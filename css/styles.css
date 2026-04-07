@@ -772,10 +772,6 @@ pre {
 .toggle-btn:hover  { background: var(--accent-gold); color: var(--parchment-bg); }
 .toggle-btn.active { background: var(--accent-red); color: var(--parchment-bg); border-color: var(--accent-red); }
 
-/* Form containers */
-.form-container        { display: none; }
-.form-container.active { display: block; }
-
 .form-title {
   font-family: 'Stoke', serif;
   font-size: 1.8rem;
