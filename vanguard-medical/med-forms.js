@@ -12,14 +12,14 @@
             crimsonProItalic: null
         };
 
-        // Local font file URLs
-        const FONT_URLS = {
-            ledger: 'Ledger-Regular.ttf',
-            stoke: 'Stoke-Regular.ttf',
-            laBelleAurore: 'LaBelleAurore-Regular.ttf',
-            crimsonPro: 'CrimsonPro-VariableFont_wght.ttf',
-            crimsonProItalic: 'CrimsonPro-Italic-VariableFont_wght.ttf'
-        };
+		// Local font file URLs
+		const FONT_URLS = {
+		    ledger: '/pv-project/assets/Ledger-Regular.ttf',
+		    stoke: '/pv-project/assets/Stoke-Regular.ttf',
+		    laBelleAurore: '/pv-project/assets/LaBelleAurore-Regular.ttf',
+		    crimsonPro: '/pv-project/assets/CrimsonPro-VariableFont_wght.ttf',
+		    crimsonProItalic: '/pv-project/assets/CrimsonPro-Italic-VariableFont_wght.ttf'
+		};
 
         // Convert ArrayBuffer to Base64
         function arrayBufferToBase64(buffer) {
