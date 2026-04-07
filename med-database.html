@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Registry</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ledger&family=Stoke:wght@400;700&family=La+Belle+Aurore&display=swap" rel="stylesheet">
+</head>
+<header class="header">
+	<div class="branding">
+		<img alt="Phoenix Vanguard Emblem" src="https://github.com/crafting-tools/phoenix-vanguard-med-forms/blob/main/pdf-emblem-web.png?raw=true">
+		<div class="text">
+			<h1>Phoenix Vanguard</h1>
+			<p>Official Records</p>
+		</div>
+	</div>
+	<div class="nav">
+	<a href="https://crafting-tools.github.io/phoenix-vanguard-med-records/">Medical Records</a>
+	<a href="https://crafting-tools.github.io/phoenix-vanguard-med-forms/">Intake and Report Form</a>
+	<a href="https://crafting-tools.github.io/crafting-macro-database/">Macro Database</a>
+	</div>
+</header>
+<body>
+  <div class="app">
+
+    <aside class="sidebar">
+      <h2>Patients</h2>
+      <ul id="patientList"></ul>
+    </aside>
+
+    <main class="content">
+      <div class="parchment">
+        <div id="patientContent">
+		  <h1>View Phoenix Vanguard Medical Records</h1>
+          <p>Select a patient from the sidebar.</p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Marked -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script src="js/content.js"></script>
+</body>
+</html>
