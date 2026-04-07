@@ -210,7 +210,7 @@ pre {
   height: 70px;
   width: 70px;
   flex-shrink: 0;
-  background-color: var(--text-primary);
+  background-color: var(--accent-red);
   -webkit-mask: url("/pv-project/assets/logo.svg") no-repeat center / contain;
           mask: url("/pv-project/assets/logo.svg") no-repeat center / contain;
   transition: background-color 0.3s ease;
