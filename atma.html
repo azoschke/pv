@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atma Farm &mdash; Zodiac Weapons Checklist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=Ledger&family=La+Belle+Aurore&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html" class="site-brand">
+        <span class="site-logo" role="img" aria-label="Zodiac Weapons"></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link">Book Farm</a></li>
+        <li><a href="atma.html" class="nav-link active">Atma Farm</a></li>
+      </ul>
+
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme">
+        <span id="theme-icon" aria-hidden="true">&#9790;</span>
+        <span id="theme-text">Dark</span>
+      </button>
+    </nav>
+    <header class="app-header">
+      <h1 class="app-title">Up in Arms, Atma Farm</h1>
+      <p class="app-subtitle">Stage 3 &middot; Atma Zodiac Weapons</p>
+    </header>
+
+    <div class="info-card">
+      <p>
+        Speak to <strong>Jalzahn</strong> in <strong>North Shroud (X: 30.0, Y: 19.0)</strong> to unlock the
+        <em>Relic Weapon Zenith Enhancement</em> option. Obtain all 12 Atma by completing FATEs in the
+        listed zones with your <strong>Zenith weapon equipped</strong>. Drops are not guaranteed.
+      </p>
+      <p>
+        The Atma dropped are job-agnostic, so you may farm all of them at once without picking up the additional weapon quests. Only
+        <strong>one of each Atma per job</strong> is required to enhance that job's weapon &mdash; if you
+        intend to farm the relic for all ARR jobs, you will need <strong>10 of each Atma</strong> total.
+      </p>
+    </div>
+
+    <div class="overall-progress">
+      <div class="overall-progress-label">
+        <span>Overall Atma Progress</span>
+        <span id="overall-progress-text">0 / 120</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="overall-progress-fill"></div>
+      </div>
+      <div class="overall-progress-sub" id="overall-progress-sub">0 / 12 Atma types complete for a single job</div>
+    </div>
+
+    <div id="atma-container"></div>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="atma.js"></script>
+</body>
+</html>

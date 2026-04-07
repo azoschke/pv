@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Farm &mdash; Zodiac Weapons Checklist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=Ledger&family=La+Belle+Aurore&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html" class="site-brand">
+        <span class="site-logo" role="img" aria-label="Zodiac Weapons"></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html" class="nav-link active">Book Farm</a></li>
+        <li><a href="atma.html" class="nav-link">Atma Farm</a></li>
+      </ul>
+
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme">
+        <span id="theme-icon" aria-hidden="true">&#9790;</span>
+        <span id="theme-text">Dark</span>
+      </button>
+    </nav>
+    <header class="app-header">
+      <h1 class="app-title">Trials of the Braves, Book Checklist</h1>
+      <p class="app-subtitle">Stage 4 &middot; Animus Zodiac Weapons</p>
+    </header>
+
+    <div class="top-controls">
+      <div class="job-selector">
+        <label for="job-select">Job:</label>
+        <select id="job-select"></select>
+      </div>
+    </div>
+
+    <div class="overall-progress">
+      <div class="overall-progress-label">
+        <span>Overall Progress</span>
+        <span id="overall-progress-text">0 / 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="overall-progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="books-container"></div>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
