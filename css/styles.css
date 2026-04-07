@@ -2799,7 +2799,33 @@ body.pv-page {
 }
 
 /* Medical Database Markdown Styles */
-.value { flex: 1; white-space: pre-wrap; }
+.value {
+    flex: 1;
+    white-space: pre-wrap; /* preserve user-entered line breaks for raw text */
+}
+
+/* Override white-space for Markdown blocks so paragraphs/lists render normally */
+.field .value p,
+.field .value ul,
+.field .value ol {
+    display: block;
+    white-space: normal;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.5;
+}
+
+/* List items spacing */
+.field .value li {
+    margin-bottom: 0.25rem;
+}
+
+/* List indentation and bottom margin */
+.value ul,
+.value ol {
+    margin-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
 
 /* Headings inside .value */
 .section .value h2 {
@@ -2810,26 +2836,6 @@ body.pv-page {
     margin-bottom: 0.6rem;
     padding-bottom: 0.2rem;
     color: #5e5d59;
-}
-
-/* Paragraphs and lists inside .value */
-.field .value p,
-.field .value ul,
-.field .value ol {
-    margin-top: 0.5em;         /* controlled spacing before each block */
-    margin-bottom: 0.5em;      /* controlled spacing after each block */
-    line-height: 1.5;          /* improves readability */
-}
-
-/* List items spacing */
-.field .value li {
-    margin-bottom: 0.25rem;    /* spacing between list items */
-}
-/* List indentation and bottom margin */
-.value ul,
-.value ol { 
-    margin-left: 1.25rem; 
-    margin-bottom: 0.75rem; 
 }
 
 /* Last-Child Spacing Rules */
