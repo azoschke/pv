@@ -88,7 +88,7 @@
   /* Borders & accents */
   --border-color: #4a4239;
   --accent-brown: #a88959;
-  --accent-red:   #c43a3a;
+  --accent-red:   #c9655b;
 
   /* Progress */
   --progress-bg:   #4a4239;
@@ -188,7 +188,6 @@ pre {
   gap: 1.25rem;
   margin: 0 0 1.5rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .site-brand {
@@ -251,8 +250,7 @@ pre {
 }
 
 .nav-link.active {
-  color: var(--text-primary);
-  border-bottom-color: var(--accent-brown);
+  color: var(--accent-red);
 }
 
 /* --- Dropdowns --- */
@@ -382,7 +380,7 @@ pre {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.4rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .overall-progress-sub {
@@ -472,7 +470,7 @@ pre {
 
 .job-selector label {
   font-weight: 400;
-  font-size: 0.95rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 
@@ -596,13 +594,13 @@ pre {
 .task-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .task-table th {
   text-align: left;
   font-weight: 400;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
@@ -1386,17 +1384,6 @@ pre {
 
 /* Layout root */
 .cdb-root { padding-top: 1rem; }
-
-/* Top controls row */
-.top-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 1rem 0;
-  margin-bottom: 1.5rem;
-}
 
 .action-buttons-top {
   display: flex;
