@@ -5,7 +5,6 @@
         // Font data for PDF (will be loaded)
         let fontsLoaded = false;
         let fontData = {
-            ledger: null,
             stoke: null,
             laBelleAurore: null,
             crimsonPro: null,
@@ -14,7 +13,6 @@
 
 		// Local font file URLs
 		const FONT_URLS = {
-		    ledger: '/pv-project/assets/Ledger-Regular.ttf',
 		    stoke: '/pv-project/assets/Stoke-Regular.ttf',
 		    laBelleAurore: '/pv-project/assets/LaBelleAurore-Regular.ttf',
 		    crimsonPro: '/pv-project/assets/CrimsonPro-VariableFont_wght.ttf',
@@ -47,10 +45,6 @@
 
         // Register fonts with jsPDF
         function registerFonts(doc) {
-            if (fontData.ledger) {
-                doc.addFileToVFS('Ledger-Regular.ttf', fontData.ledger);
-                doc.addFont('Ledger-Regular.ttf', 'Ledger', 'normal');
-            }
             if (fontData.stoke) {
                 doc.addFileToVFS('Stoke-Regular.ttf', fontData.stoke);
                 doc.addFont('Stoke-Regular.ttf', 'Stoke', 'normal');
@@ -119,21 +113,19 @@
 
             // Load fonts
             try {
-                const [ledger, stoke, laBelleAurore, crimsonPro, crimsonProItalic] = await Promise.all([
-                    loadFont(FONT_URLS.ledger),
+                const [stoke, laBelleAurore, crimsonPro, crimsonProItalic] = await Promise.all([
                     loadFont(FONT_URLS.stoke),
                     loadFont(FONT_URLS.laBelleAurore),
                     loadFont(FONT_URLS.crimsonPro),
                     loadFont(FONT_URLS.crimsonProItalic)
                 ]);
 
-                fontData.ledger = ledger;
                 fontData.stoke = stoke;
                 fontData.laBelleAurore = laBelleAurore;
                 fontData.crimsonPro = crimsonPro;
                 fontData.crimsonProItalic = crimsonProItalic;
 
-                fontsLoaded = !!(ledger && stoke && laBelleAurore && crimsonPro);
+                fontsLoaded = !!(stoke && laBelleAurore && crimsonPro);
                 console.log('Fonts preloaded:', fontsLoaded ? 'all loaded' : 'some failed');
             } catch (error) {
                 console.warn('Could not preload fonts:', error);
