@@ -8,6 +8,8 @@ const patientContent = document.getElementById("patientContent");
 let patientsData = [];
 let visitsData = [];
 
+marked.use({ breaks: true });
+
 // Load patients
 Papa.parse(patientsURL, {
   download: true,
@@ -161,13 +163,13 @@ function showVisitDetails(visit) {
     return;
   }
 
-  const html = visibleFields.map(f => `
+const html = visibleFields.map(f => `
     <div class="field">
       <span class="label">${f.label}</span>
-      <span class="value">${f.value}</span>
+      <div class="value">${marked.parse(f.value)}</div>
     </div>
   `).join("");
-
+	
   document.getElementById("visitDetails").innerHTML = html;
 }
 
@@ -175,6 +177,6 @@ function showVisitDetails(visit) {
 function renderSection(title, fieldsArray) {
   const visibleFields = fieldsArray.filter(f => f.value && f.value.trim() !== "");
   if (visibleFields.length === 0) return "";
-  const fieldsHTML = visibleFields.map(f => `<div class="field"><span class="label">${f.label}</span><span class="value">${f.value}</span></div>`).join("");
+  const fieldsHTML = visibleFields.map(f => `<div class="field"><span class="label">${f.label}</span><div class="value">${marked.parse(f.value)}</div></div>`).join("");
   return `<section class="section"><h2>${title}</h2>${fieldsHTML}</section>`;
 }
