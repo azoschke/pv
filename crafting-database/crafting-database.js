@@ -121,8 +121,6 @@
     const [filterStars, setFilterStars] = useState('');
     const [sortBy, setSortBy] = useState(''); // '', 'name', 'class', 'level'
     const [expandedCrafts, setExpandedCrafts] = useState({});
-    const [theme, setTheme] = useState('light');
-
     // Load data from localStorage on mount
     useEffect(() => {
       const savedCrafts = localStorage.getItem('craftingCrafts');
@@ -154,18 +152,6 @@
       localStorage.setItem('craftingClassStats', JSON.stringify(classStats));
     }, [classStats]);
 
-    // Load theme from localStorage on mount
-    useEffect(() => {
-      const savedTheme = localStorage.getItem('craftingTheme') || 'light';
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }, []);
-
-    // Save theme to localStorage and apply it
-    useEffect(() => {
-      localStorage.setItem('craftingTheme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
-    }, [theme]);
 
     const addCraft = (craft) => {
       // Snapshot the current class stats for this craft's class
@@ -207,10 +193,6 @@
         ...prev,
         [id]: !prev[id]
       }));
-    };
-
-    const toggleTheme = () => {
-      setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
     };
 
     const exportToCSV = () => {
@@ -366,64 +348,48 @@
       return 0;
     });
 
-    return h('div', { className: 'container mx-auto px-4 max-w-7xl' },
-      // Theme toggle button in upper left corner
-      h('div', { className: 'flex justify-between items-start pt-4 mb-6 top-controls' },
-        h('button', {
-          onClick: toggleTheme,
-          className: 'theme-toggle px-3 py-2 rounded-lg transition-colors flex items-center gap-2',
-          style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' },
-          title: theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'
-        },
-          h('span', { className: 'material-icons', style: { fontSize: '20px' } }, theme === 'light' ? 'dark_mode' : 'light_mode'),
-          h('span', { className: 'theme-toggle-text text-sm' }, theme === 'light' ? 'Dark Mode' : 'Light Mode')
-        ),
-        // Top action buttons
-        h('div', { className: 'action-buttons-top flex flex-wrap gap-2 items-center' },
-        h('button', {
-          onClick: () => setIsManagingClassStats(true),
-          className: 'px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-sm',
-          style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }
-        },
-          h('span', { className: 'material-icons', style: { fontSize: '16px' } }, 'settings'),
-          'Manage Class Stats'
-        ),
-        h('button', {
-          onClick: exportToCSV,
-          className: 'px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-sm',
-          style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
-        },
-          h('span', { className: 'material-icons', style: { fontSize: '16px' } }, 'download'),
-          'Export CSV'
-        ),
-        h('label', {
-          className: 'px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer text-sm',
-          style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
-        },
-          h('span', { className: 'material-icons', style: { fontSize: '16px' } }, 'upload'),
-          'Import CSV',
-          h('input', {
-            type: 'file',
-            accept: '.csv',
-            onChange: importFromCSV,
-            style: { display: 'none' }
-          })
-        )
+    return h('div', { className: 'cdb-root container' },
+      h('div', { className: 'top-controls' },
+        h('div', { className: 'action-buttons-top' },
+          h('button', {
+            onClick: () => setIsManagingClassStats(true),
+            className: 'cdb-btn cdb-btn-secondary'
+          },
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'settings'),
+            'Manage Class Stats'
+          ),
+          h('button', {
+            onClick: exportToCSV,
+            className: 'cdb-btn cdb-btn-primary'
+          },
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'download'),
+            'Export CSV'
+          ),
+          h('label', { className: 'cdb-btn cdb-btn-primary' },
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'upload'),
+            'Import CSV',
+            h('input', {
+              type: 'file',
+              accept: '.csv',
+              onChange: importFromCSV,
+              style: { display: 'none' }
+            })
+          )
         )
       ),
-      h('header', { className: 'mb-12' },
-        h('h1', { className: 'text-4xl font-bold text-center mb-2 craft-name' }, 'FFXIV Crafting Macro Database'),
-        h('p', { className: 'text-center subtitle', style: { color: 'var(--text-secondary)' } }, 'Manage your crafting macros and recipes')
+      h('header', { className: 'app-header' },
+        h('h1', { className: 'app-title craft-name' }, 'FFXIV Crafting Macro Database'),
+        h('p', { className: 'app-subtitle' }, 'Manage your crafting macros and recipes')
       ),
-      h('div', { className: 'mb-6 space-y-3' },
+      h('div', { className: 'cdb-search-section' },
         // Search bar
-        h('div', { className: 'w-full' },
+        h('div', { className: 'cdb-search-bar' },
           h('input', {
             type: 'text',
             placeholder: 'Search crafts by name...',
             value: searchTerm,
             onChange: (e) => setSearchTerm(e.target.value),
-            className: 'w-full px-4 py-2 rounded-lg focus:outline-none',
+            className: 'cdb-input',
             style: {
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
@@ -432,11 +398,11 @@
           })
         ),
         // Filters and sorting row
-        h('div', { className: 'filters-row flex flex-wrap gap-2 items-center' },
+        h('div', { className: 'filters-row' },
           h('select', {
             value: sortBy,
             onChange: (e) => setSortBy(e.target.value),
-            className: 'px-3 py-2 rounded-lg focus:outline-none text-sm',
+            className: 'cdb-select',
             style: {
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
@@ -451,7 +417,7 @@
           h('select', {
             value: filterClass,
             onChange: (e) => setFilterClass(e.target.value),
-            className: 'px-3 py-2 rounded-lg focus:outline-none text-sm',
+            className: 'cdb-select',
             style: {
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
@@ -464,7 +430,7 @@
           h('select', {
             value: filterStars,
             onChange: (e) => setFilterStars(e.target.value),
-            className: 'px-3 py-2 rounded-lg focus:outline-none text-sm',
+            className: 'cdb-select',
             style: {
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
@@ -480,13 +446,13 @@
           )
         ),
         // Add New button row
-        h('div', { className: 'add-new-row flex items-center' },
+        h('div', { className: 'add-new-row' },
           h('button', {
             onClick: () => setIsAddingCraft(true),
-            className: 'add-new-btn px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-sm ml-auto',
+            className: 'add-new-btn cdb-btn cdb-btn-primary',
             style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
           },
-            h('span', { className: 'material-icons', style: { fontSize: '16px' } }, 'add'),
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
             'Add New'
           )
         )
@@ -507,9 +473,9 @@
         onUpdate: updateClassStats,
         onClose: () => setIsManagingClassStats(false)
       }),
-      h('div', { className: 'space-y-2 pb-8' },
+      h('div', { className: 'cdb-craft-list' },
         sortedCrafts.length === 0
-          ? h('div', { className: 'text-center py-12', style: { color: 'var(--text-secondary)' } },
+          ? h('div', { className: 'cdb-empty-state', style: { color: 'var(--text-secondary)' } },
               searchTerm || filterClass || filterStars
                 ? 'No crafts found matching your filters.'
                 : 'No crafts yet. Add your first craft above!'
@@ -558,152 +524,152 @@
     };
 
     return h('div', {
-      className: 'rounded-lg p-6 mb-6',
+      className: 'cdb-form-panel',
       style: {
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-color)'
       }
     },
-      h('h2', { className: 'text-2xl font-bold mb-4 craft-name' }, craft ? 'Edit Craft' : 'Add New Craft'),
-      h('form', { onSubmit: handleSubmit, className: 'space-y-4' },
+      h('h2', { className: 'cdb-form-title craft-name' }, craft ? 'Edit Craft' : 'Add New Craft'),
+      h('form', { onSubmit: handleSubmit, className: 'cdb-form-fields' },
         h('div', null,
-          h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Craft Name *'),
+          h('label', { className: 'cdb-label form-label' }, 'Craft Name *'),
           h('input', {
             type: 'text',
             value: formData.name,
             onChange: (e) => updateField('name', e.target.value),
-            className: 'w-full px-4 py-2 rounded-lg form-input',
+            className: 'cdb-input form-input',
             required: true
           })
         ),
-        h('div', { className: 'grid grid-cols-2 md:grid-cols-3 gap-4' },
+        h('div', { className: 'cdb-grid-3' },
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Class'),
+            h('label', { className: 'cdb-label form-label' }, 'Class'),
             h('select', {
               value: formData.class,
               onChange: (e) => updateField('class', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             },
               ...CLASSES.map(cls => h('option', { key: cls, value: cls }, cls))
             )
           ),
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Level'),
+            h('label', { className: 'cdb-label form-label' }, 'Level'),
             h('input', {
               type: 'number',
               value: formData.level,
               onChange: (e) => updateField('level', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             })
           ),
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Rating'),
+            h('label', { className: 'cdb-label form-label' }, 'Rating'),
             h('select', {
               value: formData.rating,
               onChange: (e) => updateField('rating', parseInt(e.target.value)),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             },
               ...RATING_STARS.map(star => h('option', { key: star, value: star }, star === 0 ? 'No Stars' : `${star} Star${star > 1 ? 's' : ''}`))
             )
           ),
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Durability'),
+            h('label', { className: 'cdb-label form-label' }, 'Durability'),
             h('input', {
               type: 'number',
               value: formData.durability,
               onChange: (e) => updateField('durability', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             })
           ),
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Difficulty'),
+            h('label', { className: 'cdb-label form-label' }, 'Difficulty'),
             h('input', {
               type: 'number',
               value: formData.difficulty,
               onChange: (e) => updateField('difficulty', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             })
           ),
           h('div', null,
-            h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Quality'),
+            h('label', { className: 'cdb-label form-label' }, 'Quality'),
             h('input', {
               type: 'number',
               value: formData.quality,
               onChange: (e) => updateField('quality', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             })
           )
         ),
-        h('div', { className: 'grid grid-cols-1 gap-4' },
-          h('div', { className: 'space-y-2' },
-            h('div', { className: 'flex items-center gap-2' },
+        h('div', { className: 'cdb-form-fields' },
+          h('div', { className: 'cdb-field-group' },
+            h('div', { className: 'cdb-inline-row' },
               h('input', {
                 type: 'checkbox',
                 id: 'requiresFood',
                 checked: formData.requiresFood,
                 onChange: (e) => updateField('requiresFood', e.target.checked),
-                className: 'w-4 h-4'
+                className: 'cdb-checkbox'
               }),
-              h('label', { htmlFor: 'requiresFood', className: 'text-sm font-medium form-label' }, 'Requires Food')
+              h('label', { htmlFor: 'requiresFood', className: 'cdb-label form-label' }, 'Requires Food')
             ),
             formData.requiresFood && h('select', {
               value: formData.food,
               onChange: (e) => updateField('food', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             },
               ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
             )
           ),
-          h('div', { className: 'space-y-2' },
-            h('div', { className: 'flex items-center gap-2' },
+          h('div', { className: 'cdb-field-group' },
+            h('div', { className: 'cdb-inline-row' },
               h('input', {
                 type: 'checkbox',
                 id: 'requiresPotion',
                 checked: formData.requiresPotion,
                 onChange: (e) => updateField('requiresPotion', e.target.checked),
-                className: 'w-4 h-4'
+                className: 'cdb-checkbox'
               }),
-              h('label', { htmlFor: 'requiresPotion', className: 'text-sm font-medium form-label' }, 'Requires Potion')
+              h('label', { htmlFor: 'requiresPotion', className: 'cdb-label form-label' }, 'Requires Potion')
             ),
             formData.requiresPotion && h('select', {
               value: formData.potion,
               onChange: (e) => updateField('potion', e.target.value),
-              className: 'w-full px-4 py-2 rounded-lg form-input'
+              className: 'cdb-input form-input'
             },
               ...POTION_OPTIONS.map(potion => h('option', { key: potion, value: potion }, potion))
             )
           )
         ),
         h('div', null,
-          h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Macro (automatically splits into multiple macros after 15 lines)'),
+          h('label', { className: 'cdb-label form-label' }, 'Macro (automatically splits into multiple macros after 15 lines)'),
           h('textarea', {
             value: formData.macro,
             onChange: (e) => updateField('macro', e.target.value),
-            className: 'w-full px-4 py-2 rounded-lg form-input font-mono text-sm',
+            className: 'cdb-input cdb-input-mono form-input',
             rows: 10,
             placeholder: 'Enter macro lines...'
           })
         ),
         h('div', null,
-          h('label', { className: 'block text-sm font-medium mb-2 form-label' }, 'Notes'),
+          h('label', { className: 'cdb-label form-label' }, 'Notes'),
           h('textarea', {
             value: formData.notes,
             onChange: (e) => updateField('notes', e.target.value),
-            className: 'w-full px-4 py-2 rounded-lg form-input',
+            className: 'cdb-input form-input',
             rows: 3,
             placeholder: 'Additional notes...'
           })
         ),
-        h('div', { className: 'flex gap-2 justify-end' },
+        h('div', { className: 'cdb-form-actions' },
           h('button', {
             type: 'button',
             onClick: onCancel,
-            className: 'px-4 py-2 rounded-lg transition-colors',
+            className: 'cdb-btn cdb-btn-secondary',
             style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)' }
           }, 'Cancel'),
           h('button', {
             type: 'submit',
-            className: 'px-4 py-2 rounded-lg transition-colors',
+            className: 'cdb-btn cdb-btn-secondary',
             style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
           }, `${craft ? 'Update' : 'Add'} Craft`)
         )
@@ -723,11 +689,11 @@
 
     const renderStars = (rating) => {
       if (!rating || rating === 0) return null;
-      return h('div', { className: 'flex items-center gap-1' },
+      return h('div', { className: 'cdb-stars' },
         ...[...Array(4)].map((_, i) =>
           h('span', {
             key: i,
-            className: `material-icons text-sm ${i < rating ? 'star-filled' : 'star-empty'}`
+            className: `material-icons cdb-icon-sm ${i < rating ? 'star-filled' : 'star-empty'}`
           }, 'star')
         )
       );
@@ -781,35 +747,35 @@
 
     // Common header for both collapsed and expanded
     const header = h('div', {
-      className: `craft-card-header flex items-center p-4 ${isExpanded ? 'border-b' : ''} hover:opacity-95 transition-colors cursor-pointer`,
+      className: `craft-card-header ${isExpanded ? 'expanded' : ''}`,
       onClick: onToggle,
       style: { borderColor: isExpanded ? '#C5B89A' : 'transparent', paddingRight: '80px', position: 'relative' }
     },
-      h('div', { className: 'craft-title-section flex items-center gap-2' },
-        h('h3', { className: 'text-lg font-bold craft-name' }, craft.name),
+      h('div', { className: 'craft-title-section' },
+        h('h3', { className: 'craft-name' }, craft.name),
         renderStars(craft.rating)
       ),
-      h('div', { className: 'craft-meta-section flex items-center gap-4 ml-auto' },
-        h('div', { className: 'craft-class-info flex items-center gap-2' },
-          h('span', { className: 'material-icons text-sm', style: { color: 'var(--text-secondary)' } }, CLASS_ICONS[craft.class] || 'build'),
-          h('span', { className: 'text-sm uppercase', style: { color: 'var(--text-secondary)' } }, craft.class)
+      h('div', { className: 'craft-meta-section' },
+        h('div', { className: 'craft-class-info' },
+          h('span', { className: 'material-icons cdb-icon-sm' }, CLASS_ICONS[craft.class] || 'build'),
+          h('span', { className: 'cdb-class-label' }, craft.class)
         ),
-        craft.level && h('span', { className: 'craft-level text-sm', style: { color: 'var(--text-secondary)' } }, `LVL ${craft.level}`),
+        craft.level && h('span', { className: 'craft-level' }, `LVL ${craft.level}`),
         h('span', {
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
-          className: 'material-icons cursor-pointer transition-opacity hover:opacity-70',
+          className: 'material-icons cdb-icon-btn',
           style: { color: 'var(--accent-brown)', fontSize: '24px' },
           title: 'Edit'
         }, 'edit'),
         h('span', {
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'material-icons cursor-pointer transition-opacity hover:opacity-70',
+          className: 'material-icons cdb-icon-btn',
           style: { color: 'var(--accent-brown)', fontSize: '24px' },
           title: isExpanded ? 'Collapse' : 'Expand'
         }, isExpanded ? 'expand_less' : 'expand_more'),
         h('button', {
           onClick: (e) => { e.stopPropagation(); onDelete(); },
-          className: 'rounded-lg transition-colors',
+          className: 'cdb-btn cdb-btn-secondary',
           style: {
             backgroundColor: 'var(--accent-red)',
             color: 'white',
@@ -822,207 +788,207 @@
           },
           title: 'Delete'
         },
-          h('span', { className: 'material-icons', style: { fontSize: '20px' } }, 'delete')
+          h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
         )
       )
     );
 
     // Collapsed view
     if (!isExpanded) {
-      return h('div', { className: 'craft-card rounded-lg', style: { overflow: 'visible' } },
+      return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
         header
       );
     }
 
     // Expanded view
-    return h('div', { className: 'craft-card rounded-lg', style: { overflow: 'visible' } },
+    return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
       header,
       // Class and Class Stats (darker inset row)
       isEditingInline
         ? h('div', {
-            className: 'px-4 py-3 space-y-3',
+            className: 'cdb-stats-edit-row',
             style: { backgroundColor: 'var(--bg-darker)' }
           },
-            h('div', { className: 'flex items-center gap-2' },
-              h('span', { className: 'material-icons text-sm', style: { color: 'var(--text-primary)' } }, CLASS_ICONS[editFormData.class] || 'build'),
-              h('span', { className: 'font-medium uppercase', style: { color: 'var(--text-primary)' } }, editFormData.class),
-              h('span', { className: 'text-xs ml-2', style: { color: 'var(--text-secondary)' } }, '(Edit class stats for this craft)')
+            h('div', { className: 'cdb-inline-row' },
+              h('span', { className: 'material-icons cdb-icon-sm' }, CLASS_ICONS[editFormData.class] || 'build'),
+              h('span', { className: 'cdb-class-name' }, editFormData.class),
+              h('span', { className: 'cdb-hint' }, '(Edit class stats for this craft)')
             ),
-            h('div', { className: 'grid grid-cols-3 gap-3' },
+            h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'block text-xs mb-1', style: { color: 'var(--text-primary)' } }, 'Craftsmanship'),
+                h('label', { className: 'cdb-label-xs' }, 'Craftsmanship'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.craftsmanship || 0,
                   onChange: (e) => updateClassStat('craftsmanship', e.target.value),
-                  className: 'w-full px-2 py-1 rounded text-sm',
+                  className: 'cdb-input cdb-input-sm',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                 })
               ),
               h('div', null,
-                h('label', { className: 'block text-xs mb-1', style: { color: 'var(--text-primary)' } }, 'Control'),
+                h('label', { className: 'cdb-label-xs' }, 'Control'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.control || 0,
                   onChange: (e) => updateClassStat('control', e.target.value),
-                  className: 'w-full px-2 py-1 rounded text-sm',
+                  className: 'cdb-input cdb-input-sm',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                 })
               ),
               h('div', null,
-                h('label', { className: 'block text-xs mb-1', style: { color: 'var(--text-primary)' } }, 'CP'),
+                h('label', { className: 'cdb-label-xs' }, 'CP'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.cp || 0,
                   onChange: (e) => updateClassStat('cp', e.target.value),
-                  className: 'w-full px-2 py-1 rounded text-sm',
+                  className: 'cdb-input cdb-input-sm',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                 })
               )
             )
           )
         : h('div', {
-            className: 'px-4 py-3 flex items-center gap-4 text-sm',
+            className: 'cdb-stats-row',
             style: { backgroundColor: 'var(--bg-darker)' }
           },
-            h('div', { className: 'flex items-center gap-2' },
-              h('span', { className: 'material-icons text-sm', style: { color: 'var(--text-primary)' } }, CLASS_ICONS[craft.class] || 'build'),
-              h('span', { className: 'font-medium uppercase', style: { color: 'var(--text-primary)' } }, craft.class)
+            h('div', { className: 'cdb-inline-row' },
+              h('span', { className: 'material-icons cdb-icon-sm' }, CLASS_ICONS[craft.class] || 'build'),
+              h('span', { className: 'cdb-class-name' }, craft.class)
             ),
-            h('div', { className: 'flex items-center gap-4 text-xs', style: { color: 'var(--text-secondary)' } },
+            h('div', { className: 'cdb-stats-values' },
               h('span', null,
                 h('span', null, 'Craftsmanship: '),
-                h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, stats.craftsmanship)
+                h('span', { className: 'cdb-stat-value' }, stats.craftsmanship)
               ),
               h('span', null,
                 h('span', null, 'Control: '),
-                h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, stats.control)
+                h('span', { className: 'cdb-stat-value' }, stats.control)
               ),
               h('span', null,
                 h('span', null, 'CP: '),
-                h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, stats.cp)
+                h('span', { className: 'cdb-stat-value' }, stats.cp)
               )
             )
           ),
       // Body
-      h('div', { className: 'p-4 space-y-4' },
+      h('div', { className: 'cdb-card-body' },
         isEditingInline
           ? // Inline editing form
-            h('div', { className: 'space-y-4' },
+            h('div', { className: 'cdb-form-fields' },
               // Craft Name
               h('div', null,
-                h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Craft Name *'),
+                h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Craft Name *'),
                 h('input', {
                   type: 'text',
                   value: editFormData.name,
                   onChange: (e) => updateEditField('name', e.target.value),
-                  className: 'w-full px-4 py-2 rounded-lg',
+                  className: 'cdb-input',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' },
                   required: true
                 })
               ),
               // Class, Level, Rating, Durability, Difficulty, Quality
-              h('div', { className: 'grid grid-cols-2 md:grid-cols-3 gap-4' },
+              h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Class'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Class'),
                   h('select', {
                     value: editFormData.class,
                     onChange: (e) => updateEditField('class', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   },
                     ...CLASSES.map(cls => h('option', { key: cls, value: cls }, cls))
                   )
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Level'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Level'),
                   h('input', {
                     type: 'number',
                     value: editFormData.level,
                     onChange: (e) => updateEditField('level', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Rating'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Rating'),
                   h('select', {
                     value: editFormData.rating,
                     onChange: (e) => updateEditField('rating', parseInt(e.target.value)),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   },
                     ...RATING_STARS.map(star => h('option', { key: star, value: star }, star === 0 ? 'No Stars' : `${star} Star${star > 1 ? 's' : ''}`))
                   )
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Durability'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Durability'),
                   h('input', {
                     type: 'number',
                     value: editFormData.durability,
                     onChange: (e) => updateEditField('durability', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Difficulty'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Difficulty'),
                   h('input', {
                     type: 'number',
                     value: editFormData.difficulty,
                     onChange: (e) => updateEditField('difficulty', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Quality'),
+                  h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Quality'),
                   h('input', {
                     type: 'number',
                     value: editFormData.quality,
                     onChange: (e) => updateEditField('quality', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   })
                 )
               ),
               // Food and Potion
-              h('div', { className: 'grid grid-cols-1 gap-4' },
-                h('div', { className: 'space-y-2' },
-                  h('div', { className: 'flex items-center gap-2' },
+              h('div', { className: 'cdb-form-fields' },
+                h('div', { className: 'cdb-field-group' },
+                  h('div', { className: 'cdb-inline-row' },
                     h('input', {
                       type: 'checkbox',
                       id: 'editRequiresFood',
                       checked: editFormData.requiresFood,
                       onChange: (e) => updateEditField('requiresFood', e.target.checked),
-                      className: 'w-4 h-4'
+                      className: 'cdb-checkbox'
                     }),
-                    h('label', { htmlFor: 'editRequiresFood', className: 'text-sm font-medium', style: { color: 'var(--text-primary)' } }, 'Requires Food')
+                    h('label', { htmlFor: 'editRequiresFood', className: 'cdb-label' }, 'Requires Food')
                   ),
                   editFormData.requiresFood && h('select', {
                     value: editFormData.food,
                     onChange: (e) => updateEditField('food', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   },
                     ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
                   )
                 ),
-                h('div', { className: 'space-y-2' },
-                  h('div', { className: 'flex items-center gap-2' },
+                h('div', { className: 'cdb-field-group' },
+                  h('div', { className: 'cdb-inline-row' },
                     h('input', {
                       type: 'checkbox',
                       id: 'editRequiresPotion',
                       checked: editFormData.requiresPotion,
                       onChange: (e) => updateEditField('requiresPotion', e.target.checked),
-                      className: 'w-4 h-4'
+                      className: 'cdb-checkbox'
                     }),
-                    h('label', { htmlFor: 'editRequiresPotion', className: 'text-sm font-medium', style: { color: 'var(--text-primary)' } }, 'Requires Potion')
+                    h('label', { htmlFor: 'editRequiresPotion', className: 'cdb-label' }, 'Requires Potion')
                   ),
                   editFormData.requiresPotion && h('select', {
                     value: editFormData.potion,
                     onChange: (e) => updateEditField('potion', e.target.value),
-                    className: 'w-full px-4 py-2 rounded-lg',
+                    className: 'cdb-input',
                     style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }
                   },
                     ...POTION_OPTIONS.map(potion => h('option', { key: potion, value: potion }, potion))
@@ -1031,11 +997,11 @@
               ),
               // Macro
               h('div', null,
-                h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Macro'),
+                h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Macro'),
                 h('textarea', {
                   value: editFormData.macro,
                   onChange: (e) => updateEditField('macro', e.target.value),
-                  className: 'w-full px-4 py-2 rounded-lg font-mono text-sm',
+                  className: 'cdb-input cdb-input-mono',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' },
                   rows: 10,
                   placeholder: 'Enter macro lines...'
@@ -1043,80 +1009,80 @@
               ),
               // Notes
               h('div', null,
-                h('label', { className: 'block text-sm font-medium mb-2', style: { color: 'var(--text-primary)' } }, 'Notes'),
+                h('label', { className: 'cdb-label', style: { color: 'var(--text-primary)' } }, 'Notes'),
                 h('textarea', {
                   value: editFormData.notes,
                   onChange: (e) => updateEditField('notes', e.target.value),
-                  className: 'w-full px-4 py-2 rounded-lg',
+                  className: 'cdb-input',
                   style: { backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' },
                   rows: 3,
                   placeholder: 'Additional notes...'
                 })
               ),
               // Action buttons
-              h('div', { className: 'flex gap-2 justify-end' },
+              h('div', { className: 'cdb-form-actions' },
                 h('button', {
                   onClick: handleInlineCancel,
-                  className: 'px-4 py-2 rounded-lg transition-colors',
+                  className: 'cdb-btn cdb-btn-secondary',
                   style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)' }
                 }, 'Cancel'),
                 h('button', {
                   onClick: handleInlineSave,
-                  className: 'px-4 py-2 rounded-lg transition-colors',
+                  className: 'cdb-btn cdb-btn-secondary',
                   style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
                 }, 'Save')
               )
             )
           : // Display mode
-            h('div', { className: 'space-y-4' },
+            h('div', { className: 'cdb-form-fields' },
         // Craft Stats and Food/Potion Requirements
-        h('div', { className: 'flex flex-wrap gap-6' },
+        h('div', { className: 'cdb-craft-stats' },
           // Craft Stats
-          (craft.durability || craft.difficulty || craft.quality) && h('div', { className: 'flex gap-4 text-sm' },
+          (craft.durability || craft.difficulty || craft.quality) && h('div', { className: 'cdb-stat-group' },
             craft.durability && h('span', null,
               h('span', { style: { color: 'var(--text-secondary)' } }, 'Durability: '),
-              h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, craft.durability)
+              h('span', { className: 'cdb-stat-value' }, craft.durability)
             ),
             craft.difficulty && h('span', null,
               h('span', { style: { color: 'var(--text-secondary)' } }, 'Difficulty: '),
-              h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, craft.difficulty)
+              h('span', { className: 'cdb-stat-value' }, craft.difficulty)
             ),
             craft.quality && h('span', null,
               h('span', { style: { color: 'var(--text-secondary)' } }, 'Quality: '),
-              h('span', { className: 'font-medium', style: { color: 'var(--text-primary)' } }, craft.quality)
+              h('span', { className: 'cdb-stat-value' }, craft.quality)
             )
           ),
           // Food and Potion Requirements
-          (craft.requiresFood || craft.requiresPotion) && h('div', { className: 'flex gap-4 text-sm' },
-            craft.requiresFood && h('div', { className: 'flex items-center gap-2' },
-              h('span', { className: 'material-icons text-sm', style: { color: 'var(--star-filled)' } }, 'restaurant'),
+          (craft.requiresFood || craft.requiresPotion) && h('div', { className: 'cdb-stat-group' },
+            craft.requiresFood && h('div', { className: 'cdb-inline-row' },
+              h('span', { className: 'material-icons cdb-icon-sm cdb-icon-food' }, 'restaurant'),
               h('span', { style: { color: 'var(--text-primary)' } }, craft.food)
             ),
-            craft.requiresPotion && h('div', { className: 'flex items-center gap-2' },
-              h('span', { className: 'material-icons text-sm', style: { color: 'var(--accent-brown)' } }, 'science'),
+            craft.requiresPotion && h('div', { className: 'cdb-inline-row' },
+              h('span', { className: 'material-icons cdb-icon-sm cdb-icon-potion' }, 'science'),
               h('span', { style: { color: 'var(--text-primary)' } }, craft.potion)
             )
           )
         ),
         // Macros
         craft.macro && h('div', null,
-          h('h4', { className: 'font-semibold mb-2 text-sm', style: { color: 'var(--text-primary)' } }, 'Macros:'),
-          h('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3' },
+          h('h4', { className: 'cdb-subheading', style: { color: 'var(--text-primary)' } }, 'Macros:'),
+          h('div', { className: 'cdb-macro-grid' },
             ...macroChunks.map((chunk, index) =>
-              h('div', { key: index, className: 'relative' },
-                h('div', { className: 'flex justify-between items-center mb-1' },
-                  h('span', { className: 'text-xs', style: { color: 'var(--text-secondary)' } }, `Macro ${index + 1}`),
+              h('div', { key: index, className: 'cdb-macro-chunk' },
+                h('div', { className: 'cdb-macro-header' },
+                  h('span', { className: 'cdb-macro-label' }, `Macro ${index + 1}`),
                   h('button', {
                     onClick: () => copyMacroToClipboard(chunk),
-                    className: 'text-xs px-2 py-1 rounded flex items-center gap-1',
+                    className: 'cdb-copy-btn',
                     style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)' }
                   },
-                    h('span', { className: 'material-icons', style: { fontSize: '14px' } }, 'content_copy'),
+                    h('span', { className: 'material-icons cdb-icon-xs' }, 'content_copy'),
                     'Copy'
                   )
                 ),
                 h('pre', {
-                  className: 'p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap',
+                  className: 'cdb-macro-pre',
                   style: { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }
                 }, chunk)
               )
@@ -1125,8 +1091,8 @@
         ),
         // Notes
         craft.notes && h('div', null,
-          h('h4', { className: 'font-semibold mb-2 text-sm', style: { color: 'var(--text-primary)' } }, 'Notes:'),
-          h('p', { className: 'text-sm', style: { color: 'var(--text-primary)' } }, craft.notes)
+          h('h4', { className: 'cdb-subheading', style: { color: 'var(--text-primary)' } }, 'Notes:'),
+          h('p', { className: 'cdb-notes-text' }, craft.notes)
         )
             )
       )
@@ -1161,67 +1127,67 @@
     };
 
     return h('div', {
-      className: 'fixed inset-0 flex items-center justify-center p-4 z-50',
+      className: 'cdb-modal-overlay',
       style: { backgroundColor: 'rgba(62, 56, 50, 0.75)' }
     },
       h('div', {
-        className: 'rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto',
+        className: 'cdb-modal',
         style: {
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-color)'
         }
       },
-        h('h2', { className: 'text-2xl font-bold mb-4 craft-name' }, 'Manage Class Stats'),
-        h('p', { className: 'text-sm mb-4', style: { color: 'var(--text-secondary)' } }, 'These stats will be displayed for all crafts using each class.'),
-        h('div', { className: 'space-y-4 mb-6' },
+        h('h2', { className: 'cdb-form-title craft-name' }, 'Manage Class Stats'),
+        h('p', { className: 'cdb-modal-desc' }, 'These stats will be displayed for all crafts using each class.'),
+        h('div', { className: 'cdb-form-fields cdb-modal-body' },
           ...CLASSES.map(className =>
             h('div', {
               key: className,
-              className: 'p-4 rounded-lg',
+              className: 'cdb-class-row',
               style: { backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)' }
             },
-              h('h3', { className: 'font-semibold mb-3', style: { color: 'var(--text-primary)' } }, className),
-              h('div', { className: 'grid grid-cols-3 gap-4' },
+              h('h3', { className: 'cdb-class-row-title' }, className),
+              h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'block text-sm mb-1 form-label' }, 'Craftsmanship'),
+                  h('label', { className: 'cdb-label form-label' }, 'Craftsmanship'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.craftsmanship || 0,
                     onChange: (e) => updateStat(className, 'craftsmanship', parseInt(e.target.value) || 0),
-                    className: 'w-full px-3 py-2 rounded-lg form-input'
+                    className: 'cdb-input form-input'
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm mb-1 form-label' }, 'Control'),
+                  h('label', { className: 'cdb-label form-label' }, 'Control'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.control || 0,
                     onChange: (e) => updateStat(className, 'control', parseInt(e.target.value) || 0),
-                    className: 'w-full px-3 py-2 rounded-lg form-input'
+                    className: 'cdb-input form-input'
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'block text-sm mb-1 form-label' }, 'CP'),
+                  h('label', { className: 'cdb-label form-label' }, 'CP'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.cp || 0,
                     onChange: (e) => updateStat(className, 'cp', parseInt(e.target.value) || 0),
-                    className: 'w-full px-3 py-2 rounded-lg form-input'
+                    className: 'cdb-input form-input'
                   })
                 )
               )
             )
           )
         ),
-        h('div', { className: 'flex gap-2 justify-end' },
+        h('div', { className: 'cdb-form-actions' },
           h('button', {
             onClick: onClose,
-            className: 'px-4 py-2 rounded-lg transition-colors',
+            className: 'cdb-btn cdb-btn-secondary',
             style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)' }
           }, 'Cancel'),
           h('button', {
             onClick: handleSave,
-            className: 'px-4 py-2 rounded-lg transition-colors',
+            className: 'cdb-btn cdb-btn-secondary',
             style: { backgroundColor: 'var(--accent-brown)', color: 'white' }
           }, 'Save Stats')
         )
