@@ -17,7 +17,6 @@ const ATMA_LIST = [
 ];
 
 // ===== STORAGE =====
-const LS_THEME = 'trialsOfBraves_theme';
 const LS_ATMA  = 'trialsOfBraves_atmaCounts';
 
 function loadSetting(key, fallback) {
@@ -132,31 +131,7 @@ function bindAtmaEvents() {
   });
 }
 
-// ===== THEME =====
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const icon = document.getElementById('theme-icon');
-  const text = document.getElementById('theme-text');
-  if (theme === 'dark') {
-    icon.innerHTML = '&#9788;';
-    text.textContent = 'Light';
-  } else {
-    icon.innerHTML = '&#9790;';
-    text.textContent = 'Dark';
-  }
-}
-
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
-  const savedTheme = loadSetting(LS_THEME, 'light');
-  applyTheme(savedTheme);
-
-  document.getElementById('theme-toggle').addEventListener('click', function() {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    saveSetting(LS_THEME, next);
-    applyTheme(next);
-  });
-
   renderAtma();
 });

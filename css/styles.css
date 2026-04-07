@@ -130,9 +130,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Phoenix Vanguard pages override body with a background image via a
-   page-specific class on <body> — see section 8 */
-
 .container {
   max-width: 1100px;
   margin: 0 auto;
@@ -711,104 +708,17 @@ pre {
 
 /* =============================================================================
    8. PHOENIX VANGUARD — Shared (parchment, header, forms)
-   Pages using this section should add class="pv-page" to <body>
    ============================================================================= */
 
-body.pv-page {
-  font-family: 'Crimson Pro', serif;
-  background-image: url(https://github.com/crafting-tools/phoenix-vanguard-med-forms/blob/main/form-bg-web.jpg?raw=true);
-  background-attachment: fixed;
-  background-size: cover;
-  min-height: 100vh;
-  padding: 30px;
-  color: var(--ink-color);
-  /* Override the default Zodiac bg-color so the image shows through */
-  background-color: transparent;
-}
-
-/* Parchment panel — unified with site card style (uses shared bg-card) */
+/* Parchment panel */
 .parchment {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  padding: 2rem 2.5rem;
+  background: var(--bg-card);
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  border-radius: 6px;
+  padding: 30px 50px 50px;
   position: relative;
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
-}
-
-/* PV site header (branding + horizontal nav) */
-.pv-header {
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.pv-header .branding {
-  border-radius: 6px;
-  padding: 20px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin: auto;
-  width: fit-content;
-}
-
-.pv-header .branding img {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  padding: 1px;
-  display: block;
-  filter: drop-shadow(2px 2px 2px #110f0ecc);
-}
-
-.pv-header h1 {
-  font-family: 'Stoke', serif;
-  font-weight: 500;
-  color: #e1ddd1;
-  font-size: 1.8rem;
-  line-height: 1.8rem;
-  margin: 0 0 8px;
-}
-
-.pv-header p {
-  font-family: 'La Belle Aurore', cursive;
-  font-weight: 500;
-  font-size: 1.25rem;
-  line-height: 1.25rem;
-  color: #c2bba5;
-  text-shadow: 1px 1px 1px #00000054;
-  margin: 0;
-}
-
-/* PV nav pill links (dark pill style, used inside pv-header) */
-.pv-nav {
-  border-radius: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  width: fit-content;
-  margin: auto;
-  margin-bottom: 30px;
-}
-
-.pv-nav a {
-  color: #e1dbd1;
-  text-decoration: none;
-  font-family: 'Stoke', serif;
-  font-weight: 500;
-  padding: 10px 15px;
-  display: block;
-  font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15rem;
-  background: #19100c;
-  border-radius: 6px;
-}
-
-.pv-nav a.active {
-  border: 1px solid #e1dbd1;
-  background-color: rgba(25, 16, 12, 0.48);
-  font-weight: 800;
 }
 
 /* Section headings */
@@ -1151,8 +1061,8 @@ body.pv-page {
 }
 
 .sidebar {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
   width: fit-content;
   padding: 30px 0;
   border-radius: 0.5rem 0 0 0.5rem;
@@ -1219,8 +1129,6 @@ body.pv-page {
   font-weight: bold;
   color: #5e5d59;
 }
-
-.value { flex: 1; white-space: pre-wrap; }
 
 /* Visit tabs */
 .visits-section { display: flex; flex-direction: column; margin-bottom: 0; border-bottom: none; }
@@ -1886,4 +1794,1369 @@ body.pv-page {
 @media (max-width: 480px) {
   .cdb-grid-3 { grid-template-columns: 1fr; }
   .action-buttons-top { width: 100%; justify-content: center; }
+}
+
+  /* Form inputs */
+  --form-input-bg:          #e3ded3;
+  --form-input-placeholder: #9B8F84;
+
+  /* Phoenix Vanguard — parchment world */
+  --parchment-bg:    #e3ded3;
+  --parchment-dark:  #d6d0c4;
+  --ink-color:       #2c1810;
+  --accent-gold:     #6b4423;
+  --shadow-color:    rgba(44, 24, 16, 0.3);
+}
+
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-primary: #1a1614;
+  --bg-card:    #2a2521;
+  --bg-darker:  #3a342f;
+
+  /* Text */
+  --text-primary:   #e3ded3;
+  --text-secondary: #c5b89a;
+
+  /* Borders & accents */
+  --border-color: #4a4239;
+  --accent-brown: #a88959;
+  --accent-red:   #c43a3a;
+
+  /* Progress */
+  --progress-bg:   #4a4239;
+  --progress-fill: #a88959;
+
+  /* Checkboxes */
+  --check-color: #7ab85e;
+
+  /* Stars */
+  --star-filled: #d4a574;
+  --star-empty:  #6b6560;
+
+  /* Form inputs */
+  --form-input-bg:          #3a342f;
+  --form-input-placeholder: #6b6560;
+
+  /* Phoenix Vanguard dark — parchment world stays light-ish by design
+     (background image handles darkness); only tweak ink/shadow */
+  --parchment-bg:   #e3ded3;
+  --parchment-dark: #d6d0c4;
+  --ink-color:      #2c1810;
+  --accent-gold:    #6b4423;
+  --shadow-color:   rgba(44, 24, 16, 0.4);
+}
+
+
+/* =============================================================================
+   3. BASE / BODY
+   ============================================================================= */
+
+body {
+  font-family: 'Crimson Pro', serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Phoenix Vanguard pages override body with a background image via a
+   page-specific class on <body> — see section 8 */
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+/* Focus ring (accessibility) */
+:focus-visible {
+  outline: 2px solid var(--accent-brown);
+  outline-offset: 2px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25);
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+
+/* =============================================================================
+   4. SCROLLBAR
+   ============================================================================= */
+
+::-webkit-scrollbar        { width: 10px; height: 10px; }
+::-webkit-scrollbar-track  { background: var(--bg-darker); }
+::-webkit-scrollbar-thumb  { background: var(--accent-brown); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+
+/* =============================================================================
+   5. SHARED NAV
+   ============================================================================= */
+
+#nav-placeholder {
+  /* Wrapper injected by nav.js — no styles needed; .site-nav inside handles layout */
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* Optional: swap this mask URL for your actual unified logo */
+.site-logo {
+  display: inline-block;
+  height: 28px;
+  width: 28px;
+  flex-shrink: 0;
+  background-color: var(--accent-brown);
+  -webkit-mask: url("/assets/images/logo.svg") no-repeat center / contain;
+          mask: url("/assets/images/logo.svg") no-repeat center / contain;
+}
+
+.site-brand-text {
+  /* Hide on very small screens if needed — see responsive section */
+}
+
+.nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.nav-link {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-brown);
+}
+
+.theme-toggle {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover   { background-color: var(--bg-darker); }
+.theme-toggle:active  { transform: scale(0.97); }
+
+
+/* =============================================================================
+   6. SHARED UTILITIES
+   ============================================================================= */
+
+/* --- App header (Zodiac pages) --- */
+.app-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.app-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.app-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* --- Progress bars --- */
+.overall-progress {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.overall-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.overall-progress-sub {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: var(--progress-bg);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--progress-fill);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+/* --- Info card --- */
+.info-card {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-brown);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.info-card p { margin: 0 0 0.6rem; }
+.info-card p:last-child { margin-bottom: 0; }
+
+/* --- Top controls bar --- */
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background-color: var(--bg-darker);
+  border-radius: 0.5rem;
+  box-shadow: inset 0 2px 4px rgba(62, 56, 50, 0.15);
+}
+
+.top-controls-right { justify-content: flex-end; }
+
+/* --- Disclaimer (FFXIV copyright) --- */
+.disclaimer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  line-height: 1.5;
+}
+
+/* --- Star ratings (Crafting DB) --- */
+.star-filled { color: var(--star-filled); }
+.star-empty  { color: var(--star-empty); }
+
+/* --- Material Icons --- */
+.material-icons {
+  vertical-align: middle;
+  user-select: none;
+}
+
+
+/* =============================================================================
+   7. ZODIAC WEAPONS — Book Farm & Atma Farm
+   ============================================================================= */
+
+/* Job selector */
+.job-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.job-selector label {
+  font-weight: 400;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.job-selector select {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  background-color: var(--form-input-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Book sections */
+.book {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
+}
+
+.book-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  gap: 0.5rem;
+}
+
+.book-header:hover { background-color: var(--bg-darker); }
+
+.book-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.book-check {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.book-check.completed { color: var(--check-color); }
+
+.book-name {
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.book-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.book-progress-bar {
+  width: 80px;
+  height: 6px;
+  background-color: var(--progress-bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.book-progress-bar-fill {
+  height: 100%;
+  background-color: var(--progress-fill);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.book-expand-icon {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.book.active .book-expand-icon { transform: rotate(180deg); }
+
+.book-body {
+  display: none;
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.book.active .book-body { display: block; }
+
+/* Category within a book */
+.category { margin-top: 1rem; }
+
+.category-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--accent-brown);
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Task table */
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.task-table th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.task-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+.task-table tr:last-child td { border-bottom: none; }
+
+.task-table tr.checked td {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.task-table input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--check-color);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.td-check { width: 30px; text-align: center; }
+.td-num   { width: 25px; color: var(--text-secondary); }
+
+.notes {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+/* Atma table */
+.atma-table {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.atma-table th,
+.atma-table td { padding: 0.55rem 0.75rem; }
+
+.atma-table tr.checked td {
+  opacity: 0.6;
+  background-color: rgba(90, 138, 60, 0.08);
+}
+
+.td-count-header { text-align: right; }
+
+.td-count {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.count-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.count-btn {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  line-height: 1;
+}
+
+.count-btn:hover  { background-color: var(--bg-darker); }
+.count-btn:active { transform: scale(0.95); }
+
+.count-input {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  width: 3rem;
+  text-align: center;
+  padding: 0.3rem 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  background-color: var(--form-input-bg);
+  color: var(--text-primary);
+  -moz-appearance: textfield;
+}
+
+.count-input::-webkit-outer-spin-button,
+.count-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+
+/* =============================================================================
+   8. PHOENIX VANGUARD — Shared (parchment, header, forms)
+   Pages using this section should add class="pv-page" to <body>
+   ============================================================================= */
+
+body.pv-page {
+  font-family: 'Crimson Pro', serif;
+  background-image: url(https://github.com/crafting-tools/phoenix-vanguard-med-forms/blob/main/form-bg-web.jpg?raw=true);
+  background-attachment: fixed;
+  background-size: cover;
+  min-height: 100vh;
+  padding: 30px;
+  color: var(--ink-color);
+  /* Override the default Zodiac bg-color so the image shows through */
+  background-color: transparent;
+}
+
+/* Parchment panel */
+.parchment {
+  background: var(--bg-card);
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  border-radius: 6px;
+  padding: 30px 50px 50px;
+  position: relative;
+}
+
+/* PV site header (branding + horizontal nav) */
+.pv-header {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pv-header .branding {
+  border-radius: 6px;
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: auto;
+  width: fit-content;
+}
+
+.pv-header .branding img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  padding: 1px;
+  display: block;
+  filter: drop-shadow(2px 2px 2px #110f0ecc);
+}
+
+.pv-header h1 {
+  font-family: 'Stoke', serif;
+  font-weight: 500;
+  color: #e1ddd1;
+  font-size: 1.8rem;
+  line-height: 1.8rem;
+  margin: 0 0 8px;
+}
+
+.pv-header p {
+  font-family: 'La Belle Aurore', cursive;
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.25rem;
+  color: #c2bba5;
+  text-shadow: 1px 1px 1px #00000054;
+  margin: 0;
+}
+
+/* PV nav pill links (dark pill style, used inside pv-header) */
+.pv-nav {
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: fit-content;
+  margin: auto;
+  margin-bottom: 30px;
+}
+
+.pv-nav a {
+  color: #e1dbd1;
+  text-decoration: none;
+  font-family: 'Stoke', serif;
+  font-weight: 500;
+  padding: 10px 15px;
+  display: block;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+  background: #19100c;
+  border-radius: 6px;
+}
+
+.pv-nav a.active {
+  border: 1px solid #e1dbd1;
+  background-color: rgba(25, 16, 12, 0.48);
+  font-weight: 800;
+}
+
+/* Section headings */
+.section-heading {
+  font-family: 'Stoke', serif;
+  font-size: 1.4rem;
+  text-align: center;
+  color: var(--ink-color);
+  margin: 30px 0 20px;
+  padding-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+.section-heading:first-of-type { margin-top: 0; }
+
+.subsection-heading {
+  font-family: 'Stoke', serif;
+  font-size: 1.2rem;
+  color: var(--ink-color);
+  margin: 25px 0 15px;
+  letter-spacing: 1px;
+  padding-bottom: 4px;
+  border-bottom: 2px dashed #d6d0c4;
+}
+
+/* Form toggle (intake/report) */
+.form-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-bottom: 30px;
+  margin-bottom: 40px;
+  border-bottom: 2px dashed #d6d0c4;
+}
+
+.toggle-btn {
+  font-family: 'Stoke', serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border: 1px solid var(--border-color);
+  background: var(--parchment-dark);
+  color: var(--ink-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+}
+
+.toggle-btn:hover  { background: var(--accent-gold); color: var(--parchment-bg); }
+.toggle-btn.active { background: var(--accent-red); color: var(--parchment-bg); border-color: var(--accent-red); }
+
+/* Form containers */
+.form-container        { display: none; }
+.form-container.active { display: block; }
+
+.form-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 40px;
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: var(--ink-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-color);
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(107, 68, 35, 0.25);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%236b4423' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 40px;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Markup toolbar */
+.markup-toolbar {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 4px;
+}
+
+.markup-toolbar + textarea {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.markup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.markup-btn:hover  { background: rgba(44, 24, 16, 0.15); }
+.markup-btn:active { background: rgba(44, 24, 16, 0.25); }
+
+/* Markdown preview */
+.markdown-preview {
+  display: none;
+  font-family: 'Crimson Pro', serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 10px 15px;
+  margin-top: -1px;
+  color: var(--ink-color);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--border-color);
+  border-top: 1px dashed rgba(44, 24, 16, 0.3);
+  border-radius: 0 0 4px 4px;
+}
+
+.markdown-preview::before {
+  content: 'Preview';
+  display: block;
+  font-family: 'Stoke', serif;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(44, 24, 16, 0.35);
+  margin-bottom: 5px;
+}
+
+.markdown-preview p           { margin: 0 0 0.3em; }
+.markdown-preview p:last-child { margin-bottom: 0; }
+.markdown-preview strong       { font-weight: 700; }
+.markdown-preview em           { font-style: italic; }
+
+.markdown-preview .md-heading { font-weight: 700; text-transform: uppercase; line-height: 1.4; margin: 0.5em 0 0.3em; }
+.markdown-preview .md-h1 { font-size: 1.1em; }
+.markdown-preview .md-h2 { font-size: 1.05em; }
+.markdown-preview .md-h3 { font-size: 1em; }
+.markdown-preview ul  { list-style-type: disc; padding-left: 20px; margin: 0.2em 0; }
+.markdown-preview li  { margin: 0.1em 0; }
+
+.eorzean-date-display {
+  display: none;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--accent-red);
+  background: rgba(165, 77, 68, 0.08);
+  border-left: 3px solid var(--accent-red);
+  border-radius: 2px;
+}
+
+/* Authorization block */
+.authorization-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--ink-color);
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-gold);
+}
+
+.signature-line  { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--ink-color); margin-bottom: 10px; }
+.signature-note  { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--accent-gold); font-style: italic; margin: 15px 0; }
+.signature-input { font-family: 'La Belle Aurore', cursive !important; font-size: 1.4rem !important; }
+
+/* Checkbox & radio groups */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.checkbox-label,
+.radio-label {
+  cursor: pointer;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.checkbox-label:hover,
+.radio-label:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--accent-gold);
+}
+
+.checkbox-label input[type="checkbox"],
+.radio-label    input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-red);
+  cursor: pointer;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--ink-color);
+}
+
+.radio-label input[type="radio"] { margin-top: 2px; flex-shrink: 0; }
+
+.conditional-field         { display: none; margin-left: 26px; margin-top: 8px; }
+.conditional-field.visible { display: block; }
+.conditional-field input   { width: calc(100% - 26px); }
+
+/* Submit / action buttons */
+.submit-btn {
+  width: 100%;
+  padding: 15px 30px;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--ink-color);
+  color: var(--parchment-bg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+  box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.submit-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
+.submit-btn:active { transform: translateY(0); }
+
+.button-group            { display: flex; gap: 10px; margin-top: 30px; }
+.button-group .submit-btn { flex: 1; margin-top: 0; padding: 15px 10px; }
+.button-group .export-jpg-btn  { background: #5a3a2e; }
+.button-group .export-jpg-btn:hover { background: #6d4a3c; }
+.button-group .discord-btn     { background: #a54d44; }
+.button-group .discord-btn:hover { background: #ac5249; }
+.button-group .discord-btn.copied { background: #3a5c3a; }
+
+/* Ornament & footer */
+.ornament {
+  text-align: center;
+  color: var(--accent-gold);
+  font-size: 1.5rem;
+  margin: 20px 0;
+  opacity: 0.7;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  font-family: 'La Belle Aurore', cursive;
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+}
+
+
+/* =============================================================================
+   9. PHOENIX VANGUARD — Medical Records (sidebar + visit tabs)
+   ============================================================================= */
+
+.pv-app {
+  display: flex;
+  max-width: 1100px;
+  margin: 0 auto;
+  border-radius: 5px;
+}
+
+.sidebar {
+  background: var(--parchment-bg);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  width: fit-content;
+  padding: 30px 0;
+  border-radius: 5px 0 0 5px;
+  color: var(--ink-color);
+  margin-top: 20px;
+  margin-bottom: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar ul  { list-style: none; padding-left: 0; }
+.sidebar h2  { margin: 0; padding: 0 30px; text-align: center; text-transform: uppercase; font-size: 1.25rem; letter-spacing: 0.2rem; }
+
+.sidebar li {
+  border-bottom: 1px solid var(--shadow-color);
+  padding: 12px 30px;
+}
+
+.sidebar li:has(.patient-link.active) { background-color: rgba(255, 255, 255, 0.3); }
+
+.patient-link {
+  cursor: pointer;
+  color: var(--ink-color);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.patient-link:hover,
+.patient-link.active { color: var(--accent-red); }
+
+.content { flex: 1; }
+
+/* Parchment content panel (records) */
+.parchment.records {
+  padding: 60px;
+  box-shadow: 0 0 20px var(--shadow-color), inset 0 0 50px rgba(139, 105, 20, 0.1);
+}
+
+.patient-header { margin-bottom: 20px; }
+
+.patient-header h1.patient-name {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 2.4rem;
+  line-height: 2.4rem;
+  font-weight: 500;
+  margin: 0;
+  border-bottom: 2px dashed var(--parchment-dark);
+}
+
+.section { border-bottom: 2px dashed var(--parchment-dark); margin-bottom: 20px; }
+
+.section h2 {
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.25rem;
+}
+
+.field { display: flex; flex-direction: column; margin-bottom: 20px; }
+
+.label {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+  letter-spacing: 0.125rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #5e5d59;
+}
+
+/* Medical Database Markdown Styles */
+
+.field .value p,
+.field .value ul,
+.field .value ol {
+    display: block;
+    white-space: normal;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+/* List items spacing */
+.field .value li {
+    margin-bottom: 0.25rem;
+}
+
+/* List indentation and bottom margin */
+.value ul,
+.value ol {
+    margin-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Headings inside .value */
+.section .value h2 {
+    font-family: 'Stoke';
+    font-size: 0.85rem;
+    letter-spacing: 0.05rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.2rem;
+    color: #5e5d59;
+}
+
+/* Last-Child Spacing Rules */
+.field .value p:last-child,
+.field .value ul:last-child,
+.field .value ol:last-child {
+    margin-bottom: 0;
+}
+
+/* Visit tabs */
+.visits-section { display: flex; flex-direction: column; margin-bottom: 0; border-bottom: none; }
+
+.visit-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.visit-tab {
+  padding: 6px 12px;
+  background: var(--bg-primary);
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.visit-tab.active { background: var(--bg-darker); color: var(--ink-color); }
+
+.visit-details-container {
+  padding: 20px;
+  border-radius: 0 6px 6px 6px;
+  background: var(--bg-primary);
+}
+
+.visit-details .field { margin-bottom: 10px; }
+
+
+/* =============================================================================
+   10. CRAFTING MACRO DATABASE
+   (React-rendered; most layout is handled in JS — only shared overrides here)
+   ============================================================================= */
+
+.craft-card {
+  background-color: var(--bg-card);
+  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.2);
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.craft-card:hover { box-shadow: 0 2px 8px rgba(62, 56, 50, 0.2); }
+
+.craft-name {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.search-section {
+  background-color: var(--bg-darker);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 2px 4px rgba(62, 56, 50, 0.15);
+}
+
+/* Form inputs (shared with Crafting DB) */
+.form-input {
+  background-color: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.form-input::placeholder { color: var(--form-input-placeholder); }
+.form-label               { color: var(--text-primary); }
+
+
+/* =============================================================================
+   11. LANDING PAGE
+   ============================================================================= */
+
+.landing-intro {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.65;
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.landing-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-card:hover {
+  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+  transform: translateY(-2px);
+  border-color: var(--accent-brown);
+}
+
+.landing-card-inner {
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.landing-card-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.landing-card-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1rem;
+  color: var(--accent-brown);
+  margin-bottom: 0.5rem;
+}
+
+.landing-card-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.landing-card-cta {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--accent-brown);
+  transition: color 0.2s ease;
+}
+
+.landing-card:hover .landing-card-cta {
+  color: var(--accent-red);
+}
+
+
+/* =============================================================================
+   12. RESPONSIVE
+   ============================================================================= */
+
+/* --- Nav --- */
+@media (max-width: 640px) {
+  .site-nav {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    flex: none;
+  }
+
+  .nav-link {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .theme-toggle { margin-left: 0; }
+}
+
+/* --- Zodiac pages --- */
+@media (max-width: 640px) {
+  .app-title { font-size: 1.5rem; }
+
+  .top-controls { flex-direction: column; align-items: stretch; }
+
+  .job-selector { justify-content: space-between; }
+  .job-selector select { flex: 1; }
+
+  .theme-toggle { align-self: flex-end; }
+
+  .book-progress-bar { width: 50px; }
+
+  .task-table { font-size: 0.8rem; }
+  .task-table th,
+  .task-table td { padding: 0.3rem 0.35rem; }
+
+  .atma-table th,
+  .atma-table td { padding: 0.4rem 0.45rem; }
+
+  .count-input { width: 2.4rem; }
+}
+
+/* --- Phoenix Vanguard --- */
+@media (max-width: 900px) {
+  .pv-app,
+  .pv-header .branding { flex-direction: column; }
+
+  .sidebar {
+    width: -webkit-fill-available;
+    border-radius: 5px;
+    margin-top: 0;
+    position: unset;
+  }
+
+  .pv-nav { justify-content: center; }
+}
+
+@media (max-width: 600px) {
+  body.pv-page { padding: 15px; }
+
+  .parchment { padding: 20px; }
+  .parchment.records { padding: 30px; }
+
+  .pv-header h1 { font-size: 1.4rem; }
+
+  .form-toggle { flex-direction: column; }
+  .toggle-btn  { justify-content: center; }
+
+  .form-row,
+  .form-row-3  { grid-template-columns: 1fr; }
+
+  .checkbox-group { grid-template-columns: 1fr; }
+
+  .button-group { flex-direction: column; }
+}
+
+/* --- Print --- */
+@media print {
+  button, input, select { display: none; }
 }

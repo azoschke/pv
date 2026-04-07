@@ -286,7 +286,6 @@ const BOOKS = [
 // ===== LOCALSTORAGE HELPERS =====
 const LS_JOB = 'trialsOfBraves_selectedJob';
 const LS_BOOK = 'trialsOfBraves_activeBook';
-const LS_THEME = 'trialsOfBraves_theme';
 
 function getChecksKey(job) {
   return 'trialsOfBraves_checks_' + job;
@@ -497,20 +496,6 @@ function renderBooks() {
   });
 }
 
-// ===== THEME =====
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const icon = document.getElementById('theme-icon');
-  const text = document.getElementById('theme-text');
-  if (theme === 'dark') {
-    icon.innerHTML = '&#9788;';
-    text.textContent = 'Light';
-  } else {
-    icon.innerHTML = '&#9790;';
-    text.textContent = 'Dark';
-  }
-}
-
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
   // Populate job selector
@@ -534,17 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
   jobSelect.addEventListener('change', function() {
     saveSetting(LS_JOB, this.value);
     renderBooks();
-  });
-
-  // Theme
-  const savedTheme = loadSetting(LS_THEME, 'light');
-  applyTheme(savedTheme);
-
-  document.getElementById('theme-toggle').addEventListener('click', function() {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    saveSetting(LS_THEME, next);
-    applyTheme(next);
   });
 
   // Initial render
