@@ -1059,8 +1059,6 @@ pre {
   color: #5e5d59;
 }
 
-.value { flex: 1; white-space: pre-wrap; }
-
 /* Visit tabs */
 .visits-section { display: flex; flex-direction: column; margin-bottom: 0; border-bottom: none; }
 
