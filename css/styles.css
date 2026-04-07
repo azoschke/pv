@@ -131,7 +131,8 @@ body {
 }
 
 h1, h2, h3 {
-font-family: 'Stoke', serif;
+   font-family: 'Stoke', serif;
+   font-weight: normal;
 }
 
 .container {
