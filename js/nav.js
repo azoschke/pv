@@ -3,7 +3,7 @@
  *
  * Add to every page, just before </body>:
  *   <div id="nav-placeholder"></div>
- *   <script src="/js/nav.js"></script>
+ *   <script src="/pv-project/js/nav.js"></script>
  *
  * The script:
  *  1. Fetches /components/nav.html and injects it into #nav-placeholder
