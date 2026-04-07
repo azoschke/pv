@@ -28,8 +28,8 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const root = ReactDOM.createRoot(document.getElementById("app"));
-      if (typeof FFXIVMacroDatabase !== "undefined") {
-        root.render(React.createElement(FFXIVMacroDatabase));
+      if (typeof CosmicExplorationDatabase !== "undefined") {
+        root.render(React.createElement(CosmicExplorationDatabase));
       } else {
         root.render(
           React.createElement("div", {
