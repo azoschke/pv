@@ -132,20 +132,6 @@ function bindAtmaEvents() {
   });
 }
 
-// ===== THEME =====
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const icon = document.getElementById('theme-icon');
-  const text = document.getElementById('theme-text');
-  if (theme === 'dark') {
-    icon.innerHTML = '&#9788;';
-    text.textContent = 'Light';
-  } else {
-    icon.innerHTML = '&#9790;';
-    text.textContent = 'Dark';
-  }
-}
-
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
   const savedTheme = loadSetting(LS_THEME, 'light');
