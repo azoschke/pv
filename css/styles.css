@@ -1221,7 +1221,88 @@ body.pv-page {
 
 
 /* =============================================================================
-   11. RESPONSIVE
+   11. LANDING PAGE
+   ============================================================================= */
+
+.landing-intro {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.65;
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.landing-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-card:hover {
+  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+  transform: translateY(-2px);
+  border-color: var(--accent-brown);
+}
+
+.landing-card-inner {
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.landing-card-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.landing-card-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1rem;
+  color: var(--accent-brown);
+  margin-bottom: 0.5rem;
+}
+
+.landing-card-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.landing-card-cta {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--accent-brown);
+  transition: color 0.2s ease;
+}
+
+.landing-card:hover .landing-card-cta {
+  color: var(--accent-red);
+}
+
+
+/* =============================================================================
+   12. RESPONSIVE
    ============================================================================= */
 
 /* --- Nav --- */
