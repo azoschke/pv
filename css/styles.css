@@ -206,18 +206,18 @@ pre {
   flex-shrink: 0;
 }
 
+/* Brand wordmark — rendered as a CSS mask so the fill color comes from
+   the current theme (swaps automatically in dark mode). */
 .site-logo {
   display: inline-block;
   height: 34px;
-  width: 34px;
+  /* Aspect ratio of assets/logo.svg is 927:160 ≈ 5.79 */
+  width: calc(34px * 927 / 160);
   flex-shrink: 0;
-  object-fit: contain;
-  border-radius: 50%;
-  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.25));
-}
-
-.site-brand-text {
-  /* Hide on very small screens if needed — see responsive section */
+  background-color: var(--text-primary);
+  -webkit-mask: url("/pv-project/assets/logo.svg") no-repeat center / contain;
+          mask: url("/pv-project/assets/logo.svg") no-repeat center / contain;
+  transition: background-color 0.3s ease;
 }
 
 .nav-links {
