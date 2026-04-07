@@ -4,38 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Registry</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="/pv-project/css/styles.css">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/pv-project/css/styles.css">
 </head>
-<header class="header">
-	<div class="branding">
-		<img alt="Phoenix Vanguard Emblem" src="https://github.com/crafting-tools/phoenix-vanguard-med-forms/blob/main/pdf-emblem-web.png?raw=true">
-		<div class="text">
-			<h1>Phoenix Vanguard</h1>
-			<p>Official Records</p>
-		</div>
-	</div>
-</header>
 <body>
-  <div class="container">
-    <div id="nav-placeholder"></div>
-    <div class="pv-app">
+  <div id="nav-placeholder"></div>
+  <div class="app pv-app">
 
       <aside class="sidebar">
         <h2>Patients</h2>
         <ul id="patientList"></ul>
       </aside>
 
-      <main class="content">
-        <div class="parchment">
-          <div id="patientContent">
-            <h1>View Phoenix Vanguard Medical Records</h1>
-            <p>Select a patient from the sidebar.</p>
-          </div>
+<main class="content">
+      <div class="parchment">
+        <div id="patientContent">
+		  <h1>View Phoenix Vanguard Medical Records</h1>
+          <p>Select a patient from the sidebar.</p>
+			<p><em>Disclaimer: These records are only available ICly to members of the Phoenix Vanguard Medical Team. All other personnel should consider these under lock and key, private information.</em></p>
         </div>
       </main>
 
@@ -47,7 +36,7 @@
   <!-- Marked -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <script src="js/content.js"></script>
+  <script src="/pv-project/vanguard-medical/med-database.js"></script>
   <script src="/pv-project/js/nav.js"></script>
 </body>
 </html>
