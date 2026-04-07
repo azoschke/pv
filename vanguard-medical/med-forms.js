@@ -109,8 +109,8 @@
             // Load images
             try {
                 [textureImage, emblemImage] = await Promise.all([
-                    loadTextureImage('pdf-texture-web.jpg'),
-                    loadPngImage('pdf-emblem-web.png')
+                    loadTextureImage('/pv-project/assets/pdf-texture-web.jpg'),
+                    loadPngImage('/pv-project/assets/pdf-emblem-web.png')
                 ]);
                 console.log('Images preloaded successfully');
             } catch (error) {
