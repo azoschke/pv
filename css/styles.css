@@ -2802,6 +2802,23 @@ body.pv-page {
 
 .value { flex: 1; white-space: pre-wrap; }
 
+.section .value h2 {
+    font-family: 'Stoke';
+    font-size: .85rem;
+    letter-spacing: .05rem;
+    margin-top: 1rem;
+    margin-bottom: .6rem;
+    padding-bottom: .2rem;
+    color: #5e5d59;
+}
+.field .value p:last-child, .field .value ul:last-child, .field .value ol:last-child {
+    margin-bottom: 0;
+}
+.value ul, .value ol { 
+	margin-left: 1.25rem; 
+	margin-bottom: 0.75rem; 
+}
+
 /* Visit tabs */
 .visits-section { display: flex; flex-direction: column; margin-bottom: 0; border-bottom: none; }
 
