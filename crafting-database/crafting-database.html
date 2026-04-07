@@ -5,26 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FFXIV Crafting Macro Database</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=Ledger&family=La+Belle+Aurore&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-  <!-- Custom Styles -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="/css/styles.css">
 
   <!-- React and ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 </head>
 <body>
+  <div id="nav-placeholder"></div>
   <div id="app"></div>
 
-  <!-- Main Application Script -->
   <script src="crafting-database.js"></script>
 
   <script>
@@ -33,9 +30,11 @@
       if (typeof CraftingDatabase !== 'undefined') {
         root.render(React.createElement(CraftingDatabase));
       } else {
-        root.render(React.createElement('div', { style: { color: 'cyan' } }, 'Error: CraftingDatabase component not found'));
+        root.render(React.createElement('div', { style: { color: 'red' } }, 'Error: CraftingDatabase component not found'));
       }
     });
   </script>
+
+  <script src="/js/nav.js"></script>
 </body>
 </html>
