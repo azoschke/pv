@@ -725,7 +725,7 @@ pre {
   font-family: 'Stoke', serif;
   font-size: 1.2rem;
   text-align: center;
-  color: var(--ink-color);
+  color: var(--text-secondary);
   margin: 30px 0 20px;
   padding-bottom: 8px;
   letter-spacing: 2px;
@@ -736,11 +736,11 @@ pre {
 .subsection-heading {
   font-family: 'Stoke', serif;
   font-size: 1.2rem;
-  color: var(--ink-color);
+  color: var(--text-secondary);
   margin: 25px 0 15px;
   letter-spacing: 1px;
   padding-bottom: 4px;
-  border-bottom: 2px dashed #d6d0c4;
+  border-bottom: 2px dashed var(--bg-darker);
 }
 
 /* Form toggle (intake/report) */
@@ -750,7 +750,7 @@ pre {
   gap: 10px;
   padding-bottom: 30px;
   margin-bottom: 40px;
-  border-bottom: 2px dashed #d6d0c4;
+  border-bottom: 2px dashed var(--bg-darker);
 }
 
 .toggle-btn {
@@ -792,7 +792,7 @@ pre {
   font-family: 'Stoke', serif;
   font-size: 1rem;
   margin-bottom: 8px;
-  color: var(--ink-color);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -807,8 +807,8 @@ pre {
   font-size: 1rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--ink-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
   transition: all 0.3s ease;
 }
 
@@ -818,7 +818,7 @@ pre {
   outline: none;
   border-color: var(--accent-gold);
   box-shadow: 0 0 10px rgba(107, 68, 35, 0.25);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-darker);
 }
 
 .form-group select {
@@ -845,7 +845,7 @@ pre {
   border: 1px solid var(--border-color);
   border-bottom: none;
   border-radius: 4px 4px 0 0;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--bg-darker);
   padding: 4px;
 }
 
@@ -863,7 +863,7 @@ pre {
   border: none;
   border-radius: 3px;
   background: transparent;
-  color: var(--ink-color);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -880,8 +880,8 @@ pre {
   line-height: 1.5;
   padding: 10px 15px;
   margin-top: -1px;
-  color: var(--ink-color);
-  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-secondary);
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-top: 1px dashed rgba(44, 24, 16, 0.3);
   border-radius: 0 0 4px 4px;
@@ -951,7 +951,7 @@ pre {
 .radio-label {
   cursor: pointer;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--bg-darker);
   border-radius: 4px;
   border: 1px solid var(--border-color);
   transition: all 0.2s ease;
