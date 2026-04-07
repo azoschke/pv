@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Intake Form</title>
+	
+	<link rel="stylesheet" href="/pv-project/css/styles.css">
+
+    <!-- Google Fonts -->
+	<link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- pdf.js for PDF-to-image rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <div id="nav-placeholder"></div>
+        <div class="parchment">
+
+   <!-- Treatment Report Form -->
+                 <div class="form-container" id="form-treatment">
+                <h2 class="form-title">
+                    Treatment Report Form
+                </h2>
+                <form id="treatmentForm" onsubmit="generateTreatmentPDF(event)">
+
+                    <!-- General Information -->
+                    <h3 class="section-heading">GENERAL INFORMATION</h3>
+
+                    <!-- Patient Information -->
+                    <h4 class="subsection-heading" style="font-size: 1rem; margin-top: 15px;">Patient Information</h4>
+
+                    <div class="form-group">
+                        <label for="treatment-name">
+                            <span class="material-icons">person</span>
+                            Patient Name
+                        </label>
+                        <input type="text" id="treatment-name" name="patientName" required placeholder="Enter patient's full name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="treatment-position">
+                                <span class="material-icons">badge</span>
+                                Position in the Vanguard
+                            </label>
+                            <input type="text" id="treatment-position" name="position" placeholder="e.g., Guard, Medic, Scholar...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="treatment-admission-date">
+                                <span class="material-icons">event</span>
+                                Date of Admission
+                            </label>
+                            <input type="date" id="treatment-admission-date" name="admissionDate">
+                            <div class="eorzean-date-display" id="treatment-eorzean-date"></div>
+                        </div>
+                    </div>
+
+                    <!-- Attending Medic Information -->
+                    <h4 class="subsection-heading" style="font-size: 1rem; margin-top: 15px;">Attending Medic Information</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="treatment-medic-name">
+                                <span class="material-icons">medical_services</span>
+                                Medic Name
+                            </label>
+                            <input type="text" id="treatment-medic-name" name="medicName" placeholder="Enter medic's name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="treatment-medic-specialty">
+                                <span class="material-icons">school</span>
+                                Medic Specialty
+                            </label>
+                            <input type="text" id="treatment-medic-specialty" name="medicSpecialty" placeholder="e.g., Conjury, Alchemy, Surgery...">
+                        </div>
+                    </div>
+
+                    <!-- Clinical Summary -->
+					<h4 class="subsection-heading" style="font-size: 1rem; margin-top: 15px;">Report</h4>
+					
+                    <div class="form-group">
+                        <label for="treatment-clinical-summary">
+                            <span class="material-icons">summarize</span>
+                            Clinical Summary
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="treatment-clinical-summary" name="clinicalSummary" placeholder="Provide a summary of the patient's condition and presentation..."></textarea>
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div class="form-group">
+                        <label for="treatment-diagnosis">
+                            <span class="material-icons">biotech</span>
+                            Diagnosis
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="treatment-diagnosis" name="diagnosis" placeholder="Enter the diagnosis..."></textarea>
+                    </div>
+
+                    <!-- Procedures Performed -->
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">healing</span>
+                            Procedures Performed (if any)
+                        </label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="procedures" value="Aetheric scan"> Aetheric scan
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="procedures" value="Skeletal imaging"> Skeletal imaging
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="procedures" value="Laboratory analysis"> Laboratory analysis
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Treatment Plan -->
+                    <div class="form-group">
+                        <label for="treatment-plan">
+                            <span class="material-icons">assignment</span>
+                            Treatment Plan
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="treatment-plan" name="treatmentPlan" placeholder="Describe the treatment plan..."></textarea>
+                    </div>
+
+                    <!-- Follow-up Requirements -->
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">event_repeat</span>
+                            Follow-up Requirements
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="followup" value="None" onchange="toggleFollowupFields()">
+                                No follow-up required - Patient cleared for discharge
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="followup" value="Follow-up" onchange="toggleFollowupFields()">
+                                Follow-up required
+                                <div class="conditional-field" id="followup-appointment-field">
+                                    <input type="text" id="treatment-followup-appointment" name="followupAppointment" placeholder="Next appointment date/time...">
+                                </div>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="followup" value="Ongoing" onchange="toggleFollowupFields()">
+                                Ongoing monitoring required
+                                <div class="conditional-field" id="followup-frequency-field">
+                                    <input type="text" id="treatment-followup-frequency" name="followupFrequency" placeholder="Frequency (e.g., weekly, bi-weekly)...">
+                                </div>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="followup" value="Referred" onchange="toggleFollowupFields()">
+                                Referred to specialist/external care
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Discharge Status -->
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">exit_to_app</span>
+                            Discharge Status
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="discharge" value="Full duty" onchange="toggleDischargeFields()">
+                                Discharged - Full duty cleared
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="discharge" value="Light duty" onchange="toggleDischargeFields()">
+                                Discharged - Light duty only
+                                <div class="conditional-field" id="discharge-restrictions-field">
+                                    <input type="text" id="treatment-restrictions" name="restrictions" placeholder="Restrictions...">
+                                </div>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="discharge" value="Medical leave" onchange="toggleDischargeFields()">
+                                Discharged - Medical leave recommended
+                                <div class="conditional-field" id="discharge-duration-field">
+                                    <input type="text" id="treatment-leave-duration" name="leaveDuration" placeholder="Duration...">
+                                </div>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="discharge" value="Admitted" onchange="toggleDischargeFields()">
+                                Admitted for continued observation/treatment
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="discharge" value="Transferred" onchange="toggleDischargeFields()">
+                                Transferred to external facility
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Additional Notes -->
+                    <div class="form-group">
+                        <label for="treatment-notes">
+                            <span class="material-icons">note_add</span>
+                            Additional Notes
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="treatment-notes" name="additionalNotes" placeholder="Any additional notes or observations..."></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="submit-btn">
+                            <span class="material-icons">picture_as_pdf</span>
+                            Generate PDF
+                        </button>
+                        <button type="button" class="submit-btn export-jpg-btn" onclick="exportTreatmentJPG(this)">
+                            <span class="material-icons">image</span>
+                            Export as JPG
+                        </button>
+                        <button type="button" class="submit-btn discord-btn" onclick="copyTreatmentDiscord(this)">
+                            <span class="material-icons">content_copy</span>
+                            Copy for Discord
+                        </button>
+                    </div>
+                </form>
+            </div>
+			<!-- END FORM -->
+			
+			
+        </div>
+    </div>
+	
+	<script src="/pv-project/vanguard-medical/med-forms.js"></script>
+	<script src="/pv-project/js/nav.js"></script>
+</body>
+</html>
