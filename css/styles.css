@@ -32,6 +32,10 @@
   box-sizing: border-box;
 }
 
+p {
+  margin: 0;
+}
+
 
 /* =============================================================================
    2. CSS VARIABLES
@@ -1074,15 +1078,15 @@ pre {
 .sidebar h2  { margin: 0; padding: 0 30px; text-align: center; text-transform: uppercase; font-size: 1.25rem; letter-spacing: 0.2rem; }
 
 .sidebar li {
-  border-bottom: 1px solid var(--shadow-color);
+  border-bottom: 1px solid var(--border-color);
   padding: 12px 30px;
 }
 
-.sidebar li:has(.patient-link.active) { background-color: rgba(255, 255, 255, 0.3); }
+.sidebar li:has(.patient-link.active) { background-color: var(--bg-darker); }
 
 .patient-link {
   cursor: pointer;
-  color: var(--ink-color);
+  color: var(--text-primary);
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   transition: color 0.2s;
@@ -1101,10 +1105,10 @@ pre {
   line-height: 2.4rem;
   font-weight: 500;
   margin: 0;
-  border-bottom: 2px dashed var(--parchment-dark);
+  border-bottom: 2px dashed var(--border-color);
 }
 
-.section { border-bottom: 2px dashed var(--parchment-dark); margin-bottom: 20px; }
+.section { border-bottom: 2px dashed var(--border-color); margin-bottom: 20px; }
 
 .section h2 {
   font-family: 'Stoke', serif;
@@ -1123,7 +1127,7 @@ pre {
   letter-spacing: 0.125rem;
   text-transform: uppercase;
   font-weight: bold;
-  color: #5e5d59;
+  color: var(--text-secondary);
 }
 
 /* Visit tabs */
@@ -1133,7 +1137,7 @@ pre {
 
 .visit-tab {
   padding: 6px 12px;
-  background: rgba(173, 165, 145, 0.58);
+  background: var(--bg-darker);
   border-radius: 6px 6px 0 0;
   cursor: pointer;
   font-family: 'Crimson Pro', serif;
@@ -1144,12 +1148,12 @@ pre {
   text-overflow: ellipsis;
 }
 
-.visit-tab.active { background: rgba(249, 245, 239, 0.64); color: var(--ink-color); font-weight: bold; }
+.visit-tab.active { background: var(--bg-card); color: var(--text-primary); font-weight: bold; }
 
 .visit-details-container {
   padding: 20px;
   border-radius: 0 6px 6px 6px;
-  background: rgba(249, 245, 239, 0.64);
+  background: var(--bg-card);
 }
 
 .visit-details .field { margin-bottom: 10px; }
