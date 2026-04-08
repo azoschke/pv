@@ -728,6 +728,208 @@
   };
 
   // ==========================================================================
+  // CosmicCard — one entry (collapsed header + expanded read body)
+  // ==========================================================================
+
+  const CosmicCard = ({
+    entry, isExpanded, onToggle, onDelete, onEdit,
+    highlightDifficulty, highlightQuality, highlightDurability
+  }) => {
+    const [copiedItemId, setCopiedItemId] = useState(null);
+    const [copiedChunkId, setCopiedChunkId] = useState(null);
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+    const copyText = (text, markerSetter, markerValue) => {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        markerSetter(markerValue);
+        setTimeout(() => markerSetter(null), 1500);
+      });
+    };
+
+    const header = h('div', {
+      className: `craft-card-header ${isExpanded ? 'expanded' : ''}`,
+      onClick: onToggle,
+      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent', paddingRight: '80px', position: 'relative' }
+    },
+      h('div', { className: 'craft-title-section' },
+        h('h3', { className: 'craft-name' }, entry.questName || '(unnamed)')
+      ),
+      h('div', { className: 'craft-meta-section' },
+        h('div', { className: 'cdb-badge-row' },
+          h('span', { className: 'cdb-badge cdb-badge--location' },
+            h('span', { className: 'material-icons cdb-icon-xs' }, 'public'),
+            entry.location || '—'
+          ),
+          h('span', { className: 'cdb-badge cdb-badge--job' },
+            h('span', { className: 'material-icons cdb-icon-xs' }, JOB_ICONS[entry.job] || 'build'),
+            entry.job || '—'
+          ),
+          h('span', { className: categoryBadgeClass(entry.category) }, entry.category || '—'),
+          entry.foodRequired && entry.foodType !== 'None' && h('span', {
+            className: 'cdb-badge cdb-badge--food'
+          },
+            h('span', { className: 'material-icons cdb-icon-xs' }, 'restaurant'),
+            entry.foodType
+          )
+        ),
+        h('span', {
+          onClick: (e) => { e.stopPropagation(); onEdit(); },
+          className: 'material-icons cdb-icon-btn',
+          title: 'Edit'
+        }, 'edit'),
+        h('span', {
+          onClick: (e) => { e.stopPropagation(); onToggle(); },
+          className: 'material-icons cdb-icon-btn',
+          title: isExpanded ? 'Collapse' : 'Expand'
+        }, isExpanded ? 'expand_less' : 'expand_more'),
+        deleteConfirm
+          ? h('div', { className: 'cdb-inline-row', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(50%)', zIndex: 10, gap: '0.25rem' } },
+              h('button', {
+                onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
+                className: 'cdb-btn cdb-btn-secondary',
+                style: { backgroundColor: 'var(--accent-red)', color: 'white' }
+              }, 'Confirm'),
+              h('button', {
+                onClick: (e) => { e.stopPropagation(); setDeleteConfirm(false); },
+                className: 'cdb-btn cdb-btn-secondary'
+              }, 'Cancel')
+            )
+          : h('button', {
+              onClick: (e) => { e.stopPropagation(); setDeleteConfirm(true); },
+              className: 'cdb-delete-btn',
+              title: 'Delete'
+            },
+              h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
+            )
+      )
+    );
+
+    // Collapsed view: header + per-item copy buttons row
+    const collapsedBody = !isExpanded && h('div', {
+      className: 'cdb-inline-row',
+      style: { padding: '0 1rem 0.75rem', flexWrap: 'wrap', gap: '0.4rem' }
+    },
+      h('span', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
+      ...(entry.items || []).map((item, idx) => {
+        const macroText = (entry.macros && entry.macros[idx]) ? entry.macros[idx].macro : '';
+        const markerValue = entry.id + '-' + idx;
+        return h('button', {
+          key: idx,
+          onClick: (e) => {
+            e.stopPropagation();
+            copyText(macroText, setCopiedItemId, markerValue);
+          },
+          className: 'cdb-copy-btn',
+          title: macroText ? 'Copy macro' : 'No macro for this item'
+        },
+          h('span', { className: 'material-icons cdb-icon-xs' },
+            copiedItemId === markerValue ? 'check' : 'content_copy'
+          ),
+          item.name || `Item ${idx + 1}`
+        );
+      })
+    );
+
+    if (!isExpanded) {
+      return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+        header,
+        collapsedBody
+      );
+    }
+
+    // Expanded view
+    const matchesDifficulty = (value) =>
+      highlightDifficulty && value && parseInt(highlightDifficulty) === value;
+    const matchesQuality = (value) =>
+      highlightQuality && value && parseInt(highlightQuality) === value;
+    const matchesDurability = (value) =>
+      highlightDurability && value && parseInt(highlightDurability) === value;
+
+    const statClass = (matches) =>
+      'cdb-cosmic-item-stat' + (matches ? ' cdb-cosmic-item-stat--match' : '');
+
+    return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+      header,
+      h('div', { className: 'cdb-card-body' },
+        // Items grid
+        entry.items && entry.items.length > 0 && h('div', null,
+          h('h4', { className: 'cdb-subheading' }, 'Items'),
+          h('div', { className: 'cdb-cosmic-item-grid' },
+            ...entry.items.map((item, idx) =>
+              h('div', { key: idx, className: 'cdb-cosmic-item-card' },
+                h('div', { className: 'cdb-cosmic-item-name' }, item.name || `Item ${idx + 1}`),
+                h('div', { className: statClass(matchesDifficulty(item.difficulty)) },
+                  'Difficulty: ',
+                  h('span', { className: 'cdb-stat-value' }, item.difficulty || 0)
+                ),
+                h('div', { className: statClass(matchesQuality(item.quality)) },
+                  'Quality: ',
+                  h('span', { className: 'cdb-stat-value' }, item.quality || 0)
+                ),
+                h('div', { className: statClass(matchesDurability(item.durability)) },
+                  'Durability: ',
+                  h('span', { className: 'cdb-stat-value' }, item.durability || 0)
+                )
+              )
+            )
+          )
+        ),
+        // Data reward
+        h('div', null,
+          h('h4', { className: 'cdb-subheading' }, `Data Reward (${entry.dataReward && entry.dataReward.job || entry.job})`),
+          h(DataRewardChips, {
+            dataReward: entry.dataReward || {},
+            mode: 'display'
+          }) || h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(none)')
+        ),
+        // Macros
+        entry.macros && entry.macros.length > 0 && h('div', null,
+          h('h4', { className: 'cdb-subheading' }, 'Macros'),
+          ...(entry.items || []).map((item, itemIdx) => {
+            const macroEntry = entry.macros[itemIdx];
+            const macroText = (macroEntry && macroEntry.macro) || '';
+            if (!macroText) return null;
+            const chunks = splitMacroIntoChunks(macroText);
+            return h('div', { key: itemIdx, style: { marginBottom: '0.75rem' } },
+              entry.items.length > 1 && h('div', {
+                style: { fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }
+              }, item.name || `Item ${itemIdx + 1}`),
+              h('div', { className: 'cdb-macro-grid' },
+                ...chunks.map((chunk, chunkIdx) => {
+                  const markerValue = entry.id + '-' + itemIdx + '-' + chunkIdx;
+                  return h('div', { key: chunkIdx, className: 'cdb-macro-chunk' },
+                    h('div', { className: 'cdb-macro-header' },
+                      h('span', { className: 'cdb-macro-label' },
+                        chunks.length > 1 ? `Macro ${chunkIdx + 1}` : 'Macro'
+                      ),
+                      h('button', {
+                        onClick: () => copyText(chunk, setCopiedChunkId, markerValue),
+                        className: 'cdb-copy-btn'
+                      },
+                        h('span', { className: 'material-icons cdb-icon-xs' },
+                          copiedChunkId === markerValue ? 'check' : 'content_copy'
+                        ),
+                        copiedChunkId === markerValue ? 'Copied' : 'Copy'
+                      )
+                    ),
+                    h('pre', { className: 'cdb-macro-pre' }, chunk)
+                  );
+                })
+              )
+            );
+          })
+        ),
+        // Notes
+        entry.notes && h('div', null,
+          h('h4', { className: 'cdb-subheading' }, 'Notes'),
+          h('p', { className: 'cdb-notes-text' }, entry.notes)
+        )
+      )
+    );
+  };
+
+  // ==========================================================================
   // SearchModeToggle — numeric vs text search inputs
   // ==========================================================================
 
@@ -824,6 +1026,18 @@
       setMacros(prev => [...prev, entry]);
       setIsAdding(false);
       setExpandedMacros(prev => ({ ...prev, [entry.id]: true }));
+    };
+
+    const deleteMacro = (id) => {
+      setMacros(prev => prev.filter(m => m.id !== id));
+      setExpandedMacros(prev => {
+        const { [id]: _removed, ...rest } = prev;
+        return rest;
+      });
+    };
+
+    const toggleExpanded = (id) => {
+      setExpandedMacros(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
     useEffect(() => {
@@ -1003,14 +1217,31 @@
         onCancel: () => setIsAdding(false)
       }),
       h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-        `Found ${filteredMacros.length} mission${filteredMacros.length !== 1 ? 's' : ''}`
+        `Found ${filteredMacros.length} mission${filteredMacros.length !== 1 ? 's' : ''}`,
+        searchMode === 'numeric' && (difficultySearch || qualitySearch || durabilitySearch) && h('span', { style: { marginLeft: '0.75rem' } },
+          difficultySearch && h('span', { style: { marginRight: '0.75rem' } }, `Difficulty = ${difficultySearch}`),
+          qualitySearch && h('span', { style: { marginRight: '0.75rem' } }, `Quality = ${qualitySearch}`),
+          durabilitySearch && h('span', { style: { marginRight: '0.75rem' } }, `Durability = ${durabilitySearch}`)
+        )
       ),
-      h('div', { className: 'cdb-empty-state' },
+      h('div', { className: 'cdb-craft-list' },
         filteredMacros.length === 0
-          ? (macros.length === 0
-              ? 'No missions yet. Add your first mission above!'
-              : 'No missions match your filters.')
-          : 'Card list arrives in the next commit.'
+          ? h('div', { className: 'cdb-empty-state' },
+              macros.length === 0
+                ? 'No missions yet. Add your first mission above!'
+                : 'No missions match your filters.'
+            )
+          : filteredMacros.map(entry => h(CosmicCard, {
+              key: entry.id,
+              entry: entry,
+              isExpanded: !!expandedMacros[entry.id],
+              onToggle: () => toggleExpanded(entry.id),
+              onDelete: () => deleteMacro(entry.id),
+              onEdit: () => alert('Inline edit arrives in the next commit'),
+              highlightDifficulty: searchMode === 'numeric' ? difficultySearch : '',
+              highlightQuality:    searchMode === 'numeric' ? qualitySearch : '',
+              highlightDurability: searchMode === 'numeric' ? durabilitySearch : ''
+            }))
       )
     );
   };
