@@ -732,12 +732,88 @@
   // ==========================================================================
 
   const CosmicCard = ({
-    entry, isExpanded, onToggle, onDelete, onEdit,
+    entry, isExpanded, onToggle, onDelete, onUpdate,
     highlightDifficulty, highlightQuality, highlightDurability
   }) => {
     const [copiedItemId, setCopiedItemId] = useState(null);
     const [copiedChunkId, setCopiedChunkId] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const [isEditingInline, setIsEditingInline] = useState(false);
+    const [editFormData, setEditFormData] = useState(() => JSON.parse(JSON.stringify(entry)));
+
+    const handleInlineEdit = () => {
+      if (!isExpanded) onToggle();
+      setEditFormData(JSON.parse(JSON.stringify(entry)));
+      setIsEditingInline(true);
+    };
+
+    const handleInlineSave = () => {
+      if (!editFormData.questName || !editFormData.questName.trim()) {
+        alert('Please enter a quest name');
+        return;
+      }
+      onUpdate(normalizeEntry(editFormData));
+      setIsEditingInline(false);
+    };
+
+    const handleInlineCancel = () => {
+      setIsEditingInline(false);
+      setEditFormData(JSON.parse(JSON.stringify(entry)));
+    };
+
+    const updateEditField = (field, value) => {
+      if (field === 'job') {
+        setEditFormData(prev => ({
+          ...prev,
+          job: value,
+          dataReward: { ...prev.dataReward, job: value }
+        }));
+      } else {
+        setEditFormData(prev => ({ ...prev, [field]: value }));
+      }
+    };
+
+    const updateEditItem = (index, field, value) => {
+      setEditFormData(prev => {
+        const items = prev.items.map((it, i) =>
+          i === index ? { ...it, [field]: field === 'name' ? value : (parseInt(value) || 0) } : it
+        );
+        const macros = prev.macros.map((m, i) =>
+          i === index && field === 'name' ? { ...m, itemName: value } : m
+        );
+        return { ...prev, items, macros };
+      });
+    };
+
+    const updateEditMacro = (index, value) => {
+      setEditFormData(prev => ({
+        ...prev,
+        macros: prev.macros.map((m, i) => i === index ? { ...m, macro: value } : m)
+      }));
+    };
+
+    const addEditItem = () => {
+      setEditFormData(prev => ({
+        ...prev,
+        items: [...prev.items, { name: '', difficulty: 0, quality: 0, durability: 0 }],
+        macros: [...prev.macros, { itemName: '', macro: '' }]
+      }));
+    };
+
+    const removeEditItem = (index) => {
+      setEditFormData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index),
+        macros: prev.macros.filter((_, i) => i !== index)
+      }));
+    };
+
+    const updateEditDataReward = (key, value) => {
+      setEditFormData(prev => ({
+        ...prev,
+        dataReward: { ...prev.dataReward, [key]: value }
+      }));
+    };
 
     const copyText = (text, markerSetter, markerValue) => {
       if (!text) return;
@@ -774,7 +850,7 @@
           )
         ),
         h('span', {
-          onClick: (e) => { e.stopPropagation(); onEdit(); },
+          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
           className: 'material-icons cdb-icon-btn',
           title: 'Edit'
         }, 'edit'),
@@ -849,11 +925,192 @@
     const statClass = (matches) =>
       'cdb-cosmic-item-stat' + (matches ? ' cdb-cosmic-item-stat--match' : '');
 
+    const multipleEditItems = isEditingInline && editFormData.items && editFormData.items.length > 1;
+
+    const editBody = isEditingInline && h('div', { className: 'cdb-form-fields' },
+      h('div', null,
+        h('label', { className: 'cdb-label' }, 'Quest Name *'),
+        h('input', {
+          type: 'text',
+          value: editFormData.questName || '',
+          onChange: (e) => updateEditField('questName', e.target.value),
+          className: 'cdb-input',
+          required: true
+        })
+      ),
+      h('div', { className: 'cdb-grid-3' },
+        h('div', null,
+          h('label', { className: 'cdb-label' }, 'Location'),
+          h('select', {
+            value: editFormData.location || LOCATIONS[0],
+            onChange: (e) => updateEditField('location', e.target.value),
+            className: 'cdb-input'
+          },
+            // Preserve legacy slash-separated value if present
+            editFormData.location && !LOCATIONS.includes(editFormData.location) &&
+              h('option', { value: editFormData.location }, editFormData.location),
+            ...LOCATIONS.map(loc => h('option', { key: loc, value: loc }, loc))
+          )
+        ),
+        h('div', null,
+          h('label', { className: 'cdb-label' }, 'Job'),
+          h('select', {
+            value: editFormData.job || JOBS[0],
+            onChange: (e) => updateEditField('job', e.target.value),
+            className: 'cdb-input'
+          },
+            ...JOBS.map(job => h('option', { key: job, value: job }, job))
+          )
+        ),
+        h('div', null,
+          h('label', { className: 'cdb-label' }, 'Category'),
+          h('select', {
+            value: editFormData.category || 'Class D',
+            onChange: (e) => updateEditField('category', e.target.value),
+            className: 'cdb-input'
+          },
+            ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
+          )
+        )
+      ),
+      h('div', { className: 'cdb-field-group' },
+        h('div', { className: 'cdb-inline-row' },
+          h('input', {
+            type: 'checkbox',
+            id: `editFoodRequired-${entry.id}`,
+            checked: !!editFormData.foodRequired,
+            onChange: (e) => updateEditField('foodRequired', e.target.checked),
+            className: 'cdb-checkbox'
+          }),
+          h('label', { htmlFor: `editFoodRequired-${entry.id}`, className: 'cdb-label' }, 'Food Required')
+        ),
+        editFormData.foodRequired && h('select', {
+          value: editFormData.foodType || 'None',
+          onChange: (e) => updateEditField('foodType', e.target.value),
+          className: 'cdb-input'
+        },
+          ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
+        )
+      ),
+      h('div', null,
+        h('div', { className: 'cdb-searchmode-bar' },
+          h('label', { className: 'cdb-label', style: { marginBottom: 0 } }, 'Items'),
+          h('button', {
+            type: 'button',
+            onClick: addEditItem,
+            className: 'cdb-btn cdb-btn-secondary'
+          }, 'Add Item')
+        ),
+        ...editFormData.items.map((item, idx) =>
+          h('div', { key: idx, className: 'cdb-form-fields', style: { marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--bg-darker)', borderRadius: '0.375rem' } },
+            h('div', { className: 'cdb-grid-3' },
+              h('div', null,
+                h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                h('input', {
+                  type: 'text',
+                  className: 'cdb-input cdb-input-sm',
+                  value: item.name || '',
+                  onChange: (e) => updateEditItem(idx, 'name', e.target.value)
+                })
+              ),
+              h('div', null,
+                h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                h('input', {
+                  type: 'number',
+                  className: 'cdb-input cdb-input-sm',
+                  value: item.difficulty || 0,
+                  onChange: (e) => updateEditItem(idx, 'difficulty', e.target.value)
+                })
+              ),
+              h('div', null,
+                h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                h('input', {
+                  type: 'number',
+                  className: 'cdb-input cdb-input-sm',
+                  value: item.quality || 0,
+                  onChange: (e) => updateEditItem(idx, 'quality', e.target.value)
+                })
+              )
+            ),
+            h('div', { className: 'cdb-grid-3' },
+              h('div', null,
+                h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                h('input', {
+                  type: 'number',
+                  className: 'cdb-input cdb-input-sm',
+                  value: item.durability || 0,
+                  onChange: (e) => updateEditItem(idx, 'durability', e.target.value)
+                })
+              ),
+              editFormData.items.length > 1 && h('div', { style: { alignSelf: 'end' } },
+                h('button', {
+                  type: 'button',
+                  onClick: () => removeEditItem(idx),
+                  className: 'cdb-btn cdb-btn-secondary',
+                  style: { backgroundColor: 'var(--accent-red)', color: 'white' }
+                }, 'Remove Item')
+              )
+            ),
+            multipleEditItems && h('div', null,
+              h('label', { className: 'cdb-label-xs' },
+                'Macro for ' + (item.name || `Item ${idx + 1}`)
+              ),
+              h('textarea', {
+                className: 'cdb-input cdb-input-mono',
+                rows: 6,
+                value: (editFormData.macros[idx] && editFormData.macros[idx].macro) || '',
+                onChange: (e) => updateEditMacro(idx, e.target.value)
+              })
+            )
+          )
+        ),
+        !multipleEditItems && h('div', null,
+          h('label', { className: 'cdb-label' }, 'Macro'),
+          h('textarea', {
+            className: 'cdb-input cdb-input-mono',
+            rows: 8,
+            value: (editFormData.macros[0] && editFormData.macros[0].macro) || '',
+            onChange: (e) => updateEditMacro(0, e.target.value)
+          })
+        )
+      ),
+      h('div', null,
+        h('label', { className: 'cdb-label' }, `Data Reward (${editFormData.dataReward && editFormData.dataReward.job || editFormData.job})`),
+        h(DataRewardChips, {
+          dataReward: editFormData.dataReward || {},
+          mode: 'edit',
+          onChange: updateEditDataReward
+        })
+      ),
+      h('div', null,
+        h('label', { className: 'cdb-label' }, 'Notes'),
+        h('textarea', {
+          className: 'cdb-input',
+          rows: 3,
+          value: editFormData.notes || '',
+          onChange: (e) => updateEditField('notes', e.target.value)
+        })
+      ),
+      h('div', { className: 'cdb-form-actions' },
+        h('button', {
+          type: 'button',
+          onClick: handleInlineCancel,
+          className: 'cdb-btn cdb-btn-secondary'
+        }, 'Cancel'),
+        h('button', {
+          type: 'button',
+          onClick: handleInlineSave,
+          className: 'cdb-btn cdb-btn-primary'
+        }, 'Save')
+      )
+    );
+
     return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
       header,
       h('div', { className: 'cdb-card-body' },
+        isEditingInline && editBody,
         // Items grid
-        entry.items && entry.items.length > 0 && h('div', null,
+        !isEditingInline && entry.items && entry.items.length > 0 && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Items'),
           h('div', { className: 'cdb-cosmic-item-grid' },
             ...entry.items.map((item, idx) =>
@@ -876,7 +1133,7 @@
           )
         ),
         // Data reward
-        h('div', null,
+        !isEditingInline && h('div', null,
           h('h4', { className: 'cdb-subheading' }, `Data Reward (${entry.dataReward && entry.dataReward.job || entry.job})`),
           h(DataRewardChips, {
             dataReward: entry.dataReward || {},
@@ -884,7 +1141,7 @@
           }) || h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(none)')
         ),
         // Macros
-        entry.macros && entry.macros.length > 0 && h('div', null,
+        !isEditingInline && entry.macros && entry.macros.length > 0 && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Macros'),
           ...(entry.items || []).map((item, itemIdx) => {
             const macroEntry = entry.macros[itemIdx];
@@ -921,7 +1178,7 @@
           })
         ),
         // Notes
-        entry.notes && h('div', null,
+        !isEditingInline && entry.notes && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Notes'),
           h('p', { className: 'cdb-notes-text' }, entry.notes)
         )
@@ -1034,6 +1291,10 @@
         const { [id]: _removed, ...rest } = prev;
         return rest;
       });
+    };
+
+    const updateMacro = (updated) => {
+      setMacros(prev => prev.map(m => m.id === updated.id ? updated : m));
     };
 
     const toggleExpanded = (id) => {
@@ -1237,7 +1498,7 @@
               isExpanded: !!expandedMacros[entry.id],
               onToggle: () => toggleExpanded(entry.id),
               onDelete: () => deleteMacro(entry.id),
-              onEdit: () => alert('Inline edit arrives in the next commit'),
+              onUpdate: updateMacro,
               highlightDifficulty: searchMode === 'numeric' ? difficultySearch : '',
               highlightQuality:    searchMode === 'numeric' ? qualitySearch : '',
               highlightDurability: searchMode === 'numeric' ? durabilitySearch : ''
