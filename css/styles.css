@@ -1244,11 +1244,13 @@ pre {
   font-size: 1.25rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
+   margin: unset;
+   margin-bottom:1rem;
 }
 
 .landing-card-subtitle {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 1rem;
+  font-size: 1.25rem;
   color: var(--accent-brown);
   margin-bottom: 0.5rem;
 }
@@ -1256,9 +1258,14 @@ pre {
 .landing-card-desc {
   font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.4;
   flex: 1;
+   margin: unset;
+   margin-bottom:1rem;
 }
+.landing-card-desc:last-child {
+   margin-bottom: 0;
+{
 
 .landing-card-cta {
   display: inline-block;
