@@ -28,11 +28,11 @@
       		<h1 class="app-title">Patient Intake Form</h1>
     	</header>
 		
-        <div class="parchment">
             <!-- Patient Intake Form -->
             <div class="form-container active" id="form-intake">
                 <form id="intakeForm" onsubmit="generateIntakePDF(event)">
 
+					<div class="parchment">
                     <!-- In Character Information -->
                     <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
 
@@ -269,7 +269,8 @@
                             <div class="eorzean-date-display" id="intake-eorzean-date"></div>
                         </div>
                     </div>
-
+					</div>
+					<div class="parchment">
                     <!-- Out of Character Information -->
                     <h3 class="section-heading">OUT OF CHARACTER INFORMATION</h3>
 
@@ -394,9 +395,9 @@
                             Copy for Discord
                         </button>
                     </div>
+					</div>
                 </form>
             </div>			
-        </div>
     </div>
 	
 	<script src="/pv-project/vanguard-medical/med-forms.js"></script>
