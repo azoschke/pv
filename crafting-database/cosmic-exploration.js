@@ -393,6 +393,341 @@
   };
 
   // ==========================================================================
+  // DataRewardChips — shared display/edit widget for data-reward level chips
+  // ==========================================================================
+
+  const DataRewardChips = ({ dataReward, mode, onChange }) => {
+    if (mode === 'edit') {
+      return h('div', { className: 'cdb-data-chip-row' },
+        ...DATA_REWARD_LEVELS.map(level =>
+          h('div', { key: level.key, className: 'cdb-field-group', style: { minWidth: '70px' } },
+            h('label', { className: 'cdb-label-xs' }, level.label),
+            h('input', {
+              type: 'number',
+              placeholder: '0',
+              className: 'cdb-input cdb-input-sm',
+              value: dataReward[level.key] || 0,
+              onChange: (e) => onChange(level.key, parseInt(e.target.value) || 0)
+            })
+          )
+        ),
+        h('div', { className: 'cdb-field-group', style: { minWidth: '90px' } },
+          h('label', { className: 'cdb-label-xs' }, COSMIC_POINTS_META.label),
+          h('input', {
+            type: 'number',
+            placeholder: '0',
+            className: 'cdb-input cdb-input-sm',
+            value: dataReward.cosmicPoints || 0,
+            onChange: (e) => onChange('cosmicPoints', parseInt(e.target.value) || 0)
+          })
+        )
+      );
+    }
+
+    // Display mode: render non-zero levels as chips
+    const nonZero = DATA_REWARD_LEVELS.filter(level => (dataReward[level.key] || 0) > 0);
+    const hasPoints = (dataReward.cosmicPoints || 0) > 0;
+    if (nonZero.length === 0 && !hasPoints) return null;
+
+    return h('div', { className: 'cdb-data-chip-row' },
+      ...nonZero.map(level =>
+        h('span', {
+          key: level.key,
+          className: 'cdb-data-chip cdb-data-chip--' + level.accent
+        },
+          h('span', { className: 'cdb-data-chip-label' }, level.label),
+          h('span', { className: 'cdb-data-chip-count' }, '\u00D7 ' + dataReward[level.key])
+        )
+      ),
+      hasPoints && h('span', {
+        className: 'cdb-data-chip cdb-data-chip--' + COSMIC_POINTS_META.accent
+      },
+        h('span', { className: 'material-icons cdb-icon-xs' }, COSMIC_POINTS_META.icon),
+        h('span', { className: 'cdb-data-chip-label' }, COSMIC_POINTS_META.label),
+        h('span', { className: 'cdb-data-chip-count' }, '\u00D7 ' + dataReward.cosmicPoints)
+      )
+    );
+  };
+
+  // ==========================================================================
+  // CosmicForm — Add New (shared shape used by inline edit in a later commit)
+  // ==========================================================================
+
+  const blankFormData = () => ({
+    questName: '',
+    location: LOCATIONS[0],
+    job: JOBS[0],
+    category: 'Class D',
+    foodRequired: false,
+    foodType: 'None',
+    items: [{ name: '', difficulty: '', quality: '', durability: '' }],
+    macros: [{ itemName: '', macro: '' }],
+    dataReward: (() => {
+      const dr = { job: JOBS[0], cosmicPoints: 0 };
+      DATA_REWARD_LEVELS.forEach(l => { dr[l.key] = 0; });
+      return dr;
+    })(),
+    notes: ''
+  });
+
+  const CosmicForm = ({ onSave, onCancel }) => {
+    const [formData, setFormData] = useState(blankFormData);
+
+    const updateField = (field, value) => {
+      if (field === 'job') {
+        setFormData(prev => ({
+          ...prev,
+          job: value,
+          dataReward: { ...prev.dataReward, job: value }
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [field]: value }));
+      }
+    };
+
+    const updateItem = (index, field, value) => {
+      setFormData(prev => {
+        const items = prev.items.map((it, i) =>
+          i === index ? { ...it, [field]: value } : it
+        );
+        // Keep macros array in sync with item names for display
+        const macros = prev.macros.map((m, i) =>
+          i === index && field === 'name' ? { ...m, itemName: value } : m
+        );
+        return { ...prev, items, macros };
+      });
+    };
+
+    const updateMacro = (index, value) => {
+      setFormData(prev => {
+        const macros = prev.macros.map((m, i) =>
+          i === index ? { ...m, macro: value } : m
+        );
+        return { ...prev, macros };
+      });
+    };
+
+    const addItem = () => {
+      setFormData(prev => ({
+        ...prev,
+        items: [...prev.items, { name: '', difficulty: '', quality: '', durability: '' }],
+        macros: [...prev.macros, { itemName: '', macro: '' }]
+      }));
+    };
+
+    const removeItem = (index) => {
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index),
+        macros: prev.macros.filter((_, i) => i !== index)
+      }));
+    };
+
+    const updateDataReward = (key, value) => {
+      setFormData(prev => ({
+        ...prev,
+        dataReward: { ...prev.dataReward, [key]: value }
+      }));
+    };
+
+    const handleSubmit = (e) => {
+      if (e) e.preventDefault();
+      if (!formData.questName.trim()) {
+        alert('Please enter a quest name');
+        return;
+      }
+      if (!formData.items[0].name.trim()) {
+        alert('Please enter at least one item name');
+        return;
+      }
+      onSave(formData);
+    };
+
+    const multipleItems = formData.items.length > 1;
+
+    return h('div', { className: 'cdb-form-panel' },
+      h('h2', { className: 'cdb-form-title craft-name' }, 'Add New Mission'),
+      h('form', { onSubmit: handleSubmit, className: 'cdb-form-fields' },
+        h('div', null,
+          h('label', { className: 'cdb-label' }, 'Quest Name *'),
+          h('input', {
+            type: 'text',
+            value: formData.questName,
+            onChange: (e) => updateField('questName', e.target.value),
+            className: 'cdb-input',
+            required: true
+          })
+        ),
+        h('div', { className: 'cdb-grid-3' },
+          h('div', null,
+            h('label', { className: 'cdb-label' }, 'Location'),
+            h('select', {
+              value: formData.location,
+              onChange: (e) => updateField('location', e.target.value),
+              className: 'cdb-input'
+            },
+              ...LOCATIONS.map(loc => h('option', { key: loc, value: loc }, loc))
+            )
+          ),
+          h('div', null,
+            h('label', { className: 'cdb-label' }, 'Job'),
+            h('select', {
+              value: formData.job,
+              onChange: (e) => updateField('job', e.target.value),
+              className: 'cdb-input'
+            },
+              ...JOBS.map(job => h('option', { key: job, value: job }, job))
+            )
+          ),
+          h('div', null,
+            h('label', { className: 'cdb-label' }, 'Category'),
+            h('select', {
+              value: formData.category,
+              onChange: (e) => updateField('category', e.target.value),
+              className: 'cdb-input'
+            },
+              ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
+            )
+          )
+        ),
+        h('div', { className: 'cdb-field-group' },
+          h('div', { className: 'cdb-inline-row' },
+            h('input', {
+              type: 'checkbox',
+              id: 'newFoodRequired',
+              checked: formData.foodRequired,
+              onChange: (e) => updateField('foodRequired', e.target.checked),
+              className: 'cdb-checkbox'
+            }),
+            h('label', { htmlFor: 'newFoodRequired', className: 'cdb-label' }, 'Food Required')
+          ),
+          formData.foodRequired && h('select', {
+            value: formData.foodType,
+            onChange: (e) => updateField('foodType', e.target.value),
+            className: 'cdb-input'
+          },
+            ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
+          )
+        ),
+        h('div', null,
+          h('div', { className: 'cdb-searchmode-bar' },
+            h('label', { className: 'cdb-label', style: { marginBottom: 0 } }, 'Items'),
+            h('button', {
+              type: 'button',
+              onClick: addItem,
+              className: 'cdb-btn cdb-btn-secondary'
+            }, 'Add Item')
+          ),
+          ...formData.items.map((item, index) =>
+            h('div', { key: index, className: 'cdb-form-fields', style: { marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--bg-darker)', borderRadius: '0.375rem' } },
+              h('div', { className: 'cdb-grid-3' },
+                h('div', null,
+                  h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                  h('input', {
+                    type: 'text',
+                    className: 'cdb-input cdb-input-sm',
+                    placeholder: 'Item Name',
+                    value: item.name,
+                    onChange: (e) => updateItem(index, 'name', e.target.value)
+                  })
+                ),
+                h('div', null,
+                  h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                  h('input', {
+                    type: 'number',
+                    className: 'cdb-input cdb-input-sm',
+                    value: item.difficulty,
+                    onChange: (e) => updateItem(index, 'difficulty', e.target.value)
+                  })
+                ),
+                h('div', null,
+                  h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                  h('input', {
+                    type: 'number',
+                    className: 'cdb-input cdb-input-sm',
+                    value: item.quality,
+                    onChange: (e) => updateItem(index, 'quality', e.target.value)
+                  })
+                )
+              ),
+              h('div', { className: 'cdb-grid-3' },
+                h('div', null,
+                  h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                  h('input', {
+                    type: 'number',
+                    className: 'cdb-input cdb-input-sm',
+                    value: item.durability,
+                    onChange: (e) => updateItem(index, 'durability', e.target.value)
+                  })
+                ),
+                formData.items.length > 1 && h('div', { style: { alignSelf: 'end' } },
+                  h('button', {
+                    type: 'button',
+                    onClick: () => removeItem(index),
+                    className: 'cdb-btn cdb-btn-secondary',
+                    style: { backgroundColor: 'var(--accent-red)', color: 'white' }
+                  }, 'Remove Item')
+                )
+              ),
+              multipleItems && h('div', null,
+                h('label', { className: 'cdb-label-xs' },
+                  'Macro for ' + (item.name || `Item ${index + 1}`)
+                ),
+                h('textarea', {
+                  className: 'cdb-input cdb-input-mono',
+                  rows: 6,
+                  value: formData.macros[index] ? formData.macros[index].macro : '',
+                  onChange: (e) => updateMacro(index, e.target.value),
+                  placeholder: '/ac "Muscle Memory" <wait.3>'
+                })
+              )
+            )
+          ),
+          !multipleItems && h('div', null,
+            h('label', { className: 'cdb-label' }, 'Macro'),
+            h('textarea', {
+              className: 'cdb-input cdb-input-mono',
+              rows: 6,
+              value: formData.macros[0] ? formData.macros[0].macro : '',
+              onChange: (e) => updateMacro(0, e.target.value),
+              placeholder: '/ac "Muscle Memory" <wait.3>'
+            })
+          )
+        ),
+        h('div', null,
+          h('label', { className: 'cdb-label' }, `Data Reward (${formData.dataReward.job})`),
+          h(DataRewardChips, {
+            dataReward: formData.dataReward,
+            mode: 'edit',
+            onChange: updateDataReward
+          })
+        ),
+        h('div', null,
+          h('label', { className: 'cdb-label' }, 'Notes'),
+          h('textarea', {
+            className: 'cdb-input',
+            rows: 3,
+            value: formData.notes,
+            onChange: (e) => updateField('notes', e.target.value),
+            placeholder: 'Additional notes...'
+          })
+        ),
+        h('div', { className: 'cdb-form-actions' },
+          h('button', {
+            type: 'button',
+            onClick: onCancel,
+            className: 'cdb-btn cdb-btn-secondary'
+          }, 'Cancel'),
+          h('button', {
+            type: 'submit',
+            className: 'cdb-btn cdb-btn-primary'
+          }, 'Add Mission')
+        )
+      )
+    );
+  };
+
+  // ==========================================================================
   // SearchModeToggle — numeric vs text search inputs
   // ==========================================================================
 
@@ -473,6 +808,23 @@
     const [filterCategory, setFilterCategory]     = useState('all');
     const [filterLocation, setFilterLocation]     = useState('all');
     const [filterJob, setFilterJob]               = useState('all');
+    const [isAdding, setIsAdding]                 = useState(false);
+    const [expandedMacros, setExpandedMacros]     = useState({});
+
+    const addMacro = (formData) => {
+      const entry = normalizeEntry({
+        ...formData,
+        id: makeId(),
+        items: formData.items.map(normalizeItem),
+        macros: formData.items.map((it, i) => ({
+          itemName: it.name,
+          macro: formData.macros[i] ? formData.macros[i].macro : ''
+        }))
+      });
+      setMacros(prev => [...prev, entry]);
+      setIsAdding(false);
+      setExpandedMacros(prev => ({ ...prev, [entry.id]: true }));
+    };
 
     useEffect(() => {
       setMacros(loadCosmicData());
@@ -635,13 +987,30 @@
             h('option', { value: 'all' }, 'All Jobs'),
             ...JOBS.map(job => h('option', { key: job, value: job }, job))
           )
+        ),
+        h('div', { className: 'add-new-row' },
+          h('button', {
+            onClick: () => setIsAdding(true),
+            className: 'add-new-btn cdb-btn cdb-btn-primary'
+          },
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
+            'Add New Mission'
+          )
         )
       ),
+      isAdding && h(CosmicForm, {
+        onSave: addMacro,
+        onCancel: () => setIsAdding(false)
+      }),
       h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
         `Found ${filteredMacros.length} mission${filteredMacros.length !== 1 ? 's' : ''}`
       ),
       h('div', { className: 'cdb-empty-state' },
-        'Cards arrive in the next commit.'
+        filteredMacros.length === 0
+          ? (macros.length === 0
+              ? 'No missions yet. Add your first mission above!'
+              : 'No missions match your filters.')
+          : 'Card list arrives in the next commit.'
       )
     );
   };

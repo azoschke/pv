@@ -1805,6 +1805,37 @@ pre {
 
 .cdb-numeric-row .cdb-input { flex: 1; min-width: 120px; }
 
+/* Data reward chips (used both in display and edit modes) */
+.cdb-data-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cdb-data-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-darker);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+}
+
+.cdb-data-chip-label { font-weight: 700; }
+.cdb-data-chip-count { color: var(--text-secondary); font-size: 0.8rem; }
+
+.cdb-data-chip--gray  { background: rgba(163, 155, 142, 0.18); border-color: rgba(163, 155, 142, 0.5); }
+.cdb-data-chip--tan   { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
+.cdb-data-chip--olive { background: rgba(142, 139,  92, 0.18); border-color: rgba(142, 139,  92, 0.5); }
+.cdb-data-chip--plum  { background: rgba(140,  94, 120, 0.18); border-color: rgba(140,  94, 120, 0.5); }
+.cdb-data-chip--rust  { background: rgba(158,  92,  58, 0.18); border-color: rgba(158,  92,  58, 0.5); }
+.cdb-data-chip--wine  { background: rgba(122,  46,  46, 0.18); border-color: rgba(122,  46,  46, 0.5); }
+.cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
+
 @media (max-width: 768px) {
   .cdb-numeric-row .cdb-input { flex: 1 1 100%; }
 }
