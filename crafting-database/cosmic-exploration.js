@@ -393,12 +393,86 @@
   };
 
   // ==========================================================================
-  // Root component (scaffold — expanded in later commits)
+  // SearchModeToggle — numeric vs text search inputs
+  // ==========================================================================
+
+  const SearchModeToggle = ({
+    searchMode, setSearchMode,
+    searchTerm, setSearchTerm,
+    difficultySearch, setDifficultySearch,
+    qualitySearch, setQualitySearch,
+    durabilitySearch, setDurabilitySearch
+  }) => {
+    return h('div', { className: 'cdb-search-bar' },
+      h('div', { className: 'cdb-searchmode-bar' },
+        h('span', { className: 'cdb-subheading' }, 'Search Mode'),
+        h('button', {
+          type: 'button',
+          onClick: () => setSearchMode(searchMode === 'numeric' ? 'text' : 'numeric'),
+          className: 'cdb-btn cdb-btn-secondary'
+        }, `Switch to ${searchMode === 'numeric' ? 'Text' : 'Numeric'} Search`)
+      ),
+      searchMode === 'numeric'
+        ? h('div', { className: 'cdb-numeric-row' },
+            h('input', {
+              type: 'number',
+              placeholder: 'Difficulty (exact)',
+              className: 'cdb-input',
+              value: difficultySearch,
+              onChange: (e) => setDifficultySearch(e.target.value)
+            }),
+            h('input', {
+              type: 'number',
+              placeholder: 'Quality (exact)',
+              className: 'cdb-input',
+              value: qualitySearch,
+              onChange: (e) => setQualitySearch(e.target.value)
+            }),
+            h('input', {
+              type: 'number',
+              placeholder: 'Durability (exact)',
+              className: 'cdb-input',
+              value: durabilitySearch,
+              onChange: (e) => setDurabilitySearch(e.target.value)
+            }),
+            h('button', {
+              type: 'button',
+              onClick: () => {
+                setDifficultySearch('');
+                setQualitySearch('');
+                setDurabilitySearch('');
+              },
+              className: 'cdb-btn cdb-btn-secondary'
+            }, 'Clear')
+          )
+        : h('input', {
+            type: 'text',
+            placeholder: 'Search quests, items, or data rewards...',
+            className: 'cdb-input',
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value)
+          })
+    );
+  };
+
+  // ==========================================================================
+  // Root component
   // ==========================================================================
 
   const CosmicExplorationDatabase = () => {
     const [macros, setMacros] = useState([]);
     const [hasLoaded, setHasLoaded] = useState(false);
+
+    // Search / filter / sort state
+    const [searchMode, setSearchMode]             = useState('numeric');
+    const [searchTerm, setSearchTerm]             = useState('');
+    const [difficultySearch, setDifficultySearch] = useState('');
+    const [qualitySearch, setQualitySearch]       = useState('');
+    const [durabilitySearch, setDurabilitySearch] = useState('');
+    const [sortBy, setSortBy]                     = useState('questName');
+    const [filterCategory, setFilterCategory]     = useState('all');
+    const [filterLocation, setFilterLocation]     = useState('all');
+    const [filterJob, setFilterJob]               = useState('all');
 
     useEffect(() => {
       setMacros(loadCosmicData());
@@ -409,6 +483,81 @@
       if (!hasLoaded) return;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(macros));
     }, [macros, hasLoaded]);
+
+    // Build location dropdown options from data (split slash-separated values)
+    // plus any canonical locations that aren't in the data yet.
+    const locationOptions = useMemo(() => {
+      const locs = new Set();
+      macros.forEach(m => {
+        if (m.location && m.location.includes('/')) {
+          m.location.split('/').forEach(l => locs.add(l.trim()));
+        } else if (m.location) {
+          locs.add(m.location);
+        }
+      });
+      LOCATIONS.forEach(l => locs.add(l));
+      return ['all', ...Array.from(locs).sort()];
+    }, [macros]);
+
+    const filteredMacros = useMemo(() => {
+      let filtered = macros;
+
+      if (searchMode === 'text' && searchTerm) {
+        const needle = searchTerm.toLowerCase();
+        filtered = filtered.filter(macro =>
+          (macro.questName || '').toLowerCase().includes(needle) ||
+          (macro.items || []).some(item => (item.name || '').toLowerCase().includes(needle)) ||
+          (macro.notes || '').toLowerCase().includes(needle) ||
+          (macro.dataReward && macro.dataReward.job && macro.dataReward.job.toLowerCase().includes(needle))
+        );
+      } else if (searchMode === 'numeric') {
+        if (difficultySearch) {
+          const d = parseInt(difficultySearch);
+          filtered = filtered.filter(m => m.items.some(it => it.difficulty === d));
+        }
+        if (qualitySearch) {
+          const q = parseInt(qualitySearch);
+          filtered = filtered.filter(m => m.items.some(it => it.quality === q));
+        }
+        if (durabilitySearch) {
+          const du = parseInt(durabilitySearch);
+          filtered = filtered.filter(m => m.items.some(it => it.durability === du));
+        }
+      }
+
+      if (filterCategory !== 'all') {
+        filtered = filtered.filter(m => m.category === filterCategory);
+      }
+      if (filterLocation !== 'all') {
+        filtered = filtered.filter(m => (m.location || '').includes(filterLocation));
+      }
+      if (filterJob !== 'all') {
+        filtered = filtered.filter(m => m.job === filterJob);
+      }
+
+      const sorted = [...filtered];
+      sorted.sort((a, b) => {
+        switch (sortBy) {
+          case 'questName':
+            return (a.questName || '').localeCompare(b.questName || '');
+          case 'difficulty': {
+            const ma = Math.max(0, ...a.items.map(i => i.difficulty || 0));
+            const mb = Math.max(0, ...b.items.map(i => i.difficulty || 0));
+            return mb - ma;
+          }
+          case 'quality': {
+            const ma = Math.max(0, ...a.items.map(i => i.quality || 0));
+            const mb = Math.max(0, ...b.items.map(i => i.quality || 0));
+            return mb - ma;
+          }
+          case 'category':
+            return CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category);
+          default:
+            return 0;
+        }
+      });
+      return sorted;
+    }, [macros, searchTerm, searchMode, sortBy, filterCategory, filterLocation, filterJob, difficultySearch, qualitySearch, durabilitySearch]);
 
     return h('div', { className: 'cdb-root container' },
       h('div', { className: 'top-controls' },
@@ -442,8 +591,57 @@
         h('h1', { className: 'app-title craft-name' }, 'FFXIV Cosmic Exploration Macro Database'),
         h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
       ),
+      h('div', { className: 'cdb-search-section' },
+        h(SearchModeToggle, {
+          searchMode, setSearchMode,
+          searchTerm, setSearchTerm,
+          difficultySearch, setDifficultySearch,
+          qualitySearch, setQualitySearch,
+          durabilitySearch, setDurabilitySearch
+        }),
+        h('div', { className: 'filters-row' },
+          h('select', {
+            value: sortBy,
+            onChange: (e) => setSortBy(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'questName' }, 'Sort by Quest Name'),
+            h('option', { value: 'category' }, 'Sort by Class (A\u2192D)'),
+            h('option', { value: 'difficulty' }, 'Sort by Difficulty'),
+            h('option', { value: 'quality' }, 'Sort by Quality')
+          ),
+          h('select', {
+            value: filterCategory,
+            onChange: (e) => setFilterCategory(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'all' }, 'All Classes'),
+            ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
+          ),
+          h('select', {
+            value: filterLocation,
+            onChange: (e) => setFilterLocation(e.target.value),
+            className: 'cdb-select'
+          },
+            ...locationOptions.map(loc =>
+              h('option', { key: loc, value: loc }, loc === 'all' ? 'All Locations' : loc)
+            )
+          ),
+          h('select', {
+            value: filterJob,
+            onChange: (e) => setFilterJob(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'all' }, 'All Jobs'),
+            ...JOBS.map(job => h('option', { key: job, value: job }, job))
+          )
+        )
+      ),
+      h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+        `Found ${filteredMacros.length} mission${filteredMacros.length !== 1 ? 's' : ''}`
+      ),
       h('div', { className: 'cdb-empty-state' },
-        `Loaded ${macros.length} entr${macros.length === 1 ? 'y' : 'ies'}. UI coming in the next commit.`
+        'Cards arrive in the next commit.'
       )
     );
   };

@@ -1780,3 +1780,32 @@ pre {
   .cdb-grid-3 { grid-template-columns: 1fr; }
   .action-buttons-top { width: 100%; justify-content: center; }
 }
+
+
+/* =============================================================================
+   14. COSMIC EXPLORATION — additions on top of .cdb-* classes
+   ============================================================================= */
+
+/* Search mode toggle bar (above numeric/text inputs) */
+.cdb-searchmode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.cdb-searchmode-bar .cdb-subheading { margin-bottom: 0; }
+
+.cdb-numeric-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cdb-numeric-row .cdb-input { flex: 1; min-width: 120px; }
+
+@media (max-width: 768px) {
+  .cdb-numeric-row .cdb-input { flex: 1 1 100%; }
+}
+
