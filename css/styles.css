@@ -1780,3 +1780,145 @@ pre {
   .cdb-grid-3 { grid-template-columns: 1fr; }
   .action-buttons-top { width: 100%; justify-content: center; }
 }
+
+
+/* =============================================================================
+   14. COSMIC EXPLORATION — additions on top of .cdb-* classes
+   ============================================================================= */
+
+/* Search mode toggle bar (above numeric/text inputs) */
+.cdb-searchmode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.cdb-searchmode-bar .cdb-subheading { margin-bottom: 0; }
+
+.cdb-numeric-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cdb-numeric-row .cdb-input { flex: 1; min-width: 120px; }
+
+/* Data reward chips (used both in display and edit modes) */
+.cdb-data-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cdb-data-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-darker);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+}
+
+.cdb-data-chip-label { font-weight: 700; }
+.cdb-data-chip-count { color: var(--text-secondary); font-size: 0.8rem; }
+
+.cdb-data-chip--gray  { background: rgba(163, 155, 142, 0.18); border-color: rgba(163, 155, 142, 0.5); }
+.cdb-data-chip--tan   { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
+.cdb-data-chip--olive { background: rgba(142, 139,  92, 0.18); border-color: rgba(142, 139,  92, 0.5); }
+.cdb-data-chip--plum  { background: rgba(140,  94, 120, 0.18); border-color: rgba(140,  94, 120, 0.5); }
+.cdb-data-chip--rust  { background: rgba(158,  92,  58, 0.18); border-color: rgba(158,  92,  58, 0.5); }
+.cdb-data-chip--wine  { background: rgba(122,  46,  46, 0.18); border-color: rgba(122,  46,  46, 0.5); }
+.cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
+
+/* Badge row in the card header (location / job / food) */
+.cdb-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.cdb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+  font-family: 'Crimson Pro', serif;
+  border-radius: 0.3rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+}
+
+.cdb-badge--location { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
+.cdb-badge--job      { background: rgba(139, 111,  71, 0.15); border-color: rgba(139, 111,  71, 0.5); }
+.cdb-badge--food     { background: rgba(120, 130,  80, 0.18); border-color: rgba(120, 130,  80, 0.5); }
+
+/* Category badge with per-category accent colors */
+.cdb-cat-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+  font-family: 'Stoke', serif;
+  border-radius: 0.3rem;
+  border: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cdb-cat-badge--class-a-expert  { background: rgba(122,  46,  46, 0.20); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.5); }
+.cdb-cat-badge--class-a         { background: rgba(140,  94, 120, 0.20); color: #8c5e78; border-color: rgba(140,  94, 120, 0.5); }
+.cdb-cat-badge--class-b         { background: rgba( 94, 110, 140, 0.20); color: #5e6e8c; border-color: rgba( 94, 110, 140, 0.5); }
+.cdb-cat-badge--class-c         { background: rgba(120, 130,  80, 0.20); color: #788250; border-color: rgba(120, 130,  80, 0.5); }
+.cdb-cat-badge--class-d         { background: rgba(163, 155, 142, 0.20); color: #6c655a; border-color: rgba(163, 155, 142, 0.5); }
+.cdb-cat-badge--sequential      { background: rgba(158,  92,  58, 0.20); color: #9e5c3a; border-color: rgba(158,  92,  58, 0.5); }
+.cdb-cat-badge--time-restricted { background: rgba(180, 145,  60, 0.20); color: #b4913c; border-color: rgba(180, 145,  60, 0.5); }
+.cdb-cat-badge--critical        { background: rgba(122,  46,  46, 0.25); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.55); }
+
+/* Items grid (3-up in expanded body) */
+.cdb-cosmic-item-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.cdb-cosmic-item-card {
+  background-color: var(--bg-darker);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.cdb-cosmic-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.cdb-cosmic-item-stat {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cdb-cosmic-item-stat .cdb-stat-value { color: var(--text-primary); }
+
+.cdb-cosmic-item-stat--match {
+  background: rgba(139, 111, 71, 0.18);
+  padding: 0 0.25rem;
+  border-radius: 0.2rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .cdb-numeric-row .cdb-input { flex: 1 1 100%; }
+  .cdb-cosmic-item-grid { grid-template-columns: 1fr; }
+}
+
