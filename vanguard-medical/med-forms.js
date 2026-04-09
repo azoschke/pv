@@ -13,10 +13,10 @@
 
 		// Local font file URLs
 		const FONT_URLS = {
-		    stoke: '/pv-project/assets/Stoke-Regular.ttf',
-		    laBelleAurore: '/pv-project/assets/LaBelleAurore-Regular.ttf',
-		    crimsonPro: '/pv-project/assets/CrimsonPro-VariableFont_wght.ttf',
-		    crimsonProItalic: '/pv-project/assets/CrimsonPro-Italic-VariableFont_wght.ttf'
+		    stoke: '/pv/assets/Stoke-Regular.ttf',
+		    laBelleAurore: '/pv/assets/LaBelleAurore-Regular.ttf',
+		    crimsonPro: '/pv/assets/CrimsonPro-VariableFont_wght.ttf',
+		    crimsonProItalic: '/pv/assets/CrimsonPro-Italic-VariableFont_wght.ttf'
 		};
 
         // Convert ArrayBuffer to Base64
@@ -103,8 +103,8 @@
             // Load images
             try {
                 [textureImage, emblemImage] = await Promise.all([
-                    loadTextureImage('/pv-project/assets/pdf-texture-web.jpg'),
-                    loadPngImage('/pv-project/assets/pdf-emblem-web.png')
+                    loadTextureImage('/pv/assets/pdf-texture-web.jpg'),
+                    loadPngImage('/pv/assets/pdf-emblem-web.png')
                 ]);
                 console.log('Images preloaded successfully');
             } catch (error) {
