@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Registry</title>
 
-  <link rel="icon" href="/pv-project/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv-project/css/styles.css">
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 </head>
@@ -25,19 +25,25 @@
 	
   <div class="app pv-app">
 
-      <aside class="sidebar">
-        <h2>Patients</h2>
+      <aside class="sidebar" id="patient-sidebar">
+        <div class="sidebar-header">
+          <h2>Patients</h2>
+          <button class="sidebar-toggle-close" id="sidebar-toggle-close" type="button" aria-label="Close patient list">&#10005;</button>
+        </div>
         <ul id="patientList"></ul>
       </aside>
 
-<main class="content">
-      <div class="parchment">
-        <div id="patientContent">
-		  <h1>View Phoenix Vanguard Medical Records</h1>
-          <p>Select a patient from the sidebar.</p>
-			<p><em>Disclaimer: These records are only available ICly to members of the Phoenix Vanguard Medical Team. All other personnel should consider these under lock and key, private information.</em></p>
+      <main class="content">
+        <button class="patient-list-toggle" id="patient-list-toggle" type="button" aria-expanded="false" aria-controls="patient-sidebar">
+          <span class="patient-list-toggle-icon">&#9776;</span> View Patients
+        </button>
+        <div class="parchment">
+          <div id="patientContent">
+            <h1>View Phoenix Vanguard Medical Records</h1>
+            <p>Select a patient from the list.</p>
+            <p><em>Disclaimer: These records are only available ICly to members of the Phoenix Vanguard Medical Team. All other personnel should consider these under lock and key, private information.</em></p>
+          </div>
         </div>
-		</div>
       </main>
 
   </div>
@@ -52,7 +58,7 @@
   <!-- Marked -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <script src="/pv-project/vanguard-medical/med-database.js"></script>
-  <script src="/pv-project/js/nav.js"></script>
+  <script src="/pv/vanguard-medical/med-database.js"></script>
+  <script src="/pv/js/nav.js"></script>
 </body>
 </html>

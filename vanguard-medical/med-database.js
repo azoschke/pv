@@ -37,6 +37,39 @@ Papa.parse(visitsURL, {
   }
 });
 
+// Mobile patient sidebar toggle
+(function () {
+  const toggleBtn = document.getElementById("patient-list-toggle");
+  const closeBtn = document.getElementById("sidebar-toggle-close");
+  const sidebar = document.getElementById("patient-sidebar");
+  if (!toggleBtn || !sidebar) return;
+
+  function openSidebar() {
+    sidebar.classList.add("sidebar-open");
+    toggleBtn.setAttribute("aria-expanded", "true");
+    document.body.classList.add("patient-sidebar-open");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("sidebar-open");
+    toggleBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("patient-sidebar-open");
+  }
+
+  toggleBtn.addEventListener("click", function () {
+    if (sidebar.classList.contains("sidebar-open")) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+
+  // Expose close so patient selection can auto-close on mobile
+  window._closePvPatientSidebar = closeSidebar;
+})();
+
 // Build patient sidebar
 function buildPatientSidebar() {
   patientsData.forEach(patient => {
@@ -52,6 +85,10 @@ function buildPatientSidebar() {
       document.querySelectorAll(".patient-link").forEach(el => el.classList.remove("active"));
       link.classList.add("active");
       renderPatient(patient.patient_id);
+      // Auto-close sidebar on mobile after selection
+      if (window._closePvPatientSidebar && window.innerWidth <= 900) {
+        window._closePvPatientSidebar();
+      }
     });
 
     li.appendChild(link);

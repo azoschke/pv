@@ -1,18 +1,24 @@
 <nav class="site-nav" aria-label="Primary">
-  <a href="/pv-project/index.html" class="site-brand" aria-label="Phoenix Vanguard Tools">
+  <a href="/pv/index.html" class="site-brand" aria-label="Phoenix Vanguard Tools">
     <span class="site-logo" role="img" aria-label="Phoenix Vanguard Tools"></span>
   </a>
 
-  <ul class="nav-links">
+  <button class="hamburger" id="nav-hamburger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav-sidebar">
+    <span class="hamburger-bar"></span>
+    <span class="hamburger-bar"></span>
+    <span class="hamburger-bar"></span>
+  </button>
+
+  <ul class="nav-links" id="nav-links">
     <li class="nav-dropdown" data-page="vanguard-medical">
       <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
         Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-submenu" role="menu">
-        <li role="none"><a role="menuitem" href="/pv-project/vanguard-medical/patient-intake-form.html" class="nav-sublink" data-subpage="intake-form">Patient Intake Form</a></li>
-        <li role="none"><a role="menuitem" href="/pv-project/vanguard-medical/treatment-report-form.html" class="nav-sublink" data-subpage="report-form">Treatment Report Form</a></li>
-        <li role="none"><a role="menuitem" href="/pv-project/vanguard-medical/med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
-        <li role="none"><a role="menuitem" href="/pv-project/vanguard-medical/staff-roster.html" class="nav-sublink" data-subpage="med-roster">Staff Roster</a></li>
+        <li role="none"><a role="menuitem" href="/pv/vanguard-medical/patient-intake-form.html" class="nav-sublink" data-subpage="intake-form">Patient Intake Form</a></li>
+        <li role="none"><a role="menuitem" href="/pv/vanguard-medical/treatment-report-form.html" class="nav-sublink" data-subpage="report-form">Treatment Report Form</a></li>
+        <li role="none"><a role="menuitem" href="/pv/vanguard-medical/med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
+        <li role="none"><a role="menuitem" href="/pv/vanguard-medical/staff-roster.html" class="nav-sublink" data-subpage="med-roster">Staff Roster</a></li>
       </ul>
     </li>
 
@@ -21,8 +27,8 @@
         Crafting Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-submenu" role="menu">
-        <li role="none"><a role="menuitem" href="/pv-project/crafting-database/crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
-        <li role="none"><a role="menuitem" href="/pv-project/crafting-database/cosmic-exploration.html" class="nav-sublink" data-subpage="cosmicexploration-database">Cosmic Exploration Database</a></li>
+        <li role="none"><a role="menuitem" href="/pv/crafting-database/crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
+        <li role="none"><a role="menuitem" href="/pv/crafting-database/cosmic-exploration.html" class="nav-sublink" data-subpage="cosmicexploration-database">Cosmic Exploration Database</a></li>
       </ul>
     </li>
 
@@ -31,8 +37,8 @@
         Zodiac Weapons <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-submenu" role="menu">
-        <li role="none"><a role="menuitem" href="/pv-project/zodiac-weapons/atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
-        <li role="none"><a role="menuitem" href="/pv-project/zodiac-weapons/books.html" class="nav-sublink" data-subpage="books">Books</a></li>
+        <li role="none"><a role="menuitem" href="/pv/zodiac-weapons/atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
+        <li role="none"><a role="menuitem" href="/pv/zodiac-weapons/books.html" class="nav-sublink" data-subpage="books">Books</a></li>
       </ul>
     </li>
   </ul>
@@ -41,3 +47,45 @@
     <span id="theme-icon" aria-hidden="true">&#9790;</span>
   </button>
 </nav>
+
+<!-- Mobile sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" aria-hidden="true">
+  <div class="nav-sidebar-header">
+    <a href="/pv/index.html" class="site-brand" aria-label="Phoenix Vanguard Tools">
+      <span class="site-logo" role="img" aria-label=""></span>
+    </a>
+    <button class="nav-sidebar-close" id="nav-sidebar-close" type="button" aria-label="Close navigation menu">&#10005;</button>
+  </div>
+  <ul class="nav-sidebar-links">
+    <li class="nav-sidebar-section" data-page="vanguard-medical">
+      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
+        Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <ul class="nav-sidebar-submenu">
+        <li><a href="/pv/vanguard-medical/patient-intake-form.html" class="nav-sublink" data-subpage="intake-form">Patient Intake Form</a></li>
+        <li><a href="/pv/vanguard-medical/treatment-report-form.html" class="nav-sublink" data-subpage="report-form">Treatment Report Form</a></li>
+        <li><a href="/pv/vanguard-medical/med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
+        <li><a href="/pv/vanguard-medical/staff-roster.html" class="nav-sublink" data-subpage="med-roster">Staff Roster</a></li>
+      </ul>
+    </li>
+    <li class="nav-sidebar-section" data-page="crafting-database">
+      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
+        Crafting Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <ul class="nav-sidebar-submenu">
+        <li><a href="/pv/crafting-database/crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
+        <li><a href="/pv/crafting-database/cosmic-exploration.html" class="nav-sublink" data-subpage="cosmicexploration-database">Cosmic Exploration Database</a></li>
+      </ul>
+    </li>
+    <li class="nav-sidebar-section" data-page="zodiac-weapons">
+      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
+        Zodiac Weapons <span class="nav-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <ul class="nav-sidebar-submenu">
+        <li><a href="/pv/zodiac-weapons/atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
+        <li><a href="/pv/zodiac-weapons/books.html" class="nav-sublink" data-subpage="books">Books</a></li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<div class="nav-overlay" id="nav-overlay"></div>

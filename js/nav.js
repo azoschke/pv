@@ -3,7 +3,7 @@
  *
  * Add to every page, just before </body>:
  *   <div id="nav-placeholder"></div>
- *   <script src="/pv-project/js/nav.js"></script>
+ *   <script src="/pv/js/nav.js"></script>
  *
  * The script:
  *  1. Fetches <base>/components/nav.html and injects it into #nav-placeholder
@@ -13,7 +13,7 @@
  *
  * Base path is derived dynamically from this script's own src, so it works
  * whether the site is served at the domain root or under a project subpath
- * (e.g. GitHub Pages at /pv-project/).
+ * (e.g. GitHub Pages at /pv/).
  */
 
 (function () {
@@ -24,9 +24,9 @@
     const script = document.currentScript;
     if (script && script.src) {
       try {
-        const path = new URL(script.src).pathname; // e.g. /pv-project/js/nav.js
+        const path = new URL(script.src).pathname; // e.g. /pv/js/nav.js
         const match = path.match(/^(.*)\/js\/nav\.js$/);
-        if (match) return match[1]; // e.g. /pv-project  (or "" if at root)
+        if (match) return match[1]; // e.g. /pv  (or "" if at root)
       } catch (e) { /* fall through */ }
     }
     return '';
@@ -107,7 +107,53 @@
 
     // Close dropdowns on Escape
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeAllDropdowns();
+      if (e.key === 'Escape') { closeAllDropdowns(); closeSidebar(); }
+    });
+  }
+
+  // ── 3b. Mobile sidebar (hamburger drawer) ─────────────────────────────────
+  function openSidebar() {
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+    const hamburger = document.getElementById('nav-hamburger');
+    if (!sidebar) return;
+    sidebar.classList.add('open');
+    sidebar.setAttribute('aria-hidden', 'false');
+    if (overlay) overlay.classList.add('visible');
+    if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('nav-sidebar-open');
+  }
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+    const hamburger = document.getElementById('nav-hamburger');
+    if (!sidebar) return;
+    sidebar.classList.remove('open');
+    sidebar.setAttribute('aria-hidden', 'true');
+    if (overlay) overlay.classList.remove('visible');
+    if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('nav-sidebar-open');
+  }
+
+  function wireSidebar() {
+    const hamburger = document.getElementById('nav-hamburger');
+    const closeBtn = document.getElementById('nav-sidebar-close');
+    const overlay = document.getElementById('nav-overlay');
+
+    if (hamburger) hamburger.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    // Sidebar section toggles
+    document.querySelectorAll('.nav-sidebar-section').forEach(function (section) {
+      const toggle = section.querySelector('.nav-sidebar-toggle');
+      const submenu = section.querySelector('.nav-sidebar-submenu');
+      if (!toggle || !submenu) return;
+      toggle.addEventListener('click', function () {
+        const isOpen = section.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
     });
   }
 
@@ -135,8 +181,22 @@
       if (link.dataset.page === loc.section) link.classList.add('active');
     });
 
+    // Mark active section in sidebar too
+    document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
+      if (section.dataset.page === loc.section) {
+        section.classList.add('active', 'open');
+        const toggle = section.querySelector('.nav-sidebar-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        const sub = section.querySelector('.nav-sublink[data-subpage="' + loc.page + '"]');
+        if (sub) sub.classList.add('active');
+      }
+    });
+
     // Wire up dropdown toggles
     wireDropdowns(placeholder);
+
+    // Wire up hamburger sidebar
+    wireSidebar();
 
     // Wire up theme toggle
     const toggleBtn = document.getElementById('theme-toggle');
