@@ -43,9 +43,10 @@ p {
 
 :root {
   /* Backgrounds */
-  --bg-primary:   #e3ded3;
-  --bg-card:      #f5f3ef;
-  --bg-darker:    #d3ccbf;
+  --bg-primary:    #e3ded3;
+  --bg-card:       #f5f3ef;
+  --bg-card-light: #f9f7f4;
+  --bg-darker:     #d3ccbf;
 
   /* Text */
   --text-primary:   #3E3832;
@@ -81,9 +82,10 @@ p {
 
 [data-theme="dark"] {
   /* Backgrounds */
-  --bg-primary: #1a1614;
-  --bg-card:    #2a2521;
-  --bg-darker:  #3a342f;
+  --bg-primary:    #1a1614;
+  --bg-card:       #2a2521;
+  --bg-card-light: #35302b;
+  --bg-darker:     #3a342f;
 
   /* Text */
   --text-primary:   #e3ded3;
@@ -1082,7 +1084,7 @@ pre {
   padding: 12px 30px;
 }
 
-.sidebar li:has(.patient-link.active) { background-color: var(--bg-darker); }
+.sidebar li:has(.patient-link.active) { background-color: var(--bg-card-light); }
 
 .patient-link {
   cursor: pointer;
@@ -1148,15 +1150,17 @@ pre {
   text-overflow: ellipsis;
 }
 
-.visit-tab.active { background: var(--bg-card); color: var(--text-primary); font-weight: bold; }
+.visit-tab.active { background: var(--bg-card-light); color: var(--text-primary); font-weight: bold; }
 
 .visit-details-container {
   padding: 20px;
   border-radius: 0 6px 6px 6px;
-  background: var(--bg-card);
+  background: var(--bg-card-light);
 }
 
 .visit-details .field { margin-bottom: 10px; }
+
+.value p { margin-bottom: .5rem; }
 
 
 /* =============================================================================
