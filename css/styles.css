@@ -1362,7 +1362,6 @@ pre {
   height: 100%;
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
-  box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
   z-index: 200;
   transform: translateX(-100%);
   transition: transform 0.28s ease;
@@ -1373,6 +1372,7 @@ pre {
 
 .nav-sidebar.open {
   transform: translateX(0);
+  box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
 }
 
 .nav-overlay {
@@ -1505,7 +1505,7 @@ body.nav-sidebar-open {
 }
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .hamburger {
     display: flex;
     margin-left: auto;
@@ -1517,8 +1517,12 @@ body.nav-sidebar-open {
   }
 
   .theme-toggle {
-    order: 3;
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 105;
     margin-left: 0;
+    order: unset;
   }
 }
 
@@ -1589,23 +1593,11 @@ body.nav-sidebar-open {
 
   .pv-header .branding { flex-direction: column; }
 
-  /* On medium screens (tablet), sidebar stacks above content */
-  .sidebar {
-    width: 100%;
-    border-radius: 5px;
-    margin-top: 0;
-    position: unset;
-  }
-
-  .sidebar-header {
-    padding: 0 20px;
-  }
-
   .pv-nav { justify-content: center; }
 }
 
-/* On small screens, sidebar becomes an overlay drawer */
-@media (max-width: 640px) {
+/* On tablet and smaller, sidebar becomes an overlay drawer */
+@media (max-width: 900px) {
   .patient-list-toggle {
     display: inline-flex;
     align-items: center;
@@ -1636,7 +1628,7 @@ body.nav-sidebar-open {
     display: flex;
   }
 
-  /* Sidebar becomes a fixed overlay on mobile */
+  /* Sidebar becomes a fixed overlay */
   .sidebar {
     position: fixed;
     top: 0;
@@ -1649,8 +1641,12 @@ body.nav-sidebar-open {
     z-index: 150;
     transform: translateX(-100%);
     transition: transform 0.28s ease;
-    box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
     overflow-y: auto;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
   }
 
   .sidebar-header {
@@ -1661,10 +1657,6 @@ body.nav-sidebar-open {
 
   .sidebar-header h2 {
     margin: 0;
-  }
-
-  .sidebar.sidebar-open {
-    transform: translateX(0);
   }
 
   /* Overlay behind sidebar */
@@ -1678,11 +1670,6 @@ body.nav-sidebar-open {
 
   body.patient-sidebar-open {
     overflow: hidden;
-  }
-
-  /* Hide the sidebar stacking on mobile (it's now an overlay) */
-  .pv-app {
-    flex-direction: column;
   }
 }
 
