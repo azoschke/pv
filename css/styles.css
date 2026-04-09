@@ -1287,6 +1287,37 @@ pre {
   color: var(--accent-red);
 }
 
+/* Non-link card grid variants */
+.half-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.full-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  display: block;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+  transform: translateY(-2px);
+  border-color: var(--accent-brown);
+}
+
 
 /* =============================================================================
    12. RESPONSIVE
