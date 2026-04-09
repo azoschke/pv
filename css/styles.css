@@ -1290,7 +1290,7 @@ pre {
 /* Non-link card grid variants */
 .half-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1rem;
   margin-bottom: 2.5rem;
 }
