@@ -28,12 +28,11 @@
       		<h1 class="app-title">Treatment Report Form</h1>
     	</header>
 		
-        <div class="parchment">
 
    <!-- Treatment Report Form -->
                <div class="form-container" id="form-treatment">
                 <form id="treatmentForm" onsubmit="generateTreatmentPDF(event)">
-
+					<div class="parchment">
                     <!-- Patient Information -->
                     <h4 class="subsection-heading" style="font-size: 1rem; margin-top: 15px;">Patient Information</h4>
 
@@ -234,7 +233,8 @@
                         <textarea id="treatment-notes" name="additionalNotes" placeholder="Any additional notes or observations..."></textarea>
                     </div>
 
-                    <div class="button-group">
+					 </div>
+					 <div class="button-group">
                         <button type="submit" class="submit-btn">
                             <span class="material-icons">picture_as_pdf</span>
                             Generate PDF
@@ -249,11 +249,10 @@
                         </button>
                     </div>
                 </form>
-            </div>
+			</div>
 			<!-- END FORM -->
 			
 			
-        </div>
     </div>
 	
 	<script src="/pv-project/vanguard-medical/med-forms.js"></script>
