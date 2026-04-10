@@ -1,4 +1,4 @@
-*The group had returned to the village victorious after slaying Bloodscreamer, D'vaari having been bold enough to claim the dark artifact it left behind, the question now was, at what cost? *
+_The group had returned to the village victorious after slaying Bloodscreamer, D'vaari having been bold enough to claim the dark artifact it left behind, the question now was, at what cost? _
 
 
 ## Aftermath
@@ -244,6 +244,7 @@ Cassian's fingers brushed against the worn edges of the sigil as he pulled it fr
 The masked figure returned with seven others, all carrying blankets and pillows, which they set on the empty tables. "We'll leave you all to your evening," he said with a nod before slipping back out.
 
 Z'iro moved from the counter to the table, taking a blanket and pillow. He passed by Xyla, stopping to say something quietly before heading to his room.
+
 <!-- TLDR -->
 The Phoenix Vanguard has returned to the village after defeating a monster called Bloodscreamer in a strange realm. They gather in a tavern where masked villagers keep their distance, especially from D'vaari who possesses a dark artifact taken from the slain creature.
 
