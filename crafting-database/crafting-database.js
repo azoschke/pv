@@ -761,24 +761,10 @@
           h('span', { className: 'cdb-class-label' }, craft.class)
         ),
         craft.level && h('span', { className: 'craft-level' }, `LVL ${craft.level}`),
-        h('span', {
-          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
-          className: 'material-icons cdb-icon-btn',
-          style: { color: 'var(--accent-brown)', fontSize: '24px' },
-          title: 'Edit'
-        }, 'edit'),
-        h('span', {
-          onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'material-icons cdb-icon-btn',
-          style: { color: 'var(--accent-brown)', fontSize: '24px' },
-          title: isExpanded ? 'Collapse' : 'Expand'
-        }, isExpanded ? 'expand_less' : 'expand_more'),
         h('button', {
-          onClick: (e) => { e.stopPropagation(); onDelete(); },
+          onClick: (e) => { e.stopPropagation(); onToggle(); },
           className: 'cdb-btn cdb-btn-secondary',
           style: {
-            backgroundColor: 'var(--accent-red)',
-            color: 'white',
             padding: '8px',
             position: 'absolute',
             right: '0',
@@ -786,9 +772,9 @@
             transform: 'translateY(-50%) translateX(50%)',
             zIndex: 10
           },
-          title: 'Delete'
+          title: isExpanded ? 'Collapse' : 'Expand'
         },
-          h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
+          h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
         )
       )
     );
@@ -1095,6 +1081,22 @@
           h('p', { className: 'cdb-notes-text' }, craft.notes)
         )
             )
+      ),
+      !isEditingInline && h('div', { className: 'cdb-card-footer' },
+        h('span', {
+          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
+          className: 'material-icons cdb-icon-btn',
+          style: { color: 'var(--accent-brown)', fontSize: '24px' },
+          title: 'Edit'
+        }, 'edit'),
+        h('button', {
+          onClick: (e) => { e.stopPropagation(); onDelete(); },
+          className: 'cdb-btn cdb-btn-secondary',
+          style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' },
+          title: 'Delete'
+        },
+          h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
+        )
       )
     );
   };
