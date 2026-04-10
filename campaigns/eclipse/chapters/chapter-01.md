@@ -1,7 +1,3 @@
-# Bloodscreamer \
-*March 6. 2025*
-
-
 ## The Portal's Call
 
 The portal hummed at the back of the cave, unchanged since their return. Its surface rippled like disturbed water, showing glimpses of that dark forest beneath its blood-red moon. Cassian's fingers closed around the sigil, feeling its weight settle into his palm as the group gathered in a loose semicircle before the gateway.
