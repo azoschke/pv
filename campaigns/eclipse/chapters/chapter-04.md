@@ -381,3 +381,14 @@ The Viera turned their gaze toward Skyas, expression bemused. They stared at him
 Skyas scratched the back of his head. "Not a big fan of the flawless damage club, fair enough I guess," he muttered, trying to play off the awkward moment.
 
 Behind them, the gate stood, a silent invitation to whatever horrors lay beyond.
+<!-- TLDR -->
+Under a blood-red moon, the Phoenix Vanguard approached the gate where twin guardians awaited. The path bristled with grim warnings—skeletons and shattered masks mounted on wooden poles, silent testimonies to failed challengers. Upon black stone ramparts stood the Ripper and the Flayer, dark armored figures with crimson cloaks and helmets bearing glowing red maws.
+
+The guardians descended with unnatural synchronicity once discovered, their layered voices emanating as if three people spoke at once. They taunted the group with promises of prolonged suffering, claiming "royal permission" to torment them indefinitely. Each guardian selected different targets among the Vanguard, sensing weaknesses and fears with predatory precision.
+
+The battle erupted as the entire company mobilized their unique talents. D'vaari called upon elemental forms, his fists crackling with energy. Cassian surged forward with fluid precision, his axe sweeping in deadly arcs despite his body still bearing the phantom pain of Bloodscreamer's attack. The taciturn Viera's lance glowed with viridian light as they leapt into the fray. Skyas unleashed ethereal blade techniques while Xyla's arrows found gaps in their enemies' armor. Visaki swung his dual blades with precise flourishes despite his growing fatigue. Z'iro followed behind Skyas, his twin blades lending power to his companion's attacks. Soot, initially refusing to fight out of spite, eventually channeled her anger into the battle. Rove, the small Lalafell, contributed by hurling improvised weapons—helmets, ingots, and even a fish—from his seemingly bottomless bag. Meanwhile, Fiora channeled surges of aether to sustain their fighters.
+
+The guardians fought with terrifying efficiency—teleporting to summon archers before reappearing to deliver vicious slashes. Despite their coordination, the Vanguard found themselves pushed to their limits, with multiple members sustaining serious injuries. Desperation fueled their final stand as D'vaari donned a mask that transformed his fighting style into something feral and untamed. The entire party rallied, focusing their combined strength in a last desperate assault.
+
+In the final moments, D'vaari executed the Ripper with a noose fashioned from the entrails decorating the gate, while a stone imbued with emerald wind aether split the Flayer's helmet. As both guardians faded into ambient anima, they left behind two crystal clusters—one red, one orange. The exhausted Vanguard claimed these prizes before beginning their weary journey back to the village, leaving the still-locked gate looming above.
+
