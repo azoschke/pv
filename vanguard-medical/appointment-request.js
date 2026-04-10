@@ -1,4 +1,4 @@
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1492207324520124506/SRElHLM8lmFKrLoFK6RdQG7_fBsqULNBGR0M46tuC5QBWg-BJ8FwKRk5nGkkqwRQBKHA';
+const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy.chlorinatorgreen.workers.dev/';
 const MEDICAL_ROLE_ID = '1283058454373597186';
 
 // Individual medic Discord IDs — fill in placeholders as they are confirmed
