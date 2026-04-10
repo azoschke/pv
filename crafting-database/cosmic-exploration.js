@@ -849,35 +849,21 @@
             entry.foodType
           )
         ),
-        h('span', {
-          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
-          className: 'material-icons cdb-icon-btn',
-          title: 'Edit'
-        }, 'edit'),
-        h('span', {
+        h('button', {
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'material-icons cdb-icon-btn',
+          className: 'cdb-btn cdb-btn-secondary',
+          style: {
+            padding: '8px',
+            position: 'absolute',
+            right: '0',
+            top: '50%',
+            transform: 'translateY(-50%) translateX(50%)',
+            zIndex: 10
+          },
           title: isExpanded ? 'Collapse' : 'Expand'
-        }, isExpanded ? 'expand_less' : 'expand_more'),
-        deleteConfirm
-          ? h('div', { className: 'cdb-inline-row', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%) translateX(50%)', zIndex: 10, gap: '0.25rem' } },
-              h('button', {
-                onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
-                className: 'cdb-btn cdb-btn-secondary',
-                style: { backgroundColor: 'var(--accent-red)', color: 'white' }
-              }, 'Confirm'),
-              h('button', {
-                onClick: (e) => { e.stopPropagation(); setDeleteConfirm(false); },
-                className: 'cdb-btn cdb-btn-secondary'
-              }, 'Cancel')
-            )
-          : h('button', {
-              onClick: (e) => { e.stopPropagation(); setDeleteConfirm(true); },
-              className: 'cdb-delete-btn',
-              title: 'Delete'
-            },
-              h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
-            )
+        },
+          h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
+        )
       )
     );
 
@@ -1182,6 +1168,34 @@
           h('h4', { className: 'cdb-subheading' }, 'Notes'),
           h('p', { className: 'cdb-notes-text' }, entry.notes)
         )
+      ),
+      !isEditingInline && h('div', { className: 'cdb-card-footer' },
+        h('span', {
+          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
+          className: 'material-icons cdb-icon-btn',
+          style: { color: 'var(--accent-brown)', fontSize: '24px' },
+          title: 'Edit'
+        }, 'edit'),
+        deleteConfirm
+          ? h('div', { className: 'cdb-inline-row', style: { gap: '0.25rem' } },
+              h('button', {
+                onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
+                className: 'cdb-btn cdb-btn-secondary',
+                style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' }
+              }, 'Confirm'),
+              h('button', {
+                onClick: (e) => { e.stopPropagation(); setDeleteConfirm(false); },
+                className: 'cdb-btn cdb-btn-secondary'
+              }, 'Cancel')
+            )
+          : h('button', {
+              onClick: (e) => { e.stopPropagation(); setDeleteConfirm(true); },
+              className: 'cdb-btn cdb-btn-secondary',
+              style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' },
+              title: 'Delete'
+            },
+              h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
+            )
       )
     );
   };

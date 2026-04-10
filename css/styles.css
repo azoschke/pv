@@ -1178,6 +1178,7 @@ pre {
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.2);
   transition: all 0.2s ease-in-out;
   position: relative;
+  border-radius: 6px;
 }
 
 .craft-card:hover { box-shadow: 0 2px 8px rgba(62, 56, 50, 0.2); }
@@ -1616,12 +1617,17 @@ body.nav-sidebar-open {
 }
 
 /* Overlay behind sidebar */
-body.patient-sidebar-open::after {
-  content: '';
+.patient-sidebar-overlay {
+  display: none;
   position: fixed;
   inset: 0;
   background: rgba(44, 24, 16, 0.45);
   z-index: 149;
+  cursor: pointer;
+}
+
+.patient-sidebar-overlay.active {
+  display: block;
 }
 
 body.patient-sidebar-open {
@@ -2005,6 +2011,15 @@ body.patient-sidebar-open {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.cdb-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Class stats modal */

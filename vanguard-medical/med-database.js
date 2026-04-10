@@ -42,18 +42,21 @@ Papa.parse(visitsURL, {
   const toggleBtn = document.getElementById("patient-list-toggle");
   const closeBtn = document.getElementById("sidebar-toggle-close");
   const sidebar = document.getElementById("patient-sidebar");
+  const overlay = document.getElementById("patient-sidebar-overlay");
   if (!toggleBtn || !sidebar) return;
 
   function openSidebar() {
     sidebar.classList.add("sidebar-open");
     toggleBtn.setAttribute("aria-expanded", "true");
     document.body.classList.add("patient-sidebar-open");
+    if (overlay) overlay.classList.add("active");
   }
 
   function closeSidebar() {
     sidebar.classList.remove("sidebar-open");
     toggleBtn.setAttribute("aria-expanded", "false");
     document.body.classList.remove("patient-sidebar-open");
+    if (overlay) overlay.classList.remove("active");
   }
 
   toggleBtn.addEventListener("click", function () {
@@ -65,6 +68,7 @@ Papa.parse(visitsURL, {
   });
 
   if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+  if (overlay) overlay.addEventListener("click", closeSidebar);
 
   // Expose close so patient selection can auto-close on mobile
   window._closePvPatientSidebar = closeSidebar;
