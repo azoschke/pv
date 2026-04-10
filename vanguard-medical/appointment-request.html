@@ -187,6 +187,12 @@
 
     <script>
         const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1492207324520124506/SRElHLM8lmFKrLoFK6RdQG7_fBsqULNBGR0M46tuC5QBWg-BJ8FwKRk5nGkkqwRQBKHA';
+        const MEDICAL_ROLE_ID = '1283058454373597186';
+
+        // Individual medic Discord IDs — add more as they become available
+        const MEDIC_IDS = {
+            'Fiora Acaeus': '477696368325033984',
+        };
 
         async function submitAppointmentRequest(event) {
             event.preventDefault();
@@ -203,16 +209,27 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
 
+            // Always ping the medical role; additionally ping the specific medic if their ID is known
+            let pingContent = `<@&${MEDICAL_ROLE_ID}>`;
+            if (MEDIC_IDS[medic]) {
+                pingContent += ` <@${MEDIC_IDS[medic]}>`;
+            }
+
             const payload = {
+                content: pingContent,
                 embeds: [{
                     title: 'New Appointment Request',
                     color: 0xa54d44,
+                    thumbnail: {
+                        url: 'https://crafting-tools.github.io/pv/assets/pdf-emblem-web.png'
+                    },
                     fields: [
                         { name: 'Patient Name', value: name, inline: true },
                         { name: 'Requested Medic', value: medic, inline: true },
                         { name: 'Reason for Appointment', value: reason, inline: false }
                     ],
-                    footer: { text: 'Phoenix Vanguard Medical Division' }
+                    footer: { text: 'Phoenix Vanguard Medical Division' },
+                    timestamp: new Date().toISOString()
                 }]
             };
 
