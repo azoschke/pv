@@ -186,8 +186,8 @@
     </div>
 
     <script>
-        // Discord webhook URL — replace with your webhook URL from the appointment request channel
-        const DISCORD_WEBHOOK_URL = 'REPLACE_WITH_WEBHOOK_URL';
+        const GITHUB_API = 'https://api.github.com/repos/azoschke/pv/actions/workflows/discord-appointment.yml/dispatches';
+        const GITHUB_TOKEN = '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';
 
         async function submitAppointmentRequest(event) {
             event.preventDefault();
@@ -204,31 +204,30 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
 
-            const payload = {
-                embeds: [{
-                    title: 'New Appointment Request',
-                    color: 0xa54d44,
-                    fields: [
-                        { name: 'Patient Name', value: name, inline: true },
-                        { name: 'Requested Medic', value: medic, inline: true },
-                        { name: 'Reason for Appointment', value: reason, inline: false }
-                    ],
-                    footer: { text: 'Phoenix Vanguard Medical Division' }
-                }]
-            };
-
             try {
-                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                const response = await fetch(GITHUB_API, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Authorization': 'token ' + GITHUB_TOKEN,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            patient_name: name,
+                            reason: reason,
+                            preferred_medic: medic
+                        }
+                    })
                 });
 
-                if (response.ok) {
+                if (response.status === 204) {
                     document.getElementById('form-wrapper').style.display = 'none';
                     document.getElementById('confirmation-wrapper').style.display = 'block';
                 } else {
-                    errorText.textContent = 'Something went wrong. Please try again.';
+                    const body = await response.json().catch(() => ({}));
+                    errorText.textContent = body.message || 'Something went wrong. Please try again.';
                     errorDiv.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';

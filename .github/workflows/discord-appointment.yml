@@ -1,0 +1,66 @@
+name: Discord Appointment Request
+
+on:
+  workflow_dispatch:
+    inputs:
+      patient_name:
+        description: 'Patient name'
+        required: true
+      reason:
+        description: 'Reason for appointment'
+        required: true
+      preferred_medic:
+        description: 'Preferred medic'
+        required: true
+
+jobs:
+  send-to-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send appointment request to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PATIENT_NAME: ${{ github.event.inputs.patient_name }}
+          REASON: ${{ github.event.inputs.reason }}
+          PREFERRED_MEDIC: ${{ github.event.inputs.preferred_medic }}
+        run: |
+          python3 -c "
+          import os, json, urllib.request
+
+          payload = {
+              'embeds': [{
+                  'title': 'New Appointment Request',
+                  'color': 10833220,
+                  'fields': [
+                      {
+                          'name': 'Patient Name',
+                          'value': os.environ['PATIENT_NAME'],
+                          'inline': True
+                      },
+                      {
+                          'name': 'Requested Medic',
+                          'value': os.environ['PREFERRED_MEDIC'],
+                          'inline': True
+                      },
+                      {
+                          'name': 'Reason for Appointment',
+                          'value': os.environ['REASON'],
+                          'inline': False
+                      }
+                  ],
+                  'footer': {
+                      'text': 'Phoenix Vanguard Medical Division'
+                  }
+              }]
+          }
+
+          data = json.dumps(payload).encode('utf-8')
+          req = urllib.request.Request(
+              os.environ['DISCORD_WEBHOOK_URL'],
+              data=data,
+              headers={'Content-Type': 'application/json'},
+              method='POST'
+          )
+          urllib.request.urlopen(req)
+          print('Appointment request sent to Discord.')
+          "
