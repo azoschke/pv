@@ -349,7 +349,11 @@
     });
 
     return h('div', { className: 'cdb-root container' },
-      h('div', { className: 'top-controls' },
+      h('header', { className: 'app-header' },
+        h('h1', { className: 'app-title craft-name' }, 'FFXIV Crafting Macro Database'),
+        h('p', { className: 'app-subtitle' }, 'Manage your crafting macros and recipes')
+      ),
+      h('div', { className: 'top-controls top-controls-right' },
         h('div', { className: 'action-buttons-top' },
           h('button', {
             onClick: () => setIsManagingClassStats(true),
@@ -360,12 +364,12 @@
           ),
           h('button', {
             onClick: exportToCSV,
-            className: 'cdb-btn cdb-btn-primary'
+            className: 'cdb-btn cdb-btn-secondary'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'download'),
             'Export CSV'
           ),
-          h('label', { className: 'cdb-btn cdb-btn-primary' },
+          h('label', { className: 'cdb-btn cdb-btn-secondary' },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'upload'),
             'Import CSV',
             h('input', {
@@ -376,10 +380,6 @@
             })
           )
         )
-      ),
-      h('header', { className: 'app-header' },
-        h('h1', { className: 'app-title craft-name' }, 'FFXIV Crafting Macro Database'),
-        h('p', { className: 'app-subtitle' }, 'Manage your crafting macros and recipes')
       ),
       h('div', { className: 'cdb-search-section' },
         // Search bar
