@@ -2031,9 +2031,10 @@ body.nav-sidebar-open {
 }
 
 .chapter-body p {
-  margin: 0 0 1rem;
+    margin: 0 0 1rem;
+    font-size: 1.3rem;
+    line-height: 1.7rem;
 }
-
 .chapter-body p:last-child {
   margin-bottom: 0;
 }
