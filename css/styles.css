@@ -1221,11 +1221,37 @@ pre {
   line-height: 1.65;
 }
 
+.landing-section {
+  margin-bottom: 3rem;
+}
+
+.landing-section-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.landing-section-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.landing-section-desc {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
 .landing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 0;
 }
 
 .landing-card {
