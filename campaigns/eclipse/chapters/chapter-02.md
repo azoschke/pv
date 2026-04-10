@@ -1,259 +1,393 @@
-_The group had returned to the village victorious after slaying Bloodscreamer, D'vaari having been bold enough to claim the dark artifact it left behind, the question now was, at what cost? _
+## The Portal's Call
 
+The portal hummed at the back of the cave, unchanged since their return. Its surface rippled like disturbed water, showing glimpses of that dark forest beneath its blood-red moon. Cassian's fingers closed around the sigil, feeling its weight settle into his palm as the group gathered in a loose semicircle before the gateway.
 
-## Aftermath
+Soot doubled over without warning, her body convulsing. She shoved two fingers down her throat and emptied her stomach across the cavern floor.
 
-The tavern air hung stale and heavy, weighted with the lingering scent of blood and victory. The Phoenix Vanguard had returned to the village triumphant after slaying Bloodscreamer, though the cost had been steep. Shadows stretched long across weathered floorboards as masked villagers darted along the periphery, keeping careful distance from the strangers who had destroyed their tormentor. Their theatrical faces shifted between expressions of sorrow and wariness, giving D'vaari an especially wide berth whenever he moved through the room. The dark artifact he'd claimed from Bloodscreamer's remains seemed to unsettle them deeply.
+"By the Twelve," C'verna muttered, stepping back as something writhed among the half-digested remains.
 
-Captain Z'iro stood leaning against the empty bar, arms folded across his chest, dark eyes scanning his battered crew with thoughtful intensity. He huffed in annoyance at finding no bartender present.
+Among the half-digested remains of the day's meals writhed a blackened red tentacle—a remnant of the voidsent they had killed earlier. Soot had, in her typical fashion, taken a bite of their defeated enemy, and her body was now rejecting the corrupted flesh.
 
-Near the center of the room, Cassian stood swaying slightly. Dried blood stiffened the fabric of his torn clothing, and pain etched lines around his eyes despite his determination to remain upright.
+Fiora moved quickly, pulling a small packet of candied ginger from her belt. "Here," she said softly, offering it to Soot. "This should settle your stomach."
 
-Fiora crossed her arms, her exhaustion momentarily eclipsed by exasperation. "What are you doing standing?"
+Cassian stood apart from the others, the sigil pressed against his ear. The artifact pulsed beneath his fingertips, cold despite the rhythm he felt within. His jaw clenched as he listened for something—anything.
 
-"Not dead yet," Cassian muttered, rolling his shoulder with a grimace that betrayed the lie in his bravado. "Besides, I've been off my feet long enough."
+His body went rigid. Breath hissed through his teeth as his grip tightened around the Sigil. "I saw them," he gasped, loud enough for the others to hear. "They saw me too."
 
-"Is that so?" Fiora's voice carried a dangerous edge as her fingers found his wounded shoulder. She applied pressure with slow deliberation, just enough to remind him of what his body already knew.
+Xyla turned, her dreadlocks swaying as she approached. "Who saw you? What did you see?"
 
-Cassian tensed as pain lanced through his shoulder like a slow-burning fire. "Alright," he murmured, his voice rougher now, quieter with the admission of weakness. "Maybe I shouldn't be standing."
+Cassian rubbed his temple, his face drawn. "A castle, a prison. People in masks." His voice dropped. "And six of them, in red robes... one wearing a crown."
 
-Xyla turned in her chair, resting back against the bar as she watched the exchange, an amused smirk playing across her lips. The quartermaster said nothing, content to observe the familiar dance between the pair.
+The taciturn Viera's ears twitched. "I think he's dead," C'verna remarked, but concern flickered beneath her casual tone.
 
-Cassian sank onto a nearby seat, sighing softly as the weight left his trembling legs. "What are we supposed to do now?" he asked, fatigue bleeding through his words.
+Cassian staggered backward. Fiora reached his side immediately, steadying him as he swayed. She muttered something about "reckless fools" under her breath, her hands finding his shoulders.
 
-Across the room, D'vaari broke the uncomfortable silence. "Ssssoooo..." he drawled. "How're we all feeling? Soot, I know I'm a looker, but do try not to get too eager in front of a crowd. I'm a bit shy when it comes to public displays."
+D'vaari approached the portal. "We've come this far," he said, looking back at his companions. "Whatever lies beyond, we face it together."
 
-Soot had been eyeing D'vaari, or more specifically, the mask in his possession. Greed flickered in her eyes as she stood, puffing out her chest, and stalked directly toward him. "Soot want mask!"
+Z'iro nodded, though his complexion had turned greenish at the prospect of magical travel. "Let's not delay," he said, straightening despite his obvious discomfort.
 
-"You'd have to kill me for it, I'm afraid, my tailed, scaled, hip swaying dancer of a friend," D'vaari replied, his lighthearted tone belying the seriousness behind his words. "The magics bound within it have already bound to the physical... It seems the spiritual though remains untainted for the time being."
+One by one, they stepped toward the threshold. The taciturn Viera went first, then D'vaari, followed by Xyla with her bow ready. C'verna glanced back once before stepping through with a shrug. Soot followed eagerly despite her recent illness, and Z'iro moved forward with a captain's determination.
 
-Soot's scaled shoulders slumped. "Mmmph. Fine. Soot not play when thing bonded." She dropped back into her seat, still watching the mask with longing in her eyes.
+Cassian recovered enough to square his shoulders. He approached the portal with Fiora at his side, their hands finding each other briefly before they stepped through together.
 
-D'vaari hummed softly. "And here I thought you were going to put your hands on me. A shame." After a moment, he shifted his attention to the table where two newcomers sat, strangers who had somehow followed them through the portal. "So... No names, but what should we call you by?"
 
-One of them continued polishing his gunblade, the repetitive motion almost meditative. "I'm Salty. Pleased to meet ya, mate."
+## Eclipse
 
-"Call me Caretaker while we're around here," D'vaari replied. "I'll explain the note of no official names later." He glanced meaningfully toward the masked villagers. "They've got power around here. Try to keep the use of realized names to a minimum."
+The sensation hit immediately—free fall through absolute darkness. Time stretched, seconds becoming endless until they emerged with jarring suddenness on the other side.
 
-"Huh, no official names?" Orlando puzzled, glancing toward D'vaari. "Not sure what I should call myself then, but well met, Caretaker!"
+Darkness surrounded them. Above, a blood-red moon dominated the sky, massive and baleful, casting everything in shades of rust and shadow. The crimson light made familiar tree shapes seem alien and threatening.
 
-Meanwhile, Fiora's eyes darted around at the masked figures, searching for a space to properly tend to Cassian. Finding none suitable, tension crept up her spine, pulling her shoulders tight. "Stay there," she commanded Cassian with frustration evident in her clipped tone. Cassian nodded without argument this time, no stubborn pushback, just quiet understanding.
+Silence pressed against them, broken only by the slow chirping of crickets. No animals moved through the underbrush. No birds called from overhead. Behind them, the portal shimmered—their way home. Ahead, a narrow path cut through dense woods.
 
+Fiora knelt, her fingers digging into the soil. She closed her eyes, reaching for the ambient aether. Her brow furrowed as concern replaced concentration. "This land feels... dead," she murmured. "The aether is thin here, displaced by something else." She looked up at her companions. "I'm not certain we're even in Eorzea anymore. This feels like something else entirely."
 
-## Proposition
+Lucas examined nearby vegetation, turning leaves over in his hands before tossing them aside with a troubled expression. "Nothing here even resembles things that could exist in Eorzea," he said.
 
-The door to the tavern swung open slowly, spilling red moonlight across the wooden floor. Several masked figures slipped inside, remaining huddled near the entrance. Their leader cleared his throat, walking further into the tavern.
+"Not edible, huh?" C'verna remarked.
 
-"Good evening," he began, words careful and deliberate in the tavern's heavy silence. "We... appreciate the danger you've put yourselves in for our sake. Bloodscreamer was a menace."
+Lucas shrugged. "Well, I wouldn't stop you if you wanted to find out... but I wouldn't recommend it."
 
-He shifted his weight uncomfortably, the floorboards creaking beneath him. "However... there remains one more small issue, to us both this time."
+C'verna smirked. "Why would I eat unusual compounds when Soot will do it without asking?"
 
-The masked figure explained their predicament: beyond the village lay realm gates that connected to seven paths, each leading to a member of the mysterious court, with the central path stretching toward a castle. But those gates were guarded by soldiers who routinely patrolled the region. If they discovered strangers in the village, they would torch it.
+The Xaela Au Ra woman growled, her scaled features twisting with indignation. "Argh, Soot eat meat!"
 
-"If you were to remove them and take control of the gate, we'd be secure here, and we would have no further issue assisting you in the future," the figure continued, looking to the masked men with him then back toward the group. "You will need to handle them regardless, if you wish to proceed further. I advise you to remain here for the evening, though. One of our scouts reports an abnormally large number of soldiers at the gate presently. Attacking would be nothing short of suicidal."
+Fiora shot them both a stern glance. "I would not if I were you," she warned, "unless you find spending time with me in the infirmary a pleasant pastime."
 
-Cassian's face hardened with resolve. "So we have no choice," he said, voice steady despite the pain evident in his grimace. "Either we take the gate, or we wait for them to come knocking." A shadow passed over his features. "Once I heal..."
+Z'iro stumbled away from the group, bracing himself against a nearby tree. His body convulsed as he violently emptied his stomach. The captain clearly didn't handle magical transportation well. After a moment, he wiped his mouth and rejoined them, though his steps remained unsteady.
 
-Fiora knelt beside him, frustration simmering beneath her calm exterior. Her palm hovered over his wound, pulling at aether that refused to answer her call. Her lips pressed into a thin line as she tried again and failed. "There's nothing to work with," she whispered, defeat coloring her words.
+C'verna raised an eyebrow. "So you can handle a boat but you can't handle a bit of falling?"
 
-Cassian barely reacted to his own pain, his focus locked on Fiora as she struggled against the absence of aether. He reached out, placing his hand over hers. "Don't waste your energy," he told her quietly. "If it's not there, forcing it won't change it."
+Z'iro shot her a sidelong glance but said nothing. Fiora silently pressed some ginger into his hand, which he accepted with a nod.
 
-Across the room, Soot seemed delighted by the prospect of conflict. "Soot eat soldiers. Soot hungry! Need meat. Meat of soldier sound good, lot of trophy hunt," she declared with a wolfish grin, nodding toward the masked figures.
+"Captain finds difficulty in interesting places," Skyas observed with a shrug.
 
-"Meat?" Salty perked up, swinging his gunblade toward Orlando. "We could go for some meat, aye brother?"
+Xyla went still, her nose wrinkling as she sniffed the air. Her ears flattened as she drew her bow. "Everyone on alert and keep your weapons to hand," she commanded. "If what I just saw wasn't some sort of trick, we could be heading for a fight." She scanned the shadows between trees. "Did none of you smell that? It's like death or..." She shook her head, unable to find words.
 
-Orlando sighed deeply, eyes rolling skyward. "Alas, you burnt the last of the buffalo I had last night. Remember?"
+D'vaari pushed away from the rock he'd been leaning against. "Well then, sounds to me we've only really got one thing to do, which is establish ourselves in this land." He began moving toward the path. "Besides, a path like this means there is someone of intelligence, or at least a form of life beyond what we can see. Paths don't just carve themselves."
 
-"Even burnt it was pretty good," Salty insisted with an unrepentant grin.
+The group followed D'vaari's lead. Z'iro trailed behind, still recovering from his sickness. Fiora stayed close to Cassian, uncomfortable with how spread out the others had become. Her hand occasionally brushed his as they walked.
 
-The masked figures' expressions switched to laughter as they observed the group's reactions.
+C'verna handed Lucas a notebook and quill. Understanding, he began mapping their route, carefully noting landmarks and directions.
 
-D'vaari turned to address the masked figures, stepping beside Soot and placing a hand on her shoulder. "We'll keep to the advice of not attacking today. We've got a severely wounded comrade, as you no doubt saw. Even a small amount of time to recuperate is much appreciated. As for the gate—it's certainly a starting point for us as well."
+The forest remained unnervingly quiet. Only their footsteps on hard-packed earth and the occasional rustle of clothing broke the silence. Red moonlight filtered through the canopy in patches, creating pools of bloody light amid deep shadows.
 
+They approached what appeared to be a bridge spanning a narrow ravine. The structure was simple but solid—dark wood and stone.
 
-## The Curse
+"I'm not sure I should be relieved or concerned that some... thing here is capable of construction," C'verna remarked.
 
-The figures at the door shifted uncomfortably, their attention drawn to D'vaari and the dark artifact he carried. The leader's mask transformed, hardening with alarm.
+D'vaari nodded thoughtfully. "Relieved. It means that there is advanced thought here. Hostile or friendly doesn't matter. It means the complexity of the ecosystem is around."
 
-"This one is cursed," he said, pointing directly at D'vaari. "You should have left that thing where you found it. Eventually, you will become the very thing you fought so hard to destroy."
+Soot's normally grinning face had twisted into an anxious frown, her eyes wide as she surveyed their surroundings. "Soot not like," she muttered, her entire body tense.
 
-The mask's expression softened slightly. "The most recent variant of Bloodscreamer you fought was once one of our finest hunters, slayer of the former variant of the beast." His mask shifted to concern. "Though we cannot remember the name of the hunter. When the new Bloodscreamer takes form, it removes memories of itself somehow. All we have are fragments."
+Skyas adjusted his katana on his belt. "The people we fought before weren't monsters like what we usually face, even if their aether made it seem like they were. They were extremely coordinated, especially in their combat tactics. It doesn't surprise me they're advanced."
 
-Fiora flicked her eyes toward D'vaari at the revelation, then returned her focus to Cassian. She brandished a needle and thread from her pack and glared at Cassian, daring him to move.
+"I'd much rather deal with a mindless beast than someone capable of plotting," C'verna replied, bending down to pick up a small rock, which she lobbed toward the center of the bridge with casual precision.
 
-"And yet you can still recall that the individual was from here," D'vaari observed, his gaze thoughtful. "Therein lies the hint to break the very cycle you mentioned. Remnants of memory are still memory in themselves, so erasure is not complete."
+Before anyone could respond, the sound of wheels on stone broke through the silence. Around the bend ahead appeared a small carriage drawn by two large, brown creatures unlike anything they had seen. Each had six legs instead of four and six eyes on each side of their head, giving them unnervingly expansive vision.
 
-"Could there be a central place where the memories are being physically stored?" Visaki asked quietly.
+Several robed figures walked beside the carriage, their faces obscured by white theatrical masks. Another sat atop the carriage, holding the reins. They stopped on the far side of the bridge, regarding the company with apparent caution rather than hostility. Their masks shifted from neutral expressions to ones of sadness, the faces somehow moving in real-time to match their wearers' emotions.
 
-The figure nodded at Visaki. "We suspect it consumes those memories, or perhaps destroys them. Likely as a form of self-defense so that we cannot use its name. The name of the person it has taken over, we suspect only, would allow some form of... control over the beast."
+C'verna's hand moved cautiously toward her spear, her face remaining impassive as she studied the masked figures.
 
-Soot made a surprised gargle, not unlike a monkey, her eyes widening with this revelation. She looked at D'vaari with sudden excitement. "Hunt! Kill! Meat! Mask! Soot become hunter!"
+"Friend?" Soot called out hopefully.
 
-Salty, never one for subtlety, asked bluntly, "Couldn't we just slice his face off before he turns?"
+Cassian remained quiet but alert, one hand squeezing the sigil while the other hovered near the hilt of his axe. The taciturn Viera glanced at him, their voice low. "Cassian... You spoke of seeing people in masks. Like these?"
 
-D'vaari sighed. "We've got another one..."
+He nodded, his expression grim. "Yeah, the masks are the same, everyone wore them... different, theatrical... but there were some of them, six of them, who seemed different, and one crowned one."
 
-"As to the gate," the masked figure continued, "we are unsure. Perhaps they are aware of your presence. You slayed the beast on your side of things, did you not? Perhaps he felt its death, or perhaps they're about to carry out inspections. It is hard to say."
+D'vaari observed the newcomers with scholarly interest. "And quite a bit more advanced if they've learned animal husbandry and construction techniques to make transportation such as a carriage." He rubbed his chin thoughtfully. "Now this is interesting... I wonder what she'd have to say about this."
 
-The figures at the door looked at each other, exchanging silent messages with the subtle tilts of their theatrical faces. Two departed while the one who spoke for them remained.
+Xyla stepped forward, her bow now resting on her shoulder but ready to be used if needed. "Well, that's different," she called across the bridge, her voice carrying authority. "Who exactly are you and where are you coming from?"
 
+"If you have weapons in hand, lower them," D'vaari advised, removing the sword from his back and placing it on the ground before raising his hands in a gesture of surrender. "They're scared."
 
-## Strange Feast
+The robed figures seemed to relax slightly at D'vaari's actions, their masks shifting back to neutral expressions.
 
-"We will fetch you some food," he announced, his mask switching to joy. "You are in luck—our hunters were very successful before your arrival. We have something very special for you as a thanks for your assistance so far."
+"Not doing that," the taciturn Viera replied firmly. "Quartermaster spoke of monsters nearby. Staying ready."
 
-Xyla frowned, her brow furrowing as she processed everything the masked figure had told them. "Well, let's hope they don't check tonight," she said carefully. "Do you have anywhere they tend to overlook that we could stay if they come toward the village?"
+C'verna smirked. "I didn't realize you spoke theater mask." Nevertheless, she allowed her arm to return to its usual crossed position.
 
-The masked figure shook his head. "No, they are thorough, mostly because they take anything of value. It is unlikely they will confront us directly this evening." He shifted, looking around the room. "Was there... any further questions before we see to your food?"
+D'vaari shrugged. "There's a lot about me you don't realize, to be fair."
 
-Cassian spoke up, his voice growing more focused despite his exhaustion. "You said Bloodscreamer has some kind of connection to its name, that it holds importance," he said. "If it's erasing its past, then someone had to have given it one in the first place. Who made the mask? If memories are being stripped away, then someone, or something, designed it to work that way."
+"I'm in no rush," C'verna replied coolly.
 
-He leaned forward slightly, wincing at the pull of stitches. "Maybe it was one of those red robed figures I saw. The members of the court. What do you know about them?"
+Cassian positioned himself protectively next to Fiora, his gaze steady but wary. "They seem to be... their actual faces... not masks..." he observed quietly, loud enough for the others to hear.
 
-Fiora poked Cassian harder with the needle as he began shifting in his seat, eagerly asking questions. "Be still. This will go quicker if you stop squirming."
+The robed figures that were on foot slowly began to move across the bridge, leaving the carriage and its driver behind. They stopped at the halfway point, one raising a hand in what appeared to be a greeting while the others stood back.
 
-Cassian nodded at the masked figure, then glanced at Fiora. "A little warning next time?" he muttered, though he stayed still as instructed. "Fine, fine. Just hurry up. Feels like you're enjoying this a little too much."
+D'vaari stepped forward, removing an earring and holding it out as he approached. "Hello?"
 
-The masked figure tilted his head. "That is a very broad statement, though you misunderstand. Not Bloodscreamer—the beast you faced at the portal was attached to him. Bloodscreamer is feral, no attachments, though... perhaps it once did."
+The figure regarded D'vaari with a nod. When it spoke, the words emerged directly from the "mask" itself, confirming Cassian's observation. "Hello," it responded. "You are..." The figure looked D'vaari over, then past him to the group. "Different. Not from here. Something is... strange about you. No anima. Something different." It paused, seemingly in thought. "This place is dangerous."
 
-A knock interrupted them. The masked figure turned and stuck his head outside for a moment, then nodded. Looking back, his mask shifted to an expression of joy.
+"I remember more than just them," Cassian muttered to the others. "There were structures, huge ones. A castle, a cathedral, a tower, and a prison. All looming over the villages."
 
-"Your food is here," he announced, stepping aside to hold the door open.
+D'vaari engaged the figure in conversation. "Oh... That makes things so much easier, the fact we can understand one another. Yes, we have traveled... Far is the best way to put it. Travelers, given we well, travel. If this place is dangerous, might you know of the dangers, and where we could find relative safety for this... moon length? How do you keep time?"
 
-Five masked figures carried in a massive table laden with a questionable display. The feast was odd, but it was meat—that much was certain.
+Xyla joined the exchange. "This place is dangerous, but something from this world has been attacking ours, and so we are here to investigate. Would you be able to tell us about this place? I know there is something very large in the woods for starters."
 
-"Enjoy!" the head masked figure said happily.
+The figure shifted uncomfortably. "I see. Not from here at all. Moon length... no, this is our constant." It raised its hand toward the crimson orb above. "Dangerous for us, even more for you. These woods... are home to a... being, something that carries out his will." The figure glanced fearfully toward the forest. "It hunts us. We would... shelter you, but no one is safe while it roams. If you come from the place he wants, it will come for you first. If we shelter you, it would be our end."
 
-Soot gasped at the smell, then uttered a disgusted noise. "Soot not like sticky meat ropes."
+"Where to find beast?" Soot demanded eagerly. "We kill. Big group, one beast."
 
-"I've never seen meat that looks like noodles," Salty declared. "Bring out the real meat—buffalo! Pork! Mi'qote!"
+The taciturn Viera spoke up. "Creature that opened rift claimed we were too late. Seems like creature doing this 'being's' bidding..."
 
-Xyla smiled politely despite her obvious unease. "I... er... What kind of meat is this, if you don't mind me asking? Just always good to know what you're consuming."
+Fiora glared at Soot before composing herself, clearly concerned about the Xaela's eagerness for combat.
 
-Cassian took one look at the feast and shot a glance at Fiora. "I think I still have some rations in my backpack."
+"I see," D'vaari replied diplomatically. "Then you're taking a great risk even informing us of any of this. For that, we are thankful for even this small amount of—" He winced as Soot repeated her question more fervently. "—information."
 
-Z'iro looked at the table, then at Soot, perhaps wondering what would happen if she ate it.
+The taciturn Viera attempted to redirect the conversation. "What more can you tell us about anima?"
 
-The masked figure looked confused and concerned, his mask flicking between emotions. "It is both meat and fish. We caught the Writher fresh this morning, and our hunters killed the Nine-legged-strider last night. I promise it is perfectly delicious. We don't have any of what you're asking for here."
+Xyla nodded thoughtfully. "Well, what if it was dealt with? Before that thing came, was it eternally a blood moon, or did you have changes in days? We don't want to put you or anything else at risk, and given its size, I dread to think of the damage it could do to a village."
 
-Orlando, braver than he looked, reached out to take a small piece, biting into it cautiously. His eyes widened in surprise. He grabbed two platefuls and handed one to Salty. "Eat. It's actually rather good."
+C'verna's tail swished skeptically. "Are you sure we can trust them? It's a rather convenient explanation if they wanted to be rid of us."
 
-"It's good," Visaki agreed, nodding to the masked ones. "Far better than things I've had before. Compliments."
+The figure sighed, its mask shifting to express resignation. "Not so simple. Nothing is certain. This place was once... beautiful, but something changed. The Crimson King, he changed." The figure stopped abruptly, as if it had said too much. "Our village is back up the road. We will... be there, if you can kill this being, but I fear you will be no different than those before." It hesitated before continuing. "Yet... perhaps we can assist. Names are a thing of... power, for this being." Another pause. "Bloodscreamer. That is our name for it."
 
-Those brave enough to try the "Writher" found it tasted like calamari, just a bit chewier. The meat was a strange cross between beef and pork—edible and juicy, falling apart easily when chewed.
+The figure then addressed the group's other questions. "Anima is... life, it is everything around us. Now it is... his, something different, converted, changed. If you were to... put this being down, we could offer you shelter. A place to be at ease, to hide from his gaze, if only for a little while. A starting point perhaps. Perhaps give you enough time to... flee, or stay, or fight. It matters not. Soon, nothing will be able to stop him—them." The figure's mask shifted to an expression of profound sadness.
 
+"The Crimson King and his court," Cassian said thoughtfully, glancing at his sigil. "The ones with the crimson robes and the crowned one." He looked back at the masked being, his tone questioning, seeking confirmation.
 
-## Healer’s Frustration
+The figure recoiled slightly at the mention of 'Crimson King,' despite having used the name itself. The reaction spoke volumes about the fear the name inspired.
 
-While the others were eating, Fiora continued her work patching up Cassian. She cut the thread with her teeth, tying off the stitches before stashing the needle in a vial. She blanched as she stared at the feast, then shook her head and returned to her task, extracting a roll of bandages.
+The taciturn Viera turned to their companions. "Reason to be concerned, if this King's goal was to open the rift to our star."
 
-D'vaari moved to Fiora's side. "If you'd like, I can offer you a bit of aether. I don't have much left after the fight, but given our states, it would be better served in your hands."
+"Perhaps this King wants to bring his blood moon to our star," Cassian suggested, looking up at the crimson orb hanging in the sky.
 
-Cassian's fingers curled into the fabric of his sleeve as he regarded D'vaari with a nod. "Appreciate it. Just don't leave yourself defenseless." His gaze flicked to Fiora. "But don't drain yourself dry trying to patch me up. I'll manage."
+Skyas smiled grimly. "The Crimson King... Finally, we're getting closer. And it looks like I was right—we're going to have to kill whatever beast is here to have anything even close to a place to stay. Either way, I'm itching to have something to do that isn't carrying supplies."
 
-Fiora swallowed before nodding to D'vaari. She tied off the bandage on Cassian's arm, fatigue evident in her movements. "The land is barren," she said quietly. "I'm afraid of what will happen should we run into more trouble soon. Relying on my own is... inadvisable."
+C'verna's ears perked up in surprise. "Hold up, are you saying we're on a different star right now?" She shot an accusing glare at Lucas.
 
-D'vaari extended his hand to Fiora. "Place your hand over mine. It's best to leave as little room between us as possible, given aether likes to naturally dissipate when not contained within something."
+He responded with a humorous frown that seemed to say, "Not my fault—you signed up for this free company!"
 
-He reached into his pouch and pulled out slender vials of pink liquid, popping the cork on one and downing its contents. "Fucking hate the strain these things put on the body."
+"Yes," the taciturn Viera confirmed simply.
 
-As D'vaari pulled out the vial, Fiora reached out to him.
+D'vaari muttered under his breath, deep in thought. "Anima, life, names, conversion to aether, and if so, attached to the physical or just the spirit? If physical, implications to magic could be interesting; if spiritual, might cure certain flaws of the base spells, and further modification could be required."
 
-D'vaari placed his hand on top of Fiora's, closing his one visible eye. "Form of the Familiar, Astrea's Balance," he muttered. A white glow flowed over their palms.
+"No animals here," the taciturn Viera observed, looking back to the masked figure. "Forest feels dead. But if anima is 'life,' then why?"
 
-The tension bled from Fiora's shoulders as the aether flowed, though she raised an eyebrow in subtle question to D'vaari. She didn't press, simply curious.
+Fiora nodded in agreement. "Perhaps this... creature?"
 
-Cassian watched Fiora carefully, noting how the tension in her frame eased as D'vaari's aether took hold. Some of his own worry loosened at the sight.
+Cassian's expression darkened. "It was corrupted, as our friend said. It was converted, changed. By him, by them, and it wants to keep corrupting."
 
-D'vaari maintained his focus on the spell for a while longer. When finished, he withdrew his hand quickly, rubbing it on his clothing as if to get rid of something. After checking his hand was clean, he nodded. "Just a quick copy of things I've studied," he told Fiora with a small smile that never reached his eyes. "Now I'm hungry."
+"Soot want hunt!" the Xaela exclaimed, clearly growing impatient.
 
-Fiora held out another paper-wrapped provision to D'vaari. It smelled of brine.
+Xyla's brow furrowed in thought. "I assume the Bloodscreamer is either killing them all for sustenance or draining them for power of some sort."
 
-D'vaari glanced at the wrapped provision Fiora offered, raising an eyebrow. "Thanks. I want to run a self-placed experiment before eating this. This place is made of an energy they call Anima... I wonder if our bodies can handle converting it into the physical aether we're made of. It's a rather intriguing prospect."
+C'verna tilted her head. "So is the Bloodscreamer just the Crimson King's pet? Or a separate... faction?"
 
-"It concerns me too," Fiora agreed. "I tried to get a better sense from Soot's... compass... the other day, but we were interrupted."
+"Likely a creature, perhaps one day a beautiful one, but now corrupted, by whatever is corrupting everything else," Cassian theorized.
 
-"The best thing would be to find some sort of novice caster within the village," D'vaari mused, "or a manipulator of this Anima. Compare, contrast, and replicate what we can. Part of why I picked up the mask. Since it's bonded, that means conversion can happen."
+Skyas nodded. "Crimson King, Bloodscreamer, most other people we've fought seem to have had a red color theme... I'd bet it's a hunting pet of some kind."
 
-Fiora's expression grew calculating as she caught D'vaari's meaning. "I'm afraid of the consequences of an extended stay if we don't find a way."
+"So like our Soot?" C'verna quipped.
 
+D'vaari interrupted the speculation. "Regardless, the longer we keep these kindly folk, the more we jeopardize them. Best we let them through."
 
-## Understanding the Enemy
+The masked figure listened to their discussion silently before speaking again. "Not a star. A place. A pocket. A fragment. We are... not like you." Its mask shifted to something resembling frustration as it struggled to explain. "Something that broke from a whole, long ago, longer than we can remember. Now we are our own, lost, adrift." It cringed at the mention of 'Crimson King' once more. "Bloodscreamer is a symptom of the sickness. We cannot linger. We will turn back and pray for your success, or a merciful death for you." The figure stepped back, preparing to leave. "If you have any final questions... now is the time."
 
-The masked figure returned with ten others, each carrying what appeared to be large cakes with strange creatures moving in their centers. There were more than enough for everyone.
+"Where find Bloodscreamer?" Soot asked immediately.
 
-"Now then," the leader announced, "while you enjoy your dessert, allow us to show you who you'll be facing."
+The figure took her question as the last. "Follow the road. You will find the ruins. Once you are there... it will find you." With that, the group turned and returned to their carriage.
 
-He crossed to Z'iro and set down a strange mechanical device, fiddling with its controls.
+"Why traveling in forest, if Bloodscreamer is threat to you as well?" the taciturn Viera called after them.
 
-As the creatures in the center of the cakes growled, Salty growled back at one, causing it to whimper and explode in fear, coating the dessert in icing.
+The figures looked back, and one spoke a final, haunting reply: "Because we have nowhere to run."
 
-"To the Gods above, why have you forced me to suffer this fool?" Orlando muttered, glaring at Salty.
 
-The masked figure finished tinkering with the device and cleared his throat. "If I could have all your attention, please. This will be a short presentation, as I doubt this device will function very long, but it will help you survive what is to come."
+## The Hunter and the Hunted
 
-He pressed a button, and a holoscreen appeared. With the second button, the screen split in two, each displaying armored, hooded figures with grim-faced helmets.
+D'vaari sighed, watching the masked figures retreat. "That could've gone a lot worse. Just glad they were okay with being barraged with questions from everyone." He reattached his earring and retrieved his blade from the ground. "As for trusting them, I never said I did necessarily, but we offered a lot of information..."
 
-"These are the gate guardians: The Flayer and The Ripper. Believe me, their names have been more than earned. They are brothers, both in service to the council member The Executioner."
+Cassian looked back at Fiora, a quizzical expression crossing his face. Beneath the crimson moonlight, shadows danced across the planes of his half-Garlean features as he sought his wife's counsel without words. Fiora responded with a series of subtle hand signals pressed discreetly into his palm—a private language they had developed through years of marriage and battlefield companionship. As their hands connected, both felt a strange pulse emanate from the sigil Cassian held—a dark energy that seemed to throb with its own awareness, as though trying to communicate something beyond their understanding.
 
-"Why can't people ever choose less bloodthirsty names?" D'vaari asked. "Like Flower."
+Fiora recoiled from the sensation, a frown etching itself across her face as she rubbed her hand. The memory of that cold pulse lingered on her skin like the echo of winter.
 
-"Flowers are nice but not usually intimidating," Orlando pointed out.
+C'verna flicked her ear irritably, swatting at it as though seeking an invisible spider. The taciturn Viera stared into the depths of the forest, their keen eyes narrowed. "Bloodscreamer current largest threat to come through rift. Should deal with first," they said with quiet certainty.
 
-"There are many dangerous flora on the continent and outside of it," Cassian noted.
+Without further deliberation, Z'iro took point, gesturing for the others to follow him down the winding path. The company moved in somber procession, the blood-red light from above casting long shadows that stretched before them like portents.
 
-"And are you really that intimidated by someone named Ripper?" D'vaari asked skeptically.
+They soon passed through a small village where more masked figures watched them from doorways and shadowed corners. The silent inhabitants moved back as they approached, creating a pathway of empty space through which the strangers could pass unmolested. No words were exchanged—only the weight of countless hidden eyes following their progress.
 
-The figure turned to D'vaari, his mask shifting to an emotion resembling terror. "You should be afraid. The Ripper has taken to removing the internal organs from his victims and decorating the realm gate with them. He is perhaps the more violent brother."
+Once beyond the village boundaries, the forest swallowed them once more. The path narrowed, hemmed in by ancient trees whose gnarled branches seemed to reach for them with arthritic fingers.
 
-"He once came here for an inspection," the figure continued, voice hollow with remembered fear. "He found that we kept a bag of flour for ourselves. His response was to drag one of our town council members to the town square and hang him by his intestinal tract." The mask switched to profound sadness. "It was... terrible."
+"Having thought," the taciturn Viera broke the silence, "if masked ones fear King's name said aloud... and we heard laughing from woods... then maybe King's name has 'power' of its own. Maybe we should be careful of saying aloud."
 
-"An act to instill fear in would-be attackers," Visaki observed. "If we approach this with that fear, we would be falling into their traps. Maybe tantamount to death."
+D'vaari nodded thoughtfully. "Depends entirely on how it functions. The idea that names have power is so broad, and the applications are not so easily understood. But yes, it's a possibility."
 
-"My robed friend here is right," Salty agreed. "Them theatrical types are generally all bark, some bite."
+Skyas grinned, his hand resting casually on his katana. "So what you're saying is, if this thing doesn't hit hard enough to be fun, we can say its name and try to make it more fun?"
 
-The figure turned and switched off the device, the images vanishing. "We'll fetch you all blankets and pillows. Upstairs, there should be enough rooms for each of you. You are welcome to them for the night. We shall keep you in our thoughts when you head to the gate." He turned toward the door. "I shall return shortly."
+"If you want to give away the element of surprise, and die," the taciturn Viera replied flatly.
 
+"Don't do that," D'vaari added with a grimace.
 
-## Setting the Watch
+Fiora's voice was barely a whisper when she spoke. "Perhaps we should be careful of speaking our own names."
 
-"What's our watch order?" D'vaari asked once the figure had gone.
+"We agree," the taciturn Viera responded. "Playing with magic that isn't understood fully could lead to dire consequences."
 
-"I'll take first watch if you'd like," Orlando offered. "I want to look at the clouds a while."
+"No names then," Cassian concluded firmly.
 
-"People aren't just the worst things they've done," Cassian muttered to himself.
+Fiora tilted her head, a contemplative look crossing her features. "I wonder if assumed names hold similar power," she mused.
 
-Fiora waited until the masked figure had left. "We've agreed we're going to this gate?" she asked, her eyes darting around, lips pressed into a thin line.
+Skyas sighed dramatically when no one supported his desire for a challenging fight. "You guys just wanna suck the joy outta everything..."
 
-"Once they are done for the night coming and going, I say we barricade the doors the best we can," Xyla suggested. "Then each take a house shift. I'll take the first, and the rest of you decide who goes in what order."
+"Probably," D'vaari replied to Fiora. "Epithets are probably a lesser power, but still significant."
 
-Steven, Z'iro's avian companion, flew from his shoulder and began helping himself to some Writher from their meal.
+As they continued deeper into the woods, Fiora slowed her pace to walk beside Soot. "May I..." she began hesitantly, then closed her mouth, reconsidering her words. After a deep breath, she tried again. "The thing you picked up, may I try to... sense it?"
 
-"You first, D'vaari," Z'iro decided, "then I'll take over, followed by Orlando, then Visaki, then Salty. Hour and a half shifts each. That'll give us more than enough time to rest."
+Soot shrugged and removed the Anima Weaver from her possessions, holding it out. "Not taste good," she offered helpfully.
 
-"I'm fine with the last shift," Salty agreed. "Give me some time to get my weapon ready for the fight in the morning. I'll blast away any of them bastards that try to get the jump on us!"
+Fiora hovered her hand above the strange object, her eyes half-closing as she attempted to sense something beyond the familiar pull of aether she was accustomed to. She reached out with her consciousness, searching for any hint of this strange energy called anima.
 
-"Works for me, Captain," D'vaari nodded. "Also... if it seems I'm overstepping my bounds? I absolutely am. I figured the best thing to do is to try and place myself as a false leader of the group. If we're turned on, it's easier if my head rolls rather than an actual leader's."
+Before she could delve deeper, the stillness of the forest was shattered by a sound that sent ice coursing through every vein. A loud, ear-piercing shriek split the air—a horrific blend of a woman's scream and some primal beast's howl, at once shrill and deeply resonant. The sound lingered, echoing through the trees for several long moments before fading, leaving behind a silence that felt even more oppressive than before.
 
-Z'iro shrugged at D'vaari. "You're fine. It saves me the trouble. It's not me you need to worry about, so long as you aren't doing it on the ship." He made a subtle nod toward Xyla.
+Ahead on the path, strange white shards littered the ground, mingled with torn scraps of fabric—remnants of someone who had encountered whatever stalked these woods.
 
-Xyla smirked at Z'iro. "I work hard. I deserve to keep my authority. So long as people listen and don't overstep, they don't have anything to worry about. You know that, Captain."
+"Lovely," C'verna muttered, her ears flattened against her head.
 
-Cassian's fingers brushed against the worn edges of the sigil as he pulled it from his pocket, turning it over in his palm. His free hand tapped idly against his knee as he stared at it, lost in thought.
+D'vaari visibly paled. "Oh right, to answer the question of where the wild-life went—" He paused, his ears twitching nervously. "Portal sounds good right about now."
 
-The masked figure returned with seven others, all carrying blankets and pillows, which they set on the empty tables. "We'll leave you all to your evening," he said with a nod before slipping back out.
+Cassian froze at the sound, his body tensing like a coiled spring. His hand moved instinctively to his weapon, fingers tightening around the handle as his sharp gaze swept the surrounding darkness.
 
-Z'iro moved from the counter to the table, taking a blanket and pillow. He passed by Xyla, stopping to say something quietly before heading to his room.
+"At last..." Skyas grinned, drawing his katana with anticipation and cracking his neck.
+
+Without conscious thought, Cassian positioned himself protectively in front of Fiora.
+
+"Beast knows we're here; no surprising this one," the taciturn Viera said. "Are we ready?"
+
+"No," D'vaari admitted frankly.
+
+C'verna smirked. "I forgot to bring a housewarming gift."
+
+"Track and neutralize," Cassian instructed tersely. "Careful on all sides, arrow head formation."
+
+A deep, booming laugh echoed from the woods around them, seeming to come from everywhere and nowhere at once. The sound carried undisguised malice, made all the more chilling when it was followed by words.
+
+"Beast does know you are here, little thing," the voice rumbled. "And what have we here? So far from home, something new, something different... something to consume." The voice paused, humming with sinister amusement. "Something interesting."
+
+A large stone suddenly hurtled across the path from left to right, narrowly missing several members of the group. "Or something foolish," the voice concluded.
+
+"And now I can't run," D'vaari muttered. "Twelve save me."
+
+C'verna took a single step backward as she noticed movement, slowly drawing her spear into her hands with practiced ease.
+
+Xyla nocked an obsidian arrow to her bow, silvered stars glittering down its length as she scanned the area, seeking higher ground from which to survey their surroundings.
+
+The taciturn Viera leapt upward with a powerful surge, using the momentum to climb onto a perch in a nearby tree, hoping to catch a glimpse of their tormentor.
+
+"Trespassers. Fools. Lambs to the slaughter," the creature taunted. Another object hurled across their path—this time the broken corpse of one of the masked villagers, smashing into the ground with sickening force. "I can smell your fear. I can taste it in the air." The voice hummed contemplatively before asking, "Why are you here, little things?"
+
+Cassian took point, his jaw tight as his grip on his axe. "Not dying here," he muttered under his breath.
+
+"Twelve," D'vaari said, drawing his sword slowly. "If I am to die here, know that I thoroughly enjoyed the view of every single woman's ass I saw this week. Thank you." He paused meaningfully. "Including the ones in this group."
+
+"If the beast doesn't get you, my spear will," C'verna promised darkly.
+
+The creature seemed to delight in Cassian's defiance. "You will," it replied with terrible certainty, its voice suddenly changing. The next words seemed to whisper directly into each person's ear simultaneously, an intimate violation that sent shivers down their spines: "That is non-negotiable."
+
+"Bloodscreamer!" the taciturn Viera called from the treetops, their voice commanding and challenging. "We challenge you to a fight. Come before us! If you win, you can have your fill of our essence!"
+
+The moment the name was spoken, a vicious, horrific scream filled the woods, and heavy footsteps could be heard retreating into the distance—seemingly toward the ruins the masked figure had mentioned. The creature fled at the sound of its own name.
+
+"Did hearing his name... hurt him?" Cassian asked, looking up at the Viera with surprise.
+
+Fiora's brow furrowed in thought. "The question..." she murmured, something troubling her.
+
+"Well, let's not stand around long enough for him to lick his wounds if it did," Skyas urged, eager to pursue.
+
+"I would be hurt too if that was my primary school nickname," C'verna remarked dryly.
+
+"Cowardly beast," the taciturn Viera spat after landing back on the ground. "It seems to cause it distress, yes." They gestured down the path. "Come. We've pushed it back to its nest."
+
+D'vaari moved forward quickly. "Considering I've got at least one lady wanting my blood, it seems all I've got is to move forward."
+
+"I agree with Skyas and Taci," Cassian nodded. "Let's stay together."
+
+"Why would it ask questions of us?" Fiora wondered aloud, her voice troubled.
+
+"To learn our names?" the taciturn Viera suggested.
+
+"Feed information to his masters, perhaps," Cassian added grimly.
+
+The company advanced cautiously through the woods, moving as one toward the confrontation that awaited them. The path grew less defined as they approached what appeared to be ancient ruins—fallen columns and crumbling walls half-reclaimed by the forest. The crimson moonlight cast long shadows across the broken stones, creating a nightmarish landscape of light and dark.
+
+As they entered a clearing among the ruins, they finally beheld their tormentor. Perched upon a shattered wall, staring directly at them, crouched a horrid creature. Massive twisted antlers crowned a head that housed two burning crimson eyes and a maw full of needle-like teeth. The beast appeared withered and starved, its emaciated form suggesting desperate hunger. Its unnaturally long arms hung across its body, crossing near its ankles, with the corpse of a villager clutched in its taloned fingers.
+
+The Bloodscreamer sat squatted on the rubble, grinding its teeth with a sound like stone on stone. It said nothing, merely cocked its head slightly—a gesture that contained no warmth or curiosity, only predatory assessment. All across the clearing lay the smashed "masks" of villagers, torn fabric drifting like ghosts in the faint breeze. The creature narrowed its eyes, muscles tensing visibly beneath its leathery skin.
+
+C'verna charged forward, spear at the ready. In response, the Bloodscreamer stood to its full, towering height and lobbed the villager's corpse directly at her. The impact knocked her backward before the creature leapt down from the ruins, landing before the group with a huff that carried the stench of decay.
+
+"Parlé?" Xyla called with grim humor, her arrow already drawn. "We need some answers, and perhaps we can help fix whatever ails you. We will fight if we have to, though—" Her words ended as the beast attacked, and she loosed her arrow toward its shoulder.
+
+The battle erupted in furious motion. Cassian leapt at the creature, his axe slicing through its hide. Lucas raised his shield to defend C'verna while Skyas unsheathed his blade with a flourish, slashing at the Bloodscreamer's arm.
+
+"Unfortunately for this thing, we're about as bloodthirsty as it is," Skyas taunted.
+
+D'vaari positioned himself strategically, raising his blade. "You were offered a challenge, and so it shall be set again. Upon the name of Caretaker, I offer thee, challenge for challenge, blow for blow, a dance which calls upon thine name. Blood shall flow from us, and Scream to this eternal night our passion of violence. Come forth and face me!" He channeled aether into his voice, invoking, "Form of the Familiar, A Knight's Decree."
+
+"Bloodscreamer!" the taciturn Viera called again, pointing their spear at the creature. "We have come to challenge you—and there is nowhere left to run, you cowardly beast!" With remarkable agility, they used the terrain to leap up and drive their spear into the monster's neck.
+
+The Bloodscreamer appeared unaffected by its name this time. Instead, it leaned its head back and released an ear-splitting howl that seemed to shake the very stones of the ruins. It turned toward D'vaari, raising its massive claws high into the air—the creature's sheer size making it clear that D'vaari would be overwhelmed alone.
+
+C'verna rushed forward, aiming her spear at the beast's head. Cassian jumped to D'vaari's side, positioning his body and axe beside his companion's stance. "I SAID WE'RE NOT DYING!" he roared, his voice raw with determination.
+
+The Bloodscreamer brought its claws down upon them with devastating force. Though they managed to block the worst of it, Skyas was caught in the blowback, his body thrown backward from the impact. Despite his injuries, his intervention had spared D'vaari and Cassian from the full brunt of the attack.
+
+Fiora reached desperately for the aether around them, only to find it responding weakly. Without hesitation, she channeled her own life force, ignoring the sharp pain in her chest and the burning sensation of overuse. Her hands stretched toward Skyas, glowing with healing energy that flickered unstably in the crimson light.
+
+The battle raged on, a desperate choreography of strikes and counter-strikes. Lucas slashed at the creature's leg while Velika delivered a furious double-slash with her twin blades. The Bloodscreamer fought with increasing ferocity, lashing out at anyone within reach.
+
+In a moment of desperation, the creature turned and dashed into the woods, only to leap back out moments later—now accompanied by two identical copies of itself. All three monsters landed before D'vaari and Cassian, their booming laughter filling the clearing as they raised their claws to strike.
+
+"What in the blighted hells..." Fiora muttered, her face pale with exhaustion.
+
+Cassian's eyes narrowed as he studied the three figures. "Ignore the fakes, hit the real one!" he shouted, pointing at one specific Bloodscreamer. "That one! Bloodscreamer!"
+
+The moment he indicated the true creature, the illusory shades burst like bubbles, dissolving into wisps of dark energy. The real Bloodscreamer howled in pain, stumbling backward against the ruins and tripping over the rubble. "How!" it rasped in disbelief, momentarily vulnerable in its shock.
+
+The company seized their advantage, launching a coordinated assault. Lucas thrust his sword at the beast's leg while Cassian delivered a deep cut with his axe. C'verna hurled her spear with incredible force, the weapon lodging firmly in the creature's neck. D'vaari channeled his aether, calling out, "Form of the Mountains, Strength of the Gigas!" as he cleaved into the monster's leg.
+
+Fiora, despite her exhaustion, pushed herself beyond safe limits. She gathered what little aether remained, combining it with her own life force to heal her companions' wounds. Her vision began to darken at the edges as she swayed, barely catching herself against a piece of rubble.
+
+Skyas leapt into the air, his blade glowing with ethereal energy as he brought it down through the creature's body, seeming to rend not just flesh but something more fundamental. The taciturn Viera targeted the beast's tendons, attempting to hamper its movement.
+
+Bloodscreamer whirled suddenly, lowering its horns and charging at the taciturn Viera. Its aim was off, however, and it crashed into the ruins, its antlers becoming firmly embedded in the stone. Trapped, with its back exposed to the group, it had no way to defend itself.
+
+With the last reserves of her strength, Fiora wove a protective barrier around Cassian before collapsing to her knees, using her stave to remain somewhat upright as her breath came in shallow gasps.
+
+The company unleashed everything they had left. C'verna retrieved her spear from the beast's neck, using it to tear deeper into the wound. The taciturn Viera launched a wind-laced missile from their spear into the creature's back. Xyla sent a volley of arrows skyward, each one splitting into multiple shards that rained down upon their enemy.
+
+In a final, desperate act of fury, Bloodscreamer tore free from the ruins and dashed through the group, clawing and slashing wildly at anyone in reach. It then turned toward Cassian, dropping its horns to charge straight at him.
+
+"NO!" Fiora screamed as Cassian was struck, his body thrown violently against a fallen column. The impact reverberated through the ruins, dust and small stones shaken loose by the force.
+
+Despite the devastating blow, Cassian forced himself up, blood streaming from wounds on his temple, arms, and chest. With a primal growl, he charged the creature one last time, his axe swinging in a powerful arc that cleaved deep into Bloodscreamer's body.
+
+The monster fell, its massive form crashing to the ground with a thunderous impact. Cassian collapsed beside it, a faint smile crossing his bloodied face as he looked toward Fiora with hazy eyes before closing them, his chest still rising and falling with shallow breaths.
+
+Like the demons they had encountered before, Bloodscreamer's body began to disperse into anima—the strange energy of this realm—leaving behind something dark and ominous where it had fallen.
+
+D'vaari approached the mysterious object, picking it up and examining it in the crimson moonlight. "Hello, Bloodscreamer," he murmured. "Much like those before you, you and I shall become very well acquainted, I think. Many are the things I have in mind to study you. I hope it's enlightening, to say the least..."
+
+Xyla kicked at the dissipating remains of the creature, her face grim. "I think we should get everyone back to that village, eat, and then rest. Hopefully, they'll be able to help with healing Cassian as well."
+
+Fiora crawled to her husband's side, her hands trembling as she pulled bandages from her belt, completely drained of healing aether. "Someone help me carry him," she requested, then added in a small, vulnerable voice, "please."
+
+Skyas stepped forward without hesitation. "I gotcha, Fiora." He gently lifted Cassian's unconscious form. "We can treat him at the village. Also, if you want, we can move him to the infirmary back at the manor."
+
+The taciturn Viera nodded in agreement. "Beast of woods is dead—masked ones claimed would assist if beast was dealt with."
+
+Fiora gave Skyas a grateful nod, too exhausted for words as they gathered their wounded and began the long trek back toward the village, leaving the ruins behind them in the eternal crimson twilight of this strange realm.
 
 <!-- TLDR -->
-The Phoenix Vanguard has returned to the village after defeating a monster called Bloodscreamer in a strange realm. They gather in a tavern where masked villagers keep their distance, especially from D'vaari who possesses a dark artifact taken from the slain creature.
+The Phoenix Vanguard stepped through a portal into a realm bathed in crimson light. A blood-red moon hung overhead.
 
-Cassian, severely wounded from the fight, stubbornly tries to remain standing despite his injuries until Fiora forces him to sit down. She attempts to heal him but struggles due to the lack of aether in this strange realm. D'vaari offers her some of his own magical energy to help.
+They discovered this place lacked the familiar currents of aether, replaced instead by something the locals called "anima." The group encountered robed figures with shifting theatrical masks that served as their actual faces. These beings explained they lived in a fragmented world ruled by a terrifying entity called the Crimson King and his court.
 
-The masked villagers explain their situation. Beyond the village lie gates guarded by soldiers who would destroy the village if they discovered strangers. They ask the Vanguard to eliminate these guards and take control of the gate, which would both secure the village and allow the group to proceed further into this realm. However, they warn that attacking immediately would be suicidal due to increased guard presence.
+The masked villagers warned of Bloodscreamer, a hunter-creature that stalked the woods as the King's servant. They revealed a crucial detail: names held power in this realm, and speaking Bloodscreamer's name caused distress. The creature hunted the villagers mercilessly, leaving them with nowhere to run. They offered shelter to the Vanguard if they could defeat the beast.
 
-The villagers reveal important information about Bloodscreamer. It was once a hunter who slayed the previous version of the beast, suggesting a cycle where the killer becomes the new monster. They warn D'vaari that the artifact he carries is cursed, potentially transforming him into the next Bloodscreamer.
+As the company journeyed deeper into the forest, they encountered Bloodscreamer itself. It taunted them with booming laughter before hurling stones and even a villager's corpse as they prepared for battle. The taciturn Viera called out its name as a challenge, and surprisingly, the creature fled toward ancient ruins deeper in the forest.
 
-They're served strange local food that some find unsettling but others enjoy. Before leaving them to rest, the villagers use a device to show them their next opponents: two brothers called The Flayer and The Ripper, lieutenants of someone called The Executioner, known for their extreme cruelty.
+The Vanguard pursued and engaged in desperate combat. Bloodscreamer fought with terrifying ferocity, manifesting illusions of itself and unleashing devastating attacks. Despite the realm's lack of aether hampering their magical abilities, the group coordinated their assault.
 
-The group discusses plans for the night, setting up watch shifts while they recover.
+In a crucial moment, the creature created perfect copies of itself to confuse the attackers. The company seized their advantage when the real monster was identified, launching a final coordinated assault. Though they suffered injuries, they prevailed. As Bloodscreamer fell, its form dispersed into anima energy, leaving behind a dark artifact that D'vaari claimed for study.
+
