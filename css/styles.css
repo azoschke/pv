@@ -1046,6 +1046,82 @@ pre {
   font-size: 0.9rem;
 }
 
+/* --- Appointment Request --- */
+#appt-reason { min-height: 100px; }
+
+.confirmation-panel {
+  display: none;
+  text-align: center;
+  padding: 20px 0 10px;
+}
+
+.confirmation-panel .check-icon {
+  font-size: 3rem;
+  color: #a54d44;
+  margin-bottom: 1rem;
+}
+
+.confirmation-panel h2 {
+  font-family: 'Stoke', serif;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+}
+
+.confirmation-panel p {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+.confirmation-panel .intake-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: #2c1810;
+  color: #f5f3ef;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 15px var(--shadow-color);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.confirmation-panel .intake-btn:hover {
+  background: #45352f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--shadow-color);
+}
+
+.confirmation-panel .intake-btn:active {
+  transform: translateY(0);
+}
+
+.error-message {
+  display: none;
+  background: #f9eded;
+  border: 1px solid #d4a5a5;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: #7a2e2e;
+}
+
+[data-theme="dark"] .error-message {
+  background: #3a2020;
+  border-color: #7a4040;
+  color: #e5a0a0;
+}
+
 
 /* =============================================================================
    9. PHOENIX VANGUARD — Medical Records (sidebar + visit tabs)
