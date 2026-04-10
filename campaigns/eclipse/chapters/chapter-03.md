@@ -1,383 +1,259 @@
-The crimson moon hung heavy in the sky, casting its sanguine glow across the land as the Phoenix Vanguard prepared to leave the relative safety of the village. Morning was a concept difficult to grasp in this realm of perpetual twilight, but they had rested as well as possible before their inevitable confrontation with the realm gate's guardians, the Ripper and the Flayer. The villagers bid them a curt farewell before the group set out on their path.
+_The group had returned to the village victorious after slaying Bloodscreamer, D'vaari having been bold enough to claim the dark artifact it left behind, the question now was, at what cost? _
 
-Cassian checked his weapons methodically, the memory of Bloodscreamer's attack still fresh in his mind and body. His wounds had mostly knit together thanks to Fiora's attentions, though the soreness lingered beneath his skin like a warning. He felt Fiora's hands on him again, checking his stitches with practiced precision. Her fingers moved with clinical efficiency, but he caught the subtle tightness around her eyes as she glanced toward the blood-red moon overhead.
 
-"So... Soot want meat," the woman announced, breaking the silence.
+## Aftermath
 
-The taciturn Viera sighed. "Soot always wants meat. Stay focused—have feeling fight ahead will be... harmful.
+The tavern air hung stale and heavy, weighted with the lingering scent of blood and victory. The Phoenix Vanguard had returned to the village triumphant after slaying Bloodscreamer, though the cost had been steep. Shadows stretched long across weathered floorboards as masked villagers darted along the periphery, keeping careful distance from the strangers who had destroyed their tormentor. Their theatrical faces shifted between expressions of sorrow and wariness, giving D'vaari an especially wide berth whenever he moved through the room. The dark artifact he'd claimed from Bloodscreamer's remains seemed to unsettle them deeply.
 
-D'vaari rolled his shoulder, letting out a sigh. "Seems like even eating food here doesn't replenish our strength... It's replaced by the energy of this realm, Anima. What you've got aetherically is all we get until we can take some time away from here... I've also yet to find a way to convert the principle energy one way or another."
+Captain Z'iro stood leaning against the empty bar, arms folded across his chest, dark eyes scanning his battered crew with thoughtful intensity. He huffed in annoyance at finding no bartender present.
 
-Soot's gaze locked onto D'vaari, eyes narrowing with hunger. "Soot want raw meat." Her eyes drifted to the mask hanging at his belt. "And that mask."
+Near the center of the room, Cassian stood swaying slightly. Dried blood stiffened the fabric of his torn clothing, and pain etched lines around his eyes despite his determination to remain upright.
 
-"Unfortunately Soot, man meat gives you the runs if I recall, so you'll have to turn your gaze elsewhere for now," D'vaari replied casually.
+Fiora crossed her arms, her exhaustion momentarily eclipsed by exasperation. "What are you doing standing?"
 
-Soot's face scrunched into indignation. "Shakes. Give shakes, not runs."
+"Not dead yet," Cassian muttered, rolling his shoulder with a grimace that betrayed the lie in his bravado. "Besides, I've been off my feet long enough."
 
-"Eh," D'vaari shrugged. "Popoto, Popato."
+"Is that so?" Fiora's voice carried a dangerous edge as her fingers found his wounded shoulder. She applied pressure with slow deliberation, just enough to remind him of what his body already knew.
 
-Behind them, the small lalafell, Rove, grumbled, mostly to himself. "If I had known this place was so gloomy, I'd've come a little better prepped."
+Cassian tensed as pain lanced through his shoulder like a slow-burning fire. "Alright," he murmured, his voice rougher now, quieter with the admission of weakness. "Maybe I shouldn't be standing."
 
-Cassian hadn't noticed the small figure until now. He exchanged a quick, confused glance with Fiora, who responded with a series of subtle hand signals. "Was he here the whole time?" Cassian whispered, glancing discreetly at the Lalafell who was now jotting notes in a small book.
+Xyla turned in her chair, resting back against the bar as she watched the exchange, an amused smirk playing across her lips. The quartermaster said nothing, content to observe the familiar dance between the pair.
 
-Fiora tilted her head toward Cassian again, making swift hand gestures, barely perceptible to anyone watching. Cassian's expression turned grim at her gestures, "Thanks for patching me up," he murmured to Fiora, masking a nod whilst staring out into the distance, scanning the area. She nodded, her brow still furrowed with concern.
+Cassian sank onto a nearby seat, sighing softly as the weight left his trembling legs. "What are we supposed to do now?" he asked, fatigue bleeding through his words.
 
-Visaki's voice rose above the quiet conversations, gazing up at the foreboding sky. "Rarely do you see a sight so... menacing. The warnings from the villagers clearly showed this wouldn't be a light task, but the danger is still unexpected in a way."
+Across the room, D'vaari broke the uncomfortable silence. "Ssssoooo..." he drawled. "How're we all feeling? Soot, I know I'm a looker, but do try not to get too eager in front of a crowd. I'm a bit shy when it comes to public displays."
 
-"The sky is definitely menacing," Skyas agreed, scratching behind his head. "Certainly gives the vibe of 'the beginning of the end,' but I can't help but feel like I'm the only one excited for the upcoming fights." His tail curled with anticipation.
+Soot had been eyeing D'vaari, or more specifically, the mask in his possession. Greed flickered in her eyes as she stood, puffing out her chest, and stalked directly toward him. "Soot want mask!"
 
-D'vaari patted himself down, giving a few nods as if confirming he had all his possessions. "Right... Well, no time like the present I suppose. Only one way a suicidal charge to a fortified location works out, and that's by taking the lead."
+"You'd have to kill me for it, I'm afraid, my tailed, scaled, hip swaying dancer of a friend," D'vaari replied, his lighthearted tone belying the seriousness behind his words. "The magics bound within it have already bound to the physical... It seems the spiritual though remains untainted for the time being."
 
-Z'iro flicked the remains of his smoke away into the dark path. "On that we agree."
+Soot's scaled shoulders slumped. "Mmmph. Fine. Soot not play when thing bonded." She dropped back into her seat, still watching the mask with longing in her eyes.
 
-In the distance, the peaks of the gate were visible, drawing closer with each step."Shouldn't we have a scout before we all head face first into the gates?" Cassian suggested.
+D'vaari hummed softly. "And here I thought you were going to put your hands on me. A shame." After a moment, he shifted his attention to the table where two newcomers sat, strangers who had somehow followed them through the portal. "So... No names, but what should we call you by?"
 
-D'vaari shook his head. "You'd think, but with such a small group, if they're discovered we're down quite a bit of firepower."
+One of them continued polishing his gunblade, the repetitive motion almost meditative. "I'm Salty. Pleased to meet ya, mate."
 
-"Oh, hush D'vaari. Be hopeful," Soot chided.
+"Call me Caretaker while we're around here," D'vaari replied. "I'll explain the note of no official names later." He glanced meaningfully toward the masked villagers. "They've got power around here. Try to keep the use of realized names to a minimum."
 
-"Coward, remember?" D'vaari reminded her with a slight tilt of his head.
+"Huh, no official names?" Orlando puzzled, glancing toward D'vaari. "Not sure what I should call myself then, but well met, Caretaker!"
 
-Soot's brow furrowed. "Coward not mean pes— pessi— pessimist? Yes."
+Meanwhile, Fiora's eyes darted around at the masked figures, searching for a space to properly tend to Cassian. Finding none suitable, tension crept up her spine, pulling her shoulders tight. "Stay there," she commanded Cassian with frustration evident in her clipped tone. Cassian nodded without argument this time, no stubborn pushback, just quiet understanding.
 
-"Wasn't really pessimism by pointing out a different way to be cautious," D'vaari countered.
 
-"Being cautious saves lives," Cassian interjected, voice firm.
+## Proposition
 
-Soot pounded a fist against her chest. "Not here to argue, here to fight and WIN!"
+The door to the tavern swung open slowly, spilling red moonlight across the wooden floor. Several masked figures slipped inside, remaining huddled near the entrance. Their leader cleared his throat, walking further into the tavern.
 
-"Save fighting for what's ahead," the taciturn Viera warned.
+"Good evening," he began, words careful and deliberate in the tavern's heavy silence. "We... appreciate the danger you've put yourselves in for our sake. Bloodscreamer was a menace."
 
-Skyas glanced at Soot with raised eyebrows. "Are we just gonna gloss over that Soot said a three syllable word?" He asked like a proud father.
+He shifted his weight uncomfortably, the floorboards creaking beneath him. "However... there remains one more small issue, to us both this time."
 
-The taciturn Viera sighed. "All anxious—don't need to lose before we even arrive." Soot nodded as he spoke.
+The masked figure explained their predicament: beyond the village lay realm gates that connected to seven paths, each leading to a member of the mysterious court, with the central path stretching toward a castle. But those gates were guarded by soldiers who routinely patrolled the region. If they discovered strangers in the village, they would torch it.
 
-"'Probably aware we are here,'" the taciturn Viera repeated their earlier observation under their breath, sighing quietly.
+"If you were to remove them and take control of the gate, we'd be secure here, and we would have no further issue assisting you in the future," the figure continued, looking to the masked men with him then back toward the group. "You will need to handle them regardless, if you wish to proceed further. I advise you to remain here for the evening, though. One of our scouts reports an abnormally large number of soldiers at the gate presently. Attacking would be nothing short of suicidal."
 
-As they continued forward, the peaks of the large realm gates loomed ever closer. The ramparts connecting to the gates came into view, but they weren't the only things becoming visible.
+Cassian's face hardened with resolve. "So we have no choice," he said, voice steady despite the pain evident in his grimace. "Either we take the gate, or we wait for them to come knocking." A shadow passed over his features. "Once I heal..."
 
-The sides of the road became lined with wooden poles—at first simply large stakes in the ground, but soon they played host to tattered black robes, shattered white masks and, in some instances, skeletons pierced at various angles. Their skeletal maws hung open in permanent expressions of agony and despair—grim tokens left by those who had once walked this road and found their end upon it.
+Fiora knelt beside him, frustration simmering beneath her calm exterior. Her palm hovered over his wound, pulling at aether that refused to answer her call. Her lips pressed into a thin line as she tried again and failed. "There's nothing to work with," she whispered, defeat coloring her words.
 
-"Warnings from the guards," the taciturn Viera observed, voice flat.
+Cassian barely reacted to his own pain, his focus locked on Fiora as she struggled against the absence of aether. He reached out, placing his hand over hers. "Don't waste your energy," he told her quietly. "If it's not there, forcing it won't change it."
 
-Soot walked over to one of the skeletons and wrenched a rib from it with a loud crack.
+Across the room, Soot seemed delighted by the prospect of conflict. "Soot eat soldiers. Soot hungry! Need meat. Meat of soldier sound good, lot of trophy hunt," she declared with a wolfish grin, nodding toward the masked figures.
 
-Visaki drew his weapons. "Warnings or declarations of our fate? They could be watching us now."
+"Meat?" Salty perked up, swinging his gunblade toward Orlando. "We could go for some meat, aye brother?"
 
-"Unlikely—but probably aware we are here, yes," the taciturn Viera replied.
+Orlando sighed deeply, eyes rolling skyward. "Alas, you burnt the last of the buffalo I had last night. Remember?"
 
-D'vaari sighed, rolling a shoulder. "I'm not fighting here, I simply made a counterpoint to an idea presented. I'm a mercenary at heart. I've been paid, so now I just charge into whatever formation I'm told to. First in, last out." He continued to trudge along, adjusting a glove as he did so, aware of Xyla’s silent presence watching over them from behind.
+"Even burnt it was pretty good," Salty insisted with an unrepentant grin.
 
-Soot examined the bone then hurled it forward, testing for traps. "Uh... deep cut. Into tasty marrow." She frowned. "Soot not like."
+The masked figures' expressions switched to laughter as they observed the group's reactions.
 
-Fiora lifted the flap of her bag, meticulously sorting through well-labeled vials before pulling some closer to the top. She gestured toward Cassian and D'vaari, offering them small draughts.
+D'vaari turned to address the masked figures, stepping beside Soot and placing a hand on her shoulder. "We'll keep to the advice of not attacking today. We've got a severely wounded comrade, as you no doubt saw. Even a small amount of time to recuperate is much appreciated. As for the gate—it's certainly a starting point for us as well."
 
-"Save it," D'vaari said with a shake of his head. "Better to hand it to those who might need it."
 
-Cassian accepted a few vials from Fiora with a nod. Fiora considered D'vaari's words before approaching the taciturn Viera, holding out her hand with a couple vials. They quietly accepted them with a respectful nod, slipping them securely into a satchel.
+## The Curse
 
-The group rounded a bend in the road, leaving only a short distance of cobblestone and patchwork masonry between them and the gates proper. The ramparts stood high and proud, their black stone gleaming beneath the crimson moon. The gates themselves appeared to be composed of both anima and dark metal—spikes littering their surface, each adorned with either skeletal remains or those currently in decay.
+The figures at the door shifted uncomfortably, their attention drawn to D'vaari and the dark artifact he carried. The leader's mask transformed, hardening with alarm.
 
-Between the spikes hung entrails, arranged as if someone had been decorating for a holiday. Upon the wall sat two figures, each dressed in black armor with flowing crimson cloaks. Their helmets bore large grinning maws that glowed a bloody red—grim visages of those who had exacted their toll upon all who walked this road. Soot and Z’iro inspected the spikes. Z’iro’s inspection was quiet, unreadable as Soot licked her lips.
+"This one is cursed," he said, pointing directly at D'vaari. "You should have left that thing where you found it. Eventually, you will become the very thing you fought so hard to destroy."
 
-They hadn't yet noticed the group, apparently engaged in animated conversation, sharing menacing laughs.
+The mask's expression softened slightly. "The most recent variant of Bloodscreamer you fought was once one of our finest hunters, slayer of the former variant of the beast." His mask shifted to concern. "Though we cannot remember the name of the hunter. When the new Bloodscreamer takes form, it removes memories of itself somehow. All we have are fragments."
 
-Soot made a rude gesture at them.
+Fiora flicked her eyes toward D'vaari at the revelation, then returned her focus to Cassian. She brandished a needle and thread from her pack and glared at Cassian, daring him to move.
 
-Visaki stayed in the shadows. "If only their armor was a bit different, I could pretend to be one of them. Oh well. We may have to fight."
+"And yet you can still recall that the individual was from here," D'vaari observed, his gaze thoughtful. "Therein lies the hint to break the very cycle you mentioned. Remnants of memory are still memory in themselves, so erasure is not complete."
 
-Skyas smirked slyly. "That must be our welcoming party. They don't seem to notice us yet."
+"Could there be a central place where the memories are being physically stored?" Visaki asked quietly.
 
-Cassian exhaled slowly through his nose, eyes narrowing. "They haven't seen us. Not yet. If we get closer, we do it quiet." His hand shifted toward his weapon, but he didn't draw it yet.
+The figure nodded at Visaki. "We suspect it consumes those memories, or perhaps destroys them. Likely as a form of self-defense so that we cannot use its name. The name of the person it has taken over, we suspect only, would allow some form of... control over the beast."
 
-Fiora retreated toward the back of the group, her hand hovering over her bag.
+Soot made a surprised gargle, not unlike a monkey, her eyes widening with this revelation. She looked at D'vaari with sudden excitement. "Hunt! Kill! Meat! Mask! Soot become hunter!"
 
-D'vaari grabbed a smaller chunk of the carved stone nearby, hefting it in his hand and tossing it up and down. He tensed his arm back as if preparing to throw but stopped at Cassian's words. "Would it serve us much good given we've got cover here," he muttered, lowering his arm.
+Salty, never one for subtlety, asked bluntly, "Couldn't we just slice his face off before he turns?"
 
-The lalafell was too occupied with his note taking to seem to notice the grotesque display ahead, too keenly focused on the group and their immediate surroundings.
+D'vaari sighed. "We've got another one..."
 
-The taciturn Viera glanced at D'vaari. "Can cover sound of our movement."
+"As to the gate," the masked figure continued, "we are unsure. Perhaps they are aware of your presence. You slayed the beast on your side of things, did you not? Perhaps he felt its death, or perhaps they're about to carry out inspections. It is hard to say."
 
-Skyas quirked his brow. "Not that I'm opposed to either or, but as much as I'd like to get the drop on them, I've fought a few guys like this before. All that rock would do is piss them off. Again, not opposed to that either. It'd make the fight more fun."
+The figures at the door looked at each other, exchanging silent messages with the subtle tilts of their theatrical faces. Two departed while the one who spoke for them remained.
 
-"That was the thought," D'vaari agreed.
 
-Skyas responded with a laugh, "Well then, make sure you flick with your fingers at the end of the throw. Puts a bit of extra umph into the throw." D’vaari hummed noncommittally in response.
+## Strange Feast
 
-Fiora noticed the figure on the left turn his head ever so slightly, though not directly toward the group. Cassian's grip tightened subtly, fingers flexing before resting near his weapon. "They know we're here. Left one sees us. Has for a while. They're waiting for something. This smells like trap." His voice remained low, careful not to betray that he'd noticed their observer.
+"We will fetch you some food," he announced, his mask switching to joy. "You are in luck—our hunters were very successful before your arrival. We have something very special for you as a thanks for your assistance so far."
 
-Visaki frowned. "They could've been looking at something else... but better safe than spotted and dead."
+Xyla frowned, her brow furrowing as she processed everything the masked figure had told them. "Well, let's hope they don't check tonight," she said carefully. "Do you have anywhere they tend to overlook that we could stay if they come toward the village?"
 
-Fiora's voice was barely audible. "We could leave."
+The masked figure shook his head. "No, they are thorough, mostly because they take anything of value. It is unlikely they will confront us directly this evening." He shifted, looking around the room. "Was there... any further questions before we see to your food?"
 
-"'Probably aware we are here,'" the taciturn Viera repeated their earlier words with a quiet sigh.
+Cassian spoke up, his voice growing more focused despite his exhaustion. "You said Bloodscreamer has some kind of connection to its name, that it holds importance," he said. "If it's erasing its past, then someone had to have given it one in the first place. Who made the mask? If memories are being stripped away, then someone, or something, designed it to work that way."
 
-Soot's eyes lit up. "So... charge?"
+He leaned forward slightly, wincing at the pull of stitches. "Maybe it was one of those red robed figures I saw. The members of the court. What do you know about them?"
 
-The figures on the wall continued their conversation, but upon Cassian's warning, the group could see the figure on the left had indeed turned his head just enough that they could glimpse the corner of an orange iris watching them. As if an illusion was shattered, on second glance the whole conversation seemed slightly too animated, too intense. Then the figure on the right also turned slightly, mimicking the other figure.
+Fiora poked Cassian harder with the needle as he began shifting in his seat, eagerly asking questions. "Be still. This will go quicker if you stop squirming."
 
-"I say we spring the trap, but I'll go with whatever majority votes," Skyas offered, hand already moving toward his weapon.
+Cassian nodded at the masked figure, then glanced at Fiora. "A little warning next time?" he muttered, though he stayed still as instructed. "Fine, fine. Just hurry up. Feels like you're enjoying this a little too much."
 
-Cassian's jaw tightened. "No, they are not looking at something else... they are looking at us. They know." He tried to maintain a casual posture despite his words.
+The masked figure tilted his head. "That is a very broad statement, though you misunderstand. Not Bloodscreamer—the beast you faced at the portal was attached to him. Bloodscreamer is feral, no attachments, though... perhaps it once did."
 
-The taciturn Viera shifted uncomfortably. "Don't like that..."
+A knock interrupted them. The masked figure turned and stuck his head outside for a moment, then nodded. Looking back, his mask shifted to an expression of joy.
 
-D'vaari let his free hand drum against the mask dangling at his side. "No point in stealth then... Discussion before we rip each other apart. Might get something out of them." He began moving forward. As he did, both figures on the wall turned their heads, staring directly down at the group.
+"Your food is here," he announced, stepping aside to hold the door open.
 
-"D'vaari, wait," Cassian hissed. "There could be a trap... stay behind." The last words were directed at Fiora, who maintained her position but allowed slightly more distance between herself and the rest of the group.
+Five masked figures carried in a massive table laden with a questionable display. The feast was odd, but it was meat—that much was certain.
 
-Soot yanked on D'vaari's tail, pulling him back. "You not leader," she hissed through clenched teeth, looking toward Z'iro and Xyla.
+"Enjoy!" the head masked figure said happily.
 
-D'vaari raised a hand toward the two figures on the tower. "If there was, then even better to have had only one person approach rather than moving as a group, but a bit—" He grimaced as he glanced at Soot, noticing Xyla move away from the group towards higher ground. "Exactly why I moved up."
+Soot gasped at the smell, then uttered a disgusted noise. "Soot not like sticky meat ropes."
 
-"But leaders should go first. Make decision for us," Soot insisted.
+"I've never seen meat that looks like noodles," Salty declared. "Bring out the real meat—buffalo! Pork! Mi'qote!"
 
-"She's right. Don't be rash," Visaki agreed.
+Xyla smiled politely despite her obvious unease. "I... er... What kind of meat is this, if you don't mind me asking? Just always good to know what you're consuming."
 
-Away from the rest of the group, Rove grumbled under his breath, gradually becoming aware of the tableau in front of him. "One must admire another's passion in their work I suppose..."
+Cassian took one look at the feast and shot a glance at Fiora. "I think I still have some rations in my backpack."
 
-Cassian's voice hardened. "They want us to approach, but not out of fear. They're in control here. We need to change that."
+Z'iro looked at the table, then at Soot, perhaps wondering what would happen if she ate it.
 
-The taciturn Viera nudged Cassian. "Attention forward. Cassian—the lock on the gate, there. It looks like the artifact you carry," they mumbled, glancing back to him.
+The masked figure looked confused and concerned, his mask flicking between emotions. "It is both meat and fish. We caught the Writher fresh this morning, and our hunters killed the Nine-legged-strider last night. I promise it is perfectly delicious. We don't have any of what you're asking for here."
 
-"You two are going to stay up there or are you going to come down to our level?" D'vaari called up, waving Soot off, hand firmly clenched around the stone. "I don't particularly enjoy shouting. I'd much rather talk where we're all comfortable with our speaking."
+Orlando, braver than he looked, reached out to take a small piece, biting into it cautiously. His eyes widened in surprise. He grabbed two platefuls and handed one to Salty. "Eat. It's actually rather good."
 
-"It could be worth you going on while they're distracted," the taciturn Viera suggested quietly.
+"It's good," Visaki agreed, nodding to the masked ones. "Far better than things I've had before. Compliments."
 
-Cassian nodded slightly.
+Those brave enough to try the "Writher" found it tasted like calamari, just a bit chewier. The meat was a strange cross between beef and pork—edible and juicy, falling apart easily when chewed.
 
-Soot crossed her arms over her chest. "Another decision made for group from not leader."
 
-Both figures heaved themselves from the high wall, landing in unison before the gates. They looked at each other, then began speaking, their voices odd—sounding as if three people spoke at once.
+## Healer’s Frustration
 
-The Flayer spoke first. "I told you not to look."
+While the others were eating, Fiora continued her work patching up Cassian. She cut the thread with her teeth, tying off the stitches before stashing the needle in a vial. She blanched as she stared at the feast, then shook her head and returned to her task, extracting a roll of bandages.
 
-The Ripper laughed. "You really didn't expect them to get that close, did you?"
+D'vaari moved to Fiora's side. "If you'd like, I can offer you a bit of aether. I don't have much left after the fight, but given our states, it would be better served in your hands."
 
-The Flayer huffed. "I had hoped they would."
+Cassian's fingers curled into the fabric of his sleeve as he regarded D'vaari with a nod. "Appreciate it. Just don't leave yourself defenseless." His gaze flicked to Fiora. "But don't drain yourself dry trying to patch me up. I'll manage."
 
-The Ripper reached up, scratching the side of his helmet as if it was skin. "Came from the village I suspect, seems we'll have plenty of new decorations, things to pass the time."
+Fiora swallowed before nodding to D'vaari. She tied off the bandage on Cassian's arm, fatigue evident in her movements. "The land is barren," she said quietly. "I'm afraid of what will happen should we run into more trouble soon. Relying on my own is... inadvisable."
 
-The Flayer looked toward the group, his gaze settling on Cassian for a long moment. "Amusing, what do you figure this one doesn't want to lose?"
+D'vaari extended his hand to Fiora. "Place your hand over mine. It's best to leave as little room between us as possible, given aether likes to naturally dissipate when not contained within something."
 
-The Ripper scanned the group, his eyes finally resting on Fiora. "I have an idea."
+He reached into his pouch and pulled out slender vials of pink liquid, popping the cork on one and downing its contents. "Fucking hate the strain these things put on the body."
 
-Cassian's grip tightened on his axe, bringing it in front of his body as he positioned himself between Fiora and the Ripper's gaze.
+As D'vaari pulled out the vial, Fiora reached out to him.
 
-Both brothers chuckled in unison before the Flayer spoke again. "Now wouldn't that be a treat." His voice carried a mocking tone. "I bet she could sing us a sweet melody as I peel her flesh off."
+D'vaari placed his hand on top of Fiora's, closing his one visible eye. "Form of the Familiar, Astrea's Balance," he muttered. A white glow flowed over their palms.
 
-"I want this one," the Ripper said, inhaling deeply as his attention shifted to D'vaari. "I can smell his sin, his guilt. Oh, the secrets I'll pull from him."
+The tension bled from Fiora's shoulders as the aether flowed, though she raised an eyebrow in subtle question to D'vaari. She didn't press, simply curious.
 
-Fiora's expression became impassive, stony, as she gazed forward without emotion.
+Cassian watched Fiora carefully, noting how the tension in her frame eased as D'vaari's aether took hold. Some of his own worry loosened at the sight.
 
-D'vaari's eyes narrowed. "You should, given it's the same as yours. I'd be surprised if you didn't know what your own scent was. Now can we have a discussion, or are we just going to go straight to beating each other to death?"
+D'vaari maintained his focus on the spell for a while longer. When finished, he withdrew his hand quickly, rubbing it on his clothing as if to get rid of something. After checking his hand was clean, he nodded. "Just a quick copy of things I've studied," he told Fiora with a small smile that never reached his eyes. "Now I'm hungry."
 
-"If you're trying to pass the time," Cassian said, his jaw tight and fingers curling instinctively, "I'd suggest another game. Because this one? You'll lose."
+Fiora held out another paper-wrapped provision to D'vaari. It smelled of brine.
 
-Rove mumbled to himself, "They do seem to be keen on exchanging words to attempt to inflict doubt and fear..."
+D'vaari glanced at the wrapped provision Fiora offered, raising an eyebrow. "Thanks. I want to run a self-placed experiment before eating this. This place is made of an energy they call Anima... I wonder if our bodies can handle converting it into the physical aether we're made of. It's a rather intriguing prospect."
 
-Skyas grinned. "Either way, if only we had some sort of long-ranged damage dealer with us... What a shame." He looked back toward Xyla with a wink.
+"It concerns me too," Fiora agreed. "I tried to get a better sense from Soot's... compass... the other day, but we were interrupted."
 
-The Flayer seemed keen on pressing Cassian. "Struck a nerve, did I?" he laughed. "It's okay, you can watch as she suffers. You need not worry, she won't die, not for a very, very long time. Fun fact—neither will any of you. No no, we have big plans for you."
+"The best thing would be to find some sort of novice caster within the village," D'vaari mused, "or a manipulator of this Anima. Compare, contrast, and replicate what we can. Part of why I picked up the mask. Since it's bonded, that means conversion can happen."
 
-"We've been given royal permission to have our fun, and we don't like to break our toys too quickly," the Ripper continued, still focused on D'vaari. "But for you, I'll make an exception."
+Fiora's expression grew calculating as she caught D'vaari's meaning. "I'm afraid of the consequences of an extended stay if we don't find a way."
 
-Both brothers drew their weapons. The Flayer pulled a huge battle-axe from over his shoulder, though a bow remained on his back. The Ripper drew two long swords, both taking battle-ready positions.
 
-"Come on then, let's see what you're made of," the Flayer said to Cassian, taunting him.
+## Understanding the Enemy
 
-Skyas drew his weapon. "Dawww, hear that D'vaari? You're special. Normally I'd be a little jealous, buuuut this time around I think it's better you than me. It's well past time we beat the breaks off of dumb and dumber up here."
+The masked figure returned with ten others, each carrying what appeared to be large cakes with strange creatures moving in their centers. There were more than enough for everyone.
 
-The taciturn Viera freed their lance from their back, the touch causing it to alight with a brilliant viridian gleam.
+"Now then," the leader announced, "while you enjoy your dessert, allow us to show you who you'll be facing."
 
-"I was prepared for this," Visaki said, swinging his dual swords with a flourish. "Let's see if I still have the touch."
+He crossed to Z'iro and set down a strange mechanical device, fiddling with its controls.
 
-D'vaari sighed. "Still no damnable answers forthcoming. I really wish this place would fill me in on some details." He dropped the stone, tightening his gloves. "It's a good thing that he and I are in mutual agreement however. A mirror, and I don't think either of us likes what we see."
+As the creatures in the center of the cakes growled, Salty growled back at one, causing it to whimper and explode in fear, coating the dessert in icing.
 
-Cassian's expression hardened, something dangerous flickering behind his eyes. "You talk too much." He tilted his head slightly, letting his gaze drag over both figures. "You're used to playing with prey. That's the thing about hunters who grow comfortable... eventually, they mistake a predator for a meal."
+"To the Gods above, why have you forced me to suffer this fool?" Orlando muttered, glaring at Salty.
 
-Fiora stood firm, taking a quick swig from one of her potions before drawing aether together in a heavy barrier around Cassian. The familiar sensation of her aether enveloped him.
+The masked figure finished tinkering with the device and cleared his throat. "If I could have all your attention, please. This will be a short presentation, as I doubt this device will function very long, but it will help you survive what is to come."
 
-In that moment, the battle was joined.
+He pressed a button, and a holoscreen appeared. With the second button, the screen split in two, each displaying armored, hooded figures with grim-faced helmets.
 
-D'vaari shot forward toward the Ripper. "Form of the Sky, Talons of the Steppe," he called, swinging his hand forward to create an aetheric claw that grasped at one of the longswords. He delivered a straight punch to the gut of his foe. "Form of Water, The Eels Sting." Electricity crackled from his fist before he spun on his heel.
+"These are the gate guardians: The Flayer and The Ripper. Believe me, their names have been more than earned. They are brothers, both in service to the council member The Executioner."
 
-Cassian surged forward in a single, fluid motion, his axe sweeping in a swift arc aimed directly at the Flayer's throat.
+"Why can't people ever choose less bloodthirsty names?" D'vaari asked. "Like Flower."
 
-The small Lalafell jumped in surprise. "OH WE'RE DOING THIS ALRIGHTY UHM... HAVE AT THEE HEATHENS!" he shouted, digging into his bag and producing a red vial which he hurled at their enemy. Upon impact, it exploded into an impressive burst of fire.
+"Flowers are nice but not usually intimidating," Orlando pointed out.
 
-"Form of Stone, Strike from the Golem's Heart," D'vaari continued his assault.
+"There are many dangerous flora on the continent and outside of it," Cassian noted.
 
-Skyas sprinted forward, not giving their enemies a chance to attack first. In a blur, his katana left its sheath, gliding through the armored Flayer's defenses. "Hey, so while I have ya here, who's doing your armor? I gotta say, you red guys have some top-tier threads minus the masks. Not a big fan of the budget voidsent smiles."
+"And are you really that intimidated by someone named Ripper?" D'vaari asked skeptically.
 
-Visaki crossed his blades in front of him in an X and charged, swinging them in a wide, fast slice.
+The figure turned to D'vaari, his mask shifting to an emotion resembling terror. "You should be afraid. The Ripper has taken to removing the internal organs from his victims and decorating the realm gate with them. He is perhaps the more violent brother."
 
-The taciturn Viera leapt into the air, diving down with their lance.
+"He once came here for an inspection," the figure continued, voice hollow with remembered fear. "He found that we kept a bag of flour for ourselves. His response was to drag one of our town council members to the town square and hang him by his intestinal tract." The mask switched to profound sadness. "It was... terrible."
 
-Xyla notched an arrow, stars shimmering down its shaft as she pulled back. It flew true toward the Ripper's shoulder joint.
+"An act to instill fear in would-be attackers," Visaki observed. "If we approach this with that fear, we would be falling into their traps. Maybe tantamount to death."
 
-Soot remained where she stood, letting her anger build. For once, she didn't want to fight—purely out of spite.
+"My robed friend here is right," Salty agreed. "Them theatrical types are generally all bark, some bite."
 
-The guardians took the damage in stride, dancing and weaving around some strikes but being pummeled by others. Their armor largely held. Both laughed, seeming to enjoy themselves.
+The figure turned and switched off the device, the images vanishing. "We'll fetch you all blankets and pillows. Upstairs, there should be enough rooms for each of you. You are welcome to them for the night. We shall keep you in our thoughts when you head to the gate." He turned toward the door. "I shall return shortly."
 
-"Finally!" the Ripper called out as he engaged with D'vaari.
 
-"I'm going to enjoy this," the Flayer said, squaring off with Cassian.
+## Setting the Watch
 
-Momentarily, their forms flickered and the axe-wielder appeared upon the ramparts. Anima archers materialized beside him. He drew his bow, and both he and the archers fired, peppering the group with arrows before he returned to face Cassian.
+"What's our watch order?" D'vaari asked once the figure had gone.
 
-The Ripper vanished, jumping between group members to deliver vicious slashes with his blades, reappearing before D'vaari.
+"I'll take first watch if you'd like," Orlando offered. "I want to look at the clouds a while."
 
-The group was holding, for now.
+"People aren't just the worst things they've done," Cassian muttered to himself.
 
-Fiora stumbled back as an arrow grazed her thigh. She gritted her teeth before her expression became disturbingly blank. Her staff moved mechanically in her hands as the aether distorted around her. Silently, she cast the gathered energy toward her injured companions, drawing the rest inward to sustain herself.
+Fiora waited until the masked figure had left. "We've agreed we're going to this gate?" she asked, her eyes darting around, lips pressed into a thin line.
 
-Cassian lunged again, feinting high before twisting his axe downward in a brutal slash aimed at the Flayer's leg. "Keep laughing, you'll be fun to break," he taunted.
+"Once they are done for the night coming and going, I say we barricade the doors the best we can," Xyla suggested. "Then each take a house shift. I'll take the first, and the rest of you decide who goes in what order."
 
-Rove fumbled in his bag while scrambling to dodge the arrows, panic clear on his face. He pulled out what appeared to be a helmet, shoved a wind crystal inside it, and hurled it toward the Ripper. Mid-flight, the helmet accelerated to the speed of an arrow as it collided with its target. "Huh... it worked," Rove muttered in surprise. "How about that..."
+Steven, Z'iro's avian companion, flew from his shoulder and began helping himself to some Writher from their meal.
 
-Visaki, momentarily pinned down by the anima archers, managed to stabilize himself enough to deliver another spinning slash.
+"You first, D'vaari," Z'iro decided, "then I'll take over, followed by Orlando, then Visaki, then Salty. Hour and a half shifts each. That'll give us more than enough time to rest."
 
-The taciturn Viera weaved through the barrage of arrows, deflecting those they couldn't dodge. Their lance flashed with viridian light, marking the Ripper as its hunted target.
+"I'm fine with the last shift," Salty agreed. "Give me some time to get my weapon ready for the fight in the morning. I'll blast away any of them bastards that try to get the jump on us!"
 
-Xyla dropped a bag of orange powder on the ground, dipping her arrow's head into it before taking aim. The shot flew true, landing in her target's shoulder joint again.
+"Works for me, Captain," D'vaari nodded. "Also... if it seems I'm overstepping my bounds? I absolutely am. I figured the best thing to do is to try and place myself as a false leader of the group. If we're turned on, it's easier if my head rolls rather than an actual leader's."
 
-D'vaari took a cut across his forearm, wincing as he jumped back. "It's only fair to meet you as an equal then..." He reached for the mask at his belt, slipping it over his face. "Form of Anima, Bloodscreamer's Fury." Something changed in him as the mask locked in place—his movements becoming less calculated, more savage as he clawed at his opponent.
+Z'iro shrugged at D'vaari. "You're fine. It saves me the trouble. It's not me you need to worry about, so long as you aren't doing it on the ship." He made a subtle nod toward Xyla.
 
-Skyas gathered strength for his next attack, his blade beginning to emit a glow. "Try not to let your hip give out on this one, Captain. I'd hate for this to not work!" he called to Z'iro with a smirk. Blue lightning charged through his weapon as he cleaved through the Flayer and hit the Ripper as well.
+Xyla smirked at Z'iro. "I work hard. I deserve to keep my authority. So long as people listen and don't overstep, they don't have anything to worry about. You know that, Captain."
 
-Z'iro followed in behind Skyas, rolling around him to deliver a vicious follow-up strike, his twin blades glowing as they lent their power to Skyas's attack.
+Cassian's fingers brushed against the worn edges of the sigil as he pulled it from his pocket, turning it over in his palm. His free hand tapped idly against his knee as he stared at it, lost in thought.
 
-Both guardians engaged individually with Cassian and D'vaari but found their strikes parried and blocked repeatedly. The Flayer huffed an annoyed growl while the Ripper seemed delighted by the fight, laughing and swinging like a feral animal, caring little whether he caused injury or not.
+The masked figure returned with seven others, all carrying blankets and pillows, which they set on the empty tables. "We'll leave you all to your evening," he said with a nod before slipping back out.
 
-"Bitch," Cassian whispered.
+Z'iro moved from the counter to the table, taking a blanket and pillow. He passed by Xyla, stopping to say something quietly before heading to his room.
 
-Skyas caught the word and smirked. "A bit louder, Cassian. What's the point in taunting if they won't hear it?"
+<!-- TLDR -->
+The Phoenix Vanguard has returned to the village after defeating a monster called Bloodscreamer in a strange realm. They gather in a tavern where masked villagers keep their distance, especially from D'vaari who possesses a dark artifact taken from the slain creature.
 
-Cassian braced himself, watching the Flayer's movements with sharp precision. At the last second, he twisted his wrist, angling his axe just right to redirect the strike. The moment his enemy's balance shifted, Cassian surged forward, driving his axe hard into the armored gut.
+Cassian, severely wounded from the fight, stubbornly tries to remain standing despite his injuries until Fiora forces him to sit down. She attempts to heal him but struggles due to the lack of aether in this strange realm. D'vaari offers her some of his own magical energy to help.
 
-The taciturn Viera continued their feral assault, letting their lance guide their strikes against the armored foe.
+The masked villagers explain their situation. Beyond the village lie gates guarded by soldiers who would destroy the village if they discovered strangers. They ask the Vanguard to eliminate these guards and take control of the gate, which would both secure the village and allow the group to proceed further into this realm. However, they warn that attacking immediately would be suicidal due to increased guard presence.
 
-Rove, riding high on his successful quick thinking, blindly grabbed something from his bag and hurled it without checking. A fish flew through the air, slapping against armor with a wet smack.
+The villagers reveal important information about Bloodscreamer. It was once a hunter who slayed the previous version of the beast, suggesting a cycle where the killer becomes the new monster. They warn D'vaari that the artifact he carries is cursed, potentially transforming him into the next Bloodscreamer.
 
-Visaki, still injured, managed to deliver another slash with his remaining strength.
+They're served strange local food that some find unsettling but others enjoy. Before leaving them to rest, the villagers use a device to show them their next opponents: two brothers called The Flayer and The Ripper, lieutenants of someone called The Executioner, known for their extreme cruelty.
 
-Fiora felt a familiar hollowness spreading through her chest, but her face remained a mask of stone as she drew more aether. Pale blue energy danced across her fingertips before leaping to heal her companions.
-
-Skyas charged toward the more frustrated guardian. "Found the weak link, boys!" he called as he swung his blade into the Flayer's back.
-
-Xyla pulled back on her bowstring and aimed above the two guardians. The sky alighted with a silver blast as her arrow split, raining down shards around them.
-
-Once again, both guardians slipped away through streams of anima. Arrows rained down upon the group as the Ripper dashed between them, hacking and slashing before both returned to their original positions.
-
-Fiora uncorked a vial with shaking fingers, tipping the contents down her throat in a desperate swallow.
-
-D'vaari caught an axe blade with his bare hands, pushing it aside before kicking away the backswing. In the next flurry, he continued savagely tearing at both foes, his movements enhanced by the mask's power. He rolled away from one strike before jumping back from another, letting out a low, guttural growl and grinning as more blood spilled.
-
-Cassian's body, still sore from the battle with Bloodscreamer, moved slower than he'd hoped. He swung with everything he had, but fatigue weighed on him more than he'd realized.
-
-The taciturn Viera continued to dodge through the attacks before retaliating with a slice of their lance against an exposed back.
-
-Rove, seeing his fish slap followed by an arrow wound, narrowed his eyes and reached into his bag again. He took a calming breath and pulled out an axe, spinning in place to generate momentum with the help of a wind crystal before launching it toward the Ripper.
-
-Visaki paused to regain his composure before launching a risky slash.
-
-The Ripper unleashed a brutal assault on Cassian, hacking and slashing like a wild beast. Blood sprayed as the blades bit through armor. Cassian collapsed to one knee as the Ripper backed up.
-
-"Get up, MEAT!" the Ripper shouted. "I'm not through with you yet!" He spat on the ground beside Cassian's fallen form.
-
-The Flayer, however, was not faring well against D'vaari, unable to connect with his strikes.
-
-Rove's eyes went wide seeing Cassian's devastating injuries. He quickly grabbed a metal ingot from his bag and hurled it as hard as he could toward the Ripper.
-
-D'vaari had reverted from his feral state, returning to calm, measured responses. For each strike, he used a flat palm to push the Flayer's weapon aside. "As I told your brother, we are a mirror... I know you. We are weak cowards, hating our positions in life. You have seen bloodlust, now, see the strength of peace, the weight of our own ambitions. Each blow a reminder of those chains. Form of Water, The Everflowing Waters." He delivered an open palm strike to send his foe away from his injured allies.
-
-Skyas saw Cassian struggling to rise. "Hey, Fiora... You trust me, right?"
-
-Terror gripped Fiora's body as she watched blades tear into Cassian. His blood painting the ground unlocked something desperate within her. Her vision tunneled to a pinpoint of focus, black spots dancing at the edges as she channeled aether in a violent surge toward Cassian's broken form.
-
-Visaki moved to protect Cassian, joining others in batting away their enemies.
-
-Cassian hit the ground hard, pain ripping through his body as fresh wounds opened across his armor. His breath came ragged, his vision blurring from the sheer brutality of the assault. Drawing on every ounce of strength left in his battered form, he willed his body to harden, his muscles tightening like coiled steel. His aether surged inward, reinforcing his bones, thickening his skin.
-
-The taciturn Viera was caught slightly off-guard by the onslaught against Cassian but continued their attack against the Ripper.
-
-"Eh, not enough time," Skyas muttered. "You have the right to slap the ever-loving fuck out of me after this at any time of your choosing." He walked toward Cassian, letting his blade power up with an ethereal glow before swinging it through Cassian's worst wounds. Rather than creating more damage, the ethereal blade glided through his body like it wasn't there, magically sealing the wounds.
-
-Xyla pulled back, two shimmering arrows appearing as she took aim. She let them fly toward the crack in the Ripper's shoulder armor.
-
-Moments later, the Flayer finally managed to weave past D'vaari's defenses, ripping into him with his battle-axe. Blood sprayed across the gates. Behind him, the Ripper connected with Cassian again, though not as devastatingly as before.
-
-As they finished their assault, they switched places quickly. The Flayer leaned toward Cassian, laughing. "Looking a little pale, friend. Giving up so soon?" he mocked. "I get her that easily?"
-
-The Ripper said nothing, launching himself at D'vaari with a battle cry.
-
-D'vaari stumbled back, feeling warmth leave him as two brutal swings cut into his flesh. The heartbeat in his ears nearly drowned out all other sound. "First... First to enter, last to leave," he called, raising his fists. "Cassian, hold the line! Start a tactical retreat when one of us falls!"
-
-He delivered a strike to the Ripper's knee, teeth grinding together in grim determination.
-
-At the taunt, Cassian's jaw tightened, his hands clenching into fists. He lifted his head, fixing the Flayer with a look of resolve. "Giving up? You'll have to do a lot worse than this..." He stood and swung his axe, striking the Ripper's side.
-
-The taciturn Viera infused their blade with shearing wind to help pierce their opponent's defenses.
-
-Rove, panicking as the situation worsened, pulled out another helmet. Shoving a wind crystal inside, he launched it toward the Ripper.
-
-Skyas dashed into the Ripper to back up D'vaari. "Seven Hells, you two, did you think our only healer was bored?" He slammed his blade downward, rending flesh and armor.
-
-Visaki, feeling the effects of fatigue, managed only a weak but accurate strike.
-
-Fiora drew a sharp breath, calculation overtaking emotion as her lips twitched downward. She steeled herself to turn away from Cassian—the choice tearing at her like physical pain—and channeled her remaining strength toward D'vaari instead.
-
-Both guardians unleashed everything they had on Cassian and D'vaari, but somehow, against all odds, both men held their ground in a heroic last stand. The guardians looked heavily damaged, their armor dented and masks scarred from battle. Everyone—the party and their foes—stood on the edge of victory or defeat.
-
-Cassian's breath was ragged, his body screaming with exhaustion, but he held his ground. The weight of his axe felt heavier than ever, but he refused to let it falter. He swung again, striking true.
-
-"Form of the Swamp, Adamantoise's Shell," D'vaari called through gritted teeth. His aether transformed into a defensive shell as he tucked in like a boxer, his arms hardening to meet sword swings with his gauntlets. Metal sparked and fractured as he shifted to deliver a blast of heated wind against the Ripper's torso. "Help the others. I will hold him," he told Skyas, his words slurred with exhaustion.
-
-The taciturn Viera launched themselves high into the air, coming down lance-first against their opponent. Visaki used the opportunity of their enemies' weakened state to land what he hoped would be a final blow.
-
-Rove set his bag down, digging desperately until he produced a gun. He shoved a lightning shard into it, took aim, and fired.
-
-Fiora hurled a small flickering wisp of aether toward Cassian, the pale glow stuttering. Her knees struck the ground as her body betrayed her, hollowness eating at her chest. Her hands shook as she tried to drink from a draught, but most of it dripped onto the earth, spilling from her mouth.
-
-Skyas twisted his blade into the Ripper's wound. "Fat chance, man. You're hanging on by a thread as is. I'll help the others as needed."
-
-Xyla loosed another arrow that landed perfectly between the crack in the Ripper's armor.
-
-The Flayer and Ripper both stumbled back, their wounds numerous. Unable to continue fighting, they were vulnerable to a final blow.
-
-Skyas jumped back, recognizing that for D'vaari, this was personal now.
-
-D'vaari stumbled forward, both he and his "mirror" exhausted. He threw a punch across the Ripper's helmet, followed by an uppercut that sent his foe falling onto his back. Breathing heavily, he grabbed the man by the neck and dragged him along the ground to the gate where decorations still adorned the enemy's fortification.
-
-"You said you wanted to know my sin. Allow me to show you," he muttered, reaching for some of the entrails hanging nearby. He coiled them around the Ripper's neck like a noose. "As I said, we are mirrors, and this fate is yours, as well as mine."
-
-He pulled up, hoisting the man as so many victims before had been displayed. It was not glorious or graceful. D'vaari simply leaned his weight on the makeshift noose, falling silent until all struggle ceased.
-
-As the Flayer lifted his weapon for what would surely be a killing blow to Cassian, Fiora's panic filled her with desperate rage. Pushing off her knees, she snatched a jagged stone from the ground, trembling fingers imbuing it with emerald wind aether as she whispered of storm and fury. The stone launched from her palm with the force of a tempest toward the Flayer's skull, splitting his helm with a resounding crack. He dropped without a sound, his taunts silenced forever.
-
-As both guardians fell, their bodies slowly faded into the ambient anima, leaving only the gate before them. On the ground lay two glowing gem clusters—one red, the other orange—waiting to be claimed.
-
-Rove quickly shoved the gun back into his bag and sprinted past the group to gather the remains of items he had thrown during the fight.
-
-Fiora collapsed, her body finally giving in to the strain.
-
-Cassian immediately went to the orange crystal, observing its glow and warmth. His examination lasted only a moment before his attention snapped to Fiora. He slipped the crystal into his pocket and gathered her in his arms, cradling her against his chest despite his own wounds screaming in protest.
-
-"Know better than to touch strange crystals appearing from... things like this," the taciturn Viera cautioned, watching Cassian with narrowed eyes.
-
-Visaki approached the remaining crystal but stopped short of touching it, his hand hovering inches away.
-
-Behind them, Rove surveyed the carnage with dismay. The hastily thrown weapons that had aided their victory now lay scattered and broken across the battlefield. Both helmets were severely dented, the axe needed sharpening, the metal ingot would require cleaning, and the fish... the fish was nothing more than paste.
-
-Once the form dissipated, D'vaari reached up and removed the mask. "Time to report back," he announced, his voice thin with exhaustion. Without waiting for response, he began limping toward the path that would lead them back to the village.
-
-Cassian followed, Fiora's limp form cradled in his arms. He matched his pace to D'vaari's, mindful not to jostle Fiora more than necessary. Her head rested against his shoulder, and he found himself counting her breaths.
-
-Behind them, Skyas sheathed his katana. "Another flawless run under the belt," he declared with a grin that belied the blood spattered across his face. He turned to the taciturn Viera. "You too, Taci, congrats. Welcome to the big boy club." He offered a playful wink.
-
-The Viera turned their gaze toward Skyas, expression bemused. They stared at him in silence for several long seconds before shifting their attention to the gate. Their eyes tracked upward, studying the locked gate and architecture looming above them.
-
-Skyas scratched the back of his head. "Not a big fan of the flawless damage club, fair enough I guess," he muttered, trying to play off the awkward moment.
-
-Behind them, the gate stood, a silent invitation to whatever horrors lay beyond.
+The group discusses plans for the night, setting up watch shifts while they recover.
