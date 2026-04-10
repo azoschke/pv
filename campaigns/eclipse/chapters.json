@@ -1,4 +1,14 @@
 [
+  { "id": "chapter-01", "title": "Prior Events", "date": "Unknown" },
   { "id": "chapter-01", "title": "Bloodscreamer", "date": "March 6, 2025" },
-  { "id": "chapter-02", "title": "The Village", "date": "March 27, 2025" }
+  { "id": "chapter-02", "title": "The Village", "date": "March 27, 2025" },
+  { "id": "chapter-03", "title": "The Ripper and Flayer", "date": "April 10, 2025" },
+  { "id": "chapter-04", "title": "Villa of Questionable Value", "date": "April 17., 2025" },
+  { "id": "chapter-05", "title": "Sir Alfred", "date": "April 24, 2025" },
+  { "id": "chapter-06", "title": "The Path Diverted", "date": "May 8, 2025" },
+  { "id": "chapter-07", "title": "The Knights' Bargain", "date": "May 13, 2025" },
+  { "id": "chapter-08", "title": "Bombs Away", "date": "May 29, 2025" }
+  { "id": "chapter-09", "title": "Trains", "date": "June 19, 2025" },
+  { "id": "chapter-10", "title": "Valorspire", "date": "October 23, 2025" },
+  { "id": "chapter-11", "title": "Venture to Gloomport", "date": "March 19, 2026" }
 ]
