@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Request</title>
+
+    <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+    <link rel="stylesheet" href="/pv/css/styles.css">
+    <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        .confirmation-panel {
+            display: none;
+            text-align: center;
+            padding: 20px 0 10px;
+        }
+
+        .confirmation-panel .check-icon {
+            font-size: 3rem;
+            color: #a54d44;
+            margin-bottom: 1rem;
+        }
+
+        .confirmation-panel h2 {
+            font-family: 'Stoke', serif;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin: 0 0 0.75rem;
+        }
+
+        .confirmation-panel p {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+        }
+
+        .confirmation-panel .intake-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: #2c1810;
+            color: #f5f3ef;
+            font-family: 'Stoke', serif;
+            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        .confirmation-panel .intake-btn:hover {
+            background: #45352f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+
+        .confirmation-panel .intake-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            display: none;
+            background: #f9eded;
+            border: 1px solid #d4a5a5;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            font-family: 'Crimson Pro', serif;
+            font-size: 1rem;
+            color: #7a2e2e;
+        }
+
+        [data-theme="dark"] .error-message {
+            background: #3a2020;
+            border-color: #7a4040;
+            color: #e5a0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="nav-placeholder"></div>
+
+        <header class="app-header">
+            <p class="app-subtitle">Phoenix Vanguard Medical Division</p>
+            <h1 class="app-title">Appointment Request</h1>
+        </header>
+
+        <p class="landing-intro">
+            Request a medical appointment with a Phoenix Vanguard medic. All fields are required.
+        </p>
+
+        <!-- Request Form -->
+        <div id="form-wrapper">
+            <div class="form-container active" id="form-appointment">
+                <form id="appointmentForm" onsubmit="submitAppointmentRequest(event)">
+                    <div class="parchment">
+                        <h3 class="section-heading">APPOINTMENT REQUEST</h3>
+
+                        <div class="form-group">
+                            <label for="appt-name">
+                                <span class="material-icons">person</span>
+                                Name
+                            </label>
+                            <input type="text" id="appt-name" name="name" required placeholder="Your character's name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="appt-reason">
+                                <span class="material-icons">medical_services</span>
+                                Reason for Appointment
+                            </label>
+                            <textarea id="appt-reason" name="reason" required placeholder="Briefly describe the reason for your appointment..." style="min-height: 100px;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="appt-medic">
+                                <span class="material-icons">badge</span>
+                                I'd like an appointment with
+                            </label>
+                            <select id="appt-medic" name="medic" required>
+                                <option value="">Select a medic...</option>
+                                <option value="Any Available Medic">Any Available Medic</option>
+                                <option value="Fiora Acaeus">Fiora Acaeus</option>
+                                <option value="V'ika Tia">V'ika Tia</option>
+                                <option value="Astares De'Ruahn">Astares De'Ruahn</option>
+                                <option value="Addison Tyrrell">Addison Tyrrell</option>
+                                <option value="Lixiss">Lixiss</option>
+                                <option value="Orlando Oleander">Orlando Oleander</option>
+                                <option value="Naoji Sugitani">Naoji Sugitani</option>
+                            </select>
+                        </div>
+
+                        <div id="error-message" class="error-message">
+                            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 6px;">error_outline</span>
+                            <span id="error-text">Something went wrong. Please try again.</span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" id="submit-btn" class="submit-btn">
+                            <span class="material-icons">send</span>
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Confirmation Message -->
+        <div id="confirmation-wrapper" style="display: none;">
+            <div class="parchment">
+                <div class="confirmation-panel" style="display: block;">
+                    <span class="material-icons check-icon">check_circle</span>
+                    <h2>Request Sent</h2>
+                    <p>
+                        Your appointment request has been submitted to the medical team. A medic will be in touch with you soon.
+                    </p>
+                    <p>
+                        In the meantime, please fill out a Patient Intake Form and post it to the appointment request channel in Discord so your medic can prepare.
+                    </p>
+                    <a href="https://crafting-tools.github.io/pv/vanguard-medical/patient-intake-form.html" class="intake-btn" target="_blank" rel="noopener">
+                        <span class="material-icons">assignment</span>
+                        Fill Out Patient Intake Form
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+            FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+        </div>
+    </div>
+
+    <script>
+        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1492207324520124506/SRElHLM8lmFKrLoFK6RdQG7_fBsqULNBGR0M46tuC5QBWg-BJ8FwKRk5nGkkqwRQBKHA';
+        const MEDICAL_ROLE_ID = '1283058454373597186';
+
+        // Individual medic Discord IDs — add more as they become available
+        const MEDIC_IDS = {
+            'Fiora Acaeus': '477696368325033984',
+        };
+
+        async function submitAppointmentRequest(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('appt-name').value.trim();
+            const reason = document.getElementById('appt-reason').value.trim();
+            const medic = document.getElementById('appt-medic').value;
+
+            const submitBtn = document.getElementById('submit-btn');
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
+
+            // Always ping the medical role; additionally ping the specific medic if their ID is known
+            let pingContent = `<@&${MEDICAL_ROLE_ID}>`;
+            if (MEDIC_IDS[medic]) {
+                pingContent += ` <@${MEDIC_IDS[medic]}>`;
+            }
+
+            const payload = {
+                content: pingContent,
+                embeds: [{
+                    title: 'New Appointment Request',
+                    color: 0xa54d44,
+                    thumbnail: {
+                        url: 'https://crafting-tools.github.io/pv/assets/pdf-emblem-web.png'
+                    },
+                    fields: [
+                        { name: 'Patient Name', value: name, inline: true },
+                        { name: 'Requested Medic', value: medic, inline: true },
+                        { name: 'Reason for Appointment', value: reason, inline: false }
+                    ],
+                    footer: { text: 'Phoenix Vanguard Medical Division' },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            try {
+                const response = await fetch(DISCORD_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    document.getElementById('form-wrapper').style.display = 'none';
+                    document.getElementById('confirmation-wrapper').style.display = 'block';
+                } else {
+                    errorText.textContent = 'Something went wrong. Please try again.';
+                    errorDiv.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';
+                }
+            } catch (err) {
+                errorText.textContent = 'Could not connect. Please check your connection and try again.';
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';
+            }
+        }
+    </script>
+
+    <script src="/pv/js/nav.js"></script>
+</body>
+</html>
