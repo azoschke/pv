@@ -186,8 +186,7 @@
     </div>
 
     <script>
-        const GITHUB_API = 'https://api.github.com/repos/azoschke/pv/actions/workflows/discord-appointment.yml/dispatches';
-        const GITHUB_TOKEN = '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';
+        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1492207324520124506/SRElHLM8lmFKrLoFK6RdQG7_fBsqULNBGR0M46tuC5QBWg-BJ8FwKRk5nGkkqwRQBKHA';
 
         async function submitAppointmentRequest(event) {
             event.preventDefault();
@@ -204,30 +203,31 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
 
+            const payload = {
+                embeds: [{
+                    title: 'New Appointment Request',
+                    color: 0xa54d44,
+                    fields: [
+                        { name: 'Patient Name', value: name, inline: true },
+                        { name: 'Requested Medic', value: medic, inline: true },
+                        { name: 'Reason for Appointment', value: reason, inline: false }
+                    ],
+                    footer: { text: 'Phoenix Vanguard Medical Division' }
+                }]
+            };
+
             try {
-                const response = await fetch(GITHUB_API, {
+                const response = await fetch(DISCORD_WEBHOOK, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': 'token ' + GITHUB_TOKEN,
-                        'Accept': 'application/vnd.github+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        ref: 'main',
-                        inputs: {
-                            patient_name: name,
-                            reason: reason,
-                            preferred_medic: medic
-                        }
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
-                if (response.status === 204) {
+                if (response.ok) {
                     document.getElementById('form-wrapper').style.display = 'none';
                     document.getElementById('confirmation-wrapper').style.display = 'block';
                 } else {
-                    const body = await response.json().catch(() => ({}));
-                    errorText.textContent = body.message || 'Something went wrong. Please try again.';
+                    errorText.textContent = 'Something went wrong. Please try again.';
                     errorDiv.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';
