@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony of the Eclipse — Phoenix Vanguard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+</head>
+<body>
+
+  <div class="container">
+    <div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">
+        <a href="/pv/campaigns/campaigns.html" class="campaign-back-link">Campaigns</a>
+      </p>
+      <h1 class="app-title">Symphony of the Eclipse</h1>
+    </header>
+
+    <!-- Two-column layout: sidebar + main -->
+    <div class="campaign-layout" id="campaign-layout">
+
+      <!-- Chapter sidebar -->
+      <aside class="campaign-sidebar" id="campaign-sidebar" aria-label="Chapter navigation">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Chapters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close chapter list">&#10005;</button>
+        </div>
+        <ul class="chapter-list" id="chapter-list" role="list">
+          <!-- populated by JS from chapters.json -->
+        </ul>
+      </aside>
+
+      <!-- Main content area -->
+      <main class="campaign-main" id="campaign-main">
+        <div class="campaign-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle chapter list">
+            &#9776; Chapters
+          </button>
+        </div>
+
+        <div id="chapter-content" class="chapter-view">
+          <div class="chapter-loading">Loading&hellip;</div>
+        </div>
+      </main>
+
+    </div><!-- /.campaign-layout -->
+
+    <!-- Mobile overlay -->
+    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+
+  </div><!-- /.container -->
+
+  <!-- Load shared markdown utilities first, then page logic -->
+  <script src="../campaigns.js"></script>
+  <script>
+  (function () {
+
+    var CHAPTERS_URL = './chapters.json';
+    var CHAPTERS_DIR = './chapters/';
+    var SIDEBAR_STORAGE_KEY = 'eclipse-sidebar-hidden';
+
+    var chapters      = [];
+    var activeId      = null;
+    var showingTldr   = false;
+    var chapterCache  = {}; // id → { main: html, tldr: html|null }
+
+    // DOM refs (resolved after DOMContentLoaded)
+    var chapterList   = null;
+    var chapterContent = null;
+    var sidebarEl     = null;
+    var toggleBtn     = null;
+    var closeBtn      = null;
+    var overlay       = null;
+
+    // ── Breakpoint helper ───────────────────────────────────────────────────
+    function isMobile() { return window.innerWidth <= 768; }
+
+    // ── Sidebar open / close ────────────────────────────────────────────────
+    function openSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.add('sidebar-open');
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden', 'false');
+      } else {
+        sidebarEl.classList.remove('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_STORAGE_KEY, '0'); } catch(e) {}
+      }
+    }
+
+    function closeSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.remove('sidebar-open');
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+      } else {
+        sidebarEl.classList.add('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_STORAGE_KEY, '1'); } catch(e) {}
+      }
+    }
+
+    function toggleSidebar() {
+      if (isMobile()) {
+        // Mobile: toggle button always opens the drawer
+        openSidebar();
+      } else {
+        if (sidebarEl.classList.contains('sidebar-hidden')) {
+          openSidebar();
+        } else {
+          closeSidebar();
+        }
+      }
+    }
+
+    function restoreSidebarState() {
+      // Only restore on desktop; mobile always starts closed
+      if (isMobile()) return;
+      try {
+        if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1') {
+          sidebarEl.classList.add('sidebar-hidden');
+        }
+      } catch(e) {}
+    }
+
+    // ── Chapter list rendering ──────────────────────────────────────────────
+    function buildChapterList(data) {
+      chapterList.innerHTML = '';
+      data.forEach(function (ch) {
+        var li  = document.createElement('li');
+        li.className = 'chapter-list-item';
+        li.dataset.chapterId = ch.id;
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chapter-list-btn';
+        btn.innerHTML =
+          '<span class="chapter-list-btn-title">' + escapeHtml(ch.title) + '</span>' +
+          '<span class="chapter-list-btn-date">'  + escapeHtml(ch.date)  + '</span>';
+        btn.addEventListener('click', function () {
+          loadChapter(ch.id);
+          if (isMobile()) closeSidebar();
+        });
+
+        li.appendChild(btn);
+        chapterList.appendChild(li);
+      });
+    }
+
+    function setActiveChapterItem(id) {
+      var items = chapterList.querySelectorAll('.chapter-list-item');
+      items.forEach(function (li) {
+        li.classList.toggle('active', li.dataset.chapterId === id);
+      });
+    }
+
+    // ── Chapter loading & rendering ─────────────────────────────────────────
+    function loadChapter(id) {
+      if (activeId === id) return;
+      activeId = id;
+      showingTldr = false;
+
+      setActiveChapterItem(id);
+
+      // Reflect in URL hash so back/forward and link-sharing work
+      history.replaceState(null, '', '#' + id);
+
+      if (chapterCache[id]) {
+        renderChapter(id, chapterCache[id]);
+        return;
+      }
+
+      chapterContent.innerHTML = '<div class="chapter-loading">Loading&hellip;</div>';
+
+      fetch(CHAPTERS_DIR + id + '.md')
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(function (md) {
+          var split = CampaignUtils.splitChapterContent(md);
+          var data  = {
+            main: CampaignUtils.parseMarkdown(split.main),
+            tldr: split.tldr ? CampaignUtils.parseMarkdown(split.tldr) : null
+          };
+          chapterCache[id] = data;
+          renderChapter(id, data);
+        })
+        .catch(function (err) {
+          chapterContent.innerHTML = '<div class="chapter-error">Could not load this chapter. Please try again later.</div>';
+          console.error('[eclipse] chapter load error:', err);
+        });
+    }
+
+    function renderChapter(id, data) {
+      var ch      = chapters.find(function (c) { return c.id === id; });
+      if (!ch) return;
+      var hasTldr = !!data.tldr;
+
+      chapterContent.innerHTML =
+        '<div class="chapter-view-header">' +
+          '<div class="chapter-view-meta">' +
+            '<p class="chapter-view-label">Chapter</p>' +
+            '<h2 class="chapter-view-title">' + escapeHtml(ch.title) + '</h2>' +
+            '<p class="chapter-view-date">'  + escapeHtml(ch.date)  + '</p>' +
+          '</div>' +
+          (hasTldr
+            ? '<button class="tldr-toggle-btn" id="tldr-toggle-btn" type="button" aria-pressed="false">TL;DR</button>'
+            : '') +
+        '</div>' +
+        '<div class="chapter-body" id="chapter-body-main">'  + data.main + '</div>' +
+        (hasTldr
+          ? '<div class="chapter-body chapter-body--tldr" id="chapter-body-tldr" hidden>' + data.tldr + '</div>'
+          : '');
+
+      if (hasTldr) {
+        document.getElementById('tldr-toggle-btn').addEventListener('click', function () {
+          showingTldr = !showingTldr;
+          this.classList.toggle('active', showingTldr);
+          this.setAttribute('aria-pressed', showingTldr ? 'true' : 'false');
+          var mainBody = document.getElementById('chapter-body-main');
+          var tldrBody = document.getElementById('chapter-body-tldr');
+          if (showingTldr) {
+            mainBody.hidden = true;
+            tldrBody.removeAttribute('hidden');
+          } else {
+            mainBody.removeAttribute('hidden');
+            tldrBody.hidden = true;
+          }
+        });
+      }
+    }
+
+    // ── Utilities ──────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;');
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    function init() {
+      chapterList    = document.getElementById('chapter-list');
+      chapterContent = document.getElementById('chapter-content');
+      sidebarEl      = document.getElementById('campaign-sidebar');
+      toggleBtn      = document.getElementById('sidebar-toggle-btn');
+      closeBtn       = document.getElementById('sidebar-close-btn');
+      overlay        = document.getElementById('campaign-overlay');
+
+      // Wire controls
+      toggleBtn.addEventListener('click', toggleSidebar);
+      closeBtn.addEventListener('click', closeSidebar);
+      overlay.addEventListener('click', closeSidebar);
+
+      // Restore sidebar preference on desktop
+      restoreSidebarState();
+
+      // Fetch chapter list
+      fetch(CHAPTERS_URL)
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          chapters = data;
+          buildChapterList(chapters);
+
+          // Load chapter from URL hash, or default to first
+          var hash   = window.location.hash.slice(1);
+          var target = chapters.find(function (c) { return c.id === hash; }) || chapters[0];
+          if (target) loadChapter(target.id);
+        })
+        .catch(function (err) {
+          chapterContent.innerHTML = '<div class="chapter-error">Could not load chapter list.</div>';
+          console.error('[eclipse] chapters.json error:', err);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+  })();
+  </script>
+
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
