@@ -146,6 +146,20 @@
     .visit-card.open .visit-card-body { display: block; }
     @media (max-width: 600px) { .visit-card-body { padding: 1rem; } }
 
+    /* Visit subsection headings (Patient Intake / Treatment Report) */
+    .visit-subsection-label {
+      font-family: 'Stoke', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-brown);
+      margin-bottom: 1rem;
+    }
+    .visit-subsection-divider {
+      border-top: 1px solid var(--border-color);
+      margin: 1.25rem 0;
+    }
+
     /* ── Loading / error states ────────────────────────────────────── */
     .v2-state-msg {
       font-family: 'La Belle Aurore', cursive;
@@ -433,11 +447,14 @@
         html += '<div class="record-card-header"><div><p class="record-card-label">Medical</p><h2 class="record-card-title">Visit History</h2></div></div>';
 
         visits.forEach(function(v, idx) {
-          var visitFields = [
+          // Split into intake fields (from patient) and report fields (from medic)
+          var intakeFields = [
             { l: "Presenting Complaint", v: v.presenting_complaint },
             { l: "Current Symptoms", v: v.current_symptoms },
-            { l: "Recent Exposures", v: v.recent_exposures },
-            { l: "Attending Medic", v: v.attending_medic },
+            { l: "Recent Exposures", v: v.recent_exposures }
+          ].filter(function(f) { return hasValue(f.v); });
+
+          var reportFields = [
             { l: "Clinical Summary", v: v.clinical_summary },
             { l: "Diagnosis", v: v.diagnosis },
             { l: "Procedures Performed", v: v.procedures_performed },
@@ -446,6 +463,8 @@
             { l: "Discharge Status", v: v.discharge_status },
             { l: "Additional Notes", v: v.additional_notes }
           ].filter(function(f) { return hasValue(f.v); });
+
+          var hasContent = intakeFields.length || reportFields.length;
 
           html += '<div class="visit-card" data-visit-idx="' + idx + '">';
           html += '<div class="visit-card-header">';
@@ -459,10 +478,20 @@
           html += '</div>';
 
           html += '<div class="visit-card-body">';
-          if (visitFields.length) {
-            visitFields.forEach(function(f) { html += field(f.l, f.v); });
-          } else {
+          if (!hasContent) {
             html += '<em style="color:var(--text-secondary);">No details available for this visit.</em>';
+          } else {
+            if (intakeFields.length) {
+              html += '<div class="visit-subsection-label">Patient Intake</div>';
+              intakeFields.forEach(function(f) { html += field(f.l, f.v); });
+            }
+            if (reportFields.length) {
+              if (intakeFields.length) {
+                html += '<div class="visit-subsection-divider"></div>';
+              }
+              html += '<div class="visit-subsection-label">Treatment Report</div>';
+              reportFields.forEach(function(f) { html += field(f.l, f.v); });
+            }
           }
           html += '</div>';
           html += '</div>';
