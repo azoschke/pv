@@ -422,7 +422,7 @@
 
       if (ecFields.length) {
         html += '<div class="record-card">';
-        html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h2 class="record-card-title">Emergency Contact</h2></div></div>';
+        html += '<div class="record-card-header"><div><h2 class="record-card-title">Emergency Contact</h2></div></div>';
         html += '<div class="record-fields-inline">';
         ecFields.forEach(function(f) { html += field(f.l, f.v); });
         html += '</div></div>';
@@ -439,7 +439,7 @@
 
       if (condFields.length) {
         html += '<div class="record-card">';
-        html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h2 class="record-card-title">Pre-existing Conditions</h2></div></div>';
+        html += '<div class="record-card-header"><div><h2 class="record-card-title">Pre-existing Conditions</h2></div></div>';
         condFields.forEach(function(f) { html += field(f.l, f.v); });
         html += '</div>';
       }
