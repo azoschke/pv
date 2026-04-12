@@ -1857,7 +1857,7 @@ body.nav-sidebar-open {
 
 /* ── Rendered chapter markdown ───────────────────────────────────────────────── */
 
-.chapter-body {
+.chapter-body, .record-field-value {
   font-family: 'Crimson Pro', serif;
   font-size: 1.15rem;
   line-height: 1.75;
