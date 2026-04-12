@@ -126,8 +126,8 @@
     .visit-card.open .visit-card-date { color: var(--accent-red); }
 
     .visit-card-meta {
-      font-family: 'La Belle Aurore', cursive;
-      font-size: 0.95rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.1rem;
       color: var(--text-secondary);
     }
 
@@ -351,20 +351,35 @@
       var patient = data && data.patient ? data.patient : data || {};
       var visits  = Array.isArray(data && data.visits) ? data.visits : (Array.isArray(patient.visits) ? patient.visits : []);
 
-      // Sort visits newest first
+      // Sort visits newest first using Eorzean date parsing
+      // Format: "XAM, YYS" or "XUM, YYS" where X=moon number, AM/UM=astral/umbral, YY=sun(day)
+      // Moon order: 1AM,1UM,2AM,2UM,3AM,3UM,4AM,4UM,5AM,5UM,6AM,6UM (12 moons total)
+      // Without a year field, we sort by moon then sun and accept that
+      // year rollovers will interleave. If a year is added later, it
+      // slots in naturally before the moon component.
+      function parseEorzeanDate(str) {
+        if (!str) return { moon: 0, sun: 0 };
+        var m = String(str).match(/(\d+)\s*(AM|UM)/i);
+        var s = String(str).match(/(\d+)\s*S/i);
+        var moonNum = m ? parseInt(m[1], 10) : 0;
+        var isUmbral = m ? m[2].toUpperCase() === "UM" : false;
+        // Convert to ordinal: 1AM=1, 1UM=2, 2AM=3, 2UM=4, ...
+        var moonOrd = moonNum * 2 - (isUmbral ? 0 : 1);
+        var sunNum  = s ? parseInt(s[1], 10) : 0;
+        return { moon: moonOrd, sun: sunNum };
+      }
+
       visits.sort(function(a, b) {
-        var ad = new Date(a.visit_date).getTime();
-        var bd = new Date(b.visit_date).getTime();
-        return (isNaN(bd) ? 0 : bd) - (isNaN(ad) ? 0 : ad);
+        var da = parseEorzeanDate(a.visit_date);
+        var db = parseEorzeanDate(b.visit_date);
+        if (db.moon !== da.moon) return db.moon - da.moon;
+        return db.sun - da.sun;
       });
 
       // --- Build HTML ---
       var html = "";
 
-      // Patient name card
-      html += '<div class="record-card"><h1 class="patient-name-header">' + escapeHTML(patient.patient_name || "Unknown Patient") + '</h1></div>';
-
-      // General Information
+      // General Information (with patient name as header)
       var generalInline = [
         { l: "Race", v: patient.race },
         { l: "Gender", v: patient.gender },
@@ -372,13 +387,14 @@
         { l: "Vanguard Position", v: patient.vanguard_position }
       ].filter(function(f) { return hasValue(f.v); });
 
+      html += '<div class="record-card">';
+      html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(patient.patient_name || "Unknown Patient") + '</h1></div></div>';
       if (generalInline.length) {
-        html += '<div class="record-card">';
-        html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h2 class="record-card-title">General Information</h2></div></div>';
         html += '<div class="record-fields-inline">';
         generalInline.forEach(function(f) { html += field(f.l, f.v); });
-        html += '</div></div>';
+        html += '</div>';
       }
+      html += '</div>';
 
       // Emergency Contact
       var ecFields = [
@@ -431,9 +447,7 @@
             { l: "Additional Notes", v: v.additional_notes }
           ].filter(function(f) { return hasValue(f.v); });
 
-          var openClass = idx === 0 ? " open" : "";
-
-          html += '<div class="visit-card' + openClass + '" data-visit-idx="' + idx + '">';
+          html += '<div class="visit-card" data-visit-idx="' + idx + '">';
           html += '<div class="visit-card-header">';
           html += '<div>';
           html += '<span class="visit-card-date">' + escapeHTML(v.visit_date || "(undated)") + '</span>';
