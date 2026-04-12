@@ -281,8 +281,12 @@
         <form id="visit-form">
           <div class="admin-form-grid">
             <div class="form-group">
-              <label for="vf-date">Visit Date</label>
+              <label for="vf-date">Visit Date (Eorzean)</label>
               <input id="vf-date" type="text" placeholder="e.g. 2AM, 04S" required>
+            </div>
+            <div class="form-group">
+              <label for="vf-sort-date">Sort Date (real-life, hidden from public)</label>
+              <input id="vf-sort-date" type="date">
             </div>
             <div class="form-group">
               <label for="vf-medic">Attending Medic</label>
@@ -779,6 +783,7 @@
 
     const VISIT_FIELDS = [
       ["vf-date", "visit_date"],
+      ["vf-sort-date", "sort_date"],
       ["vf-medic", "attending_medic"],
       ["vf-complaint", "presenting_complaint"],
       ["vf-symptoms", "current_symptoms"],

@@ -365,25 +365,29 @@
       var patient = data && data.patient ? data.patient : data || {};
       var visits  = Array.isArray(data && data.visits) ? data.visits : (Array.isArray(patient.visits) ? patient.visits : []);
 
-      // Sort visits newest first using Eorzean date parsing
-      // Format: "XAM, YYS" or "XUM, YYS" where X=moon number, AM/UM=astral/umbral, YY=sun(day)
-      // Moon order: 1AM,1UM,2AM,2UM,3AM,3UM,4AM,4UM,5AM,5UM,6AM,6UM (12 moons total)
-      // Without a year field, we sort by moon then sun and accept that
-      // year rollovers will interleave. If a year is added later, it
-      // slots in naturally before the moon component.
+      // Sort visits newest first.
+      // Primary key: sort_date (real-life ISO date, hidden from public view).
+      // Fallback for older records without sort_date: Eorzean date parsing.
       function parseEorzeanDate(str) {
         if (!str) return { moon: 0, sun: 0 };
         var m = String(str).match(/(\d+)\s*(AM|UM)/i);
         var s = String(str).match(/(\d+)\s*S/i);
         var moonNum = m ? parseInt(m[1], 10) : 0;
         var isUmbral = m ? m[2].toUpperCase() === "UM" : false;
-        // Convert to ordinal: 1AM=1, 1UM=2, 2AM=3, 2UM=4, ...
         var moonOrd = moonNum * 2 - (isUmbral ? 0 : 1);
         var sunNum  = s ? parseInt(s[1], 10) : 0;
         return { moon: moonOrd, sun: sunNum };
       }
 
       visits.sort(function(a, b) {
+        // If both have sort_date, use it (ISO strings sort lexicographically)
+        var sa = a.sort_date || "";
+        var sb = b.sort_date || "";
+        if (sa && sb) return sb.localeCompare(sa);
+        // If only one has it, the one with sort_date is newer (put first)
+        if (sa && !sb) return -1;
+        if (!sa && sb) return 1;
+        // Neither has sort_date — fall back to Eorzean parsing
         var da = parseEorzeanDate(a.visit_date);
         var db = parseEorzeanDate(b.visit_date);
         if (db.moon !== da.moon) return db.moon - da.moon;
