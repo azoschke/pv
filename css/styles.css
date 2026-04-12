@@ -72,6 +72,9 @@ p {
   --form-input-bg:          #e3ded3;
   --form-input-placeholder: #9B8F84;
 
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #e8e2d9;
+
   /* Phoenix Vanguard — parchment world */
   --parchment-bg:    #e3ded3;
   --parchment-dark:  #d6d0c4;
@@ -110,6 +113,9 @@ p {
   /* Form inputs */
   --form-input-bg:          #3a342f;
   --form-input-placeholder: #6b6560;
+
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #222019;
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
@@ -1244,7 +1250,7 @@ pre {
 }
 
 .medical-staff-band .landing-card {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-staff-panel);
   box-shadow: none;
 }
 
