@@ -10,6 +10,168 @@
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- V2 patient records — card-based layout with legible font sizes --- */
+
+    /* ── Patient selector as card grid ─────────────────────────────── */
+    .patient-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .patient-card {
+      display: block;
+      text-decoration: none;
+      color: var(--text-primary);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    }
+    .patient-card:hover {
+      box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+      transform: translateY(-2px);
+      border-color: var(--accent-brown);
+    }
+    .patient-card.active {
+      border-color: var(--accent-red);
+      box-shadow: 0 4px 16px rgba(165, 77, 68, 0.2);
+    }
+    .patient-card-name {
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    /* ── Loading / error states ────────────────────────────────────── */
+    .v2-loading, .v2-error {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-secondary);
+      font-family: 'La Belle Aurore', cursive;
+      font-size: 1.2rem;
+    }
+    .v2-error { color: var(--accent-red); }
+
+    /* ── Patient detail panel — card style ─────────────────────────── */
+    .patient-detail {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 2rem 2.5rem;
+    }
+    @media (max-width: 600px) { .patient-detail { padding: 1.25rem; } }
+
+    .patient-detail .patient-name {
+      font-family: 'La Belle Aurore', cursive;
+      font-size: 2.4rem;
+      line-height: 2.4rem;
+      font-weight: 500;
+      margin: 0 0 0.25rem;
+      border-bottom: 2px dashed var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    /* ── Section styling — larger prose ─────────────────────────────── */
+    .patient-detail .section {
+      border-bottom: 2px dashed var(--border-color);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .patient-detail .section:last-child { border-bottom: none; }
+
+    .patient-detail .section h2 {
+      font-family: 'Stoke', serif;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2rem;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .patient-detail .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1.25rem;
+    }
+
+    .patient-detail .label {
+      font-family: 'Stoke', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .patient-detail .value {
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.3rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+    .patient-detail .value p { margin: 0 0 0.75rem; }
+    .patient-detail .value p:last-child { margin-bottom: 0; }
+
+    /* ── Visit tabs — keep accessible ──────────────────────────────── */
+    .patient-detail .visit-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .patient-detail .visit-tab {
+      padding: 8px 14px;
+      background: var(--bg-darker);
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.05rem;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .patient-detail .visit-tab:hover {
+      background: var(--bg-card-light);
+    }
+    .patient-detail .visit-tab.active {
+      background: var(--bg-card-light);
+      color: var(--text-primary);
+      font-weight: bold;
+    }
+
+    .patient-detail .visit-details-container {
+      padding: 1.5rem;
+      border-radius: 0 6px 6px 6px;
+      background: var(--bg-card-light);
+    }
+
+    /* ── Back link ──────────────────────────────────────────────────── */
+    .back-to-list {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Stoke', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      margin-bottom: 1rem;
+      transition: color 0.2s;
+    }
+    .back-to-list:hover { color: var(--accent-red); }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -24,85 +186,28 @@
      <em>Disclaimer: These records are only available ICly to members of the Phoenix Vanguard Medical Team. All other personnel should consider these under lock and key, private information.</em>
     </p>
 
-  <div class="app pv-app">
-      <div class="patient-sidebar-overlay" id="patient-sidebar-overlay"></div>
+    <div id="app-root">
+      <!-- JS renders patient grid or patient detail here -->
+      <div class="v2-loading" id="initial-loading">Loading patient records&hellip;</div>
+    </div>
 
-      <aside class="sidebar" id="patient-sidebar">
-        <div class="sidebar-header">
-          <h2>Patients</h2>
-          <button class="sidebar-toggle-close" id="sidebar-toggle-close" type="button" aria-label="Close patient list">&#10005;</button>
-        </div>
-        <ul id="patientList"></ul>
-      </aside>
-
-      <main class="content">
-        <button class="patient-list-toggle" id="patient-list-toggle" type="button" aria-expanded="false" aria-controls="patient-sidebar">
-          <span class="patient-list-toggle-icon">&#9776;</span> Select Patient
-        </button>
-        <div class="parchment">
-          <div id="patientContent">
-            <h2>Select a patient to view their records.</h2>
-            <p>Please see Fiora if records are not up to date or files are missing.</p>
-          </div>
-        </div>
-      </main>
-
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
   </div>
-  <div class="disclaimer">
-    FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
-    FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
-  </div>
-</div>
 
-  <!-- Marked (matches existing med-database for consistent markdown rendering) -->
+  <!-- Marked (markdown rendering, matching existing med-database) -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
   (function () {
     const API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-
-    const patientList = document.getElementById("patientList");
-    const patientContent = document.getElementById("patientContent");
+    const appRoot = document.getElementById("app-root");
 
     if (window.marked && marked.use) {
       marked.use({ breaks: true });
     }
-
-    // --- Mobile patient sidebar toggle ---
-    (function () {
-      const toggleBtn = document.getElementById("patient-list-toggle");
-      const closeBtn = document.getElementById("sidebar-toggle-close");
-      const sidebar = document.getElementById("patient-sidebar");
-      const overlay = document.getElementById("patient-sidebar-overlay");
-      if (!toggleBtn || !sidebar) return;
-
-      function openSidebar() {
-        sidebar.classList.add("sidebar-open");
-        toggleBtn.setAttribute("aria-expanded", "true");
-        document.body.classList.add("patient-sidebar-open");
-        if (overlay) overlay.classList.add("active");
-      }
-
-      function closeSidebar() {
-        sidebar.classList.remove("sidebar-open");
-        toggleBtn.setAttribute("aria-expanded", "false");
-        document.body.classList.remove("patient-sidebar-open");
-        if (overlay) overlay.classList.remove("active");
-      }
-
-      toggleBtn.addEventListener("click", function () {
-        if (sidebar.classList.contains("sidebar-open")) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
-      });
-
-      if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
-      if (overlay) overlay.addEventListener("click", closeSidebar);
-
-      window._closePvPatientSidebar = closeSidebar;
-    })();
 
     // --- Helpers ---
     function escapeHTML(str) {
@@ -116,8 +221,6 @@
     }
 
     function renderValue(value) {
-      // Render markdown → HTML via marked, but escape raw HTML first so
-      // only markdown syntax produces markup (no XSS from user content).
       if (value == null) return "";
       const escaped = escapeHTML(value);
       if (window.marked && typeof marked.parse === "function") {
@@ -139,110 +242,90 @@
       return `<section class="section"><h2>${escapeHTML(title)}</h2>${fieldsHTML}</section>`;
     }
 
-    function setPatientContent(html) {
-      patientContent.innerHTML = html;
-    }
-
-    function showLoading(message) {
-      setPatientContent(`<h2>${escapeHTML(message || "Loading…")}</h2>`);
-    }
-
-    function showError(message) {
-      setPatientContent(
-        `<h2>Unable to load records</h2>` +
-        `<p>${escapeHTML(message || "An unexpected error occurred.")}</p>` +
-        `<p>Please see Fiora if this problem persists.</p>`
-      );
-    }
-
     // --- API ---
     async function apiGet(path) {
       const res = await fetch(API_BASE + path, {
         method: "GET",
         headers: { "Accept": "application/json" }
       });
-      if (!res.ok) {
-        throw new Error("Request failed (" + res.status + ")");
-      }
+      if (!res.ok) throw new Error("Request failed (" + res.status + ")");
       return res.json();
     }
 
-    // --- Patient list ---
-    async function loadPatientList() {
-      const loadingLi = document.createElement("li");
-      loadingLi.textContent = "Loading…";
-      loadingLi.style.padding = "12px 30px";
-      loadingLi.style.color = "var(--text-secondary)";
-      patientList.appendChild(loadingLi);
-
+    // =====================================================================
+    //  View: Patient Grid
+    // =====================================================================
+    async function showPatientGrid() {
+      appRoot.innerHTML = `<div class="v2-loading">Loading patient records&hellip;</div>`;
       try {
         const patients = await apiGet("/patients");
-        patientList.innerHTML = "";
-
         if (!Array.isArray(patients) || patients.length === 0) {
-          const li = document.createElement("li");
-          li.textContent = "No patients on file.";
-          li.style.padding = "12px 30px";
-          li.style.color = "var(--text-secondary)";
-          patientList.appendChild(li);
+          appRoot.innerHTML = `<div class="v2-loading">No patients on file.</div>`;
           return;
         }
 
-        // Sort alphabetically by name for stable ordering
-        patients.sort((a, b) => {
-          const an = (a.patient_name || "").toLowerCase();
-          const bn = (b.patient_name || "").toLowerCase();
-          return an.localeCompare(bn);
-        });
+        patients.sort((a, b) =>
+          (a.patient_name || "").localeCompare(b.patient_name || "", undefined, { sensitivity: "base" })
+        );
 
-        patients.forEach(patient => {
-          if (patient.patient_id == null || !patient.patient_name) return;
-          const li = document.createElement("li");
-          const link = document.createElement("span");
+        const grid = document.createElement("div");
+        grid.className = "patient-grid";
 
-          link.textContent = patient.patient_name;
-          link.classList.add("patient-link");
-          link.dataset.patientId = String(patient.patient_id);
+        patients.forEach(p => {
+          if (p.patient_id == null || !p.patient_name) return;
+          const card = document.createElement("div");
+          card.className = "patient-card";
+          card.setAttribute("role", "button");
+          card.setAttribute("tabindex", "0");
 
-          link.addEventListener("click", () => {
-            document.querySelectorAll(".patient-link").forEach(el => el.classList.remove("active"));
-            link.classList.add("active");
-            loadPatient(patient.patient_id);
-            if (window._closePvPatientSidebar && window.innerWidth <= 900) {
-              window._closePvPatientSidebar();
-            }
+          const name = document.createElement("div");
+          name.className = "patient-card-name";
+          name.textContent = p.patient_name;
+          card.appendChild(name);
+
+          function select() {
+            showPatientDetail(p.patient_id);
+          }
+          card.addEventListener("click", select);
+          card.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); }
           });
 
-          li.appendChild(link);
-          patientList.appendChild(li);
+          grid.appendChild(card);
         });
+
+        const intro = document.createElement("p");
+        intro.style.cssText = "margin-bottom:1rem; color:var(--text-secondary); font-size:1.1rem;";
+        intro.textContent = "Please see Fiora if records are not up to date or files are missing.";
+
+        appRoot.innerHTML = "";
+        appRoot.appendChild(intro);
+        appRoot.appendChild(grid);
       } catch (err) {
         console.error("Error loading patients:", err);
-        patientList.innerHTML = "";
-        const li = document.createElement("li");
-        li.textContent = "Failed to load patients.";
-        li.style.padding = "12px 30px";
-        li.style.color = "var(--accent-red)";
-        patientList.appendChild(li);
-        showError("Could not reach the medical database. Please try again shortly.");
+        appRoot.innerHTML = `<div class="v2-error">Could not reach the medical database. Please try again shortly.</div>`;
       }
     }
 
-    // --- Single patient ---
-    async function loadPatient(patientId) {
-      showLoading("Loading patient records…");
+    // =====================================================================
+    //  View: Patient Detail
+    // =====================================================================
+    async function showPatientDetail(patientId) {
+      appRoot.innerHTML = `<div class="v2-loading">Loading patient records&hellip;</div>`;
       try {
         const data = await apiGet("/patients/" + encodeURIComponent(patientId));
         renderPatient(data);
       } catch (err) {
         console.error("Error loading patient:", err);
-        showError("Could not load this patient's records.");
+        appRoot.innerHTML =
+          `<div class="v2-error">Could not load this patient's records.</div>` +
+          `<p style="text-align:center;"><button class="back-to-list" id="err-back">&larr; Back to patient list</button></p>`;
+        const backBtn = document.getElementById("err-back");
+        if (backBtn) backBtn.addEventListener("click", showPatientGrid);
       }
     }
 
     function renderPatient(data) {
-      // API may return the patient fields at top level with a `visits` array,
-      // or nested under `patient`. Handle both shapes defensively.
       const patient = data && data.patient ? data.patient : data || {};
       const visits = Array.isArray(data && data.visits)
         ? data.visits
@@ -252,8 +335,7 @@
         { label: "Race", value: patient.race },
         { label: "Gender", value: patient.gender },
         { label: "Age", value: patient.age },
-        { label: "Vanguard Position", value: patient.vanguard_position },
-        { label: "Date Updated", value: patient.date_updated }
+        { label: "Vanguard Position", value: patient.vanguard_position }
       ];
 
       const emergencyFields = [
@@ -274,9 +356,7 @@
       const sortedVisits = visits.slice().sort((a, b) => {
         const ad = new Date(a.visit_date).getTime();
         const bd = new Date(b.visit_date).getTime();
-        const av = isNaN(ad) ? 0 : ad;
-        const bv = isNaN(bd) ? 0 : bd;
-        return bv - av;
+        return (isNaN(bd) ? 0 : bd) - (isNaN(ad) ? 0 : ad);
       });
 
       let visitTabs = "";
@@ -296,17 +376,22 @@
         `
         : "";
 
-      patientContent.innerHTML = `
-        <header class="patient-header">
-          <h1 class="patient-name">${escapeHTML(patient.patient_name || "Unknown Patient")}</h1>
-        </header>
+      appRoot.innerHTML = `
+        <button class="back-to-list" id="back-btn">&larr; Back to patient list</button>
+        <div class="patient-detail">
+          <header class="patient-header">
+            <h1 class="patient-name">${escapeHTML(patient.patient_name || "Unknown Patient")}</h1>
+          </header>
 
-        ${renderSection("General Information", generalFields)}
-        ${renderSection("Emergency Contact", emergencyFields)}
-        ${renderSection("Pre-existing Conditions", conditionsFields)}
+          ${renderSection("General Information", generalFields)}
+          ${renderSection("Emergency Contact", emergencyFields)}
+          ${renderSection("Pre-existing Conditions", conditionsFields)}
 
-        ${visitsSectionHTML}
+          ${visitsSectionHTML}
+        </div>
       `;
+
+      document.getElementById("back-btn").addEventListener("click", showPatientGrid);
 
       // Attach visit tab events
       document.querySelectorAll(".visit-tab").forEach(tab => {
@@ -318,7 +403,7 @@
         });
       });
 
-      // Auto-click first visit if exists
+      // Auto-click first visit
       const firstTab = document.querySelector(".visit-tab");
       if (firstTab) firstTab.click();
     }
@@ -355,8 +440,8 @@
       `).join("");
     }
 
-    // --- Kick off ---
-    loadPatientList();
+    // --- Boot ---
+    showPatientGrid();
   })();
   </script>
   <script src="/pv/js/nav.js"></script>
