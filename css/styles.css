@@ -72,6 +72,9 @@ p {
   --form-input-bg:          #e3ded3;
   --form-input-placeholder: #9B8F84;
 
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #e8e2d9;
+
   /* Phoenix Vanguard — parchment world */
   --parchment-bg:    #e3ded3;
   --parchment-dark:  #d6d0c4;
@@ -110,6 +113,9 @@ p {
   /* Form inputs */
   --form-input-bg:          #3a342f;
   --form-input-placeholder: #6b6560;
+
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #222019;
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
@@ -327,6 +333,25 @@ pre {
   color: var(--text-primary);
   border-left-color: var(--accent-brown);
   background-color: var(--bg-darker);
+}
+
+.nav-submenu-label {
+  padding: 0.45rem 1rem 0.2rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  pointer-events: none;
+  user-select: none;
+  list-style: none;
+}
+
+.nav-submenu-label--divider {
+  margin-top: 0.2rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* --- Theme toggle (icon only) --- */
@@ -1203,6 +1228,32 @@ pre {
   margin: 0;
 }
 
+.landing-subsection-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+}
+
+/* ── Medical Division staff band ─────────────────────────────────────────── */
+
+.medical-staff-band {
+  margin-top: 1.25rem;
+}
+
+.medical-staff-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.medical-staff-band .landing-card {
+  background-color: var(--bg-staff-panel);
+  box-shadow: none;
+}
+
 .landing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -1465,10 +1516,19 @@ body.nav-sidebar-open {
 }
 
 .nav-sidebar-section.open > .nav-sidebar-submenu {
-  max-height: 400px;
+  max-height: 500px;
 }
 
 .nav-sidebar-submenu li {}
+
+.nav-sidebar-submenu .nav-submenu-label {
+  padding: 0.5rem 1.25rem 0.2rem 1.5rem;
+}
+
+.nav-sidebar-submenu .nav-submenu-label--divider {
+  margin-top: 0.2rem;
+  padding-top: 0.55rem;
+}
 
 .nav-sidebar-submenu .nav-sublink {
   display: block;
@@ -1491,6 +1551,7 @@ body.nav-sidebar-open {
   border-left-color: var(--accent-brown);
   background-color: var(--bg-darker);
 }
+
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 @media (max-width: 900px) {
@@ -1796,7 +1857,7 @@ body.nav-sidebar-open {
 
 /* ── Rendered chapter markdown ───────────────────────────────────────────────── */
 
-.chapter-body {
+.chapter-body, .record-field-value {
   font-family: 'Crimson Pro', serif;
   font-size: 1.15rem;
   line-height: 1.75;
