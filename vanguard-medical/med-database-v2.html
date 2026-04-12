@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Registry</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+	<div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">Phoenix Vanguard Medical Division</p>
+      <h1 class="app-title">Patient Records</h1>
+    </header>
+
+    <p class="landing-intro">
+     <em>Disclaimer: These records are only available ICly to members of the Phoenix Vanguard Medical Team. All other personnel should consider these under lock and key, private information.</em>
+    </p>
+
+  <div class="app pv-app">
+      <div class="patient-sidebar-overlay" id="patient-sidebar-overlay"></div>
+
+      <aside class="sidebar" id="patient-sidebar">
+        <div class="sidebar-header">
+          <h2>Patients</h2>
+          <button class="sidebar-toggle-close" id="sidebar-toggle-close" type="button" aria-label="Close patient list">&#10005;</button>
+        </div>
+        <ul id="patientList"></ul>
+      </aside>
+
+      <main class="content">
+        <button class="patient-list-toggle" id="patient-list-toggle" type="button" aria-expanded="false" aria-controls="patient-sidebar">
+          <span class="patient-list-toggle-icon">&#9776;</span> Select Patient
+        </button>
+        <div class="parchment">
+          <div id="patientContent">
+            <h2>Select a patient to view their records.</h2>
+            <p>Please see Fiora if records are not up to date or files are missing.</p>
+          </div>
+        </div>
+      </main>
+
+  </div>
+  <div class="disclaimer">
+    FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+    FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+  </div>
+</div>
+
+  <!-- Marked (matches existing med-database for consistent markdown rendering) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+  (function () {
+    const API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
+
+    const patientList = document.getElementById("patientList");
+    const patientContent = document.getElementById("patientContent");
+
+    if (window.marked && marked.use) {
+      marked.use({ breaks: true });
+    }
+
+    // --- Mobile patient sidebar toggle ---
+    (function () {
+      const toggleBtn = document.getElementById("patient-list-toggle");
+      const closeBtn = document.getElementById("sidebar-toggle-close");
+      const sidebar = document.getElementById("patient-sidebar");
+      const overlay = document.getElementById("patient-sidebar-overlay");
+      if (!toggleBtn || !sidebar) return;
+
+      function openSidebar() {
+        sidebar.classList.add("sidebar-open");
+        toggleBtn.setAttribute("aria-expanded", "true");
+        document.body.classList.add("patient-sidebar-open");
+        if (overlay) overlay.classList.add("active");
+      }
+
+      function closeSidebar() {
+        sidebar.classList.remove("sidebar-open");
+        toggleBtn.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("patient-sidebar-open");
+        if (overlay) overlay.classList.remove("active");
+      }
+
+      toggleBtn.addEventListener("click", function () {
+        if (sidebar.classList.contains("sidebar-open")) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      });
+
+      if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+      if (overlay) overlay.addEventListener("click", closeSidebar);
+
+      window._closePvPatientSidebar = closeSidebar;
+    })();
+
+    // --- Helpers ---
+    function escapeHTML(str) {
+      if (str == null) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function renderValue(value) {
+      // Match existing page: render markdown content via marked.
+      // Fall back to escaped text if marked isn't available.
+      if (value == null) return "";
+      if (window.marked && typeof marked.parse === "function") {
+        return marked.parse(String(value));
+      }
+      return "<p>" + escapeHTML(value) + "</p>";
+    }
+
+    function hasValue(v) {
+      return v != null && String(v).trim() !== "";
+    }
+
+    function renderSection(title, fieldsArray) {
+      const visible = fieldsArray.filter(f => hasValue(f.value));
+      if (!visible.length) return "";
+      const fieldsHTML = visible.map(f =>
+        `<div class="field"><span class="label">${escapeHTML(f.label)}</span><div class="value">${renderValue(f.value)}</div></div>`
+      ).join("");
+      return `<section class="section"><h2>${escapeHTML(title)}</h2>${fieldsHTML}</section>`;
+    }
+
+    function setPatientContent(html) {
+      patientContent.innerHTML = html;
+    }
+
+    function showLoading(message) {
+      setPatientContent(`<h2>${escapeHTML(message || "Loading…")}</h2>`);
+    }
+
+    function showError(message) {
+      setPatientContent(
+        `<h2>Unable to load records</h2>` +
+        `<p>${escapeHTML(message || "An unexpected error occurred.")}</p>` +
+        `<p>Please see Fiora if this problem persists.</p>`
+      );
+    }
+
+    // --- API ---
+    async function apiGet(path) {
+      const res = await fetch(API_BASE + path, {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      });
+      if (!res.ok) {
+        throw new Error("Request failed (" + res.status + ")");
+      }
+      return res.json();
+    }
+
+    // --- Patient list ---
+    async function loadPatientList() {
+      const loadingLi = document.createElement("li");
+      loadingLi.textContent = "Loading…";
+      loadingLi.style.padding = "12px 30px";
+      loadingLi.style.color = "var(--text-secondary)";
+      patientList.appendChild(loadingLi);
+
+      try {
+        const patients = await apiGet("/patients");
+        patientList.innerHTML = "";
+
+        if (!Array.isArray(patients) || patients.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No patients on file.";
+          li.style.padding = "12px 30px";
+          li.style.color = "var(--text-secondary)";
+          patientList.appendChild(li);
+          return;
+        }
+
+        // Sort alphabetically by name for stable ordering
+        patients.sort((a, b) => {
+          const an = (a.patient_name || "").toLowerCase();
+          const bn = (b.patient_name || "").toLowerCase();
+          return an.localeCompare(bn);
+        });
+
+        patients.forEach(patient => {
+          if (patient.patient_id == null || !patient.patient_name) return;
+          const li = document.createElement("li");
+          const link = document.createElement("span");
+
+          link.textContent = patient.patient_name;
+          link.classList.add("patient-link");
+          link.dataset.patientId = String(patient.patient_id);
+
+          link.addEventListener("click", () => {
+            document.querySelectorAll(".patient-link").forEach(el => el.classList.remove("active"));
+            link.classList.add("active");
+            loadPatient(patient.patient_id);
+            if (window._closePvPatientSidebar && window.innerWidth <= 900) {
+              window._closePvPatientSidebar();
+            }
+          });
+
+          li.appendChild(link);
+          patientList.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Error loading patients:", err);
+        patientList.innerHTML = "";
+        const li = document.createElement("li");
+        li.textContent = "Failed to load patients.";
+        li.style.padding = "12px 30px";
+        li.style.color = "var(--accent-red)";
+        patientList.appendChild(li);
+        showError("Could not reach the medical database. Please try again shortly.");
+      }
+    }
+
+    // --- Single patient ---
+    async function loadPatient(patientId) {
+      showLoading("Loading patient records…");
+      try {
+        const data = await apiGet("/patients/" + encodeURIComponent(patientId));
+        renderPatient(data);
+      } catch (err) {
+        console.error("Error loading patient:", err);
+        showError("Could not load this patient's records.");
+      }
+    }
+
+    function renderPatient(data) {
+      // API may return the patient fields at top level with a `visits` array,
+      // or nested under `patient`. Handle both shapes defensively.
+      const patient = data && data.patient ? data.patient : data || {};
+      const visits = Array.isArray(data && data.visits)
+        ? data.visits
+        : (Array.isArray(patient.visits) ? patient.visits : []);
+
+      const generalFields = [
+        { label: "Race", value: patient.race },
+        { label: "Gender", value: patient.gender },
+        { label: "Age", value: patient.age },
+        { label: "Vanguard Position", value: patient.vanguard_position },
+        { label: "Date Updated", value: patient.date_updated }
+      ];
+
+      const emergencyFields = [
+        { label: "Name", value: patient.emergency_contact_name },
+        { label: "Relationship", value: patient.emergency_contact_relationship },
+        { label: "Contact Method", value: patient.emergency_contact_method }
+      ];
+
+      const conditionsFields = [
+        { label: "Chronic Illness", value: patient.chronic_illness },
+        { label: "Previous Injuries", value: patient.previous_injuries },
+        { label: "Known Allergies", value: patient.known_allergies },
+        { label: "Current Medications", value: patient.current_medications },
+        { label: "Aetheric Abnormalities", value: patient.aetheric_abnormalities }
+      ];
+
+      // Sort visits newest first
+      const sortedVisits = visits.slice().sort((a, b) => {
+        const ad = new Date(a.visit_date).getTime();
+        const bd = new Date(b.visit_date).getTime();
+        const av = isNaN(ad) ? 0 : ad;
+        const bv = isNaN(bd) ? 0 : bd;
+        return bv - av;
+      });
+
+      let visitTabs = "";
+      sortedVisits.forEach((v, idx) => {
+        visitTabs += `<div class="visit-tab" data-index="${idx}">${escapeHTML(v.visit_date || "(undated)")}</div>`;
+      });
+
+      const visitsSectionHTML = sortedVisits.length
+        ? `
+          <section class="section visits-section">
+            <h2>Visits</h2>
+            <div class="visit-tabs">${visitTabs}</div>
+            <div class="visit-details-container">
+              <div id="visitDetails"></div>
+            </div>
+          </section>
+        `
+        : "";
+
+      patientContent.innerHTML = `
+        <header class="patient-header">
+          <h1 class="patient-name">${escapeHTML(patient.patient_name || "Unknown Patient")}</h1>
+        </header>
+
+        ${renderSection("General Information", generalFields)}
+        ${renderSection("Emergency Contact", emergencyFields)}
+        ${renderSection("Pre-existing Conditions", conditionsFields)}
+
+        ${visitsSectionHTML}
+      `;
+
+      // Attach visit tab events
+      document.querySelectorAll(".visit-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".visit-tab").forEach(el => el.classList.remove("active"));
+          tab.classList.add("active");
+          const visitIdx = parseInt(tab.dataset.index, 10);
+          showVisitDetails(sortedVisits[visitIdx]);
+        });
+      });
+
+      // Auto-click first visit if exists
+      const firstTab = document.querySelector(".visit-tab");
+      if (firstTab) firstTab.click();
+    }
+
+    function showVisitDetails(visit) {
+      const container = document.getElementById("visitDetails");
+      if (!container || !visit) return;
+
+      const fields = [
+        { label: "Presenting Complaint", value: visit.presenting_complaint },
+        { label: "Current Symptoms", value: visit.current_symptoms },
+        { label: "Recent Exposures", value: visit.recent_exposures },
+        { label: "Attending Medic", value: visit.attending_medic },
+        { label: "Clinical Summary", value: visit.clinical_summary },
+        { label: "Diagnosis", value: visit.diagnosis },
+        { label: "Procedures Performed", value: visit.procedures_performed },
+        { label: "Treatment Plan", value: visit.treatment_plan },
+        { label: "Follow-up", value: visit.follow_up },
+        { label: "Discharge Status", value: visit.discharge_status },
+        { label: "Additional Notes", value: visit.additional_notes }
+      ];
+
+      const visible = fields.filter(f => hasValue(f.value));
+      if (visible.length === 0) {
+        container.innerHTML = "<em>No details available for this visit.</em>";
+        return;
+      }
+
+      container.innerHTML = visible.map(f => `
+        <div class="field">
+          <span class="label">${escapeHTML(f.label)}</span>
+          <div class="value">${renderValue(f.value)}</div>
+        </div>
+      `).join("");
+    }
+
+    // --- Kick off ---
+    loadPatientList();
+  })();
+  </script>
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
