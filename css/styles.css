@@ -72,6 +72,9 @@ p {
   --form-input-bg:          #e3ded3;
   --form-input-placeholder: #9B8F84;
 
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #e8e2d9;
+
   /* Phoenix Vanguard — parchment world */
   --parchment-bg:    #e3ded3;
   --parchment-dark:  #d6d0c4;
@@ -110,6 +113,9 @@ p {
   /* Form inputs */
   --form-input-bg:          #3a342f;
   --form-input-placeholder: #6b6560;
+
+  /* Staff panel (Medical Division landing) */
+  --bg-staff-panel: #222019;
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
@@ -1228,19 +1234,44 @@ pre {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin: 1.25rem 0 0.6rem;
+  margin: 0 0 0.75rem;
 }
 
-.landing-subsection-label--staff {
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border-color);
+/* ── Medical Division two-column layout ─────────────────────────────────── */
+
+.medical-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-areas: "staff patients";
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.landing-grid--staff {
-  margin-left: 1.5rem;
-  padding-left: 1rem;
-  border-left: 2px solid var(--border-color);
+.medical-staff-panel {
+  grid-area: staff;
+  background-color: var(--bg-staff-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 1rem 0.85rem;
+}
+
+.medical-staff-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.medical-staff-cards .landing-card-title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.medical-staff-cards .landing-card-inner {
+  padding: 1rem 0.9rem;
+}
+
+.medical-patient-panel {
+  grid-area: patients;
 }
 
 .landing-grid {
@@ -1539,6 +1570,33 @@ body.nav-sidebar-open {
   color: var(--text-primary);
   border-left-color: var(--accent-brown);
   background-color: var(--bg-darker);
+}
+
+/* --- Medical Division: stack on mobile --- */
+@media (max-width: 768px) {
+  .medical-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "patients" "staff";
+  }
+
+  .medical-staff-panel {
+    padding: 1rem;
+  }
+
+  .medical-staff-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .medical-staff-cards .landing-card-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .medical-staff-cards .landing-card-inner {
+    padding: 1.75rem 1.5rem;
+  }
 }
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
