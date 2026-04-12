@@ -329,6 +329,25 @@ pre {
   background-color: var(--bg-darker);
 }
 
+.nav-submenu-label {
+  padding: 0.45rem 1rem 0.2rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  pointer-events: none;
+  user-select: none;
+  list-style: none;
+}
+
+.nav-submenu-label--divider {
+  margin-top: 0.2rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border-color);
+}
+
 /* --- Theme toggle (icon only) --- */
 .theme-toggle {
   font-size: 1rem;
@@ -1203,6 +1222,27 @@ pre {
   margin: 0;
 }
 
+.landing-subsection-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 1.25rem 0 0.6rem;
+}
+
+.landing-subsection-label--staff {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.landing-grid--staff {
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border-color);
+}
+
 .landing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -1465,10 +1505,19 @@ body.nav-sidebar-open {
 }
 
 .nav-sidebar-section.open > .nav-sidebar-submenu {
-  max-height: 400px;
+  max-height: 500px;
 }
 
 .nav-sidebar-submenu li {}
+
+.nav-sidebar-submenu .nav-submenu-label {
+  padding: 0.5rem 1.25rem 0.2rem 1.5rem;
+}
+
+.nav-sidebar-submenu .nav-submenu-label--divider {
+  margin-top: 0.2rem;
+  padding-top: 0.55rem;
+}
 
 .nav-sidebar-submenu .nav-sublink {
   display: block;
