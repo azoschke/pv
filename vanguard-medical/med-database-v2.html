@@ -116,13 +116,14 @@
     }
 
     function renderValue(value) {
-      // Match existing page: render markdown content via marked.
-      // Fall back to escaped text if marked isn't available.
+      // Render markdown → HTML via marked, but escape raw HTML first so
+      // only markdown syntax produces markup (no XSS from user content).
       if (value == null) return "";
+      const escaped = escapeHTML(value);
       if (window.marked && typeof marked.parse === "function") {
-        return marked.parse(String(value));
+        return marked.parse(escaped);
       }
-      return "<p>" + escapeHTML(value) + "</p>";
+      return "<p>" + escaped + "</p>";
     }
 
     function hasValue(v) {
