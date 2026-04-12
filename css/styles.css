@@ -73,7 +73,7 @@ p {
   --form-input-placeholder: #9B8F84;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #e8e2d9;
+  --bg-staff-panel: #ede9e2;
 
   /* Phoenix Vanguard — parchment world */
   --parchment-bg:    #e3ded3;
@@ -115,7 +115,7 @@ p {
   --form-input-placeholder: #6b6560;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #222019;
+  --bg-staff-panel: #231e1a;
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
