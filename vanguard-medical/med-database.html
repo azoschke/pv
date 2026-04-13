@@ -73,14 +73,31 @@
       color: var(--text-secondary);
       margin-bottom: 0.3rem;
     }
-    .record-field-value, .record-field-value p {
+    .record-field-value h2 {
+        font-size: 1.05rem;
+        text-transform: uppercase;
+        margin: 0;
+        margin-bottom: .75rem;
+        margin-top: 1rem;
+        color: var(--text-secondary);
+    }
+    .record-field-value p, .record-field-value ul li, .record-field-value ol li {
       font-family: 'Crimson Pro', serif;
       font-size: 1.15rem;
       line-height: 1.5;
       color: var(--text-primary);
     }
+    .record-field-value p strong {
+      color: var(--text-secondary);
+    }
     .record-field-value p { margin: 0 0 0.75rem; }
     .record-field-value p:last-child { margin-bottom: 0; }
+    .record-field-value ul, .record-field-value ol {
+        padding: 0;
+        margin: 0;
+        margin-left: 1rem;
+        margin-bottom: .75rem;
+    }
 
     /* ── Inline field row (for short fields like race/gender/age) ── */
     .record-fields-inline {
