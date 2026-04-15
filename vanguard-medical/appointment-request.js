@@ -7,7 +7,7 @@ const MEDIC_IDS = {
     "V'ika Tia":         '',
     "Astares De'Ruahn":  '',
     'Addison Tyrrell':   '',
-    'Lixiss':            '',
+    'Lixiss Valra':            '',
     'Orlando Oleander':  '',
     'Naoji Sugitani':    '',
 };
