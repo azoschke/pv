@@ -1,0 +1,416 @@
+/* ============================================================================
+   Phoenix Vanguard — Admin Portal styles
+   ----------------------------------------------------------------------------
+   Layout shell only: 224px ink-dark sidebar + flexible main area. All colors
+   reference the existing CSS variables from /pv/css/styles.css so the site's
+   light/dark theme toggle works for the portal without extra JS.
+   The sidebar scopes `data-theme="dark"` onto itself so its text colors
+   resolve against the dark-mode variable branch regardless of the site theme
+   — the sidebar surface is always dark by design.
+   ============================================================================ */
+
+html, body {
+  height: 100%;
+}
+body {
+  overflow: hidden; /* shell scrolls inside .portal-main */
+}
+
+.portal-boot {
+  padding: 2rem;
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+}
+
+/* --------------- Shell grid --------------- */
+.portal-shell {
+  display: grid;
+  grid-template-columns: 224px 1fr;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* --------------- Sidebar --------------- */
+.portal-sidebar {
+  grid-column: 1;
+  background: var(--ink-color);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0;
+  border-right: 1px solid rgba(0,0,0,0.4);
+  overflow-y: auto;
+}
+
+.portal-sidebar .sidebar-brand {
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid rgba(197, 184, 154, 0.15);
+  margin-bottom: 0.75rem;
+}
+.portal-sidebar .sidebar-brand-title {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.2rem;
+}
+.portal-sidebar .sidebar-brand-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.portal-sidebar .sidebar-user {
+  padding: 0.25rem 1.25rem 0.75rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.portal-sidebar .sidebar-user .sidebar-user-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0 0 0.1rem;
+}
+.portal-sidebar .sidebar-user .sidebar-user-roles {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+  margin: 0;
+}
+
+.portal-sidebar .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.5rem 0.5rem;
+  flex: 1;
+}
+.portal-sidebar .sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.portal-sidebar .sidebar-nav-item .material-icons {
+  font-size: 20px;
+  color: var(--accent-brown);
+}
+.portal-sidebar .sidebar-nav-item:hover {
+  background: rgba(197, 184, 154, 0.08);
+}
+.portal-sidebar .sidebar-nav-item.is-active {
+  background: rgba(168, 137, 89, 0.22);
+  color: var(--text-primary);
+}
+.portal-sidebar .sidebar-nav-item.is-active .material-icons {
+  color: var(--text-primary);
+}
+
+.portal-sidebar .sidebar-footer {
+  border-top: 1px solid rgba(197, 184, 154, 0.15);
+  padding: 0.75rem 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-sidebar .sidebar-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.portal-sidebar .sidebar-footer-btn .material-icons {
+  font-size: 18px;
+  color: var(--accent-brown);
+}
+.portal-sidebar .sidebar-footer-btn:hover {
+  background: rgba(197, 184, 154, 0.08);
+  color: var(--text-primary);
+}
+
+/* --------------- Main --------------- */
+.portal-main {
+  grid-column: 2;
+  overflow-y: auto;
+  padding: 1.75rem 2rem 3rem;
+}
+.portal-main .portal-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.portal-main .portal-section-header .material-icons {
+  font-size: 28px;
+  color: var(--accent-brown);
+}
+.portal-main .portal-section-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+.portal-main .portal-section-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin: -0.75rem 0 1.25rem;
+}
+
+/* --------------- Cards / parchment tweaks for the portal --------------- */
+.portal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1.25rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.portal-card .portal-card-title {
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+}
+
+/* --------------- Tables --------------- */
+.portal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+}
+.portal-table thead th {
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card-light);
+}
+.portal-table tbody td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+.portal-table tbody tr:hover {
+  background: var(--bg-card-light);
+}
+
+/* --------------- Inline buttons --------------- */
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  background: var(--accent-brown);
+  color: #fff;
+  border: 1px solid var(--accent-brown);
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.portal-btn:hover { filter: brightness(1.05); }
+.portal-btn.is-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.portal-btn.is-ghost:hover { background: var(--bg-card-light); }
+.portal-btn.is-danger {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+}
+.portal-btn.is-small {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+}
+.portal-btn .material-icons { font-size: 16px; }
+
+/* --------------- Form fields --------------- */
+.portal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.portal-field label {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.portal-field input[type="text"],
+.portal-field input[type="date"],
+.portal-field textarea,
+.portal-field select {
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem 0.6rem;
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+}
+.portal-field textarea { min-height: 5rem; resize: vertical; }
+.portal-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+/* --------------- Flash --------------- */
+.portal-flash {
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  margin: 0.5rem 0 0.75rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+}
+.portal-flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+.portal-flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+
+/* --------------- Notes popover --------------- */
+.note-cell {
+  position: relative;
+  cursor: pointer;
+  max-width: 18rem;
+  color: var(--text-primary);
+}
+.note-cell-trigger {
+  display: inline-block;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.note-cell-popover {
+  position: absolute;
+  top: 1.75rem;
+  left: 0;
+  z-index: 5;
+  min-width: 16rem;
+  max-width: 28rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.6rem 0.75rem;
+  box-shadow: 0 6px 16px var(--shadow-color);
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* --------------- Talked-to checkbox cell --------------- */
+.talked-to-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.talked-to-cell input[type="checkbox"] {
+  accent-color: var(--check-color);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* --------------- Coming soon --------------- */
+.portal-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+}
+.portal-coming-soon .material-icons {
+  font-size: 56px;
+  color: var(--accent-brown);
+  margin-bottom: 0.75rem;
+}
+.portal-coming-soon h2 {
+  font-family: 'Stoke', serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+.portal-coming-soon p {
+  margin: 0;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.05rem;
+}
+
+/* --------------- Badges --------------- */
+.portal-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.portal-badge.is-pinned {
+  background: rgba(165, 77, 68, 0.15);
+  color: var(--accent-red);
+}
+.portal-badge.is-ok {
+  background: rgba(90, 138, 60, 0.15);
+  color: var(--check-color);
+}
+
+/* --------------- Responsive (v1: minimal) --------------- */
+@media (max-width: 720px) {
+  .portal-shell { grid-template-columns: 1fr; }
+  .portal-sidebar {
+    grid-column: 1;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+  .portal-sidebar .sidebar-brand,
+  .portal-sidebar .sidebar-user,
+  .portal-sidebar .sidebar-footer { display: none; }
+  .portal-sidebar .sidebar-nav {
+    flex-direction: row;
+    flex: 1;
+  }
+  .portal-main { grid-column: 1; padding: 1rem; }
+  .portal-field-row { grid-template-columns: 1fr; }
+}

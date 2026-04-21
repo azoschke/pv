@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal — Sign In</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    .admin-login-wrap { max-width: 420px; margin: 3rem auto; }
+    .admin-login-wrap .parchment { padding: 32px; }
+    .portal-brand {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .portal-brand-title {
+      font-family: 'Stoke', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin: 0 0 0.25rem;
+    }
+    .portal-brand-subtitle {
+      font-family: 'La Belle Aurore', cursive;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .flash {
+      padding: 0.6rem 0.8rem;
+      border-radius: 4px;
+      margin-top: 0.75rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.9rem;
+    }
+    .flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+    .flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="admin-login-wrap">
+      <div class="parchment">
+        <div class="portal-brand">
+          <p class="portal-brand-title">Phoenix Vanguard</p>
+          <p class="portal-brand-subtitle">Management Portal</p>
+        </div>
+
+        <h3 class="section-heading" style="text-align:center;">Sign In</h3>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="form-group">
+            <label for="login-username">Username</label>
+            <input id="login-username" name="username" type="text" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" required autocomplete="current-password">
+          </div>
+          <div id="login-flash"></div>
+          <button type="submit" id="login-submit" class="submit-btn" style="width:100%;">Sign In</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script>
+  (function () {
+    var form = document.getElementById('loginForm');
+    var flash = document.getElementById('login-flash');
+    var btn = document.getElementById('login-submit');
+
+    function showFlash(type, msg) {
+      flash.innerHTML = '';
+      if (!msg) return;
+      var div = document.createElement('div');
+      div.className = 'flash ' + type;
+      div.textContent = msg;
+      flash.appendChild(div);
+    }
+
+    // If we already hold a valid-looking session, go straight to the portal.
+    if (PVAdminAPI.getSession()) {
+      window.location.replace('/pv/admin/portal.html');
+      return;
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var username = document.getElementById('login-username').value.trim();
+      var password = document.getElementById('login-password').value;
+      if (!username || !password) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      showFlash('', '');
+
+      try {
+        var data = await PVAdminAPI.request('POST', '/auth/login', {
+          username: username,
+          password: password
+        }, false);
+        if (!data || !data.token) throw new Error('Login failed: no token returned.');
+
+        PVAdminAPI.setSession({
+          token: data.token,
+          username: data.username || username,
+          display_name: data.display_name || username,
+          roles: data.roles || [],
+          expires_at: data.expires_at || null
+        });
+        document.getElementById('login-password').value = '';
+        window.location.replace('/pv/admin/portal.html');
+      } catch (err) {
+        showFlash('error', err.message || 'Login failed.');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
