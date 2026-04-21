@@ -3,13 +3,11 @@
 //
 //  Responsibilities:
 //    - Load /me (refreshes roles on mount in case they changed server-side)
-//    - Render the 224px ink-dark sidebar (brand, user, nav, theme, logout)
+//    - Render the ink-dark sidebar (logo, brand, user, nav, theme, logout)
+//    - On mobile/tablet the sidebar collapses to a slide-in drawer opened by
+//      a top bar with a hamburger button (mirrors the main site nav)
 //    - Gate sidebar items by role via ROLE_ACCESS
-//    - Route to the active section's component (members/patients/announcements
-//      /coming-soon)
-//
-//  The sidebar wraps itself in data-theme="dark" so its ink surface resolves
-//  against dark-mode tokens regardless of the user-chosen site theme.
+//    - Route to the active section's component
 // ============================================================================
 
 (function () {
@@ -17,7 +15,7 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  // --------- Role + section metadata (ported from the wireframe) ----------
+  // --------- Role + section metadata ----------
   var SECTIONS = [
     { id: 'members',       label: 'FC Members',        icon: 'group' },
     { id: 'medical',       label: 'Medical Division',  icon: 'medical_services' },
@@ -27,8 +25,6 @@
     { id: 'admin',         label: 'Admin Settings',    icon: 'settings' }
   ];
 
-  // ROLE_ACCESS: section-id -> array of role slugs that can see it.
-  // Admin sees everything (handled explicitly below).
   var ROLE_ACCESS = {
     members:       ['officer', 'admin'],
     medical:       ['medical', 'admin'],
@@ -61,16 +57,13 @@
     return document.documentElement.getAttribute('data-theme') || 'light';
   }
   function setTheme(t) {
-    if (t === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else              document.documentElement.removeAttribute('data-theme');
     try { localStorage.setItem(THEME_KEY, t); } catch (_e) {}
   }
 
-  // --------- Sidebar ----------
-  function Sidebar(props) {
+  // --------- Sidebar body (shared between desktop rail + mobile drawer) ----
+  function SidebarBody(props) {
     var session = props.session;
     var activeSection = props.activeSection;
     var onSelect = props.onSelect;
@@ -83,10 +76,13 @@
       return canAccess(s.id, roles);
     });
 
-    return h('aside', { className: 'portal-sidebar', 'data-theme': 'dark' },
-      h('div', { className: 'sidebar-brand' },
-        h('p', { className: 'sidebar-brand-title' }, 'Phoenix Vanguard'),
-        h('p', { className: 'sidebar-brand-subtitle' }, 'Management Portal')
+    return h('div', { className: 'portal-sidebar-body' },
+      h('a', { href: '/pv/index.html', className: 'sidebar-brand', 'aria-label': 'Phoenix Vanguard' },
+        h('span', { className: 'site-logo sidebar-logo', role: 'img', 'aria-label': 'Phoenix Vanguard' }),
+        h('span', { className: 'sidebar-brand-text' },
+          h('span', { className: 'sidebar-brand-title' }, 'Phoenix Vanguard'),
+          h('span', { className: 'sidebar-brand-subtitle' }, 'Management Portal')
+        )
       ),
       h('div', { className: 'sidebar-user' },
         h('p', { className: 'sidebar-user-name' },
@@ -128,6 +124,29 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'logout'),
           h('span', null, 'Log out')
         )
+      )
+    );
+  }
+
+  // --------- Top bar (mobile/tablet only) ----------
+  function PortalTopBar(props) {
+    var onOpenDrawer = props.onOpenDrawer;
+    var activeMeta = props.activeMeta;
+
+    return h('header', { className: 'portal-topbar' },
+      h('button', {
+        type: 'button',
+        className: 'portal-topbar-hamburger',
+        'aria-label': 'Open menu',
+        onClick: onOpenDrawer
+      },
+        h('span', null), h('span', null), h('span', null)
+      ),
+      h('a', { href: '/pv/index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
+        h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' })
+      ),
+      h('span', { className: 'portal-topbar-title' },
+        activeMeta ? activeMeta.label : ''
       )
     );
   }
@@ -193,7 +212,10 @@
     var themeState = useState(getTheme());
     var theme = themeState[0], setThemeLocal = themeState[1];
 
-    // Refresh /me on mount so stale role lists in sessionStorage get corrected.
+    var drawerState = useState(false);
+    var drawerOpen = drawerState[0], setDrawerOpen = drawerState[1];
+
+    // Refresh /me on mount so stale role lists get corrected.
     useEffect(function () {
       var cancelled = false;
       PVAdminAPI.me().then(function (data) {
@@ -208,21 +230,25 @@
         });
         PVAdminAPI.setSession(merged);
         setSession(merged);
-        // If current section is no longer accessible (e.g. role was removed),
-        // bounce to the first accessible one.
         if (!canAccess(section, merged.roles)) {
           setSection(defaultSectionFor(merged.roles));
         }
-      }).catch(function (_err) {
-        // 401 handled inside api.js (redirects to login).
-      });
+      }).catch(function (_err) { /* 401 handled in api.js */ });
       return function () { cancelled = true; };
     // eslint-disable-next-line
     }, []);
 
+    // Close drawer with ESC
+    useEffect(function () {
+      if (!drawerOpen) return;
+      function onKey(e) { if (e.key === 'Escape') setDrawerOpen(false); }
+      document.addEventListener('keydown', onKey);
+      return function () { document.removeEventListener('keydown', onKey); };
+    }, [drawerOpen]);
+
     function onSelect(nextId) {
       setSection(nextId);
-      // Jump back to top when switching sections.
+      setDrawerOpen(false);
       var main = document.querySelector('[data-scroll-main]');
       if (main) main.scrollTo({ top: 0, behavior: 'instant' });
     }
@@ -233,9 +259,7 @@
       setThemeLocal(next);
     }
 
-    function onLogout() {
-      PVAdminAPI.logout();
-    }
+    function onLogout() { PVAdminAPI.logout(); }
 
     if (!session) {
       PVAdminAPI.redirectToLogin();
@@ -245,15 +269,49 @@
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });
     var accessible = activeMeta ? canAccess(activeMeta.id, session.roles || []) : false;
 
-    return h('div', { className: 'portal-shell' },
-      h(Sidebar, {
-        session: session,
-        activeSection: section,
-        onSelect: onSelect,
-        onToggleTheme: onToggleTheme,
-        onLogout: onLogout,
-        theme: theme
+    var sidebarProps = {
+      session: session,
+      activeSection: section,
+      onSelect: onSelect,
+      onToggleTheme: onToggleTheme,
+      onLogout: onLogout,
+      theme: theme
+    };
+
+    return h('div', { className: 'portal-shell' + (drawerOpen ? ' drawer-open' : '') },
+      // Desktop sidebar rail (always rendered; hidden on small screens by CSS)
+      h('aside', { className: 'portal-sidebar portal-sidebar-rail', 'data-theme': 'dark' },
+        h(SidebarBody, sidebarProps)
+      ),
+
+      // Mobile top bar
+      h(PortalTopBar, {
+        onOpenDrawer: function () { setDrawerOpen(true); },
+        activeMeta: activeMeta
       }),
+
+      // Mobile drawer (always rendered; positioned offscreen when closed)
+      h('aside', {
+        className: 'portal-sidebar portal-sidebar-drawer' + (drawerOpen ? ' is-open' : ''),
+        'data-theme': 'dark',
+        'aria-hidden': drawerOpen ? 'false' : 'true'
+      },
+        h('div', { className: 'portal-drawer-header' },
+          h('button', {
+            type: 'button',
+            className: 'portal-drawer-close',
+            'aria-label': 'Close menu',
+            onClick: function () { setDrawerOpen(false); }
+          }, '✕')
+        ),
+        h(SidebarBody, sidebarProps)
+      ),
+      h('div', {
+        className: 'portal-drawer-overlay' + (drawerOpen ? ' is-visible' : ''),
+        onClick: function () { setDrawerOpen(false); }
+      }),
+
+      // Main
       h('main', { className: 'portal-main', 'data-scroll-main': '' },
         activeMeta ? h('div', { className: 'portal-section-header' },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),

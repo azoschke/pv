@@ -2,13 +2,12 @@
 //  PVAdminMembers — FC Member Directory
 //
 //  - List all members (sorted by name).
-//  - Inline-editable rows (double-click or "Edit" -> row becomes a form).
-//  - "Add member" row at the top.
+//  - Edit / Add open a modal popup form.
 //  - Notes truncate at 20 chars with a click popover.
-//  - Scroll position on the main panel is preserved across edit/save via
-//    the `data-scroll-main` attribute (set by portal.js).
+//  - Talked-To checkbox is ONLY visible / clickable when activity is
+//    "LOA" or "Inactive"; for Active members it renders as a muted dash.
 //
-//  Worker routes used (see admin-portal/workers/pv-med-database-worker.js):
+//  Worker routes:
 //    GET    /members
 //    POST   /members
 //    PATCH  /members/:id
@@ -21,8 +20,6 @@
   var useEffect = React.useEffect;
   var useRef = React.useRef;
 
-  // Suggestion lists for the dropdown fields. These are hints only; the worker
-  // stores whatever text we send, matching the visits.discharge_status pattern.
   var OOC_RANKS = [
     'Leader',
     'Captain',
@@ -49,6 +46,12 @@
   ];
   var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed'];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
+
+  // Activities for which Talked-To is meaningful.
+  var TALKED_TO_ACTIVITIES = ['LOA', 'Inactive'];
+  function shouldShowTalkedTo(activity) {
+    return TALKED_TO_ACTIVITIES.indexOf(activity) !== -1;
+  }
 
   var NOTE_TRUNCATE = 20;
 
@@ -80,8 +83,8 @@
     );
   }
 
-  // --------- Row editor ----------
-  function EditRow(props) {
+  // --------- Modal form body ----------
+  function MemberForm(props) {
     var member = props.member || {};
     var onSave = props.onSave;
     var onCancel = props.onCancel;
@@ -103,99 +106,125 @@
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
     var saving = savingState[0], setSaving = savingState[1];
+    var errState = useState('');
+    var err = errState[0], setErr = errState[1];
 
     function setField(key, val) {
       setDraft(function (d) {
-        var n = Object.assign({}, d); n[key] = val; return n;
+        var n = Object.assign({}, d); n[key] = val;
+        // If activity changes away from LOA/Inactive, reset talked_to.
+        if (key === 'activity' && !shouldShowTalkedTo(val)) n.talked_to = false;
+        return n;
       });
     }
 
-    async function doSave() {
-      if (!draft.name.trim() || !draft.ooc_rank.trim() || !draft.faction.trim()) return;
-      setSaving(true);
+    async function doSave(e) {
+      if (e) e.preventDefault();
+      if (!draft.name.trim() || !draft.ooc_rank.trim() || !draft.faction.trim()) {
+        setErr('Name, OOC Rank, and Faction are required.');
+        return;
+      }
+      setSaving(true); setErr('');
       try { await onSave(draft); }
+      catch (e2) { setErr(e2.message || 'Save failed.'); }
       finally { setSaving(false); }
     }
 
-    function input(key, placeholder, datalistId) {
-      return h('input', {
-        type: 'text',
-        value: draft[key],
-        placeholder: placeholder || '',
-        list: datalistId,
-        onChange: function (e) { setField(key, e.target.value); }
-      });
-    }
-
-    return h('tr', null,
-      h('td', null, input('name', 'Name')),
-      h('td', null,
-        input('ooc_rank', 'OOC rank', 'ooc-ranks'),
-        h('datalist', { id: 'ooc-ranks' },
-          OOC_RANKS.map(function (v) { return h('option', { key: v, value: v }); }))
-      ),
-      h('td', null, input('ic_rank', 'IC rank')),
-      h('td', null,
-        input('faction', 'Faction', 'factions'),
-        h('datalist', { id: 'factions' },
-          FACTIONS.map(function (v) { return h('option', { key: v, value: v }); }))
-      ),
-      h('td', null,
-        h('select', {
-          value: draft.interview,
-          onChange: function (e) { setField('interview', e.target.value); }
-        }, INTERVIEWS.map(function (v) { return h('option', { key: v, value: v }, v); }))
-      ),
-      h('td', null,
-        h('select', {
-          value: draft.activity,
-          onChange: function (e) { setField('activity', e.target.value); }
-        }, ACTIVITIES.map(function (v) { return h('option', { key: v, value: v }, v); }))
-      ),
-      h('td', null,
-        h('label', { className: 'talked-to-cell' },
+    return h('form', { onSubmit: doSave },
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      h('div', { className: 'portal-field-row' },
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Name *'),
           h('input', {
-            type: 'checkbox',
-            checked: draft.talked_to,
-            onChange: function (e) { setField('talked_to', e.target.checked); }
+            type: 'text',
+            value: draft.name,
+            onChange: function (e) { setField('name', e.target.value); }
+          })
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'OOC Rank *'),
+          h('input', {
+            type: 'text', list: 'ooc-ranks',
+            value: draft.ooc_rank,
+            onChange: function (e) { setField('ooc_rank', e.target.value); }
           }),
-          h('span', null, draft.talked_to ? 'Yes' : 'No')
+          h('datalist', { id: 'ooc-ranks' },
+            OOC_RANKS.map(function (v) { return h('option', { key: v, value: v }); }))
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'IC Rank'),
+          h('input', {
+            type: 'text',
+            value: draft.ic_rank,
+            onChange: function (e) { setField('ic_rank', e.target.value); }
+          })
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Faction *'),
+          h('input', {
+            type: 'text', list: 'factions',
+            value: draft.faction,
+            onChange: function (e) { setField('faction', e.target.value); }
+          }),
+          h('datalist', { id: 'factions' },
+            FACTIONS.map(function (v) { return h('option', { key: v, value: v }); }))
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Interview'),
+          h('select', {
+            value: draft.interview,
+            onChange: function (e) { setField('interview', e.target.value); }
+          }, INTERVIEWS.map(function (v) { return h('option', { key: v, value: v }, v); }))
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Activity'),
+          h('select', {
+            value: draft.activity,
+            onChange: function (e) { setField('activity', e.target.value); }
+          }, ACTIVITIES.map(function (v) { return h('option', { key: v, value: v }, v); }))
+        ),
+        shouldShowTalkedTo(draft.activity) ? h('div', { className: 'portal-field' },
+          h('label', null, 'Talked To'),
+          h('label', { className: 'talked-to-cell' },
+            h('input', {
+              type: 'checkbox',
+              checked: draft.talked_to,
+              onChange: function (e) { setField('talked_to', e.target.checked); }
+            }),
+            h('span', null, draft.talked_to ? 'Yes' : 'No')
+          )
+        ) : null,
+        h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
+          h('label', null, 'Notes'),
+          h('textarea', {
+            value: draft.notes,
+            onChange: function (e) { setField('notes', e.target.value); }
+          })
         )
       ),
-      h('td', null,
-        h('input', {
-          type: 'text',
-          value: draft.notes,
-          placeholder: 'Notes',
-          onChange: function (e) { setField('notes', e.target.value); }
-        })
-      ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'button',
-          className: 'portal-btn is-small',
-          onClick: doSave,
+          type: 'submit',
+          className: 'portal-btn',
           disabled: saving
-        }, saving ? 'Saving…' : (isNew ? 'Add' : 'Save')),
-        ' ',
+        }, saving ? 'Saving…' : (isNew ? 'Add member' : 'Save member')),
         h('button', {
           type: 'button',
-          className: 'portal-btn is-small is-ghost',
+          className: 'portal-btn is-ghost',
           onClick: onCancel,
           disabled: saving
         }, 'Cancel'),
-        (!isNew && allowDelete) ? h('span', null, ' ',
-          h('button', {
-            type: 'button',
-            className: 'portal-btn is-small is-danger',
-            onClick: function () {
-              if (confirm('Delete "' + (member.name || 'this member') + '"? This cannot be undone.')) {
-                onDelete(member);
-              }
-            },
-            disabled: saving
-          }, 'Delete')
-        ) : null
+        (!isNew && allowDelete) ? h('button', {
+          type: 'button',
+          className: 'portal-btn is-danger',
+          style: { marginLeft: 'auto' },
+          onClick: function () {
+            if (confirm('Delete "' + (member.name || 'this member') + '"? This cannot be undone.')) {
+              onDelete(member);
+            }
+          },
+          disabled: saving
+        }, 'Delete') : null
       )
     );
   }
@@ -206,6 +235,8 @@
     var onEdit = props.onEdit;
     var onToggleTalkedTo = props.onToggleTalkedTo;
 
+    var showTalkedTo = shouldShowTalkedTo(m.activity);
+
     return h('tr', null,
       h('td', null, m.name),
       h('td', null, m.ooc_rank),
@@ -214,28 +245,30 @@
       h('td', null, m.interview),
       h('td', null, m.activity),
       h('td', null,
-        h('label', { className: 'talked-to-cell' },
-          h('input', {
-            type: 'checkbox',
-            checked: !!m.talked_to,
-            onChange: function (e) { onToggleTalkedTo(m, e.target.checked); }
-          }),
-          h('span', null, m.talked_to ? 'Yes' : 'No')
-        )
+        showTalkedTo
+          ? h('label', { className: 'talked-to-cell' },
+              h('input', {
+                type: 'checkbox',
+                checked: !!m.talked_to,
+                onChange: function (e) { onToggleTalkedTo(m, e.target.checked); }
+              }),
+              h('span', null, m.talked_to ? 'Yes' : 'No')
+            )
+          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
       h('td', null, h(NoteCell, { value: m.notes })),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
         h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
-          onClick: function () { onEdit(m.id); }
+          onClick: function () { onEdit(m); }
         }, 'Edit')
       )
     );
   }
 
   // --------- Main component ----------
-  function Members(props) {
+  function Members() {
     var allowDelete = PVAdminAPI.hasRole('admin');
 
     var membersState = useState([]);
@@ -247,32 +280,12 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
-    var editIdState = useState(null);
-    var editId = editIdState[0], setEditId = editIdState[1];
-
-    var addingState = useState(false);
-    var adding = addingState[0], setAdding = addingState[1];
+    // modalMember: null = closed, {} = adding, <member> = editing.
+    var modalState = useState(null);
+    var modalMember = modalState[0], setModalMember = modalState[1];
 
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
-
-    // Scroll-preservation: capture before an edit/save, restore after the
-    // render with the freshly returned list.
-    var savedScrollRef = useRef(null);
-
-    function captureScroll() {
-      var main = document.querySelector('[data-scroll-main]');
-      savedScrollRef.current = main ? main.scrollTop : null;
-    }
-    function restoreScroll() {
-      if (savedScrollRef.current == null) return;
-      var y = savedScrollRef.current;
-      requestAnimationFrame(function () {
-        var main = document.querySelector('[data-scroll-main]');
-        if (main) main.scrollTop = y;
-        savedScrollRef.current = null;
-      });
-    }
 
     async function reload() {
       setErr('');
@@ -289,54 +302,36 @@
     useEffect(function () { reload(); }, []);
 
     async function handleCreate(draft) {
-      captureScroll();
-      try {
-        await PVAdminAPI.request('POST', '/members', draft, true);
-        setAdding(false);
-        await reload();
-        restoreScroll();
-      } catch (e) {
-        setErr(e.message || 'Failed to add member.');
-      }
+      await PVAdminAPI.request('POST', '/members', draft, true);
+      setModalMember(null);
+      await reload();
     }
 
     async function handleUpdate(id, draft) {
-      captureScroll();
-      try {
-        await PVAdminAPI.request('PATCH', '/members/' + id, draft, true);
-        setEditId(null);
-        await reload();
-        restoreScroll();
-      } catch (e) {
-        setErr(e.message || 'Failed to save member.');
-      }
+      await PVAdminAPI.request('PATCH', '/members/' + id, draft, true);
+      setModalMember(null);
+      await reload();
     }
 
     async function handleDelete(member) {
-      captureScroll();
       try {
         await PVAdminAPI.request('DELETE', '/members/' + member.id, undefined, true);
-        setEditId(null);
+        setModalMember(null);
         await reload();
-        restoreScroll();
       } catch (e) {
         setErr(e.message || 'Failed to delete member.');
       }
     }
 
     async function handleToggleTalkedTo(member, next) {
-      // Inline toggle without switching to the full edit row.
-      captureScroll();
       var optimistic = members.map(function (m) {
         return m.id === member.id ? Object.assign({}, m, { talked_to: next ? 1 : 0 }) : m;
       });
       setMembers(optimistic);
       try {
         await PVAdminAPI.request('PATCH', '/members/' + member.id, { talked_to: next }, true);
-        restoreScroll();
       } catch (e) {
         setErr(e.message || 'Failed to update Talked-To.');
-        // Revert on failure.
         await reload();
       }
     }
@@ -350,38 +345,35 @@
         })
       : members;
 
+    var modalOpen = modalMember !== null;
+    var modalIsNew = modalOpen && !modalMember.id;
+
     return h('div', null,
       h('div', { className: 'portal-card' },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Member Directory'),
-          h('input', {
-            type: 'search',
-            placeholder: 'Filter by name, faction, rank…',
-            value: filter,
-            onChange: function (e) { setFilter(e.target.value); },
-            style: {
-              background: 'var(--form-input-bg)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-primary)',
-              padding: '0.4rem 0.6rem',
-              borderRadius: '4px',
-              minWidth: '16rem'
-            }
-          }),
-          h('button', {
-            type: 'button',
-            className: 'portal-btn',
-            onClick: function () { setAdding(true); setEditId(null); },
-            disabled: adding
-          },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
-            h('span', null, 'Add member')
+        h('div', { className: 'portal-card-header' },
+          h('h2', { className: 'portal-card-title' }, 'Member Directory'),
+          h('div', { className: 'portal-card-actions' },
+            h('input', {
+              type: 'search',
+              className: 'portal-search',
+              placeholder: 'Filter by name, faction, rank…',
+              value: filter,
+              onChange: function (e) { setFilter(e.target.value); }
+            }),
+            h('button', {
+              type: 'button',
+              className: 'portal-btn',
+              onClick: function () { setModalMember({}); }
+            },
+              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
+              h('span', null, 'Add member')
+            )
           )
         ),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
           ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading members…')
-          : h('div', { style: { overflowX: 'auto' } },
+          : h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table' },
                 h('thead', null,
                   h('tr', null,
@@ -393,48 +385,44 @@
                     h('th', null, 'Activity'),
                     h('th', null, 'Talked To'),
                     h('th', null, 'Notes'),
-                    h('th', null, '')
+                    h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
                   )
                 ),
                 h('tbody', null,
-                  adding ? h(EditRow, {
-                    key: '__new',
-                    member: null,
-                    onSave: handleCreate,
-                    onCancel: function () { setAdding(false); },
-                    onDelete: function () {},
-                    allowDelete: false
-                  }) : null,
-                  filtered.map(function (m) {
-                    if (editId === m.id) {
-                      return h(EditRow, {
-                        key: m.id,
-                        member: m,
-                        onSave: function (draft) { return handleUpdate(m.id, draft); },
-                        onCancel: function () { setEditId(null); },
-                        onDelete: handleDelete,
-                        allowDelete: allowDelete
-                      });
-                    }
-                    return h(ReadRow, {
-                      key: m.id,
-                      member: m,
-                      onEdit: function (id) { setEditId(id); setAdding(false); },
-                      onToggleTalkedTo: handleToggleTalkedTo
-                    });
-                  }),
-                  (!adding && !filtered.length)
-                    ? h('tr', null,
+                  filtered.length
+                    ? filtered.map(function (m) {
+                        return h(ReadRow, {
+                          key: m.id,
+                          member: m,
+                          onEdit: function (member) { setModalMember(member); },
+                          onToggleTalkedTo: handleToggleTalkedTo
+                        });
+                      })
+                    : h('tr', null,
                         h('td', {
                           colSpan: 9,
                           style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
                         }, filter ? 'No members match your filter.' : 'No members yet. Click “Add member” to create the first.')
                       )
-                    : null
                 )
               )
             )
-      )
+      ),
+      modalOpen ? h(window.PVAdminModal, {
+        title: modalIsNew ? 'New Member' : 'Edit Member — ' + (modalMember.name || ''),
+        size: 'lg',
+        onClose: function () { setModalMember(null); }
+      },
+        h(MemberForm, {
+          member: modalMember,
+          onSave: function (draft) {
+            return modalIsNew ? handleCreate(draft) : handleUpdate(modalMember.id, draft);
+          },
+          onCancel: function () { setModalMember(null); },
+          onDelete: handleDelete,
+          allowDelete: allowDelete
+        })
+      ) : null
     );
   }
 

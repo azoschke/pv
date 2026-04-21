@@ -7,20 +7,13 @@
 //    - new            : create-patient form (patient_id captured here only)
 //    - edit-patient   : edit the patient record
 //    - visits         : visit list for the selected patient; each visit is a
-//                       compact row (date / medic / discharge / complaint)
-//                       that expands to the full form on Edit. Delete on
-//                       admin role only.
+//                       compact row (date / medic / discharge / complaint).
+//                       Editing or adding opens a modal popup. Delete only
+//                       on admin role.
 //
 //  Patient ID is set at creation and never shown or edited afterwards.
-//
-//  Worker routes:
-//    GET    /patients                list { patient_id, patient_name }
-//    GET    /patients/:id            { patient, visits }
-//    POST   /patients                create
-//    PUT    /patients/:id            update
-//    POST   /visits                  create
-//    PUT    /visits/:id              update
-//    DELETE /visits/:id              admin only
+//  Visits are sorted by sort_date DESC (falls back to visit_date DESC).
+//  sort_date is exposed on the visit form so it can be tuned manually.
 // ============================================================================
 
 (function () {
@@ -49,8 +42,12 @@
     { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea' }
   ];
 
+  // sort_date is stored on each row (DB has it) and used for ordering; expose
+  // it as a proper editable field so medics can tweak visit order without
+  // changing the displayed visit_date.
   var VISIT_FIELDS = [
     { key: 'visit_date',           label: 'Visit Date',            type: 'text', required: true, placeholder: 'YYYY-MM-DD' },
+    { key: 'sort_date',            label: 'Sort Date (for ordering)', type: 'text', placeholder: 'YYYY-MM-DD — defaults to Visit Date', help: 'Used only to order visits in the list. Leave blank to match Visit Date.' },
     { key: 'attending_medic',      label: 'Attending Medic',       type: 'text' },
     { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea' },
     { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea' },
@@ -122,13 +119,14 @@
           }
           return h('div', { className: 'portal-field', key: f.key },
             h('label', null, f.label + (f.required ? ' *' : '')),
-            input
+            input,
+            f.help ? h('span', { className: 'portal-field-help' }, f.help) : null
           );
         })
       ),
       h('datalist', { id: 'discharge-status' },
         DISCHARGE_SUGGESTIONS.map(function (v) { return h('option', { key: v, value: v }); })),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.75rem' } },
+      h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
           className: 'portal-btn',
@@ -162,64 +160,61 @@
       : patients;
 
     return h('div', { className: 'portal-card' },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Patient Records'),
-        h('input', {
-          type: 'search',
-          placeholder: 'Filter by name…',
-          value: filter,
-          onChange: function (e) { setFilter(e.target.value); },
-          style: {
-            background: 'var(--form-input-bg)',
-            border: '1px solid var(--border-color)',
-            color: 'var(--text-primary)',
-            padding: '0.4rem 0.6rem',
-            borderRadius: '4px',
-            minWidth: '16rem'
-          }
-        }),
-        h('button', {
-          type: 'button',
-          className: 'portal-btn',
-          onClick: onNew
-        },
-          h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
-          h('span', null, 'New patient')
+      h('div', { className: 'portal-card-header' },
+        h('h2', { className: 'portal-card-title' }, 'Patient Records'),
+        h('div', { className: 'portal-card-actions' },
+          h('input', {
+            type: 'search',
+            className: 'portal-search',
+            placeholder: 'Filter by name…',
+            value: filter,
+            onChange: function (e) { setFilter(e.target.value); }
+          }),
+          h('button', {
+            type: 'button',
+            className: 'portal-btn',
+            onClick: onNew
+          },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
+            h('span', null, 'New patient')
+          )
         )
       ),
-      h('table', { className: 'portal-table', style: { marginTop: '0.75rem' } },
-        h('thead', null,
-          h('tr', null,
-            h('th', null, 'Name'),
-            h('th', { style: { width: '1%', whiteSpace: 'nowrap', textAlign: 'right' } }, 'Actions')
+      h('div', { className: 'portal-table-wrap' },
+        h('table', { className: 'portal-table' },
+          h('thead', null,
+            h('tr', null,
+              h('th', null, 'Name'),
+              h('th', { style: { width: '1%', whiteSpace: 'nowrap', textAlign: 'right' } }, 'Actions')
+            )
+          ),
+          h('tbody', null,
+            filtered.length
+              ? filtered.map(function (p) {
+                  return h('tr', { key: p.patient_id },
+                    h('td', null, p.patient_name),
+                    h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
+                      h('button', {
+                        type: 'button',
+                        className: 'portal-btn is-small is-ghost',
+                        onClick: function () { onEditPatient(p.patient_id); }
+                      }, 'Edit patient'),
+                      ' ',
+                      h('button', {
+                        type: 'button',
+                        className: 'portal-btn is-small',
+                        onClick: function () { onVisits(p.patient_id); }
+                      }, 'Add or edit visits')
+                    )
+                  );
+                })
+              : h('tr', null,
+                  h('td', {
+                    colSpan: 2,
+                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                  }, q ? 'No patients match your filter.' : 'No patients yet.')
+                )
           )
-        ),
-        h('tbody', null,
-          filtered.length
-            ? filtered.map(function (p) {
-                return h('tr', { key: p.patient_id },
-                  h('td', null, p.patient_name),
-                  h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
-                    h('button', {
-                      type: 'button',
-                      className: 'portal-btn is-small is-ghost',
-                      onClick: function () { onEditPatient(p.patient_id); }
-                    }, 'Edit patient'),
-                    ' ',
-                    h('button', {
-                      type: 'button',
-                      className: 'portal-btn is-small',
-                      onClick: function () { onVisits(p.patient_id); }
-                    }, 'Add or edit visits')
-                  )
-                );
-              })
-            : h('tr', null,
-                h('td', {
-                  colSpan: 2,
-                  style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
-                }, q ? 'No patients match your filter.' : 'No patients yet.')
-              )
         )
       )
     );
@@ -264,7 +259,7 @@
     var p = data.patient;
 
     return h('div', { className: 'portal-card' },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' } },
+      h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
           className: 'portal-btn is-ghost is-small',
@@ -273,7 +268,7 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } },
+        h('h2', { className: 'portal-card-title' },
           'Edit Patient — ' + p.patient_name)
       ),
       saved ? h('div', { className: 'portal-flash success' }, 'Saved.') : null,
@@ -287,63 +282,41 @@
     );
   }
 
-  // --------- Visit row (compact) ----------
+  // --------- Visit read row (compact) ----------
   function VisitRow(props) {
     var v = props.visit;
-    var isEditing = props.isEditing;
     var onEdit = props.onEdit;
-    var onCancel = props.onCancel;
-    var onSave = props.onSave;
     var onDelete = props.onDelete;
     var allowDelete = props.allowDelete;
 
     var preview = v.presenting_complaint || '';
     if (preview.length > 60) preview = preview.slice(0, 60) + '…';
 
-    if (!isEditing) {
-      return h('tr', null,
-        h('td', null, v.visit_date || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-        h('td', null, v.attending_medic || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-        h('td', null, v.discharge_status
-          ? h('span', { className: 'portal-badge' + (v.discharge_status === 'Discharged' ? ' is-ok' : '') }, v.discharge_status)
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
-        ),
-        h('td', null, preview || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-        h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+    return h('tr', null,
+      h('td', null, v.visit_date || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
+      h('td', null, v.attending_medic || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
+      h('td', null, v.discharge_status
+        ? h('span', { className: 'portal-badge' + (v.discharge_status === 'Discharged' ? ' is-ok' : '') }, v.discharge_status)
+        : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      ),
+      h('td', null, preview || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
+      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+        h('button', {
+          type: 'button',
+          className: 'portal-btn is-small is-ghost',
+          onClick: function () { onEdit(v); }
+        }, 'Edit'),
+        allowDelete ? h('span', null, ' ',
           h('button', {
             type: 'button',
-            className: 'portal-btn is-small is-ghost',
-            onClick: function () { onEdit(v.visit_id); }
-          }, 'Edit'),
-          allowDelete ? h('span', null, ' ',
-            h('button', {
-              type: 'button',
-              className: 'portal-btn is-small is-danger',
-              onClick: function () {
-                if (confirm('Delete visit from ' + (v.visit_date || 'unknown date') + '? This cannot be undone.')) {
-                  onDelete(v);
-                }
+            className: 'portal-btn is-small is-danger',
+            onClick: function () {
+              if (confirm('Delete visit from ' + (v.visit_date || 'unknown date') + '? This cannot be undone.')) {
+                onDelete(v);
               }
-            }, 'Delete')
-          ) : null
-        )
-      );
-    }
-
-    // Editing row: spans the full table width.
-    return h('tr', null,
-      h('td', {
-        colSpan: 5,
-        style: { background: 'var(--bg-card-light)', padding: '0.75rem' }
-      },
-        h(RecordForm, {
-          fields: VISIT_FIELDS,
-          initial: v,
-          isNew: false,
-          submitLabel: 'Save visit',
-          onSubmit: function (draft) { return onSave(v.visit_id, draft); },
-          onCancel: onCancel
-        })
+            }
+          }, 'Delete')
+        ) : null
       )
     );
   }
@@ -361,10 +334,9 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
-    var addingState = useState(false);
-    var adding = addingState[0], setAdding = addingState[1];
-    var editingIdState = useState(null);
-    var editingId = editingIdState[0], setEditingId = editingIdState[1];
+    // modalVisit: null = closed, {} = adding new, <visit> = editing.
+    var modalState = useState(null);
+    var modalVisit = modalState[0], setModalVisit = modalState[1];
 
     async function reload() {
       setErr('');
@@ -384,17 +356,19 @@
       var body = Object.assign({}, draft, {
         patient_id: patientId,
         patient_name: data.patient.patient_name,
-        sort_date: draft.visit_date
+        sort_date: (draft.sort_date || '').trim() || draft.visit_date
       });
       await PVAdminAPI.request('POST', '/visits', body, true);
-      setAdding(false);
+      setModalVisit(null);
       await reload();
     }
 
     async function handleUpdate(visitId, draft) {
-      var body = Object.assign({}, draft, { sort_date: draft.visit_date });
+      var body = Object.assign({}, draft, {
+        sort_date: (draft.sort_date || '').trim() || draft.visit_date
+      });
       await PVAdminAPI.request('PUT', '/visits/' + visitId, body, true);
-      setEditingId(null);
+      setModalVisit(null);
       await reload();
     }
 
@@ -414,10 +388,19 @@
     );
 
     var p = data.patient;
-    var visits = data.visits || [];
+    var visits = (data.visits || []).slice().sort(function (a, b) {
+      var ka = a.sort_date || a.visit_date || '';
+      var kb = b.sort_date || b.visit_date || '';
+      if (ka < kb) return 1;
+      if (ka > kb) return -1;
+      return 0;
+    });
+
+    var modalOpen = modalVisit !== null;
+    var modalIsNew = modalOpen && !modalVisit.visit_id;
 
     return h('div', { className: 'portal-card' },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
+      h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
           className: 'portal-btn is-ghost is-small',
@@ -426,64 +409,72 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } },
+        h('h2', { className: 'portal-card-title' },
           'Visits — ' + p.patient_name),
-        adding ? null : h('button', {
-          type: 'button',
-          className: 'portal-btn is-small',
-          onClick: function () { setAdding(true); setEditingId(null); }
-        },
-          h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
-          h('span', null, 'Add visit')
+        h('div', { className: 'portal-card-actions' },
+          h('button', {
+            type: 'button',
+            className: 'portal-btn is-small',
+            onClick: function () {
+              setModalVisit({ visit_date: new Date().toISOString().slice(0, 10) });
+            }
+          },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
+            h('span', null, 'Add visit')
+          )
         )
       ),
-      adding
-        ? h('div', {
-            style: { marginTop: '0.75rem', padding: '0.75rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '4px' }
-          },
-            h('h3', { style: { margin: '0 0 0.5rem', fontFamily: 'Stoke, serif', letterSpacing: '0.06em', fontSize: '0.95rem' } }, 'New Visit'),
-            h(RecordForm, {
-              fields: VISIT_FIELDS,
-              initial: { visit_date: new Date().toISOString().slice(0, 10) },
-              isNew: true,
-              submitLabel: 'Add visit',
-              onSubmit: handleCreate,
-              onCancel: function () { setAdding(false); }
-            })
+      h('div', { className: 'portal-table-wrap', style: { marginTop: '0.75rem' } },
+        h('table', { className: 'portal-table' },
+          h('thead', null,
+            h('tr', null,
+              h('th', null, 'Date'),
+              h('th', null, 'Medic'),
+              h('th', null, 'Discharge'),
+              h('th', null, 'Presenting Complaint'),
+              h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, 'Actions')
+            )
+          ),
+          h('tbody', null,
+            visits.length
+              ? visits.map(function (v) {
+                  return h(VisitRow, {
+                    key: v.visit_id,
+                    visit: v,
+                    onEdit: function (visit) { setModalVisit(visit); },
+                    onDelete: handleDelete,
+                    allowDelete: allowDelete
+                  });
+                })
+              : h('tr', null,
+                  h('td', {
+                    colSpan: 5,
+                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                  }, 'No visits recorded yet.')
+                )
           )
-        : null,
-      h('table', { className: 'portal-table', style: { marginTop: '0.75rem' } },
-        h('thead', null,
-          h('tr', null,
-            h('th', null, 'Date'),
-            h('th', null, 'Medic'),
-            h('th', null, 'Discharge'),
-            h('th', null, 'Presenting Complaint'),
-            h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, 'Actions')
-          )
-        ),
-        h('tbody', null,
-          visits.length
-            ? visits.map(function (v) {
-                return h(VisitRow, {
-                  key: v.visit_id,
-                  visit: v,
-                  isEditing: editingId === v.visit_id,
-                  onEdit: function (id) { setEditingId(id); setAdding(false); },
-                  onCancel: function () { setEditingId(null); },
-                  onSave: handleUpdate,
-                  onDelete: handleDelete,
-                  allowDelete: allowDelete
-                });
-              })
-            : h('tr', null,
-                h('td', {
-                  colSpan: 5,
-                  style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
-                }, 'No visits recorded yet.')
-              )
         )
-      )
+      ),
+      modalOpen ? h(window.PVAdminModal, {
+        title: modalIsNew
+          ? 'New Visit — ' + p.patient_name
+          : 'Edit Visit — ' + (modalVisit.visit_date || ''),
+        size: 'lg',
+        onClose: function () { setModalVisit(null); }
+      },
+        h(RecordForm, {
+          fields: VISIT_FIELDS,
+          initial: modalVisit,
+          isNew: modalIsNew,
+          submitLabel: modalIsNew ? 'Add visit' : 'Save visit',
+          onSubmit: function (draft) {
+            return modalIsNew
+              ? handleCreate(draft)
+              : handleUpdate(modalVisit.visit_id, draft);
+          },
+          onCancel: function () { setModalVisit(null); }
+        })
+      ) : null
     );
   }
 
@@ -498,7 +489,7 @@
     }
 
     return h('div', { className: 'portal-card' },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' } },
+      h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
           className: 'portal-btn is-ghost is-small',
@@ -507,7 +498,7 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'New Patient Record')
+        h('h2', { className: 'portal-card-title' }, 'New Patient Record')
       ),
       h(RecordForm, {
         fields: PATIENT_FIELDS,
