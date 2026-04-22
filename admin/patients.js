@@ -23,23 +23,49 @@
 
   var DISCHARGE_SUGGESTIONS = ['Under Observation', 'Discharged'];
 
-  // Fields on the patient record. `newOnly: true` means the field is only
-  // captured on create — never displayed or editable afterwards.
-  var PATIENT_FIELDS = [
-    { key: 'patient_id',   label: 'Patient ID', type: 'text', required: true, newOnly: true },
-    { key: 'patient_name', label: 'Name',       type: 'text', required: true },
-    { key: 'race',         label: 'Race',       type: 'text' },
-    { key: 'gender',       label: 'Gender',     type: 'text' },
-    { key: 'age',          label: 'Age',        type: 'text' },
-    { key: 'vanguard_position', label: 'Vanguard Position', type: 'text' },
-    { key: 'emergency_contact_name', label: 'Emergency Contact', type: 'text' },
-    { key: 'emergency_contact_relationship', label: 'Relationship', type: 'text' },
-    { key: 'emergency_contact_method', label: 'Contact Method', type: 'text' },
-    { key: 'chronic_illness',       label: 'Chronic Illnesses',     type: 'textarea' },
-    { key: 'previous_injuries',     label: 'Previous Injuries',     type: 'textarea' },
-    { key: 'known_allergies',       label: 'Known Allergies',       type: 'textarea' },
-    { key: 'current_medications',   label: 'Current Medications',   type: 'textarea' },
-    { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea' }
+  // Patient record form laid out to mirror the patient intake form
+  // (vanguard-medical/patient-intake-form.html), grouped into the same
+  // sections so editing an existing record follows the same flow an
+  // intake captures:
+  //   1. Patient Information
+  //   2. Emergency Contact
+  //   3. Pre-Existing Conditions
+  //
+  // `newOnly: true` = field is only captured on create (Patient ID).
+  // `fullWidth: true` = field spans both columns of the form-row grid.
+  var PATIENT_SECTIONS = [
+    {
+      id: 'patient-info',
+      title: 'Patient Information',
+      fields: [
+        { key: 'patient_id',         label: 'Patient ID',        type: 'text', required: true, newOnly: true, fullWidth: true },
+        { key: 'patient_name',       label: 'Patient Name',      type: 'text', required: true, fullWidth: true },
+        { key: 'race',               label: 'Race',              type: 'text' },
+        { key: 'gender',             label: 'Gender',            type: 'text' },
+        { key: 'age',                label: 'Age',               type: 'text' },
+        { key: 'vanguard_position',  label: 'Vanguard Position', type: 'text' }
+      ]
+    },
+    {
+      id: 'emergency-contact',
+      title: 'Emergency Contact',
+      fields: [
+        { key: 'emergency_contact_name',         label: 'Name',           type: 'text', fullWidth: true },
+        { key: 'emergency_contact_relationship', label: 'Relationship',   type: 'text' },
+        { key: 'emergency_contact_method',       label: 'Contact Method', type: 'text' }
+      ]
+    },
+    {
+      id: 'pre-existing',
+      title: 'Pre-Existing Conditions',
+      fields: [
+        { key: 'chronic_illness',        label: 'Chronic Illnesses',      type: 'textarea', fullWidth: true },
+        { key: 'previous_injuries',      label: 'Previous Injuries',      type: 'textarea', fullWidth: true },
+        { key: 'known_allergies',        label: 'Known Allergies',        type: 'textarea', fullWidth: true },
+        { key: 'current_medications',    label: 'Current Medications',    type: 'textarea', fullWidth: true },
+        { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea', fullWidth: true }
+      ]
+    }
   ];
 
   // Visit form layout:
@@ -66,8 +92,16 @@
   ];
 
   // --------- Reusable form ----------
+  // Accepts either:
+  //   - props.fields   : flat [{key, label, type, ...}]
+  //   - props.sections : grouped [{ id, title, fields: [...] }]
+  // When `sections` is provided, fields render grouped under subsection
+  // headings (mirrors the layout of the patient intake form).
   function RecordForm(props) {
-    var fields = props.fields;
+    var sections = props.sections || null;
+    var fields = props.fields || (sections
+      ? sections.reduce(function (acc, s) { return acc.concat(s.fields); }, [])
+      : []);
     var initial = props.initial || {};
     var isNew = props.isNew;
     var onSubmit = props.onSubmit;
@@ -105,35 +139,53 @@
       finally { setSaving(false); }
     }
 
+    function renderField(f) {
+      if (f.newOnly && !isNew) return null;
+      var input;
+      var common = {
+        value: draft[f.key] || '',
+        onChange: function (e) { setField(f.key, e.target.value); },
+        placeholder: f.placeholder || ''
+      };
+      if (f.type === 'textarea') {
+        input = h('textarea', common);
+      } else if (f.type === 'date') {
+        input = h('input', Object.assign({ type: 'date' }, common));
+      } else {
+        input = h('input', Object.assign({ type: 'text', list: f.datalist || null }, common));
+      }
+      return h('div', {
+        className: 'portal-field',
+        key: f.key,
+        style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
+      },
+        h('label', null, f.label + (f.required ? ' *' : '')),
+        input,
+        f.help ? h('span', { className: 'portal-field-help' }, f.help) : null
+      );
+    }
+
+    var body;
+    if (sections) {
+      body = sections.map(function (s) {
+        // Skip rendering a section if every field in it is hidden (e.g.
+        // a section that only contains `newOnly` fields while editing).
+        var visibleFields = s.fields.filter(function (f) { return !(f.newOnly && !isNew); });
+        if (!visibleFields.length) return null;
+        return h('div', { key: s.id, className: 'portal-form-section' },
+          h('h3', { className: 'portal-form-section-title' }, s.title),
+          h('div', { className: 'portal-field-row' },
+            visibleFields.map(renderField)
+          )
+        );
+      });
+    } else {
+      body = h('div', { className: 'portal-field-row' }, fields.map(renderField));
+    }
+
     return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
-      h('div', { className: 'portal-field-row' },
-        fields.map(function (f) {
-          if (f.newOnly && !isNew) return null;
-          var input;
-          var common = {
-            value: draft[f.key] || '',
-            onChange: function (e) { setField(f.key, e.target.value); },
-            placeholder: f.placeholder || ''
-          };
-          if (f.type === 'textarea') {
-            input = h('textarea', common);
-          } else if (f.type === 'date') {
-            input = h('input', Object.assign({ type: 'date' }, common));
-          } else {
-            input = h('input', Object.assign({ type: 'text', list: f.datalist || null }, common));
-          }
-          return h('div', {
-            className: 'portal-field',
-            key: f.key,
-            style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
-          },
-            h('label', null, f.label + (f.required ? ' *' : '')),
-            input,
-            f.help ? h('span', { className: 'portal-field-help' }, f.help) : null
-          );
-        })
-      ),
+      body,
       h('datalist', { id: 'discharge-status' },
         DISCHARGE_SUGGESTIONS.map(function (v) { return h('option', { key: v, value: v }); })),
       h('div', { className: 'portal-form-actions' },
@@ -283,7 +335,7 @@
       ),
       saved ? h('div', { className: 'portal-flash success' }, 'Saved.') : null,
       h(RecordForm, {
-        fields: PATIENT_FIELDS,
+        sections: PATIENT_SECTIONS,
         initial: p,
         isNew: false,
         submitLabel: 'Save patient',
@@ -508,7 +560,7 @@
         h('h2', { className: 'portal-card-title' }, 'New Patient Record')
       ),
       h(RecordForm, {
-        fields: PATIENT_FIELDS,
+        sections: PATIENT_SECTIONS,
         initial: {},
         isNew: true,
         submitLabel: 'Create patient',
