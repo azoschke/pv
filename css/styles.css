@@ -354,6 +354,36 @@ pre {
   border-top: 1px solid var(--border-color);
 }
 
+/* --- Admin login pill (user icon + "Login") --- */
+.nav-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.1rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-login-btn:hover  { background-color: var(--bg-darker); }
+.nav-login-btn:active { transform: scale(0.97); }
+.nav-login-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.nav-login-btn-sidebar {
+  margin: 0.5rem 1rem;
+  justify-content: center;
+  width: calc(100% - 2rem);
+}
+
 /* --- Theme toggle (icon only) --- */
 .theme-toggle {
   font-size: 1rem;

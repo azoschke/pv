@@ -57,8 +57,11 @@
 
   </ul>
 
-  <a href="/pv/admin/login.html" class="theme-toggle nav-icon-btn" data-subpage="admin-login" aria-label="Admin portal" title="Admin portal">
-    <span aria-hidden="true">&#9881;</span>
+  <a href="/pv/admin/login.html" class="nav-login-btn" data-subpage="admin-login" aria-label="Admin login" title="Admin login">
+    <svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>
+    </svg>
+    <span>Login</span>
   </a>
   <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
     <span id="theme-icon" aria-hidden="true">&#9790;</span>
@@ -116,7 +119,12 @@
       </ul>
     </li>
     <li class="nav-sidebar-section" data-page="admin">
-      <a href="/pv/admin/login.html" class="nav-sublink" data-subpage="admin-login" style="display:block;padding:0.6rem 1rem;font-family:'Stoke',serif;">Admin</a>
+      <a href="/pv/admin/login.html" class="nav-login-btn nav-login-btn-sidebar" data-subpage="admin-login" aria-label="Admin login">
+        <svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>
+        </svg>
+        <span>Login</span>
+      </a>
     </li>
   </ul>
 </div>
