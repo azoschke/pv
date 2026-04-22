@@ -25,8 +25,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   grid-template-columns: 260px 1fr;
   grid-template-rows: 1fr;
   grid-template-areas: "side main";
-  width: 100vw;
+  width: 100%;
   height: 100vh;
+  height: 100dvh; /* use dynamic viewport height on mobile so the topbar
+                     doesn't slip out of the visible area when the address
+                     bar / virtual keyboard resizes the viewport */
   background: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -220,17 +223,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-topbar-hamburger {
   display: inline-flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: stretch;
   width: 34px;
   height: 28px;
-  padding: 3px 4px;
-  background: transparent;
+  padding: 5px 5px;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
 }
+[data-theme="dark"] .portal-topbar-hamburger { background: var(--bg-darker); }
+.portal-topbar-hamburger:hover { filter: brightness(0.95); }
 .portal-topbar-hamburger span {
   display: block;
+  width: 100%;
   height: 2px;
   background: var(--text-primary);
   border-radius: 2px;
@@ -458,6 +465,26 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   flex-wrap: wrap;
 }
 
+/* --------------- Grouped form sections ---------------
+   Used by sectioned RecordForm (e.g. patient edit form mirrors the
+   patient intake form: Patient Information → Emergency Contact →
+   Pre-Existing Conditions). */
+.portal-form-section {
+  margin-bottom: 1.25rem;
+}
+.portal-form-section + .portal-form-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.portal-form-section-title {
+  margin: 0 0 0.65rem;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+}
+
 /* --------------- Flash --------------- */
 .portal-flash {
   padding: 0.7rem 0.9rem;
@@ -468,35 +495,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
 .portal-flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
-
-/* --------------- Notes popover --------------- */
-.note-cell {
-  position: relative;
-  cursor: pointer;
-  max-width: 18rem;
-  color: var(--text-primary);
-}
-.note-cell-trigger {
-  display: inline-block;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-}
-.note-cell-popover {
-  position: absolute;
-  top: 1.85rem;
-  left: 0;
-  z-index: 5;
-  min-width: 16rem;
-  max-width: 28rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.7rem 0.85rem;
-  box-shadow: 0 6px 16px var(--shadow-color);
-  white-space: pre-wrap;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
 
 /* --------------- Talked-to checkbox cell --------------- */
 .talked-to-cell {
@@ -646,7 +644,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
       "main";
   }
   .portal-sidebar-rail { display: none; }
-  .portal-topbar { display: flex; }
+  .portal-topbar {
+    display: flex;
+    /* Keep the top bar pinned so it stays visible after modal saves / form
+       rerenders on mobile — without this, some viewport changes (virtual
+       keyboard, momentum scroll) could leave the shell scrolled with the
+       topbar out of view. */
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
   .portal-sidebar-drawer { display: flex; flex-direction: column; }
   .portal-drawer-overlay { display: block; }
   .portal-main { padding: 1rem 1rem 3rem; }
