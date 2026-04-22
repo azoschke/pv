@@ -20,32 +20,55 @@
   var useEffect = React.useEffect;
   var useRef = React.useRef;
 
+  // Authoritative OOC rank order. Also used to sort the member list —
+  // primary key = rank index; secondary = name alphabetical.
   var OOC_RANKS = [
-    'Leader',
-    'Captain',
-    'Officer',
+    'Phoenix Captain',
     'Quartermaster',
-    'Archivist',
-    'Herald',
-    'Chief',
-    'Senior Mercenary',
-    'Mercenary',
-    'Senior Medic',
-    'Medic',
-    'Apprentice',
-    'Recruit',
-    'Guest',
-    'Alumni'
+    'Phoenix Council',
+    'Phoenix Guard',
+    'Embers',
+    'Firesworn',
+    'Vanguard',
+    'Lieutenant',
+    'Operative',
+    'Corsair',
+    'Buccaneer',
+    'Crewmate',
+    'Deckhand',
+    'Cinders',
+    'LOA'
   ];
+  var OOC_RANK_INDEX = (function () {
+    var m = {};
+    OOC_RANKS.forEach(function (r, i) { m[r] = i; });
+    return m;
+  })();
+
   var FACTIONS = [
-    'Medical Division',
-    'Mercenary Division',
-    'Pirate Division',
-    'Leadership',
-    'Unassigned'
+    'Medical',
+    'Pirate',
+    'Mercenary',
+    'House Staff',
+    'NA - No RP'
   ];
   var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed'];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
+
+  function memberSortKey(m) {
+    // Members with an unrecognised rank fall at the end, preserving
+    // existing data while surfacing it for cleanup.
+    var rankIdx = OOC_RANK_INDEX[m.ooc_rank];
+    return [
+      rankIdx == null ? OOC_RANKS.length : rankIdx,
+      (m.name || '').toLowerCase()
+    ];
+  }
+  function compareMembers(a, b) {
+    var ka = memberSortKey(a), kb = memberSortKey(b);
+    if (ka[0] !== kb[0]) return ka[0] - kb[0];
+    return ka[1] < kb[1] ? -1 : ka[1] > kb[1] ? 1 : 0;
+  }
 
   // Activities for which Talked-To is meaningful.
   var TALKED_TO_ACTIVITIES = ['LOA', 'Inactive'];
@@ -336,7 +359,7 @@
       }
     }
 
-    var filtered = filter
+    var filteredBase = filter
       ? members.filter(function (m) {
           var q = filter.toLowerCase();
           return (m.name && m.name.toLowerCase().indexOf(q) !== -1)
@@ -344,6 +367,8 @@
               || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1);
         })
       : members;
+    // Sort by OOC-rank index, then alphabetical within rank.
+    var filtered = filteredBase.slice().sort(compareMembers);
 
     var modalOpen = modalMember !== null;
     var modalIsNew = modalOpen && !modalMember.id;
