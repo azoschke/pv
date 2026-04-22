@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal — Create Account</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    .admin-login-wrap { max-width: 460px; margin: 3rem auto; }
+    .admin-login-wrap .parchment { padding: 32px; }
+    .portal-brand { text-align: center; margin-bottom: 1.5rem; }
+    .portal-brand-title {
+      font-family: 'Stoke', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin: 0 0 0.25rem;
+    }
+    .portal-brand-subtitle {
+      font-family: 'La Belle Aurore', cursive;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .flash {
+      padding: 0.6rem 0.8rem;
+      border-radius: 4px;
+      margin-top: 0.75rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.95rem;
+    }
+    .flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+    .flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+    .help-text {
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .login-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.95rem;
+      color: var(--accent-red);
+    }
+    .rules-card {
+      background: var(--bg-card-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.75rem 0.9rem;
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .rules-card strong { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="admin-login-wrap">
+      <div class="parchment">
+        <div class="portal-brand">
+          <p class="portal-brand-title">Phoenix Vanguard</p>
+          <p class="portal-brand-subtitle">Create Account</p>
+        </div>
+
+        <div class="rules-card">
+          Accounts are issued only to existing Free Company members.
+          <br><br>
+          <strong>Username</strong> must be your character's first name, lowercase.<br>
+          <strong>Display name</strong> must be your character's full name (exactly).<br><br>
+          If the pair doesn't match the roster, the account won't be created.
+          New accounts start with no access — an admin will grant roles after.
+        </div>
+
+        <form id="registerForm" autocomplete="off">
+          <div class="form-group">
+            <label for="reg-username">Username (first name, lowercase)</label>
+            <input id="reg-username" name="username" type="text" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="reg-display">Display Name (full character name)</label>
+            <input id="reg-display" name="display_name" type="text" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input id="reg-password" name="password" type="password" required autocomplete="new-password" minlength="10">
+            <div class="help-text">Minimum 10 characters.</div>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirm Password</label>
+            <input id="reg-confirm" name="confirm" type="password" required autocomplete="new-password" minlength="10">
+          </div>
+          <div id="reg-flash"></div>
+          <button type="submit" id="reg-submit" class="submit-btn" style="width:100%;">Create Account</button>
+        </form>
+
+        <a class="login-link" href="/pv/admin/login.html">Already have an account? Sign in →</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script>
+  (function () {
+    var form = document.getElementById('registerForm');
+    var flash = document.getElementById('reg-flash');
+    var btn = document.getElementById('reg-submit');
+
+    function showFlash(type, msg) {
+      flash.innerHTML = '';
+      if (!msg) return;
+      var div = document.createElement('div');
+      div.className = 'flash ' + type;
+      div.textContent = msg;
+      flash.appendChild(div);
+    }
+
+    if (PVAdminAPI.getSession()) {
+      window.location.replace('/pv/admin/portal.html');
+      return;
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var username = document.getElementById('reg-username').value.trim();
+      var displayName = document.getElementById('reg-display').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var confirm = document.getElementById('reg-confirm').value;
+
+      if (!username || !displayName || !password) return;
+      if (password.length < 10) {
+        showFlash('error', 'Password must be at least 10 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showFlash('error', 'Passwords do not match.');
+        return;
+      }
+      if (!/^[a-z][a-z0-9'-]*$/.test(username)) {
+        showFlash('error', 'Username must be all lowercase letters (your character’s first name).');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating…';
+      showFlash('', '');
+
+      try {
+        await PVAdminAPI.request('POST', '/auth/register', {
+          username: username,
+          display_name: displayName,
+          password: password
+        }, false);
+        form.style.display = 'none';
+        showFlash('success',
+          'Account created. An admin will assign roles before you can access the portal. Sign in to confirm.');
+      } catch (err) {
+        showFlash('error', err.message || 'Could not create account.');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

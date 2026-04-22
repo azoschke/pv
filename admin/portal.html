@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal — Phoenix Vanguard</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="stylesheet" href="/pv/admin/portal.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <div id="portal-root">
+    <div class="portal-boot">Loading…</div>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script src="/pv/admin/modal.js"></script>
+  <script src="/pv/admin/coming-soon.js"></script>
+  <script src="/pv/admin/members.js"></script>
+  <script src="/pv/admin/patients.js"></script>
+  <script src="/pv/admin/announcements.js"></script>
+  <script src="/pv/admin/admin-settings.js"></script>
+  <script src="/pv/admin/portal.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!PVAdminAPI.getSession()) {
+        window.location.replace('/pv/admin/login.html');
+        return;
+      }
+      var rootEl = document.getElementById('portal-root');
+      var root = ReactDOM.createRoot(rootEl);
+      if (typeof PVAdminPortal !== 'undefined') {
+        root.render(React.createElement(PVAdminPortal));
+      } else {
+        rootEl.innerHTML = '<div style="color:var(--accent-red);padding:2rem;">Portal failed to load. Missing module: PVAdminPortal.</div>';
+      }
+    });
+  </script>
+</body>
+</html>
