@@ -50,9 +50,10 @@
     'Pirate',
     'Mercenary',
     'House Staff',
-    'NA - No RP'
+    'NA - No RP',
+    'No Data'
   ];
-  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed'];
+  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'No Data'];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
   function memberSortKey(m) {
@@ -166,13 +167,13 @@
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'OOC Rank *'),
-          h('input', {
-            type: 'text', list: 'ooc-ranks',
+          h('select', {
             value: draft.ooc_rank,
             onChange: function (e) { setField('ooc_rank', e.target.value); }
-          }),
-          h('datalist', { id: 'ooc-ranks' },
-            OOC_RANKS.map(function (v) { return h('option', { key: v, value: v }); }))
+          },
+            h('option', { value: '' }, '— Select rank —'),
+            OOC_RANKS.map(function (v) { return h('option', { key: v, value: v }, v); })
+          )
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'IC Rank'),
@@ -184,13 +185,13 @@
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'Faction *'),
-          h('input', {
-            type: 'text', list: 'factions',
+          h('select', {
             value: draft.faction,
             onChange: function (e) { setField('faction', e.target.value); }
-          }),
-          h('datalist', { id: 'factions' },
-            FACTIONS.map(function (v) { return h('option', { key: v, value: v }); }))
+          },
+            h('option', { value: '' }, '— Select faction —'),
+            FACTIONS.map(function (v) { return h('option', { key: v, value: v }, v); })
+          )
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'Interview'),

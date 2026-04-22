@@ -42,23 +42,27 @@
     { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea' }
   ];
 
-  // sort_date is stored on each row (DB has it) and used for ordering; expose
-  // it as a proper editable field so medics can tweak visit order without
-  // changing the displayed visit_date.
+  // visit_date is always IC (free-text, e.g. "Third Sun of the Second Umbral
+  // Moon"). sort_date is a real-world calendar date used only to order visits
+  // in the list; it gets a date picker.
+  // Long narrative fields are marked fullWidth so they span both grid columns.
   var VISIT_FIELDS = [
-    { key: 'visit_date',           label: 'Visit Date',            type: 'text', required: true, placeholder: 'YYYY-MM-DD' },
-    { key: 'sort_date',            label: 'Sort Date (for ordering)', type: 'text', placeholder: 'YYYY-MM-DD — defaults to Visit Date', help: 'Used only to order visits in the list. Leave blank to match Visit Date.' },
+    { key: 'visit_date',           label: 'Visit Date (IC)',       type: 'text', required: true,
+      placeholder: 'e.g. Third Sun of the Second Umbral Moon',
+      help: 'In-character date. Months alternate Astral/Umbral: 1st Astral (month 1), 1st Umbral (month 2), 2nd Astral (month 3), …' },
+    { key: 'sort_date',            label: 'Sort Date (real calendar)', type: 'date',
+      help: 'Real-world date used only to order visits in the list.' },
     { key: 'attending_medic',      label: 'Attending Medic',       type: 'text' },
+    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     datalist: 'discharge-status' },
     { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea' },
     { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea' },
     { key: 'recent_exposures',     label: 'Recent Exposures',      type: 'textarea' },
-    { key: 'clinical_summary',     label: 'Clinical Summary',      type: 'textarea' },
-    { key: 'diagnosis',            label: 'Diagnosis',             type: 'textarea' },
-    { key: 'procedures_performed', label: 'Procedures Performed',  type: 'textarea' },
-    { key: 'treatment_plan',       label: 'Treatment Plan',        type: 'textarea' },
     { key: 'follow_up',            label: 'Follow-up',             type: 'textarea' },
-    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     datalist: 'discharge-status' },
-    { key: 'additional_notes',     label: 'Additional Notes',      type: 'textarea' }
+    { key: 'clinical_summary',     label: 'Clinical Summary',      type: 'textarea', fullWidth: true },
+    { key: 'diagnosis',            label: 'Diagnosis',             type: 'textarea', fullWidth: true },
+    { key: 'procedures_performed', label: 'Procedures Performed',  type: 'textarea', fullWidth: true },
+    { key: 'treatment_plan',       label: 'Treatment Plan',        type: 'textarea', fullWidth: true },
+    { key: 'additional_notes',     label: 'Additional Notes',      type: 'textarea', fullWidth: true }
   ];
 
   // --------- Reusable form ----------
@@ -114,10 +118,16 @@
           };
           if (f.type === 'textarea') {
             input = h('textarea', common);
+          } else if (f.type === 'date') {
+            input = h('input', Object.assign({ type: 'date' }, common));
           } else {
             input = h('input', Object.assign({ type: 'text', list: f.datalist || null }, common));
           }
-          return h('div', { className: 'portal-field', key: f.key },
+          return h('div', {
+            className: 'portal-field',
+            key: f.key,
+            style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
+          },
             h('label', null, f.label + (f.required ? ' *' : '')),
             input,
             f.help ? h('span', { className: 'portal-field-help' }, f.help) : null
@@ -295,10 +305,7 @@
     return h('tr', null,
       h('td', null, v.visit_date || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', null, v.attending_medic || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null, v.discharge_status
-        ? h('span', { className: 'portal-badge' + (v.discharge_status === 'Discharged' ? ' is-ok' : '') }, v.discharge_status)
-        : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
-      ),
+      h('td', null, v.discharge_status || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', null, preview || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
         h('button', {
@@ -356,7 +363,7 @@
       var body = Object.assign({}, draft, {
         patient_id: patientId,
         patient_name: data.patient.patient_name,
-        sort_date: (draft.sort_date || '').trim() || draft.visit_date
+        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
       });
       await PVAdminAPI.request('POST', '/visits', body, true);
       setModalVisit(null);
@@ -365,7 +372,7 @@
 
     async function handleUpdate(visitId, draft) {
       var body = Object.assign({}, draft, {
-        sort_date: (draft.sort_date || '').trim() || draft.visit_date
+        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
       });
       await PVAdminAPI.request('PUT', '/visits/' + visitId, body, true);
       setModalVisit(null);
@@ -416,7 +423,7 @@
             type: 'button',
             className: 'portal-btn is-small',
             onClick: function () {
-              setModalVisit({ visit_date: new Date().toISOString().slice(0, 10) });
+              setModalVisit({ sort_date: new Date().toISOString().slice(0, 10) });
             }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
