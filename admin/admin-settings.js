@@ -27,6 +27,13 @@
     { slug: 'admin',     label: 'Admin' }
   ];
 
+  // Root admin: frozen account. No admin can change its roles or delete it.
+  // Mirrors the server-side guard in pv-med-database-worker.
+  var ROOT_ADMIN_USERNAME = 'fiora';
+  function isRootAdmin(user) {
+    return user && user.username && user.username.toLowerCase() === ROOT_ADMIN_USERNAME;
+  }
+
   function fmtDate(iso) {
     if (!iso) return '—';
     var d = new Date(iso.replace(' ', 'T') + 'Z');
@@ -45,10 +52,14 @@
     var currentSet = {};
     (u.roles || []).forEach(function (r) { currentSet[r] = true; });
     var isSelf = u.id === selfId;
+    var isRoot = isRootAdmin(u);
 
     return h('tr', null,
       h('td', null,
-        h('div', { style: { fontWeight: 600 } }, u.username),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+          h('span', { style: { fontWeight: 600 } }, u.username),
+          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null
+        ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
       h('td', null, fmtDate(u.created_at)),
@@ -61,7 +72,7 @@
               h('input', {
                 type: 'checkbox',
                 checked: !!currentSet[r.slug],
-                disabled: !!busyRoles[busyKey],
+                disabled: isRoot || !!busyRoles[busyKey],
                 onChange: function (e) { onToggleRole(u, r.slug, e.target.checked); }
               }),
               h('span', null, r.label)
@@ -70,18 +81,20 @@
         )
       ),
       h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
-        isSelf
-          ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(you)')
-          : h('button', {
-              type: 'button',
-              className: 'portal-btn is-small is-danger',
-              disabled: deleting,
-              onClick: function () {
-                if (confirm('Delete account "' + u.username + '"? This cannot be undone.')) {
-                  onDelete(u);
+        isRoot
+          ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(protected)')
+          : isSelf
+            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(you)')
+            : h('button', {
+                type: 'button',
+                className: 'portal-btn is-small is-danger',
+                disabled: deleting,
+                onClick: function () {
+                  if (confirm('Delete account "' + u.username + '"? This cannot be undone.')) {
+                    onDelete(u);
+                  }
                 }
-              }
-            }, deleting ? 'Deleting…' : 'Delete')
+              }, deleting ? 'Deleting…' : 'Delete')
       )
     );
   }
@@ -118,6 +131,7 @@
     useEffect(function () { reload(); }, []);
 
     async function handleToggleRole(user, roleSlug, next) {
+      if (isRootAdmin(user)) return; // UI no-op; server would reject anyway.
       var busyKey = user.id + ':' + roleSlug;
       setBusyRoles(function (b) { var n = Object.assign({}, b); n[busyKey] = true; return n; });
 

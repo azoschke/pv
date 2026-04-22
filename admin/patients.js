@@ -42,26 +42,26 @@
     { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea' }
   ];
 
-  // visit_date is always IC (free-text, e.g. "Third Sun of the Second Umbral
-  // Moon"). sort_date is a real-world calendar date used only to order visits
-  // in the list; it gets a date picker.
-  // Long narrative fields are marked fullWidth so they span both grid columns.
+  // Visit form layout:
+  // Row 1: visit_date (IC free-text, half)  |  sort_date (real date, half)
+  // Below: every other field is full-width. Follow-up + Discharge Status sit
+  // after Treatment Plan per the workflow (record care first, then outcome).
   var VISIT_FIELDS = [
     { key: 'visit_date',           label: 'Visit Date (IC)',       type: 'text', required: true,
       placeholder: 'e.g. Third Sun of the Second Umbral Moon',
       help: 'In-character date. Months alternate Astral/Umbral: 1st Astral (month 1), 1st Umbral (month 2), 2nd Astral (month 3), …' },
     { key: 'sort_date',            label: 'Sort Date (real calendar)', type: 'date',
       help: 'Real-world date used only to order visits in the list.' },
-    { key: 'attending_medic',      label: 'Attending Medic',       type: 'text' },
-    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     datalist: 'discharge-status' },
-    { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea' },
-    { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea' },
-    { key: 'recent_exposures',     label: 'Recent Exposures',      type: 'textarea' },
-    { key: 'follow_up',            label: 'Follow-up',             type: 'textarea' },
+    { key: 'attending_medic',      label: 'Attending Medic',       type: 'text',     fullWidth: true },
+    { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea', fullWidth: true },
+    { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea', fullWidth: true },
+    { key: 'recent_exposures',     label: 'Recent Exposures',      type: 'textarea', fullWidth: true },
     { key: 'clinical_summary',     label: 'Clinical Summary',      type: 'textarea', fullWidth: true },
     { key: 'diagnosis',            label: 'Diagnosis',             type: 'textarea', fullWidth: true },
     { key: 'procedures_performed', label: 'Procedures Performed',  type: 'textarea', fullWidth: true },
     { key: 'treatment_plan',       label: 'Treatment Plan',        type: 'textarea', fullWidth: true },
+    { key: 'follow_up',            label: 'Follow-up',             type: 'textarea', fullWidth: true },
+    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     fullWidth: true, datalist: 'discharge-status' },
     { key: 'additional_notes',     label: 'Additional Notes',      type: 'textarea', fullWidth: true }
   ];
 
