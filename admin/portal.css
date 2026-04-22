@@ -31,14 +31,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
 }
 
-/* --------------- Sidebar (desktop rail) --------------- */
+/* --------------- Sidebar (desktop rail) ---------------
+   Light theme: parchment-darker panel, dark text.
+   Dark theme:  card-dark panel, light text. Both resolve via the
+   scoped variables below so the site theme toggle drives them. */
 .portal-sidebar {
-  background: var(--ink-color);
+  background: var(--bg-darker);
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(0,0,0,0.4);
+  border-right: 1px solid var(--border-color);
   overflow-y: auto;
+}
+[data-theme="dark"] .portal-sidebar {
+  background: var(--bg-card);
+  border-right-color: var(--border-color);
 }
 .portal-sidebar-rail {
   grid-area: side;
@@ -57,7 +64,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   gap: 0.75rem;
   padding: 0 1.25rem 1rem;
-  border-bottom: 1px solid rgba(197, 184, 154, 0.15);
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 0.75rem;
   text-decoration: none;
 }
@@ -131,15 +138,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 22px;
   color: var(--accent-brown);
 }
-.portal-sidebar .sidebar-nav-item:hover { background: rgba(197, 184, 154, 0.08); }
+.portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
 .portal-sidebar .sidebar-nav-item.is-active {
-  background: rgba(168, 137, 89, 0.22);
+  background: var(--bg-card);
   color: var(--text-primary);
 }
-.portal-sidebar .sidebar-nav-item.is-active .material-icons { color: var(--text-primary); }
+[data-theme="dark"] .portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
+[data-theme="dark"] .portal-sidebar .sidebar-nav-item.is-active { background: var(--bg-darker); }
+.portal-sidebar .sidebar-nav-item.is-active .material-icons { color: var(--accent-red); }
 
 .portal-sidebar .sidebar-footer {
-  border-top: 1px solid rgba(197, 184, 154, 0.15);
+  border-top: 1px solid var(--border-color);
   padding: 0.75rem 0.5rem 1rem;
   display: flex;
   flex-direction: column;
@@ -164,7 +173,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--accent-brown);
 }
 .portal-sidebar .sidebar-footer-btn:hover {
-  background: rgba(197, 184, 154, 0.08);
+  background: var(--bg-card-light);
   color: var(--text-primary);
 }
 
@@ -203,10 +212,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 1rem;
-  background: var(--ink-color);
+  background: var(--bg-darker);
   color: var(--text-primary);
-  border-bottom: 1px solid rgba(0,0,0,0.4);
+  border-bottom: 1px solid var(--border-color);
 }
+[data-theme="dark"] .portal-topbar { background: var(--bg-card); }
 .portal-topbar-hamburger {
   display: inline-flex;
   flex-direction: column;
@@ -215,14 +225,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   height: 28px;
   padding: 3px 4px;
   background: transparent;
-  border: 1px solid rgba(197, 184, 154, 0.25);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
 }
 .portal-topbar-hamburger span {
   display: block;
   height: 2px;
-  background: #e3ded3;
+  background: var(--text-primary);
   border-radius: 2px;
 }
 .portal-topbar-brand {
@@ -239,7 +249,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 0.95rem;
-  color: #e3ded3;
+  color: var(--text-primary);
   margin-left: auto;
 }
 
@@ -528,6 +538,28 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-badge.is-pinned { background: rgba(165, 77, 68, 0.15); color: var(--accent-red); }
 .portal-badge.is-ok     { background: rgba(90, 138, 60, 0.15); color: var(--check-color); }
+
+/* --------------- Admin Settings role checkboxes --------------- */
+.admin-role-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
+}
+.admin-role-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  user-select: none;
+}
+.admin-role-checkbox input[type="checkbox"] {
+  accent-color: var(--check-color);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
 
 /* --------------- Modal --------------- */
 .portal-modal-overlay {

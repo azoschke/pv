@@ -176,11 +176,7 @@
           subtitle: 'Raid logs and ship manifests are on the way.'
         });
       case 'admin':
-        return h(window.PVAdminComingSoon, {
-          icon: 'settings',
-          title: 'Admin Settings',
-          subtitle: 'User and role management tools are on the way.'
-        });
+        return h(window.PVAdminSettings || Missing('admin-settings.js'), { session: session });
       default:
         return h('div', { className: 'portal-coming-soon' },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'help_outline'),
@@ -280,7 +276,7 @@
 
     return h('div', { className: 'portal-shell' + (drawerOpen ? ' drawer-open' : '') },
       // Desktop sidebar rail (always rendered; hidden on small screens by CSS)
-      h('aside', { className: 'portal-sidebar portal-sidebar-rail', 'data-theme': 'dark' },
+      h('aside', { className: 'portal-sidebar portal-sidebar-rail' },
         h(SidebarBody, sidebarProps)
       ),
 
@@ -293,7 +289,6 @@
       // Mobile drawer (always rendered; positioned offscreen when closed)
       h('aside', {
         className: 'portal-sidebar portal-sidebar-drawer' + (drawerOpen ? ' is-open' : ''),
-        'data-theme': 'dark',
         'aria-hidden': drawerOpen ? 'false' : 'true'
       },
         h('div', { className: 'portal-drawer-header' },
