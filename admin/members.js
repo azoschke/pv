@@ -77,9 +77,11 @@
     return TALKED_TO_ACTIVITIES.indexOf(activity) !== -1;
   }
 
-  var NOTE_TRUNCATE = 20;
-
-  // --------- Note cell: truncated trigger, centered modal popup ----------
+  // --------- Note cell: "Read notes" pill button opens a modal popup ----------
+  // Rows with a note render a themed button that opens the full note in a
+  // modal; rows without a note render a muted dash. The button uses the
+  // shared .portal-btn styles so it follows the light/dark theme instead
+  // of looking like an unstyled browser button.
   function NoteCell(props) {
     var value = props.value || '';
     var label = props.label || 'Notes';
@@ -88,19 +90,15 @@
 
     if (!value) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
 
-    var trigger;
-    if (value.length <= NOTE_TRUNCATE) {
-      trigger = h('span', null, value);
-    } else {
-      trigger = h('button', {
-        type: 'button',
-        className: 'note-cell-trigger',
-        onClick: function () { setOpen(true); }
-      }, value.slice(0, NOTE_TRUNCATE) + '…');
-    }
-
     return h(React.Fragment, null,
-      trigger,
+      h('button', {
+        type: 'button',
+        className: 'portal-btn is-small is-ghost',
+        onClick: function () { setOpen(true); }
+      },
+        h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '16px' } }, 'sticky_note_2'),
+        h('span', null, 'Read notes')
+      ),
       open ? h(window.PVAdminModal, {
         title: label,
         onClose: function () { setOpen(false); }
