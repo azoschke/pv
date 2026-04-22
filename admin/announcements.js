@@ -32,6 +32,7 @@
 
   function ComposeForm(props) {
     var onSubmit = props.onSubmit;
+    var onCancel = props.onCancel;
 
     var titleState = useState('');
     var title = titleState[0], setTitle = titleState[1];
@@ -45,8 +46,6 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var noteState = useState('');
-    var note = noteState[0], setNote = noteState[1];
 
     async function handleSubmit(e) {
       e.preventDefault();
@@ -54,30 +53,22 @@
         setErr('Title and body are required.');
         return;
       }
-      setSaving(true); setErr(''); setNote('');
+      setSaving(true); setErr('');
       try {
-        var result = await onSubmit({
+        await onSubmit({
           title: title.trim(),
           body: body.trim(),
           pinned: pinned,
           post_to_discord: toDiscord
         });
-        setTitle(''); setBody(''); setPinned(false); setToDiscord(false);
-        if (result && toDiscord) {
-          if (result.discord_posted) setNote('Posted to Discord.');
-          else setNote('Saved, but Discord post failed: ' + (result.discord_error || 'unknown error.'));
-        }
       } catch (e) {
         setErr(e.message || 'Failed to post announcement.');
-      } finally {
         setSaving(false);
       }
     }
 
-    return h('form', { onSubmit: handleSubmit, className: 'portal-card' },
-      h('h2', { className: 'portal-card-title' }, 'New Bulletin'),
+    return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
-      note ? h('div', { className: 'portal-flash success' }, note) : null,
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),
         h('input', {
@@ -92,10 +83,10 @@
         h('textarea', {
           value: body,
           onChange: function (e) { setBody(e.target.value); },
-          rows: 5
+          rows: 6
         })
       ),
-      h('div', { style: { display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' } },
+      h('div', { style: { display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.25rem' } },
         h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
           h('input', {
             type: 'checkbox',
@@ -111,13 +102,20 @@
             onChange: function (e) { setToDiscord(e.target.checked); }
           }),
           h('span', null, 'Post to Discord #officer-announcements')
-        ),
+        )
+      ),
+      h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
           className: 'portal-btn',
-          disabled: saving,
-          style: { marginLeft: 'auto' }
-        }, saving ? 'Posting…' : 'Post bulletin')
+          disabled: saving
+        }, saving ? 'Posting…' : 'Post bulletin'),
+        onCancel ? h('button', {
+          type: 'button',
+          className: 'portal-btn is-ghost',
+          onClick: onCancel,
+          disabled: saving
+        }, 'Cancel') : null
       )
     );
   }
@@ -165,6 +163,10 @@
     var loading = loadingState[0], setLoading = loadingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
+    var composeOpenState = useState(false);
+    var composeOpen = composeOpenState[0], setComposeOpen = composeOpenState[1];
+    var flashState = useState('');
+    var flash = flashState[0], setFlash = flashState[1];
 
     async function reload() {
       setErr('');
@@ -182,6 +184,14 @@
 
     async function handleCreate(draft) {
       var result = await PVAdminAPI.request('POST', '/announcements', draft, true);
+      setComposeOpen(false);
+      if (draft.post_to_discord) {
+        if (result && result.discord_posted) setFlash('Bulletin posted. Posted to Discord.');
+        else setFlash('Bulletin posted, but Discord post failed: ' + ((result && result.discord_error) || 'unknown error.'));
+      } else {
+        setFlash('Bulletin posted.');
+      }
+      setTimeout(function () { setFlash(''); }, 4000);
       await reload();
       return result;
     }
@@ -196,7 +206,20 @@
     }
 
     return h('div', null,
-      canPost ? h(ComposeForm, { onSubmit: handleCreate }) : null,
+      canPost ? h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem' } },
+          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Announcements'),
+          h('button', {
+            type: 'button',
+            className: 'portal-btn',
+            onClick: function () { setComposeOpen(true); }
+          },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
+            h('span', null, 'New announcement')
+          )
+        ),
+        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+      ) : null,
       err ? h('div', { className: 'portal-card' }, h('div', { className: 'portal-flash error' }, err)) : null,
       loading
         ? h('div', { className: 'portal-card' }, 'Loading bulletins…')
@@ -211,7 +234,17 @@
             })
           : h('div', { className: 'portal-card' },
               h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'No bulletins posted yet.')
-            )
+            ),
+      composeOpen ? h(window.PVAdminModal, {
+        title: 'New Announcement',
+        size: 'lg',
+        onClose: function () { setComposeOpen(false); }
+      },
+        h(ComposeForm, {
+          onSubmit: handleCreate,
+          onCancel: function () { setComposeOpen(false); }
+        })
+      ) : null
     );
   }
 

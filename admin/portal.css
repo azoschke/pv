@@ -336,6 +336,24 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   min-width: 16rem;
 }
 
+.portal-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+  align-items: center;
+  margin: 0.35rem 0 0.85rem;
+}
+.portal-filter-select {
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.4rem 0.55rem;
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  min-width: 11rem;
+}
+
 /* --------------- Tables --------------- */
 .portal-table-wrap { overflow-x: auto; }
 .portal-table {

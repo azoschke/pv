@@ -79,31 +79,34 @@
 
   var NOTE_TRUNCATE = 20;
 
-  // --------- Note cell with popover ----------
+  // --------- Note cell: truncated trigger, centered modal popup ----------
   function NoteCell(props) {
     var value = props.value || '';
+    var label = props.label || 'Notes';
     var openState = useState(false);
     var open = openState[0], setOpen = openState[1];
-    var wrapRef = useRef(null);
-
-    useEffect(function () {
-      if (!open) return;
-      function onDoc(e) {
-        if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-      }
-      document.addEventListener('mousedown', onDoc);
-      return function () { document.removeEventListener('mousedown', onDoc); };
-    }, [open]);
 
     if (!value) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
-    if (value.length <= NOTE_TRUNCATE) return h('span', null, value);
 
-    return h('span', { className: 'note-cell', ref: wrapRef },
-      h('span', {
+    var trigger;
+    if (value.length <= NOTE_TRUNCATE) {
+      trigger = h('span', null, value);
+    } else {
+      trigger = h('button', {
+        type: 'button',
         className: 'note-cell-trigger',
-        onClick: function () { setOpen(!open); }
-      }, value.slice(0, NOTE_TRUNCATE) + '…'),
-      open ? h('span', { className: 'note-cell-popover' }, value) : null
+        onClick: function () { setOpen(true); }
+      }, value.slice(0, NOTE_TRUNCATE) + '…');
+    }
+
+    return h(React.Fragment, null,
+      trigger,
+      open ? h(window.PVAdminModal, {
+        title: label,
+        onClose: function () { setOpen(false); }
+      },
+        h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem' } }, value)
+      ) : null
     );
   }
 
@@ -280,7 +283,7 @@
             )
           : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
-      h('td', null, h(NoteCell, { value: m.notes })),
+      h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || '') })),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
         h('button', {
           type: 'button',
@@ -310,6 +313,14 @@
 
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
+    var rankFilterState     = useState('');
+    var rankFilter     = rankFilterState[0],     setRankFilter     = rankFilterState[1];
+    var factionFilterState  = useState('');
+    var factionFilter  = factionFilterState[0],  setFactionFilter  = factionFilterState[1];
+    var interviewFilterState = useState('');
+    var interviewFilter = interviewFilterState[0], setInterviewFilter = interviewFilterState[1];
+    var activityFilterState = useState('');
+    var activityFilter = activityFilterState[0], setActivityFilter = activityFilterState[1];
 
     async function reload() {
       setErr('');
@@ -360,19 +371,37 @@
       }
     }
 
-    var filteredBase = filter
-      ? members.filter(function (m) {
-          var q = filter.toLowerCase();
-          return (m.name && m.name.toLowerCase().indexOf(q) !== -1)
-              || (m.faction && m.faction.toLowerCase().indexOf(q) !== -1)
-              || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1);
-        })
-      : members;
+    var q = filter.trim().toLowerCase();
+    var filteredBase = members.filter(function (m) {
+      if (q) {
+        var hit = (m.name && m.name.toLowerCase().indexOf(q) !== -1)
+               || (m.faction && m.faction.toLowerCase().indexOf(q) !== -1)
+               || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1);
+        if (!hit) return false;
+      }
+      if (rankFilter      && m.ooc_rank  !== rankFilter)      return false;
+      if (factionFilter   && m.faction   !== factionFilter)   return false;
+      if (interviewFilter && m.interview !== interviewFilter) return false;
+      if (activityFilter  && m.activity  !== activityFilter)  return false;
+      return true;
+    });
     // Sort by OOC-rank index, then alphabetical within rank.
     var filtered = filteredBase.slice().sort(compareMembers);
 
     var modalOpen = modalMember !== null;
     var modalIsNew = modalOpen && !modalMember.id;
+
+    function filterSelect(value, onChange, placeholder, options) {
+      return h('select', {
+        className: 'portal-filter-select',
+        value: value,
+        onChange: function (e) { onChange(e.target.value); }
+      },
+        h('option', { value: '' }, placeholder),
+        options.map(function (v) { return h('option', { key: v, value: v }, v); })
+      );
+    }
+    var anyFilterActive = filter || rankFilter || factionFilter || interviewFilter || activityFilter;
 
     return h('div', null,
       h('div', { className: 'portal-card' },
@@ -382,7 +411,7 @@
             h('input', {
               type: 'search',
               className: 'portal-search',
-              placeholder: 'Filter by name, faction, rank…',
+              placeholder: 'Search name…',
               value: filter,
               onChange: function (e) { setFilter(e.target.value); }
             }),
@@ -395,6 +424,20 @@
               h('span', null, 'Add member')
             )
           )
+        ),
+        h('div', { className: 'portal-filter-row' },
+          filterSelect(rankFilter,      setRankFilter,      'All OOC Ranks', OOC_RANKS),
+          filterSelect(factionFilter,   setFactionFilter,   'All Factions',  FACTIONS),
+          filterSelect(interviewFilter, setInterviewFilter, 'All Interviews', INTERVIEWS),
+          filterSelect(activityFilter,  setActivityFilter,  'All Activity',   ACTIVITIES),
+          anyFilterActive ? h('button', {
+            type: 'button',
+            className: 'portal-btn is-ghost is-small',
+            onClick: function () {
+              setFilter(''); setRankFilter(''); setFactionFilter('');
+              setInterviewFilter(''); setActivityFilter('');
+            }
+          }, 'Clear filters') : null
         ),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
