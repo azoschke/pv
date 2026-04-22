@@ -1584,6 +1584,7 @@ body.nav-sidebar-open {
 
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
+/* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 @media (max-width: 900px) {
   .hamburger {
     display: flex;
@@ -1592,6 +1593,11 @@ body.nav-sidebar-open {
   }
 
   .nav-links {
+    display: none;
+  }
+
+  /* Hide the top-nav copy so it isn't duplicated. The sidebar copy keeps `.nav-login-btn-sidebar`. */
+  .site-nav > .nav-login-btn:not(.nav-login-btn-sidebar) {
     display: none;
   }
 
