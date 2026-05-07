@@ -2589,3 +2589,410 @@ body.nav-sidebar-open {
   .cdb-cosmic-item-grid { grid-template-columns: 1fr; }
 }
 
+
+/* =============================================================================
+   14. VENUES — directory page (public)
+   ============================================================================= */
+
+/* ── Filter sidebar ───────────────────────────────────────────────────────── */
+.venues-sidebar {
+  width: 260px;
+}
+
+.venues-filter-body {
+  padding: 0.85rem 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.venues-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.venues-filter-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.venues-filter-input,
+.venues-filter-select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.venues-filter-input::placeholder {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.venues-filter-input:focus,
+.venues-filter-select:focus {
+  border-color: var(--accent-brown);
+}
+
+.venues-filter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.venues-filter-item { padding: 0; }
+
+.venues-filter-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.venues-filter-check input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.venues-filter-check-text { flex: 1; }
+
+.venues-filter-count {
+  font-family: 'Stoke', serif;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.venues-filter-reset {
+  font-family: 'Stoke', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.venues-filter-reset:hover {
+  border-color: var(--accent-brown);
+  color: var(--accent-red);
+}
+
+/* ── Toolbar (count + sort) ──────────────────────────────────────────────── */
+.venues-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.venues-result-count {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.venues-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.venues-sort-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.venues-sort .venues-filter-select {
+  width: auto;
+  min-width: 11rem;
+}
+
+/* ── Card grid ───────────────────────────────────────────────────────────── */
+.venues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.venues-empty {
+  grid-column: 1 / -1;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.venues-empty p { margin: 0 0 0.5rem; }
+.venues-empty p:last-child { margin-bottom: 0; }
+
+.venues-empty-error { color: var(--accent-red); }
+
+/* ── Venue card ──────────────────────────────────────────────────────────── */
+.venue-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  color: inherit;
+}
+
+.venue-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-brown);
+}
+
+.venue-card.is-featured {
+  border-color: var(--accent-brown);
+  box-shadow: 0 0 0 1px var(--accent-brown) inset;
+}
+
+.venue-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+  overflow: hidden;
+}
+
+.venue-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.venue-card-sig {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.75rem;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+.venue-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.25rem;
+  line-height: 1;
+}
+
+.venue-badge-featured {
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.venue-badge-size {
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #f3e9d2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.venue-card-body {
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.venue-card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.venue-card-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.venue-card-location {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.venue-card-desc {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.venue-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.venue-card-tag {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 0.95rem;
+  color: var(--accent-brown);
+}
+
+/* ── Venue modal ─────────────────────────────────────────────────────────── */
+.venue-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.7);
+  z-index: 200;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+  overflow-y: auto;
+}
+
+.venue-modal-overlay.is-open { display: flex; }
+
+.venue-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.venue-modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.3rem;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.venue-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
+
+.venue-modal-img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.venue-modal-img-fallback {
+  position: relative;
+}
+
+.venue-modal-content {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.venue-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.venue-modal-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.55rem;
+  font-weight: 400;
+  margin: 0 0 0.25rem;
+  color: var(--text-primary);
+}
+
+.venue-modal-location {
+  font-family: 'Stoke', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+}
+
+.venue-modal-desc {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.venue-modal-desc p { margin: 0 0 0.85rem; }
+.venue-modal-desc p:last-child { margin-bottom: 0; }
+
+.venue-modal-tags { margin-top: 1.1rem; }
+
+@media (max-width: 768px) {
+  .venues-sidebar { width: 280px; }
+  .venues-toolbar .venues-filter-select { width: 100%; }
+  .venue-modal-overlay { padding: 1rem; }
+  .venue-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
+}
+
