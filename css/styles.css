@@ -2783,7 +2783,6 @@ body.nav-sidebar-open {
 
 .venue-card.is-featured {
   border-color: var(--accent-brown);
-  box-shadow: 0 0 0 1px var(--accent-brown) inset;
 }
 
 .venue-card-media {
@@ -2948,6 +2947,79 @@ body.nav-sidebar-open {
 
 .venue-modal-img-fallback {
   position: relative;
+}
+
+.venue-gallery {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.venue-gallery-track {
+  position: absolute;
+  inset: 0;
+}
+
+.venue-gallery-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.venue-gallery-slide.is-active { opacity: 1; }
+
+.venue-gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.3rem;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.venue-gallery-nav:hover { background: rgba(0, 0, 0, 0.75); }
+
+.venue-gallery-prev { left: 0.6rem; }
+.venue-gallery-next { right: 0.6rem; }
+
+.venue-gallery-dots {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.4rem;
+  z-index: 2;
+}
+
+.venue-gallery-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.venue-gallery-dot.is-active {
+  background: #f3e9d2;
+  border-color: #f3e9d2;
 }
 
 .venue-modal-content {

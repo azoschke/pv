@@ -59,6 +59,7 @@
       room_number: '',
       description: '',
       image_url: '',
+      gallery_images: ['', '', ''],
       tags: [],
       extra_tags: [],
       featured: false
@@ -67,6 +68,13 @@
 
   function venueToDraft(v) {
     if (!v) return emptyDraft();
+    var gal = Array.isArray(v.gallery_images)
+      ? v.gallery_images.slice(0, 3)
+      : [v.gallery_image_1, v.gallery_image_2, v.gallery_image_3];
+    var galleryImages = ['', '', ''];
+    for (var i = 0; i < 3; i++) {
+      if (gal && gal[i]) galleryImages[i] = String(gal[i]);
+    }
     return {
       id: v.id,
       name: v.name || '',
@@ -77,6 +85,7 @@
       room_number: v.room_number != null ? String(v.room_number) : '',
       description: v.description || '',
       image_url: v.image_url || '',
+      gallery_images: galleryImages,
       tags: Array.isArray(v.tags) ? v.tags.slice() : [],
       extra_tags: Array.isArray(v.extra_tags) ? v.extra_tags.slice() : [],
       featured: !!v.featured
@@ -85,15 +94,19 @@
 
   function draftToPayload(draft) {
     var allowsRoom = draft.size === 'room' || draft.size === 'apartment';
+    var isApartment = draft.size === 'apartment';
     return {
       name: draft.name.trim(),
       size: draft.size,
       district: draft.district,
       ward: draft.ward === '' ? null : Number(draft.ward),
-      plot: draft.plot === '' ? null : Number(draft.plot),
+      plot: isApartment || draft.plot === '' ? null : Number(draft.plot),
       room_number: !allowsRoom || draft.room_number === '' ? null : Number(draft.room_number),
       description: draft.description.trim() || null,
       image_url: draft.image_url.trim() || null,
+      gallery_images: (draft.gallery_images || [])
+        .map(function (g) { return (g || '').trim(); })
+        .filter(function (g) { return !!g; }),
       tags: draft.tags.slice(),
       extra_tags: draft.extra_tags.slice(),
       featured: !!draft.featured
@@ -117,13 +130,23 @@
     var newTag = newTagState[0], setNewTag = newTagState[1];
 
     var allowsRoom = draft.size === 'room' || draft.size === 'apartment';
+    var isApartment = draft.size === 'apartment';
 
     function setField(k, v) {
       setDraft(function (d) {
         var next = Object.assign({}, d, { [k]: v });
-        // When size changes to non-room/apartment, drop any room_number value.
         if (k === 'size' && v !== 'room' && v !== 'apartment') next.room_number = '';
+        if (k === 'size' && v === 'apartment') next.plot = '';
         return next;
+      });
+    }
+
+    function setGalleryImage(idx, value) {
+      setDraft(function (d) {
+        var next = (d.gallery_images || ['', '', '']).slice();
+        while (next.length < 3) next.push('');
+        next[idx] = value;
+        return Object.assign({}, d, { gallery_images: next });
       });
     }
 
@@ -164,7 +187,7 @@
         setErr('Ward must be an integer 1–30.');
         return;
       }
-      if (draft.plot !== '') {
+      if (!isApartment && draft.plot !== '') {
         var plot = Number(draft.plot);
         if (!Number.isInteger(plot) || plot < 1 || plot > 60) {
           setErr('Plot must be an integer 1–60 (or leave blank).');
@@ -233,8 +256,10 @@
           h('label', null, 'Plot'),
           h('input', {
             type: 'number', min: 1, max: 60,
-            value: draft.plot,
-            onChange: function (e) { setField('plot', e.target.value); }
+            value: isApartment ? '' : draft.plot,
+            onChange: function (e) { setField('plot', e.target.value); },
+            disabled: isApartment,
+            placeholder: isApartment ? 'n/a' : ''
           })
         ),
         h('div', { className: 'portal-field' },
@@ -270,6 +295,36 @@
           },
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Gallery images (up to 3)'),
+        h('p', { className: 'portal-field-help', style: { marginTop: 0 } },
+          'Additional images shown in the modal slider. Same format as the primary image.'
+        ),
+        [0, 1, 2].map(function (idx) {
+          var val = (draft.gallery_images && draft.gallery_images[idx]) || '';
+          return h('div', {
+            key: idx,
+            style: { display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
+          },
+            h('input', {
+              type: 'text',
+              value: val,
+              onChange: function (e) { setGalleryImage(idx, e.target.value); },
+              placeholder: 'https://… or /pv/assets/venues/your-file.jpg',
+              style: { flex: 1 }
+            }),
+            val ? h('img', {
+              src: val, alt: '',
+              style: {
+                width: '64px', height: '40px', objectFit: 'cover',
+                border: '1px solid var(--border-color)', borderRadius: '0.25rem'
+              },
+              onError: function (e) { e.target.style.display = 'none'; }
+            }) : null
+          );
+        })
       ),
 
       h('div', { className: 'portal-field' },

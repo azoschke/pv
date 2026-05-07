@@ -72,7 +72,8 @@
     district: "",
     featured: false
   };
-  var sort = "name_asc";
+  var sort = "featured";
+  var VALID_SORTS = { featured: 1, size_asc: 1, size_desc: 1 };
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function escapeHTML(str) {
@@ -96,7 +97,7 @@
         filters.featured = !!saved.featured;
       }
       var savedSort = localStorage.getItem(SORT_KEY);
-      if (savedSort) sort = savedSort;
+      if (savedSort && VALID_SORTS[savedSort]) sort = savedSort;
     } catch (_e) { /* ignore */ }
   }
 
@@ -221,7 +222,7 @@
 
     resetBtn.addEventListener("click", function () {
       filters = { search: "", sizes: {}, types: {}, district: "", featured: false };
-      sort = "name_asc";
+      sort = "featured";
       saveFilters();
       // Re-sync inputs.
       searchInput.value = "";
@@ -267,24 +268,37 @@
     return true;
   }
 
+  function nullableNum(n) {
+    // Sort nulls/undefined to the end within a tier.
+    return n == null ? Number.POSITIVE_INFINITY : Number(n);
+  }
+
+  function locationCompare(a, b) {
+    return DISTRICT_ORDER.indexOf(a.district) - DISTRICT_ORDER.indexOf(b.district)
+      || nullableNum(a.ward) - nullableNum(b.ward)
+      || nullableNum(a.plot) - nullableNum(b.plot)
+      || nullableNum(a.room_number) - nullableNum(b.room_number)
+      || (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+  }
+
   function sortVenues(list) {
     var copy = list.slice();
     copy.sort(function (a, b) {
+      // Featured always pinned to the top, regardless of sort mode.
+      var fa = a.featured ? 0 : 1;
+      var fb = b.featured ? 0 : 1;
+      if (fa !== fb) return fa - fb;
+
       switch (sort) {
-        case "name_desc":
-          return (b.name || "").localeCompare(a.name || "", undefined, { sensitivity: "base" });
         case "size_asc":
           return SIZE_ORDER.indexOf(a.size) - SIZE_ORDER.indexOf(b.size)
-            || (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+            || locationCompare(a, b);
         case "size_desc":
           return SIZE_ORDER.indexOf(b.size) - SIZE_ORDER.indexOf(a.size)
-            || (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
-        case "district":
-          return DISTRICT_ORDER.indexOf(a.district) - DISTRICT_ORDER.indexOf(b.district)
-            || (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
-        case "name_asc":
+            || locationCompare(a, b);
+        case "featured":
         default:
-          return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+          return locationCompare(a, b);
       }
     });
     return copy;
@@ -330,9 +344,25 @@
   function locationLine(v) {
     var parts = [DISTRICT_LABEL[v.district] || ""];
     if (v.ward != null) parts.push("Ward " + v.ward);
-    if (v.plot != null) parts.push("Plot " + v.plot);
+    if (v.plot != null && v.size !== "apartment") parts.push("Plot " + v.plot);
     if (v.room_number != null) parts.push("Room " + v.room_number);
     return parts.filter(Boolean).join(", ");
+  }
+
+  // Collect primary + up to three gallery images. Field name mirrors what the
+  // worker is expected to return: `gallery_images` as an array of strings
+  // (full URLs or paths under /pv/assets/venues/). Falls back to legacy
+  // `gallery_image_1/2/3` shape if the worker exposes those instead.
+  function venueImages(v) {
+    var imgs = [];
+    if (v.image_url) imgs.push(v.image_url);
+    var gal = Array.isArray(v.gallery_images)
+      ? v.gallery_images
+      : [v.gallery_image_1, v.gallery_image_2, v.gallery_image_3];
+    gal.forEach(function (g) {
+      if (g && typeof g === "string" && g.trim()) imgs.push(g.trim());
+    });
+    return imgs;
   }
 
   function truncate(str, n) {
@@ -451,14 +481,65 @@
   }
 
   // ── Modal ────────────────────────────────────────────────────────────────
-  function openModal(v) {
+  function buildGalleryHtml(v) {
     var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
-    var imgHtml = v.image_url
-      ? '<img src="' + escapeHTML(v.image_url) + '" alt="" class="venue-modal-img">'
-      : '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
+    var imgs = venueImages(v);
+
+    if (!imgs.length) {
+      return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
         palette.from + ' 0%, ' + palette.to + ' 100%);">' +
         '<span class="venue-card-sig">' + escapeHTML((v.name || "").toLowerCase()) + '</span>' +
         '</div>';
+    }
+
+    if (imgs.length === 1) {
+      return '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img">';
+    }
+
+    var slides = imgs.map(function (src, i) {
+      return '<img src="' + escapeHTML(src) + '" alt="" ' +
+        'class="venue-gallery-slide' + (i === 0 ? ' is-active' : '') + '" ' +
+        'data-index="' + i + '">';
+    }).join("");
+
+    var dots = imgs.map(function (_, i) {
+      return '<button type="button" class="venue-gallery-dot' + (i === 0 ? ' is-active' : '') +
+        '" data-index="' + i + '" aria-label="Image ' + (i + 1) + '"></button>';
+    }).join("");
+
+    return '<div class="venue-gallery" data-count="' + imgs.length + '">' +
+      '<div class="venue-gallery-track">' + slides + '</div>' +
+      '<button type="button" class="venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
+      '<button type="button" class="venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
+      '<div class="venue-gallery-dots">' + dots + '</div>' +
+      '</div>';
+  }
+
+  function wireGallery(root) {
+    var gallery = root.querySelector(".venue-gallery");
+    if (!gallery) return;
+    var slides = gallery.querySelectorAll(".venue-gallery-slide");
+    var dots   = gallery.querySelectorAll(".venue-gallery-dot");
+    if (!slides.length) return;
+    var idx = 0;
+
+    function show(i) {
+      idx = (i + slides.length) % slides.length;
+      slides.forEach(function (s, j) { s.classList.toggle("is-active", j === idx); });
+      dots.forEach(function (d, j) { d.classList.toggle("is-active", j === idx); });
+    }
+
+    var prev = gallery.querySelector(".venue-gallery-prev");
+    var next = gallery.querySelector(".venue-gallery-next");
+    if (prev) prev.addEventListener("click", function () { show(idx - 1); });
+    if (next) next.addEventListener("click", function () { show(idx + 1); });
+    dots.forEach(function (d) {
+      d.addEventListener("click", function () { show(Number(d.dataset.index) || 0); });
+    });
+  }
+
+  function openModal(v) {
+    var imgHtml = buildGalleryHtml(v);
 
     var descHtml = v.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(v.description)) : "<p>" + escapeHTML(v.description) + "</p>")
@@ -488,6 +569,8 @@
         '<div class="venue-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
+
+    wireGallery(modalBody);
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
