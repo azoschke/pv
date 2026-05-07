@@ -167,7 +167,8 @@
     // Mark active dropdown + sub-link
     const loc = getCurrentLocation();
     placeholder.querySelectorAll('.nav-dropdown[data-page]').forEach(function (dropdown) {
-      if (dropdown.dataset.page === loc.section) {
+      const pages = dropdown.dataset.page.split(/\s+/).filter(Boolean);
+      if (pages.indexOf(loc.section) !== -1) {
         dropdown.classList.add('active');
         const toggle = dropdown.querySelector('.nav-dropdown-toggle');
         if (toggle) toggle.classList.add('active');
@@ -183,7 +184,8 @@
 
     // Mark active section in sidebar too
     document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
-      if (section.dataset.page === loc.section) {
+      const pages = section.dataset.page.split(/\s+/).filter(Boolean);
+      if (pages.indexOf(loc.section) !== -1) {
         section.classList.add('active', 'open');
         const toggle = section.querySelector('.nav-sidebar-toggle');
         if (toggle) toggle.setAttribute('aria-expanded', 'true');
