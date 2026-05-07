@@ -10,6 +10,21 @@
   </button>
 
   <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown" data-page="campaigns">
+      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <ul class="nav-submenu" role="menu">
+        <li role="none"><a role="menuitem" href="/pv/campaigns/campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
+        <li role="none"><a role="menuitem" href="/pv/campaigns/eclipse/eclipse.html" class="nav-sublink" data-subpage="eclipse">Symphony of the Eclipse</a></li>
+        <li role="none"><a role="menuitem" href="/pv/campaigns/stormveil/stormveil.html" class="nav-sublink" data-subpage="stormveil">Stormveil</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="/pv/venues/venues.html" class="nav-link" data-page="venues">Venues</a>
+    </li>
+
     <li class="nav-dropdown" data-page="vanguard-medical">
       <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
         Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
@@ -25,39 +40,18 @@
       </ul>
     </li>
 
-    <li class="nav-dropdown" data-page="crafting-database">
+    <li class="nav-dropdown" data-page="crafting-database zodiac-weapons">
       <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Crafting Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
+        Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-submenu" role="menu">
+        <li class="nav-submenu-label" role="presentation">Crafting</li>
         <li role="none"><a role="menuitem" href="/pv/crafting-database/crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
         <li role="none"><a role="menuitem" href="/pv/crafting-database/cosmic-exploration.html" class="nav-sublink" data-subpage="cosmic-exploration">Cosmic Exploration Database</a></li>
-      </ul>
-    </li>
-
-    <li class="nav-dropdown" data-page="zodiac-weapons">
-      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Zodiac Weapons <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-submenu" role="menu">
+        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Zodiac Weapons</li>
         <li role="none"><a role="menuitem" href="/pv/zodiac-weapons/atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
         <li role="none"><a role="menuitem" href="/pv/zodiac-weapons/books.html" class="nav-sublink" data-subpage="books">Books</a></li>
       </ul>
-    </li>
-
-    <li class="nav-dropdown" data-page="campaigns">
-      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-submenu" role="menu">
-        <li role="none"><a role="menuitem" href="/pv/campaigns/campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
-        <li role="none"><a role="menuitem" href="/pv/campaigns/eclipse/eclipse.html" class="nav-sublink" data-subpage="eclipse">Symphony of the Eclipse</a></li>
-        <li role="none"><a role="menuitem" href="/pv/campaigns/stormveil/stormveil.html" class="nav-sublink" data-subpage="stormveil">Stormveil</a></li>
-      </ul>
-    </li>
-
-    <li>
-      <a href="/pv/venues/venues.html" class="nav-link" data-page="venues">Venues</a>
     </li>
 
   </ul>
@@ -82,6 +76,19 @@
     <button class="nav-sidebar-close" id="nav-sidebar-close" type="button" aria-label="Close navigation menu">&#10005;</button>
   </div>
   <ul class="nav-sidebar-links">
+    <li class="nav-sidebar-section" data-page="campaigns">
+      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
+        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
+      </button>
+      <ul class="nav-sidebar-submenu">
+        <li><a href="/pv/campaigns/campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
+        <li><a href="/pv/campaigns/eclipse/eclipse.html" class="nav-sublink" data-subpage="eclipse">Symphony of the Eclipse</a></li>
+        <li><a href="/pv/campaigns/stormveil/stormveil.html" class="nav-sublink" data-subpage="stormveil">Stormveil</a></li>
+      </ul>
+    </li>
+    <li class="nav-sidebar-section" data-page="venues">
+      <a href="/pv/venues/venues.html" class="nav-link nav-sidebar-link" data-page="venues">Venues</a>
+    </li>
     <li class="nav-sidebar-section" data-page="vanguard-medical">
       <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
         Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
@@ -96,36 +103,18 @@
         <li><a href="/pv/vanguard-medical/med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
       </ul>
     </li>
-    <li class="nav-sidebar-section" data-page="crafting-database">
+    <li class="nav-sidebar-section" data-page="crafting-database zodiac-weapons">
       <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Crafting Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
+        Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-sidebar-submenu">
+        <li class="nav-submenu-label" role="presentation">Crafting</li>
         <li><a href="/pv/crafting-database/crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
         <li><a href="/pv/crafting-database/cosmic-exploration.html" class="nav-sublink" data-subpage="cosmic-exploration">Cosmic Exploration Database</a></li>
-      </ul>
-    </li>
-    <li class="nav-sidebar-section" data-page="zodiac-weapons">
-      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Zodiac Weapons <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-sidebar-submenu">
+        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Zodiac Weapons</li>
         <li><a href="/pv/zodiac-weapons/atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
         <li><a href="/pv/zodiac-weapons/books.html" class="nav-sublink" data-subpage="books">Books</a></li>
       </ul>
-    </li>
-    <li class="nav-sidebar-section" data-page="campaigns">
-      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-sidebar-submenu">
-        <li><a href="/pv/campaigns/campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
-        <li><a href="/pv/campaigns/eclipse/eclipse.html" class="nav-sublink" data-subpage="eclipse">Symphony of the Eclipse</a></li>
-        <li><a href="/pv/campaigns/stormveil/stormveil.html" class="nav-sublink" data-subpage="stormveil">Stormveil</a></li>
-      </ul>
-    </li>
-    <li class="nav-sidebar-section" data-page="venues">
-      <a href="/pv/venues/venues.html" class="nav-link nav-sidebar-link" data-page="venues">Venues</a>
     </li>
     <li class="nav-sidebar-section" data-page="admin">
       <a href="/pv/admin/login.html" class="nav-login-btn nav-login-btn-sidebar" data-subpage="admin-login" aria-label="Admin login">
