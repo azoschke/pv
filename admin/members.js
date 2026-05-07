@@ -46,14 +46,17 @@
   })();
 
   var FACTIONS = [
-    'Medical',
+    'Pirate/Mercenary',
     'Pirate',
     'Mercenary',
+    'Medical',
+    'Mercenary/Medical',
     'House Staff',
+    'Contractor',
     'NA - No RP',
     'No Data'
   ];
-  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'No Data'];
+  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data',];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
   function memberSortKey(m) {
