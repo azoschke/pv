@@ -21,6 +21,7 @@
     { id: 'medical',       label: 'Medical Division',  icon: 'medical_services' },
     { id: 'mercenary',     label: 'Mercenary',         icon: 'security' },
     { id: 'pirate',        label: 'Pirate Ops',        icon: 'sailing' },
+    { id: 'venues',        label: 'Venues',            icon: 'storefront' },
     { id: 'announcements', label: 'Announcements',     icon: 'campaign' },
     { id: 'admin',         label: 'Admin Settings',    icon: 'settings' }
   ];
@@ -30,6 +31,7 @@
     medical:       ['medical', 'admin'],
     mercenary:     ['mercenary', 'admin'],
     pirate:        ['pirate', 'admin'],
+    venues:        ['officer', 'admin'],
     announcements: ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:         ['admin']
   };
@@ -161,6 +163,8 @@
         return h(window.PVAdminMembers || Missing('members.js'), { session: session });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
+      case 'venues':
+        return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
       case 'announcements':
         return h(window.PVAdminAnnouncements || Missing('announcements.js'), { session: session });
       case 'mercenary':

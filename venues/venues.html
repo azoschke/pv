@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phoenix Vanguard Venues</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">Phoenix Vanguard</p>
+      <h1 class="app-title">Roleplay Venues</h1>
+    </header>
+
+    <p class="landing-intro">
+      Estates, taverns, clinics, and more open to the company and her allies.
+      Browse by district, size, or atmosphere.
+    </p>
+
+    <div class="campaign-layout" id="venues-layout">
+
+      <!-- Filter sidebar -->
+      <aside class="campaign-sidebar venues-sidebar" id="venues-sidebar" aria-label="Venue filters">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Filters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
+        </div>
+
+        <div class="venues-filter-body">
+
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="venues-search">Search</label>
+            <input
+              id="venues-search"
+              class="venues-filter-input"
+              type="search"
+              placeholder="Name or keyword..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="venues-filter-group" id="filter-size-group">
+            <span class="venues-filter-label">Size</span>
+            <ul class="venues-filter-list" id="filter-size-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group" id="filter-type-group">
+            <span class="venues-filter-label">Type</span>
+            <ul class="venues-filter-list" id="filter-type-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="filter-district">District</label>
+            <select id="filter-district" class="venues-filter-select">
+              <option value="">Any district</option>
+              <option value="mist">Mist</option>
+              <option value="lavender_beds">Lavender Beds</option>
+              <option value="goblet">Goblet</option>
+              <option value="empyreum">Empyreum</option>
+              <option value="shirogane">Shirogane</option>
+            </select>
+          </div>
+
+          <div class="venues-filter-group">
+            <span class="venues-filter-label">Featured</span>
+            <label class="venues-filter-check">
+              <input type="checkbox" id="filter-featured" />
+              <span>Featured only</span>
+            </label>
+          </div>
+
+          <button type="button" class="venues-filter-reset" id="filter-reset">
+            Reset filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="campaign-main" id="venues-main">
+        <div class="campaign-toolbar venues-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+            &#9776; Filters
+          </button>
+          <span class="venues-result-count" id="venues-count" aria-live="polite"></span>
+          <div class="venues-sort">
+            <label for="venues-sort-select" class="venues-sort-label">Sort:</label>
+            <select id="venues-sort-select" class="venues-filter-select">
+              <option value="name_asc">A &rarr; Z</option>
+              <option value="name_desc">Z &rarr; A</option>
+              <option value="size_asc">Size (small &rarr; large)</option>
+              <option value="size_desc">Size (large &rarr; small)</option>
+              <option value="district">District</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="venues-grid" class="venues-grid">
+          <!-- populated by JS -->
+        </div>
+      </main>
+
+    </div>
+
+    <!-- Mobile overlay -->
+    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+
+    <!-- Detail modal -->
+    <div class="venue-modal-overlay" id="venue-modal-overlay" aria-hidden="true">
+      <div class="venue-modal" role="dialog" aria-modal="true" aria-labelledby="venue-modal-title">
+        <button type="button" class="venue-modal-close" id="venue-modal-close" aria-label="Close">&#10005;</button>
+        <div class="venue-modal-body" id="venue-modal-body">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/pv/venues/venues.js"></script>
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
