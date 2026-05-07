@@ -45,17 +45,42 @@
     return m;
   })();
 
+  // Factions are stored as a comma-separated string in a single column
+  // (e.g. "Medical, Mercenary") so the worker doesn't need to know about
+  // the new multi-select behaviour. parseFactions / formatFactions convert
+  // between the stored string and an array of tags.
   var FACTIONS = [
-    'Pirate/Mercenary',
     'Pirate',
     'Mercenary',
     'Medical',
-    'Mercenary/Medical',
     'House Staff',
     'Contractor',
     'NA - No RP',
     'No Data'
   ];
+
+  function parseFactions(value) {
+    if (!value) return [];
+    return String(value)
+      .split(',')
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 0; });
+  }
+
+  function formatFactions(arr) {
+    var seen = {};
+    var deduped = [];
+    arr.forEach(function (f) {
+      if (!f || seen[f]) return;
+      seen[f] = true;
+      deduped.push(f);
+    });
+    // Order by canonical FACTIONS list, then any unrecognised values last
+    // so legacy data still survives a round-trip without being dropped.
+    var ordered = FACTIONS.filter(function (f) { return seen[f]; });
+    var unknown = deduped.filter(function (f) { return FACTIONS.indexOf(f) === -1; });
+    return ordered.concat(unknown).join(', ');
+  }
   var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data',];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
@@ -187,14 +212,29 @@
             onChange: function (e) { setField('ic_rank', e.target.value); }
           })
         ),
-        h('div', { className: 'portal-field' },
+        h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
           h('label', null, 'Faction *'),
-          h('select', {
-            value: draft.faction,
-            onChange: function (e) { setField('faction', e.target.value); }
-          },
-            h('option', { value: '' }, '— Select faction —'),
-            FACTIONS.map(function (v) { return h('option', { key: v, value: v }, v); })
+          h('div', { className: 'portal-checkbox-group', role: 'group', 'aria-label': 'Factions' },
+            FACTIONS.map(function (v) {
+              var current = parseFactions(draft.faction);
+              var checked = current.indexOf(v) !== -1;
+              return h('label', { key: v, className: 'portal-checkbox-option' },
+                h('input', {
+                  type: 'checkbox',
+                  checked: checked,
+                  onChange: function (e) {
+                    var next = parseFactions(draft.faction);
+                    if (e.target.checked) {
+                      if (next.indexOf(v) === -1) next.push(v);
+                    } else {
+                      next = next.filter(function (f) { return f !== v; });
+                    }
+                    setField('faction', formatFactions(next));
+                  }
+                }),
+                h('span', null, v)
+              );
+            })
           )
         ),
         h('div', { className: 'portal-field' },
@@ -265,11 +305,20 @@
 
     var showTalkedTo = shouldShowTalkedTo(m.activity);
 
+    var factions = parseFactions(m.faction);
     return h('tr', null,
       h('td', null, m.name),
       h('td', null, m.ooc_rank),
       h('td', null, m.ic_rank || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null, m.faction),
+      h('td', null,
+        factions.length
+          ? h('div', { className: 'portal-faction-tags' },
+              factions.map(function (f) {
+                return h('span', { key: f, className: 'portal-faction-tag' }, f);
+              })
+            )
+          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      ),
       h('td', null, m.interview),
       h('td', null, m.activity),
       h('td', null,
@@ -381,7 +430,7 @@
         if (!hit) return false;
       }
       if (rankFilter      && m.ooc_rank  !== rankFilter)      return false;
-      if (factionFilter   && m.faction   !== factionFilter)   return false;
+      if (factionFilter   && parseFactions(m.faction).indexOf(factionFilter) === -1) return false;
       if (interviewFilter && m.interview !== interviewFilter) return false;
       if (activityFilter  && m.activity  !== activityFilter)  return false;
       return true;
