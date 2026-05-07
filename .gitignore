@@ -1,0 +1,3 @@
+# Worker / D1 source — lives in a separate repo and deploys to Cloudflare.
+# Never commit worker code or migrations to this repo.
+worker/
