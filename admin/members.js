@@ -1,12 +1,6 @@
 // ============================================================================
 //  PVAdminMembers — FC Member Directory
 //
-//  - List all members (sorted by name).
-//  - Edit / Add open a modal popup form.
-//  - Notes truncate at 20 chars with a click popover.
-//  - Talked-To checkbox is ONLY visible / clickable when activity is
-//    "LOA" or "Inactive"; for Active members it renders as a muted dash.
-//
 //  Worker routes:
 //    GET    /members
 //    POST   /members
@@ -45,10 +39,6 @@
     return m;
   })();
 
-  // Factions are stored as a comma-separated string in a single column
-  // (e.g. "Medical, Mercenary") so the worker doesn't need to know about
-  // the new multi-select behaviour. parseFactions / formatFactions convert
-  // between the stored string and an array of tags.
   var FACTIONS = [
     'Pirate',
     'Mercenary',
@@ -75,8 +65,6 @@
       seen[f] = true;
       deduped.push(f);
     });
-    // Order by canonical FACTIONS list, then any unrecognised values last
-    // so legacy data still survives a round-trip without being dropped.
     var ordered = FACTIONS.filter(function (f) { return seen[f]; });
     var unknown = deduped.filter(function (f) { return FACTIONS.indexOf(f) === -1; });
     return ordered.concat(unknown).join(', ');
@@ -105,11 +93,6 @@
     return TALKED_TO_ACTIVITIES.indexOf(activity) !== -1;
   }
 
-  // --------- Note cell: "Read notes" pill button opens a modal popup ----------
-  // Rows with a note render a themed button that opens the full note in a
-  // modal; rows without a note render a muted dash. The button uses the
-  // shared .portal-btn styles so it follows the light/dark theme instead
-  // of looking like an unstyled browser button.
   function NoteCell(props) {
     var value = props.value || '';
     var label = props.label || 'Notes';
