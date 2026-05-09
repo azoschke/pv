@@ -344,12 +344,32 @@
     );
   }
 
+  // Returns true if the current user is allowed to edit the given visit.
+  // Admins always can. Medics can only edit visits where attending_medic
+  // (trimmed, case-insensitive) matches their own display_name. A blank
+  // attending_medic locks the visit until an admin fills it in.
+  function canEditVisit(v) {
+    if (PVAdminAPI.hasRole('admin')) return true;
+    if (!PVAdminAPI.hasRole('medical')) return false;
+    var medic = (v && v.attending_medic ? String(v.attending_medic) : '').trim().toLowerCase();
+    if (!medic) return false;
+    var session = PVAdminAPI.getSession();
+    var me = (session && session.display_name ? String(session.display_name) : '').trim().toLowerCase();
+    return !!me && medic === me;
+  }
+
   // --------- Visit read row (compact) ----------
   function VisitRow(props) {
     var v = props.visit;
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
     var allowDelete = props.allowDelete;
+    var allowEdit = canEditVisit(v);
+    var editTooltip = allowEdit
+      ? null
+      : (v.attending_medic
+          ? 'Only the attending medic or an admin can edit this visit.'
+          : 'This visit has no attending medic on record. Ask an admin to update it.');
 
     var preview = v.presenting_complaint || '';
     if (preview.length > 60) preview = preview.slice(0, 60) + '…';
@@ -363,7 +383,10 @@
         h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
-          onClick: function () { onEdit(v); }
+          disabled: !allowEdit,
+          title: editTooltip || undefined,
+          'aria-disabled': allowEdit ? undefined : 'true',
+          onClick: function () { if (allowEdit) onEdit(v); }
         }, 'Edit'),
         allowDelete ? h('span', null, ' ',
           h('button', {
