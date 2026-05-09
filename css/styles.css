@@ -1392,6 +1392,222 @@ pre {
 }
 
 
+/* ── Landing rows (alternating image / content) ─────────────────────────────── */
+
+.landing-tagline {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 36rem;
+  margin: 0.25rem auto 0;
+  line-height: 1.6;
+}
+
+.app-header + .landing-row {
+  margin-top: 3.5rem;
+}
+
+.landing-row {
+  display: grid;
+  grid-template-columns: 5fr 6fr;
+  gap: 3rem;
+  align-items: center;
+  margin-bottom: 4rem;
+}
+
+.landing-row:nth-of-type(even) {
+  grid-template-columns: 6fr 5fr;
+}
+
+.landing-row:nth-of-type(even) .landing-row-image {
+  order: 2;
+}
+
+.landing-row-content {
+  min-width: 0;
+}
+
+.landing-row-eyebrow {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.1rem;
+  color: var(--accent-red);
+  margin: 0 0 0.4rem;
+  letter-spacing: 0.01em;
+}
+
+.landing-row-title {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin: 0 0 0.85rem;
+}
+
+.landing-row-desc {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 38rem;
+}
+
+/* ── Image slot ──────────────────────────────────────────────────────────── */
+
+.img-slot {
+  position: relative;
+  min-height: 280px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--bg-darker);
+  background-image: url('/pv/assets/pdf-texture-web.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: rgba(245, 240, 230, 0.92);
+}
+
+.img-slot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-row--campaigns .img-slot::before {
+  background: linear-gradient(135deg, rgba(165, 77, 68, 0.18) 0%, rgba(120, 60, 60, 0.42) 100%);
+}
+
+.landing-row--venues .img-slot::before {
+  background: linear-gradient(135deg, rgba(139, 111, 71, 0.10) 0%, rgba(107, 68, 35, 0.32) 100%);
+}
+
+.landing-row--medical .img-slot::before {
+  background: linear-gradient(135deg, rgba(120, 140, 90, 0.18) 0%, rgba(70, 95, 55, 0.40) 100%);
+}
+
+.landing-row--tools .img-slot::before {
+  background: linear-gradient(135deg, rgba(110, 100, 90, 0.18) 0%, rgba(60, 55, 50, 0.42) 100%);
+}
+
+.img-slot-icon {
+  position: relative;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  opacity: 0.85;
+}
+
+.img-slot-label {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 1rem;
+  z-index: 1;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 230, 0.78);
+}
+
+/* ── Tool list ───────────────────────────────────────────────────────────── */
+
+.tool-list {
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+
+.tool-list li {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tool-list li:first-child {
+  border-top: 1px solid var(--border-color);
+}
+
+.tool-list a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  padding-left: 0;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-family: 'Stoke', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.01em;
+  transition: padding-left 0.25s ease, color 0.25s ease;
+}
+
+.tool-list-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tool-list-arrow {
+  color: var(--accent-brown);
+  font-size: 1.05rem;
+  transition: color 0.25s ease;
+}
+
+.tool-list a:hover {
+  padding-left: 0.4rem;
+  color: var(--accent-red);
+}
+
+.tool-list a:hover .tool-list-arrow {
+  color: var(--accent-red);
+}
+
+.tool-list a:focus-visible {
+  outline-offset: 4px;
+}
+
+/* ── Staff pill ──────────────────────────────────────────────────────────── */
+
+.tool-pill {
+  display: inline-block;
+  padding: 0.05rem 0.55rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ── Responsive: stack rows on narrow viewports ──────────────────────────── */
+
+@media (max-width: 720px) {
+  .landing-row,
+  .landing-row:nth-of-type(even) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+  .landing-row:nth-of-type(even) .landing-row-image {
+    order: 0;
+  }
+  .img-slot {
+    min-height: 200px;
+  }
+  .landing-row-title {
+    font-size: 1.6rem;
+  }
+}
+
+
 /* =============================================================================
    12. RESPONSIVE
    ============================================================================= */
