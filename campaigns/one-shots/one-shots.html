@@ -27,8 +27,8 @@
       <!-- Chapter sidebar -->
       <aside class="campaign-sidebar" id="campaign-sidebar" aria-label="Chapter navigation">
         <div class="campaign-sidebar-header">
-          <span class="campaign-sidebar-title">Chapters</span>
-          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close chapter list">&#10005;</button>
+          <span class="campaign-sidebar-title">Stories</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close story list">&#10005;</button>
         </div>
         <ul class="chapter-list" id="chapter-list" role="list">
           <!-- populated by JS from chapters.json -->
@@ -38,8 +38,8 @@
       <!-- Main content area -->
       <main class="campaign-main" id="campaign-main">
         <div class="campaign-toolbar">
-          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle chapter list">
-            &#9776; Chapters
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle story list">
+            &#9776; Stories
           </button>
         </div>
 
@@ -190,8 +190,8 @@
           renderChapter(id, data);
         })
         .catch(function (err) {
-          chapterContent.innerHTML = '<div class="chapter-error">Could not load this chapter. Please try again later.</div>';
-          console.error('[one-shots] chapter load error:', err);
+          chapterContent.innerHTML = '<div class="chapter-error">Could not load this story. Please try again later.</div>';
+          console.error('[one-shots] story load error:', err);
         });
     }
 
@@ -203,7 +203,7 @@
       chapterContent.innerHTML =
         '<div class="chapter-view-header">' +
           '<div class="chapter-view-meta">' +
-            '<p class="chapter-view-label">Chapter</p>' +
+            '<p class="chapter-view-label">Story</p>' +
             '<h2 class="chapter-view-title">' + escapeHtml(ch.title) + '</h2>' +
             '<p class="chapter-view-date">'  + escapeHtml(ch.date)  + '</p>' +
           '</div>' +
@@ -276,7 +276,7 @@
           if (target) loadChapter(target.id);
         })
         .catch(function (err) {
-          chapterContent.innerHTML = '<div class="chapter-error">Could not load chapter list.</div>';
+          chapterContent.innerHTML = '<div class="chapter-error">Could not load story list.</div>';
           console.error('[one-shots] chapters.json error:', err);
         });
     }
