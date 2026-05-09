@@ -1412,8 +1412,12 @@ pre {
   display: grid;
   grid-template-columns: 5fr 6fr;
   gap: 3rem;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 4rem;
+}
+
+.landing-row-image {
+  display: flex;
 }
 
 .landing-row:nth-of-type(even) {
@@ -1457,6 +1461,8 @@ pre {
 
 .img-slot {
   position: relative;
+  flex: 1;
+  width: 100%;
   min-height: 280px;
   border-radius: 4px;
   overflow: hidden;
@@ -1479,21 +1485,10 @@ pre {
   pointer-events: none;
 }
 
-.landing-row--campaigns .img-slot::before {
-  background: linear-gradient(135deg, rgba(165, 77, 68, 0.18) 0%, rgba(120, 60, 60, 0.42) 100%);
-}
-
-.landing-row--venues .img-slot::before {
-  background: linear-gradient(135deg, rgba(139, 111, 71, 0.10) 0%, rgba(107, 68, 35, 0.32) 100%);
-}
-
-.landing-row--medical .img-slot::before {
-  background: linear-gradient(135deg, rgba(120, 140, 90, 0.18) 0%, rgba(70, 95, 55, 0.40) 100%);
-}
-
-.landing-row--tools .img-slot::before {
-  background: linear-gradient(135deg, rgba(110, 100, 90, 0.18) 0%, rgba(60, 55, 50, 0.42) 100%);
-}
+.img-slot.tone-camp::before { background: linear-gradient(140deg, rgba(44,24,16,.55),  rgba(165,77,68,.35)); }   /* ink → red */
+.img-slot.tone-ven::before  { background: linear-gradient(140deg, rgba(107,68,35,.45), rgba(139,111,71,.45)); }  /* gold-brown */
+.img-slot.tone-med::before  { background: linear-gradient(140deg, rgba(90,138,60,.30), rgba(107,68,35,.55)); }   /* check-green → brown */
+.img-slot.tone-tool::before { background: linear-gradient(140deg, rgba(62,56,50,.55), rgba(139,111,71,.40)); }   /* ink → tan */
 
 .img-slot-icon {
   position: relative;
