@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FFXIV Cosmic Exploration Database (v2)</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Shared Styles -->
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+
+  <!-- React and ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+    <div id="app"></div>
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="/pv/crafting-database/cosmic-exploration-v2.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const root = ReactDOM.createRoot(document.getElementById('app'));
+      if (typeof CosmicExplorationDatabaseV2 !== 'undefined') {
+        root.render(React.createElement(CosmicExplorationDatabaseV2));
+      } else {
+        root.render(React.createElement('div', { style: { color: 'red' } }, 'Error: CosmicExplorationDatabaseV2 component not found'));
+      }
+    });
+  </script>
+
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
