@@ -459,8 +459,9 @@
     const [copiedChunkId, setCopiedChunkId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState(null);
+    const [focusItemId, setFocusItemId] = useState(null);
 
-    const startEdit = () => {
+    const startEdit = (opts) => {
       const base = userRecord || blankQuestRecord(quest);
       setDraft({
         foodRequired: !!base.foodRequired,
@@ -468,6 +469,7 @@
         notes: base.notes || '',
         items: { ...(base.items || {}) }
       });
+      setFocusItemId(opts && opts.focusItemId ? opts.focusItemId : null);
       setIsEditing(true);
       if (!isExpanded) onToggle();
     };
@@ -555,17 +557,27 @@
         const userItem = rec.items[item.id];
         const macroText = (userItem && userItem.macro) || '';
         const markerValue = quest.id + '-' + item.id;
+        if (macroText) {
+          return h('button', {
+            key: item.id,
+            onClick: (e) => { e.stopPropagation(); copyText(macroText, setCopiedItemId, markerValue); },
+            className: 'cdb-copy-btn',
+            title: 'Copy macro'
+          },
+            h('span', { className: 'material-icons cdb-icon-xs' },
+              copiedItemId === markerValue ? 'check' : 'content_copy'
+            ),
+            item.name || 'Item'
+          );
+        }
         return h('button', {
           key: item.id,
-          onClick: (e) => { e.stopPropagation(); copyText(macroText, setCopiedItemId, markerValue); },
+          onClick: (e) => { e.stopPropagation(); startEdit({ focusItemId: item.id }); },
           className: 'cdb-copy-btn',
-          title: macroText ? 'Copy macro' : 'No macro saved for this item',
-          disabled: !macroText,
-          style: !macroText ? { opacity: 0.55, cursor: 'default' } : null
+          title: 'Add macro for ' + (item.name || 'this item'),
+          style: { color: 'var(--accent-brown)', borderColor: 'var(--accent-brown)' }
         },
-          h('span', { className: 'material-icons cdb-icon-xs' },
-            copiedItemId === markerValue ? 'check' : 'content_copy'
-          ),
+          h('span', { className: 'material-icons cdb-icon-xs' }, 'add'),
           item.name || 'Item'
         );
       })
@@ -610,6 +622,7 @@
         h('label', { className: 'cdb-label' }, 'Macros'),
         ...quest.items.map((item) => {
           const cur = draft.items[item.id] || { itemName: item.name, macro: '' };
+          const autoFocus = focusItemId === item.id;
           return h('div', { key: item.id, style: { marginBottom: '0.75rem' } },
             h('label', { className: 'cdb-label-xs' }, 'Macro for ' + (item.name || 'Item')),
             h('textarea', {
@@ -620,6 +633,15 @@
                 ...d,
                 items: { ...d.items, [item.id]: { itemName: item.name, macro: e.target.value } }
               })),
+              ref: autoFocus ? (el) => {
+                if (el) {
+                  el.focus();
+                  if (typeof el.scrollIntoView === 'function') {
+                    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  }
+                  setFocusItemId(null);
+                }
+              } : null,
               placeholder: '/ac "Muscle Memory" <wait.3>'
             })
           );
@@ -668,6 +690,26 @@
           h('h4', { className: 'cdb-subheading' }, 'Data Reward (' + quest.job + ')'),
           h(DataRewardChips, { dataReward: quest.dataReward || {}, levels: dataRewardLevels })
             || h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(none)')
+        ),
+        !isEditing && !questHasMacro(rec) && h('div', {
+          style: {
+            margin: '0.75rem 0', padding: '0.85rem 1rem',
+            background: 'var(--bg-darker)', borderRadius: '0.375rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: '0.75rem', flexWrap: 'wrap'
+          }
+        },
+          h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+            'No macros saved for this quest yet.'
+          ),
+          h('button', {
+            onClick: (e) => { e.stopPropagation(); startEdit(); },
+            className: 'cdb-btn cdb-btn-primary',
+            style: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
+          },
+            h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
+            'Add macros'
+          )
         ),
         !isEditing && questHasMacro(rec) && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'My Macros'),
