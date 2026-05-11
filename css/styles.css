@@ -1199,6 +1199,8 @@ pre {
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--text-primary);
+  margin-top: .5rem;
+  margin-bottom: .5rem;
 }
 
 .search-section {

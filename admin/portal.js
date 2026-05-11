@@ -22,6 +22,7 @@
     { id: 'mercenary',     label: 'Mercenary',         icon: 'security' },
     { id: 'pirate',        label: 'Pirate Ops',        icon: 'sailing' },
     { id: 'venues',        label: 'Venues',            icon: 'storefront' },
+    { id: 'cosmic',        label: 'Cosmic Exploration', icon: 'rocket_launch' },
     { id: 'announcements', label: 'Announcements',     icon: 'campaign' },
     { id: 'admin',         label: 'Admin Settings',    icon: 'settings' }
   ];
@@ -32,6 +33,7 @@
     mercenary:     ['mercenary', 'admin'],
     pirate:        ['pirate', 'admin'],
     venues:        ['officer', 'admin'],
+    cosmic:        ['officer', 'admin'],
     announcements: ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:         ['admin']
   };
@@ -165,6 +167,8 @@
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
       case 'venues':
         return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
+      case 'cosmic':
+        return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
         return h(window.PVAdminAnnouncements || Missing('announcements.js'), { session: session });
       case 'mercenary':
