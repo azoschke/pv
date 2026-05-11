@@ -943,7 +943,13 @@
     return h('div', { className: 'cdb-root container' },
       h('header', { className: 'app-header' },
         h('h1', { className: 'app-title craft-name' }, 'FFXIV Cosmic Exploration Database'),
-        h('p', { className: 'app-subtitle' }, 'Shared mission catalog · your macros saved locally')
+        h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
+      ),
+
+      h('div', { className: 'info-card' },
+        h('p', null,
+          'Recipe stats are provided as they are at level 100. At lower levels, they will scale down.'
+        )
       ),
 
       h('div', { className: 'top-controls top-controls-right' },
