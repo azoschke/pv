@@ -424,29 +424,6 @@
   };
 
   // --------------------------------------------------------------------------
-  // FilterChips — toggleable pill row
-  // --------------------------------------------------------------------------
-
-  const FilterChips = ({ label, options, active, onChange }) => {
-    return h('div', { className: 'cdb-filter-chip-row' },
-      h('span', { className: 'cdb-filter-chip-label' }, label),
-      h('button', {
-        type: 'button',
-        onClick: () => onChange('all'),
-        className: 'cdb-filter-chip' + (active === 'all' ? ' cdb-filter-chip--active' : '')
-      }, 'All'),
-      ...options.map(opt =>
-        h('button', {
-          key: opt,
-          type: 'button',
-          onClick: () => onChange(opt),
-          className: 'cdb-filter-chip' + (active === opt ? ' cdb-filter-chip--active' : '')
-        }, opt)
-      )
-    );
-  };
-
-  // --------------------------------------------------------------------------
   // QuestCard — read-only quest header + per-user editable body
   // --------------------------------------------------------------------------
 
@@ -1052,6 +1029,30 @@
             h('option', { value: 'difficulty' }, 'Sort by Difficulty'),
             h('option', { value: 'quality' }, 'Sort by Quality')
           ),
+          h('select', {
+            value: filterCategory,
+            onChange: (e) => setFilterCategory(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'all' }, 'All Classes'),
+            ...categoryOptions.map(cat => h('option', { key: cat, value: cat }, cat))
+          ),
+          h('select', {
+            value: filterLocation,
+            onChange: (e) => setFilterLocation(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'all' }, 'All Locations'),
+            ...locationOptions.map(loc => h('option', { key: loc, value: loc }, loc))
+          ),
+          h('select', {
+            value: filterJob,
+            onChange: (e) => setFilterJob(e.target.value),
+            className: 'cdb-select'
+          },
+            h('option', { value: 'all' }, 'All Jobs'),
+            ...jobOptions.map(job => h('option', { key: job, value: job }, job))
+          ),
           h('label', {
             className: 'cdb-inline-row',
             style: { gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-secondary)' }
@@ -1064,17 +1065,7 @@
             }),
             'Only quests with my macros'
           )
-        ),
-
-        categoryOptions.length > 0 && h(FilterChips, {
-          label: 'Class', options: categoryOptions, active: filterCategory, onChange: setFilterCategory
-        }),
-        locationOptions.length > 0 && h(FilterChips, {
-          label: 'Location', options: locationOptions, active: filterLocation, onChange: setFilterLocation
-        }),
-        jobOptions.length > 0 && h(FilterChips, {
-          label: 'Job', options: jobOptions, active: filterJob, onChange: setFilterJob
-        })
+        )
       ),
 
       h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
