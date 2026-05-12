@@ -428,7 +428,7 @@
           uploadButton('primary')
         ),
         h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. Leave blank for a themed gradient.'
+          'Paste a URL, or upload an image. Leave blank for a themed gradient. Venue must be named prior to uploading an image.'
         ),
         uploadErr.primary ? h('p', {
           className: 'portal-field-help',
