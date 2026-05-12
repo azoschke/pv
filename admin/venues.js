@@ -22,6 +22,44 @@
 
   var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
   var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+  var UPLOAD_TARGET_WIDTH = 1400;
+  var UPLOAD_WEBP_QUALITY = 0.8;
+
+  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
+  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
+  async function resizeImageToWebp(file) {
+    var bitmap = null;
+    if (typeof createImageBitmap === 'function') {
+      try { bitmap = await createImageBitmap(file); }
+      catch (_e) { bitmap = null; }
+    }
+    if (!bitmap) {
+      bitmap = await new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
+        img.src = url;
+      });
+    }
+    var srcW = bitmap.width || bitmap.naturalWidth;
+    var srcH = bitmap.height || bitmap.naturalHeight;
+    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
+    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
+    var h = Math.max(1, Math.round((w / srcW) * srcH));
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get a 2D canvas context.');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
+    return await new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) {
+        if (!b) reject(new Error('Could not encode image as WebP (browser may not support it).'));
+        else resolve(b);
+      }, 'image/webp', UPLOAD_WEBP_QUALITY);
+    });
+  }
 
   async function uploadVenueImage(file, venueName) {
     var session = PVAdminAPI.getSession();
@@ -29,8 +67,9 @@
       PVAdminAPI.redirectToLogin();
       throw new Error('Session expired. Please sign in again.');
     }
+    var blob = await resizeImageToWebp(file);
     var form = new FormData();
-    form.append('file', file);
+    form.append('file', blob, 'upload.webp');
     form.append('venue_name', venueName);
     var res = await fetch(PVAdminAPI.API_BASE + '/venues/images', {
       method: 'POST',
