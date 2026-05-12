@@ -7,8 +7,6 @@
 //    PATCH  /venues/:id      officer | admin
 //    DELETE /venues/:id      officer | admin
 //
-//  Image hosting: an external URL field. May be a relative path like
-//  /pv/assets/venues/foo.jpg if the file lives in this repo.
 // ============================================================================
 
 (function () {
@@ -16,6 +14,83 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
+
+  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
+  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+  var UPLOAD_TARGET_WIDTH = 1400;
+  var UPLOAD_WEBP_QUALITY = 0.8;
+
+  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
+  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
+  async function resizeImageToWebp(file) {
+    var bitmap = null;
+    if (typeof createImageBitmap === 'function') {
+      try { bitmap = await createImageBitmap(file); }
+      catch (_e) { bitmap = null; }
+    }
+    if (!bitmap) {
+      bitmap = await new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
+        img.src = url;
+      });
+    }
+    var srcW = bitmap.width || bitmap.naturalWidth;
+    var srcH = bitmap.height || bitmap.naturalHeight;
+    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
+    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
+    var h = Math.max(1, Math.round((w / srcW) * srcH));
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get a 2D canvas context.');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
+    return await new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) {
+        if (!b) reject(new Error('Could not encode image as WebP (browser may not support it).'));
+        else resolve(b);
+      }, 'image/webp', UPLOAD_WEBP_QUALITY);
+    });
+  }
+
+  async function uploadVenueImage(file, venueName) {
+    var session = PVAdminAPI.getSession();
+    if (!session) {
+      PVAdminAPI.redirectToLogin();
+      throw new Error('Session expired. Please sign in again.');
+    }
+    var blob = await resizeImageToWebp(file);
+    var form = new FormData();
+    form.append('file', blob, 'upload.webp');
+    form.append('venue_name', venueName);
+    var res = await fetch(PVAdminAPI.API_BASE + '/venues/images', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.token,
+        'Accept': 'application/json'
+      },
+      body: form
+    });
+    if (res.status === 401) {
+      PVAdminAPI.clearSession();
+      PVAdminAPI.redirectToLogin();
+      throw new Error('Your session is no longer valid. Please sign in again.');
+    }
+    var text = await res.text();
+    var data = null;
+    if (text) {
+      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
+    }
+    if (!res.ok) {
+      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
+      throw new Error(msg);
+    }
+    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
+    return data.url;
+  }
 
   var SIZES = [
     { value: 'room',      label: 'Room' },
@@ -128,9 +203,75 @@
     var err = errState[0], setErr = errState[1];
     var newTagState = useState('');
     var newTag = newTagState[0], setNewTag = newTagState[1];
+    var uploadingState = useState({});
+    var uploading = uploadingState[0], setUploading = uploadingState[1];
+    var uploadErrState = useState({});
+    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var allowsRoom = draft.size === 'room' || draft.size === 'apartment';
     var isApartment = draft.size === 'apartment';
+    var nameReady = !!draft.name.trim();
+
+    function setSlotFlag(setter, slot, value) {
+      setter(function (s) {
+        var next = Object.assign({}, s);
+        if (value === undefined) delete next[slot]; else next[slot] = value;
+        return next;
+      });
+    }
+
+    async function handleImageUpload(slot, file) {
+      if (!file) return;
+      if (!nameReady) {
+        setSlotFlag(setUploadErr, slot, 'Enter the venue name before uploading.');
+        return;
+      }
+      if (file.size > UPLOAD_MAX_BYTES) {
+        setSlotFlag(setUploadErr, slot, 'File is larger than 10 MB. Pick a smaller image.');
+        return;
+      }
+      setSlotFlag(setUploadErr, slot, undefined);
+      setSlotFlag(setUploading, slot, true);
+      try {
+        var url = await uploadVenueImage(file, draft.name.trim());
+        if (slot === 'primary') setField('image_url', url);
+        else setGalleryImage(Number(slot.slice(1)), url);
+      } catch (e) {
+        setSlotFlag(setUploadErr, slot, e.message || 'Upload failed.');
+      } finally {
+        setSlotFlag(setUploading, slot, undefined);
+      }
+    }
+
+    function uploadButton(slot) {
+      var isUp = !!uploading[slot];
+      var disabled = !nameReady || isUp || saving;
+      var title = !nameReady
+        ? 'Enter the venue name above before uploading an image.'
+        : (isUp ? 'Uploading…' : 'Upload an image.');
+      return h('label', {
+        className: 'portal-btn is-ghost is-small',
+        title: title,
+        style: {
+          whiteSpace: 'nowrap',
+          opacity: disabled ? 0.55 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer'
+        }
+      },
+        isUp ? 'Uploading…' : 'Upload',
+        h('input', {
+          type: 'file',
+          accept: UPLOAD_ACCEPT,
+          disabled: disabled,
+          style: { display: 'none' },
+          onChange: function (e) {
+            var f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            handleImageUpload(slot, f);
+          }
+        })
+      );
+    }
 
     function setField(k, v) {
       setDraft(function (d) {
@@ -276,15 +417,23 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Image URL'),
-        h('input', {
-          type: 'text',
-          value: draft.image_url,
-          onChange: function (e) { setField('image_url', e.target.value); },
-          placeholder: 'https://… or /pv/assets/venues/your-file.jpg'
-        }),
-        h('p', { className: 'portal-field-help' },
-          'Paste a full URL or a path under /pv/assets/venues/. Leave blank for a themed gradient.'
+        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+          h('input', {
+            type: 'text',
+            value: draft.image_url,
+            onChange: function (e) { setField('image_url', e.target.value); },
+            placeholder: 'https://…',
+            style: { flex: 1 }
+          }),
+          uploadButton('primary')
         ),
+        h('p', { className: 'portal-field-help' },
+          'Paste a URL, or upload an image. Leave blank for a themed gradient. Venue must be named prior to uploading an image.'
+        ),
+        uploadErr.primary ? h('p', {
+          className: 'portal-field-help',
+          style: { color: 'var(--danger-color, #c0392b)' }
+        }, uploadErr.primary) : null,
         draft.image_url ? h('img', {
           src: draft.image_url, alt: '',
           style: {
@@ -298,31 +447,41 @@
       ),
 
       h('div', { className: 'portal-field' },
-        h('label', null, 'Gallery images (up to 3)'),
+        h('label', null, 'Gallery images'),
         h('p', { className: 'portal-field-help', style: { marginTop: 0 } },
-          'Additional images shown in the modal slider. Same format as the primary image.'
+          'Add up to three additional images in the gallery.'
         ),
         [0, 1, 2].map(function (idx) {
           var val = (draft.gallery_images && draft.gallery_images[idx]) || '';
+          var slot = 'g' + idx;
           return h('div', {
             key: idx,
-            style: { display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
+            style: { marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
           },
-            h('input', {
-              type: 'text',
-              value: val,
-              onChange: function (e) { setGalleryImage(idx, e.target.value); },
-              placeholder: 'https://… or /pv/assets/venues/your-file.jpg',
-              style: { flex: 1 }
-            }),
-            val ? h('img', {
-              src: val, alt: '',
-              style: {
-                width: '64px', height: '40px', objectFit: 'cover',
-                border: '1px solid var(--border-color)', borderRadius: '0.25rem'
-              },
-              onError: function (e) { e.target.style.display = 'none'; }
-            }) : null
+            h('div', {
+              style: { display: 'flex', gap: '0.5rem', alignItems: 'center' }
+            },
+              h('input', {
+                type: 'text',
+                value: val,
+                onChange: function (e) { setGalleryImage(idx, e.target.value); },
+                placeholder: 'https://…',
+                style: { flex: 1 }
+              }),
+              uploadButton(slot),
+              val ? h('img', {
+                src: val, alt: '',
+                style: {
+                  width: '64px', height: '40px', objectFit: 'cover',
+                  border: '1px solid var(--border-color)', borderRadius: '0.25rem'
+                },
+                onError: function (e) { e.target.style.display = 'none'; }
+              }) : null
+            ),
+            uploadErr[slot] ? h('p', {
+              className: 'portal-field-help',
+              style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
+            }, uploadErr[slot]) : null
           );
         })
       ),
