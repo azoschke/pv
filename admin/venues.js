@@ -428,7 +428,7 @@
           uploadButton('primary')
         ),
         h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. Leave blank for a themed gradient. Venue must be named prior to uploading an image.'
+          'Paste a URL, or upload an image. Venue must be named prior to uploading an image.<br>The cover image is part of the gallery, please do not upload the same image twice!'
         ),
         uploadErr.primary ? h('p', {
           className: 'portal-field-help',
