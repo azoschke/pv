@@ -253,7 +253,7 @@
       var disabled = !nameReady || isUp || saving;
       var title = !nameReady
         ? 'Enter the venue name above before uploading an image.'
-        : (isUp ? 'Uploading…' : 'Upload an image. It will be resized to 1400px wide WebP and stored in R2.');
+        : (isUp ? 'Uploading…' : 'Upload an image.');
       return h('label', {
         className: 'portal-btn is-ghost is-small',
         title: title,
@@ -433,7 +433,7 @@
           uploadButton('primary')
         ),
         h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image (resized to 1400px wide WebP and stored in R2). Leave blank for a themed gradient.'
+          'Paste a URL, or upload an image. Leave blank for a themed gradient.'
         ),
         uploadErr.primary ? h('p', {
           className: 'portal-field-help',
