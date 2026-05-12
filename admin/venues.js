@@ -7,11 +7,6 @@
 //    PATCH  /venues/:id      officer | admin
 //    DELETE /venues/:id      officer | admin
 //
-//  Image hosting: an external URL field. May be a relative path like
-//  /pv/assets/venues/foo.jpg if the file lives in this repo. Officers and
-//  admins may also upload directly via POST /venues/images, which stores the
-//  image in Cloudflare R2 (resized to 1400px wide WebP) and returns a public
-//  URL that the form drops into the matching text input.
 // ============================================================================
 
 (function () {
@@ -427,7 +422,7 @@
             type: 'text',
             value: draft.image_url,
             onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://… or /pv/assets/venues/your-file.jpg',
+            placeholder: 'https://…',
             style: { flex: 1 }
           }),
           uploadButton('primary')
@@ -452,9 +447,9 @@
       ),
 
       h('div', { className: 'portal-field' },
-        h('label', null, 'Gallery images (up to 3)'),
+        h('label', null, 'Gallery images'),
         h('p', { className: 'portal-field-help', style: { marginTop: 0 } },
-          'Additional images shown in the modal slider. Same format as the primary image.'
+          'Add up to three additional images in the gallery.'
         ),
         [0, 1, 2].map(function (idx) {
           var val = (draft.gallery_images && draft.gallery_images[idx]) || '';
@@ -470,7 +465,7 @@
                 type: 'text',
                 value: val,
                 onChange: function (e) { setGalleryImage(idx, e.target.value); },
-                placeholder: 'https://… or /pv/assets/venues/your-file.jpg',
+                placeholder: 'https://…',
                 style: { flex: 1 }
               }),
               uploadButton(slot),
