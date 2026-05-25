@@ -15,20 +15,21 @@
   var FILTER_KEY  = "pv-jobs-filters";
   var SORT_KEY    = "pv-jobs-sort";
 
-  var CATEGORY_ORDER = ["medical", "pirate", "mercenary", "contractor"];
+  var CATEGORY_ORDER = ["mercenary", "medical", "pirate", "house_staff", "contractor"];
   var CATEGORY_LABEL = {
-    medical: "Medical", pirate: "Pirate",
-    mercenary: "Mercenary", contractor: "Contractor"
+    mercenary: "Mercenary", medical: "Medical", pirate: "Pirate",
+    house_staff: "House Staff", contractor: "Contractor"
   };
 
   var STATUS_LABEL = { open: "Open", closed: "Closed", filled: "Filled" };
 
   // Per-category palette for the colored card backdrop (used when no image_url).
   var CATEGORY_PALETTE = {
-    medical:    { from: "#1f3a2e", to: "#10201a" },
-    pirate:     { from: "#1f3340", to: "#101c25" },
-    mercenary:  { from: "#3a2225", to: "#1f1214" },
-    contractor: { from: "#3a2c1e", to: "#1f1810" }
+    medical:     { from: "#1f3a2e", to: "#10201a" },
+    pirate:      { from: "#1f3340", to: "#101c25" },
+    mercenary:   { from: "#3a2225", to: "#1f1214" },
+    house_staff: { from: "#2e1f3a", to: "#170f20" },
+    contractor:  { from: "#3a2c1e", to: "#1f1810" }
   };
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
