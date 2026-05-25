@@ -1494,6 +1494,7 @@ pre {
 .img-slot.tone-ven::before  { background: linear-gradient(140deg, rgba(107,68,35,.45), rgba(139,111,71,.45)); }  /* gold-brown */
 .img-slot.tone-med::before  { background: linear-gradient(140deg, rgba(90,138,60,.30), rgba(107,68,35,.55)); }   /* check-green → brown */
 .img-slot.tone-tool::before { background: linear-gradient(140deg, rgba(62,56,50,.55), rgba(139,111,71,.40)); }   /* ink → tan */
+.img-slot.tone-job::before  { background: linear-gradient(140deg, rgba(44,24,16,.55),  rgba(139,111,71,.45)); }  /* ink → gold */
 
 .img-slot-icon {
   position: relative;
@@ -3282,5 +3283,245 @@ body.nav-sidebar-open {
   .venues-toolbar .venues-filter-select { width: 100%; }
   .venue-modal-overlay { padding: 1rem; }
   .venue-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
+}
+
+
+/* =============================================================================
+   15. JOB BOARD — directory page (public)
+   Reuses the generic campaign-* layout and venues-filter-* / venues-grid
+   primitives; only the cards, badges, and modal are job-specific.
+   ============================================================================= */
+
+/* ── Job card ────────────────────────────────────────────────────────────── */
+.job-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  color: inherit;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-brown);
+}
+
+.job-card.is-inactive {
+  opacity: 0.62;
+}
+
+.job-card.is-inactive:hover {
+  opacity: 0.85;
+}
+
+.job-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+  overflow: hidden;
+}
+
+.job-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.job-card-sig {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.75rem;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+.job-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.25rem;
+  line-height: 1;
+}
+
+/* Category badge (top-left), tinted per division. */
+.job-badge-category {
+  top: 0.6rem;
+  left: 0.6rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.job-badge-category.job-cat-medical    { background: #2f6b4f; }
+.job-badge-category.job-cat-pirate     { background: #2c5a73; }
+.job-badge-category.job-cat-mercenary  { background: #8b3a3f; }
+.job-badge-category.job-cat-contractor { background: #8b6f47; }
+
+/* Status badge (top-right). */
+.job-badge-status {
+  top: 0.6rem;
+  right: 0.6rem;
+  color: #f3e9d2;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.job-badge-status.job-status-open   { background: var(--accent-red); color: #fff; }
+.job-badge-status.job-status-closed { background: rgba(0, 0, 0, 0.62); }
+.job-badge-status.job-status-filled { background: rgba(0, 0, 0, 0.62); }
+
+.job-card-body {
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.job-card-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.job-card-meta {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.job-card-desc {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+/* ── Job modal ───────────────────────────────────────────────────────────── */
+.job-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.7);
+  z-index: 200;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+  overflow-y: auto;
+}
+
+.job-modal-overlay.is-open { display: flex; }
+
+.job-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.job-modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.3rem;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.job-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
+
+.job-modal-img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.job-modal-img-fallback {
+  position: relative;
+}
+
+.job-modal-content {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.job-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.job-modal-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.55rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+}
+
+.job-modal-contact {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+}
+
+.job-modal-contact-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 0.5rem;
+}
+
+.job-modal-desc {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.job-modal-desc p { margin: 0 0 0.85rem; }
+.job-modal-desc p:last-child { margin-bottom: 0; }
+
+@media (max-width: 768px) {
+  .job-modal-overlay { padding: 1rem; }
+  .job-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
 }
 
