@@ -1,0 +1,464 @@
+// ============================================================================
+//  Phoenix Vanguard Job Board — public directory
+//
+//  Mirrors the Venues directory pattern: a campaign-style filter sidebar plus
+//  a card grid with click-to-expand modal. Filters by division (category) and
+//  a toggle to reveal closed/filled postings. Open jobs always float to top.
+//
+//  Worker endpoints used:
+//    GET /jobs          -> list
+// ============================================================================
+
+(function () {
+  var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
+  var SIDEBAR_KEY = "pv-jobs-sidebar-hidden";
+  var FILTER_KEY  = "pv-jobs-filters";
+  var SORT_KEY    = "pv-jobs-sort";
+
+  var CATEGORY_ORDER = ["medical", "pirate", "mercenary", "contractor"];
+  var CATEGORY_LABEL = {
+    medical: "Medical", pirate: "Pirate",
+    mercenary: "Mercenary", contractor: "Contractor"
+  };
+
+  var STATUS_LABEL = { open: "Open", closed: "Closed", filled: "Filled" };
+
+  // Per-category palette for the colored card backdrop (used when no image_url).
+  var CATEGORY_PALETTE = {
+    medical:    { from: "#1f3a2e", to: "#10201a" },
+    pirate:     { from: "#1f3340", to: "#101c25" },
+    mercenary:  { from: "#3a2225", to: "#1f1214" },
+    contractor: { from: "#3a2c1e", to: "#1f1810" }
+  };
+
+  // ── DOM refs ─────────────────────────────────────────────────────────────
+  var sidebarEl    = document.getElementById("jobs-sidebar");
+  var toggleBtn    = document.getElementById("sidebar-toggle-btn");
+  var closeBtn     = document.getElementById("sidebar-close-btn");
+  var overlay      = document.getElementById("campaign-overlay");
+  var searchInput  = document.getElementById("jobs-search");
+  var catListEl    = document.getElementById("filter-category-list");
+  var showClosedChk = document.getElementById("filter-show-closed");
+  var resetBtn     = document.getElementById("filter-reset");
+  var sortSelect   = document.getElementById("jobs-sort-select");
+  var gridEl       = document.getElementById("jobs-grid");
+  var countEl      = document.getElementById("jobs-count");
+  var modalOverlay = document.getElementById("job-modal-overlay");
+  var modalBody    = document.getElementById("job-modal-body");
+  var modalClose   = document.getElementById("job-modal-close");
+
+  if (window.marked && marked.use) marked.use({ breaks: true });
+
+  // ── State ────────────────────────────────────────────────────────────────
+  var allJobs = [];
+  var filters = {
+    search: "",
+    categories: {},   // { medical: true, ... }
+    showClosed: false
+  };
+  var sort = "newest";
+  var VALID_SORTS = { newest: 1, oldest: 1, title: 1 };
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function escapeHTML(str) {
+    if (str == null) return "";
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function isMobile() { return window.innerWidth <= 768; }
+
+  function timeOf(j) {
+    var t = Date.parse(j.created_at || "");
+    return isNaN(t) ? 0 : t;
+  }
+
+  function loadFilters() {
+    try {
+      var raw = localStorage.getItem(FILTER_KEY);
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && typeof saved === "object") {
+          filters.search     = String(saved.search || "");
+          filters.categories = saved.categories && typeof saved.categories === "object" ? saved.categories : {};
+          filters.showClosed = !!saved.showClosed;
+        }
+      }
+      var savedSort = localStorage.getItem(SORT_KEY);
+      if (savedSort && VALID_SORTS[savedSort]) sort = savedSort;
+    } catch (_e) { /* ignore */ }
+  }
+
+  function saveFilters() {
+    try {
+      localStorage.setItem(FILTER_KEY, JSON.stringify(filters));
+      localStorage.setItem(SORT_KEY, sort);
+    } catch (_e) { /* ignore */ }
+  }
+
+  // ── Sidebar (campaign pattern) ───────────────────────────────────────────
+  function openSidebar() {
+    if (isMobile()) {
+      sidebarEl.classList.add("sidebar-open");
+      overlay.classList.add("active");
+      overlay.setAttribute("aria-hidden", "false");
+    } else {
+      sidebarEl.classList.remove("sidebar-hidden");
+      try { localStorage.setItem(SIDEBAR_KEY, "0"); } catch (_) {}
+    }
+  }
+  function closeSidebar() {
+    if (isMobile()) {
+      sidebarEl.classList.remove("sidebar-open");
+      overlay.classList.remove("active");
+      overlay.setAttribute("aria-hidden", "true");
+    } else {
+      sidebarEl.classList.add("sidebar-hidden");
+      try { localStorage.setItem(SIDEBAR_KEY, "1"); } catch (_) {}
+    }
+  }
+  function toggleSidebar() {
+    if (isMobile()) { openSidebar(); return; }
+    sidebarEl.classList.contains("sidebar-hidden") ? openSidebar() : closeSidebar();
+  }
+  function restoreSidebarState() {
+    if (isMobile()) return;
+    try { if (localStorage.getItem(SIDEBAR_KEY) === "1") sidebarEl.classList.add("sidebar-hidden"); } catch (_) {}
+  }
+
+  toggleBtn.addEventListener("click", toggleSidebar);
+  closeBtn.addEventListener("click", closeSidebar);
+  overlay.addEventListener("click", closeSidebar);
+  restoreSidebarState();
+
+  // ── Build filter checkboxes (with live counts) ───────────────────────────
+  function renderCheckboxList(listEl, items, kind) {
+    listEl.innerHTML = "";
+    items.forEach(function (it) {
+      var li = document.createElement("li");
+      li.className = "venues-filter-item";
+
+      var label = document.createElement("label");
+      label.className = "venues-filter-check";
+
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = it.value;
+      input.checked = !!filters[kind][it.value];
+      input.addEventListener("change", function () {
+        if (input.checked) filters[kind][it.value] = true;
+        else delete filters[kind][it.value];
+        saveFilters();
+        renderGrid();
+      });
+
+      var text = document.createElement("span");
+      text.className = "venues-filter-check-text";
+      text.textContent = it.label;
+
+      var count = document.createElement("span");
+      count.className = "venues-filter-count";
+      count.dataset.kind = kind;
+      count.dataset.value = it.value;
+      count.textContent = "0";
+
+      label.appendChild(input);
+      label.appendChild(text);
+      label.appendChild(count);
+      li.appendChild(label);
+      listEl.appendChild(li);
+    });
+  }
+
+  function buildFilterUI() {
+    renderCheckboxList(
+      catListEl,
+      CATEGORY_ORDER.map(function (c) { return { value: c, label: CATEGORY_LABEL[c] }; }),
+      "categories"
+    );
+
+    searchInput.value = filters.search;
+    showClosedChk.checked = filters.showClosed;
+    sortSelect.value = sort;
+
+    searchInput.addEventListener("input", function () {
+      filters.search = searchInput.value;
+      saveFilters();
+      renderGrid();
+    });
+    showClosedChk.addEventListener("change", function () {
+      filters.showClosed = showClosedChk.checked;
+      saveFilters();
+      renderGrid();
+    });
+    sortSelect.addEventListener("change", function () {
+      sort = sortSelect.value;
+      saveFilters();
+      renderGrid();
+    });
+
+    resetBtn.addEventListener("click", function () {
+      filters = { search: "", categories: {}, showClosed: false };
+      sort = "newest";
+      saveFilters();
+      searchInput.value = "";
+      showClosedChk.checked = false;
+      sortSelect.value = sort;
+      catListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      renderGrid();
+    });
+  }
+
+  // ── Filtering / sorting ──────────────────────────────────────────────────
+  function matchesFilters(j) {
+    if (!filters.showClosed && j.status !== "open") return false;
+
+    var catKeys = Object.keys(filters.categories);
+    if (catKeys.length && !filters.categories[j.category]) return false;
+
+    var q = (filters.search || "").trim().toLowerCase();
+    if (q) {
+      var hay = [
+        j.title || "",
+        j.description || "",
+        j.contact || "",
+        CATEGORY_LABEL[j.category] || "",
+        STATUS_LABEL[j.status] || ""
+      ].join(" ").toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  }
+
+  function sortJobs(list) {
+    var copy = list.slice();
+    copy.sort(function (a, b) {
+      // Open jobs always pinned to the top, regardless of sort mode.
+      var oa = a.status === "open" ? 0 : 1;
+      var ob = b.status === "open" ? 0 : 1;
+      if (oa !== ob) return oa - ob;
+
+      switch (sort) {
+        case "oldest":
+          return timeOf(a) - timeOf(b)
+            || (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+        case "title":
+          return (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+        case "newest":
+        default:
+          return timeOf(b) - timeOf(a)
+            || (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+      }
+    });
+    return copy;
+  }
+
+  // ── Counts on filter checkboxes ──────────────────────────────────────────
+  function updateCounts() {
+    function countForFacet(kind, value) {
+      return allJobs.reduce(function (acc, j) {
+        var temp = {
+          search: filters.search,
+          categories: kind === "categories" ? {} : filters.categories,
+          showClosed: filters.showClosed
+        };
+        var saved = filters;
+        filters = temp;
+        var ok = matchesFilters(j);
+        filters = saved;
+        if (!ok) return acc;
+        if (kind === "categories") return acc + (j.category === value ? 1 : 0);
+        return acc;
+      }, 0);
+    }
+
+    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+      var kind = el.dataset.kind;
+      var value = el.dataset.value;
+      if (!kind || !value) return;
+      el.textContent = String(countForFacet(kind, value));
+    });
+  }
+
+  // ── Card rendering ───────────────────────────────────────────────────────
+  function truncate(str, n) {
+    if (!str) return "";
+    var s = String(str).trim();
+    if (s.length <= n) return s;
+    return s.slice(0, n - 1) + "…";
+  }
+
+  function buildCardEl(j) {
+    var card = document.createElement("button");
+    card.type = "button";
+    card.className = "job-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
+    card.setAttribute("aria-label", j.title);
+
+    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
+    var media = document.createElement("div");
+    media.className = "job-card-media";
+
+    if (j.image_url) {
+      var img = document.createElement("img");
+      img.src = j.image_url;
+      img.alt = "";
+      img.loading = "lazy";
+      img.className = "job-card-img";
+      img.addEventListener("error", function () {
+        img.remove();
+        media.style.background =
+          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
+      });
+      media.appendChild(img);
+    } else {
+      media.style.background =
+        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
+      var sig = document.createElement("span");
+      sig.className = "job-card-sig";
+      sig.textContent = (j.title || "").toLowerCase();
+      media.appendChild(sig);
+    }
+
+    var catBadge = document.createElement("span");
+    catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
+    catBadge.textContent = (CATEGORY_LABEL[j.category] || "").toUpperCase();
+    media.appendChild(catBadge);
+
+    var statusBadge = document.createElement("span");
+    statusBadge.className = "job-badge job-badge-status job-status-" + j.status;
+    statusBadge.textContent = (STATUS_LABEL[j.status] || "").toUpperCase();
+    media.appendChild(statusBadge);
+
+    card.appendChild(media);
+
+    var body = document.createElement("div");
+    body.className = "job-card-body";
+
+    var title = document.createElement("h3");
+    title.className = "job-card-title";
+    title.textContent = j.title || "Untitled posting";
+    body.appendChild(title);
+
+    if (j.contact) {
+      var meta = document.createElement("p");
+      meta.className = "job-card-meta";
+      meta.textContent = "Contact: " + j.contact;
+      body.appendChild(meta);
+    }
+
+    var desc = document.createElement("p");
+    desc.className = "job-card-desc";
+    desc.textContent = truncate(j.description, 140);
+    body.appendChild(desc);
+
+    card.appendChild(body);
+
+    card.addEventListener("click", function () { openModal(j); });
+    return card;
+  }
+
+  function renderGrid() {
+    updateCounts();
+
+    var filtered = allJobs.filter(matchesFilters);
+    var sorted = sortJobs(filtered);
+
+    countEl.textContent = sorted.length === 1 ? "1 posting" : sorted.length + " postings";
+
+    gridEl.innerHTML = "";
+
+    if (!sorted.length) {
+      var empty = document.createElement("div");
+      empty.className = "venues-empty";
+      empty.innerHTML = '<p>No postings match these filters.</p>' +
+        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or showing closed postings.</p>';
+      gridEl.appendChild(empty);
+      return;
+    }
+
+    sorted.forEach(function (j) { gridEl.appendChild(buildCardEl(j)); });
+  }
+
+  // ── Modal ────────────────────────────────────────────────────────────────
+  function buildImageHtml(j) {
+    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
+    if (j.image_url) {
+      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">';
+    }
+    return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
+      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
+      '<span class="job-card-sig">' + escapeHTML((j.title || "").toLowerCase()) + '</span>' +
+      '</div>';
+  }
+
+  function openModal(j) {
+    var imgHtml = buildImageHtml(j);
+
+    var descHtml = j.description
+      ? (window.marked && marked.parse ? marked.parse(escapeHTML(j.description)) : "<p>" + escapeHTML(j.description) + "</p>")
+      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+
+    var badges =
+      '<span class="job-badge job-badge-category job-cat-' + j.category + '" style="position:static;">' +
+        escapeHTML((CATEGORY_LABEL[j.category] || "").toUpperCase()) + '</span>' +
+      '<span class="job-badge job-badge-status job-status-' + j.status + '" style="position:static;">' +
+        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
+
+    var contactHtml = j.contact
+      ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
+        escapeHTML(j.contact) + '</p>'
+      : "";
+
+    modalBody.innerHTML =
+      imgHtml +
+      '<div class="job-modal-content">' +
+        '<div class="job-modal-badges">' + badges + '</div>' +
+        '<h2 class="job-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
+        contactHtml +
+        '<div class="job-modal-desc">' + descHtml + '</div>' +
+      '</div>';
+
+    modalOverlay.classList.add("is-open");
+    modalOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove("is-open");
+    modalOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    modalBody.innerHTML = "";
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("mousedown", function (e) {
+    if (e.target === modalOverlay) closeModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modalOverlay.classList.contains("is-open")) closeModal();
+  });
+
+  // ── Boot ─────────────────────────────────────────────────────────────────
+  async function loadJobs() {
+    gridEl.innerHTML = '<div class="venues-empty"><p>Loading postings&hellip;</p></div>';
+    try {
+      var res = await fetch(API_BASE + "/jobs", {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      });
+      if (!res.ok) throw new Error("Request failed (" + res.status + ")");
+      var data = await res.json();
+      allJobs = Array.isArray(data) ? data : [];
+      renderGrid();
+    } catch (err) {
+      console.error("Error loading jobs:", err);
+      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+        '<p>Could not reach the job board. Please try again shortly.</p></div>';
+      countEl.textContent = "";
+    }
+  }
+
+  loadFilters();
+  buildFilterUI();
+  loadJobs();
+})();
