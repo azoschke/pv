@@ -3368,10 +3368,11 @@ body.nav-sidebar-open {
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.job-badge-category.job-cat-medical    { background: #2f6b4f; }
-.job-badge-category.job-cat-pirate     { background: #2c5a73; }
-.job-badge-category.job-cat-mercenary  { background: #8b3a3f; }
-.job-badge-category.job-cat-contractor { background: #8b6f47; }
+.job-badge-category.job-cat-medical     { background: #2f6b4f; }
+.job-badge-category.job-cat-pirate      { background: #2c5a73; }
+.job-badge-category.job-cat-mercenary   { background: #8b3a3f; }
+.job-badge-category.job-cat-house_staff { background: #6b4f8b; }
+.job-badge-category.job-cat-contractor  { background: #8b6f47; }
 
 /* Status badge (top-right). */
 .job-badge-status {

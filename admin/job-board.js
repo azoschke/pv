@@ -94,10 +94,11 @@
   }
 
   var CATEGORIES = [
-    { value: 'medical',    label: 'Medical' },
-    { value: 'pirate',     label: 'Pirate' },
-    { value: 'mercenary',  label: 'Mercenary' },
-    { value: 'contractor', label: 'Contractor' }
+    { value: 'mercenary',   label: 'Mercenary' },
+    { value: 'medical',     label: 'Medical' },
+    { value: 'pirate',      label: 'Pirate' },
+    { value: 'house_staff', label: 'House Staff' },
+    { value: 'contractor',  label: 'Contractor' }
   ];
 
   var STATUSES = [
