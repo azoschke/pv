@@ -26,6 +26,83 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
+  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
+  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+  var UPLOAD_TARGET_WIDTH = 1400;
+  var UPLOAD_WEBP_QUALITY = 0.8;
+
+  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
+  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
+  async function resizeImageToWebp(file) {
+    var bitmap = null;
+    if (typeof createImageBitmap === 'function') {
+      try { bitmap = await createImageBitmap(file); }
+      catch (_e) { bitmap = null; }
+    }
+    if (!bitmap) {
+      bitmap = await new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
+        img.src = url;
+      });
+    }
+    var srcW = bitmap.width || bitmap.naturalWidth;
+    var srcH = bitmap.height || bitmap.naturalHeight;
+    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
+    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
+    var hgt = Math.max(1, Math.round((w / srcW) * srcH));
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = hgt;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get a 2D canvas context.');
+    ctx.drawImage(bitmap, 0, 0, w, hgt);
+    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
+    return await new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) {
+        if (!b) reject(new Error('Could not encode image as WebP (browser may not support it).'));
+        else resolve(b);
+      }, 'image/webp', UPLOAD_WEBP_QUALITY);
+    });
+  }
+
+  async function uploadMedicalStaffImage(file, memberName) {
+    var session = PVAdminAPI.getSession();
+    if (!session) {
+      PVAdminAPI.redirectToLogin();
+      throw new Error('Session expired. Please sign in again.');
+    }
+    var blob = await resizeImageToWebp(file);
+    var form = new FormData();
+    form.append('file', blob, 'upload.webp');
+    form.append('member_name', memberName);
+    var res = await fetch(PVAdminAPI.API_BASE + '/medical-staff/images', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.token,
+        'Accept': 'application/json'
+      },
+      body: form
+    });
+    if (res.status === 401) {
+      PVAdminAPI.clearSession();
+      PVAdminAPI.redirectToLogin();
+      throw new Error('Your session is no longer valid. Please sign in again.');
+    }
+    var text = await res.text();
+    var data = null;
+    if (text) {
+      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
+    }
+    if (!res.ok) {
+      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
+      throw new Error(msg);
+    }
+    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
+    return data.url;
+  }
+
   var POSITIONS = [
     'Medical Lead',
     'Assistant Medical Lead',
@@ -102,13 +179,40 @@
     var draftState = useState({
       positions: (profile.positions || []).slice(),
       tags: (profile.tags || []).slice(),
-      description: profile.description || ''
+      description: profile.description || '',
+      image_url: profile.image_url || ''
     });
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
+    var uploadingState = useState(false);
+    var uploading = uploadingState[0], setUploading = uploadingState[1];
+    var uploadErrState = useState('');
+    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
+
+    function setField(k, v) {
+      setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
+    }
+
+    async function handleImageUpload(file) {
+      if (!file) return;
+      if (file.size > UPLOAD_MAX_BYTES) {
+        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
+        return;
+      }
+      setUploadErr('');
+      setUploading(true);
+      try {
+        var url = await uploadMedicalStaffImage(file, row.member.name);
+        setField('image_url', url);
+      } catch (e) {
+        setUploadErr(e.message || 'Upload failed.');
+      } finally {
+        setUploading(false);
+      }
+    }
 
     function togglePosition(p) {
       setDraft(function (d) {
@@ -141,7 +245,8 @@
         await onSave({
           positions: draft.positions.slice(),
           tags: draft.tags.slice(),
-          description: draft.description.trim()
+          description: draft.description.trim(),
+          image_url: draft.image_url.trim() || null
         });
       } catch (e2) {
         setErr(e2.message || 'Save failed.');
@@ -191,6 +296,58 @@
             );
           })
         )
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Image'),
+        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+          h('input', {
+            type: 'text',
+            value: draft.image_url,
+            onChange: function (e) { setField('image_url', e.target.value); },
+            placeholder: 'https://…',
+            style: { flex: 1 }
+          }),
+          h('label', {
+            className: 'portal-btn is-ghost is-small',
+            title: uploading ? 'Uploading…' : 'Upload an image.',
+            style: {
+              whiteSpace: 'nowrap',
+              opacity: (uploading || saving) ? 0.55 : 1,
+              cursor: (uploading || saving) ? 'not-allowed' : 'pointer'
+            }
+          },
+            uploading ? 'Uploading…' : 'Upload',
+            h('input', {
+              type: 'file',
+              accept: UPLOAD_ACCEPT,
+              disabled: uploading || saving,
+              style: { display: 'none' },
+              onChange: function (e) {
+                var f = e.target.files && e.target.files[0];
+                e.target.value = '';
+                handleImageUpload(f);
+              }
+            })
+          )
+        ),
+        h('p', { className: 'portal-field-help' },
+          'Paste a URL or upload a portrait. Shown on the public staff roster card.'
+        ),
+        uploadErr ? h('p', {
+          className: 'portal-field-help',
+          style: { color: 'var(--danger-color, #c0392b)' }
+        }, uploadErr) : null,
+        draft.image_url ? h('img', {
+          src: draft.image_url, alt: '',
+          style: {
+            display: 'block', marginTop: '0.5rem',
+            maxWidth: '320px', maxHeight: '180px',
+            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
+            objectFit: 'cover'
+          },
+          onError: function (e) { e.target.style.display = 'none'; }
+        }) : null
       ),
 
       h('div', { className: 'portal-field' },
@@ -324,7 +481,8 @@
           byId[p.member_id] = {
             positions: parseList(p.positions),
             tags: parseList(p.tags),
-            description: p.description || ''
+            description: p.description || '',
+            image_url: p.image_url || ''
           };
         }
       });

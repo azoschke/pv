@@ -341,12 +341,31 @@
 
     var media = document.createElement("div");
     media.className = "venue-card-media";
-    media.style.background = "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
 
-    var sig = document.createElement("span");
-    sig.className = "venue-card-sig";
-    sig.textContent = (s.name || "").toLowerCase();
-    media.appendChild(sig);
+    if (s.image_url) {
+      var img = document.createElement("img");
+      img.src = s.image_url;
+      img.alt = "";
+      img.loading = "lazy";
+      img.className = "venue-card-img";
+      img.addEventListener("error", function () {
+        img.remove();
+        media.style.background =
+          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
+        var sig2 = document.createElement("span");
+        sig2.className = "venue-card-sig";
+        sig2.textContent = (s.name || "").toLowerCase();
+        media.appendChild(sig2);
+      });
+      media.appendChild(img);
+    } else {
+      media.style.background =
+        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
+      var sig = document.createElement("span");
+      sig.className = "venue-card-sig";
+      sig.textContent = (s.name || "").toLowerCase();
+      media.appendChild(sig);
+    }
 
     if (primary) {
       var posBadge = document.createElement("span");
@@ -426,10 +445,12 @@
     var primary = primaryPosition(s._positions);
     var palette = POSITION_PALETTE[primary] || FALLBACK_PALETTE;
 
-    var imgHtml = '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-      '<span class="venue-card-sig">' + escapeHTML((s.name || "").toLowerCase()) + '</span>' +
-      '</div>';
+    var imgHtml = s.image_url
+      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img">'
+      : '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
+        palette.from + ' 0%, ' + palette.to + ' 100%);">' +
+        '<span class="venue-card-sig">' + escapeHTML((s.name || "").toLowerCase()) + '</span>' +
+        '</div>';
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
