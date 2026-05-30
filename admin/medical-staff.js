@@ -551,9 +551,7 @@
           })
         ),
         h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
-          'Roster pulls automatically from FC members with Faction = Medical. ' +
-          'Members without a profile are visible to admins only — they appear on the public ' +
-          'Staff Roster once a profile is saved.'
+          'If you do not see a member of the Medical team within this list, ensure they are tagged with Medical in the primary FC list. ' +
         ),
         h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
           publishedCount + ' published · ' + needsProfileCount + ' awaiting profile'
