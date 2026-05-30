@@ -1,15 +1,17 @@
-const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy.chlorinatorgreen.workers.dev/';
+const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy-secure.chlorinatorgreen.workers.dev/';
 const MEDICAL_ROLE_ID = '1283058454373597186';
-
-// Individual medic Discord IDs — fill in placeholders as they are confirmed
 const MEDIC_IDS = {
     'Fiora Acaeus':      '477696368325033984',
-    "V'ika Tia":         '',
-    "Astares De'Ruahn":  '',
-    'Addison Tyrrell':   '',
-    'Lixiss Valra':            '',
-    'Orlando Oleander':  '',
-    'Naoji Sugitani':    '',
+    "Astares De'Ruahn":  '194881867776786451',
+    'Addison Tyrrell':   '271478962964791298',
+    'Lixiss Valra':      '505184303198765060',
+    "M'iah Reid":        '236311329550368771',
+    'Orlando Oleander':  '298500250815954944',
+    'Nikita Lynkasch':   '224310874180026378',
+    'Yumiko Moonstone':  '400723333517410315',
+    'Camily Mily':       '593575045255659520',
+    'Anya Vesper':       '215649054120476674',
+    'Tasha Theja':       '1472340765702225994'
 };
 
 async function submitAppointmentRequest(event) {
@@ -44,8 +46,8 @@ async function submitAppointmentRequest(event) {
                 url: 'https://crafting-tools.github.io/pv/assets/pdf-emblem-web.png'
             },
             fields: [
-                { name: 'Patient Name', value: name, inline: true },
-                { name: 'Requested Medic', value: medic, inline: true },
+                { name: 'Patient Name', value: name, inline: false },
+                { name: 'Requested Medic', value: medic, inline: false },
                 { name: 'Reason for Appointment', value: reason, inline: false }
             ],
             footer: { text: 'Phoenix Vanguard Medical Division' },
