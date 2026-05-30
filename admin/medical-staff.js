@@ -551,7 +551,7 @@
           })
         ),
         h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
-          'If you do not see a member of the Medical team within this list, ensure they are tagged with Medical in the primary FC list. ' +
+          'If you do not see a member of the Medical team within this list, ensure they are tagged with Medical in the primary FC list.'
         ),
         h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
           publishedCount + ' published · ' + needsProfileCount + ' awaiting profile'
