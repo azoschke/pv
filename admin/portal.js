@@ -17,27 +17,29 @@
 
   // --------- Role + section metadata ----------
   var SECTIONS = [
-    { id: 'members',       label: 'FC Members',        icon: 'group' },
-    { id: 'medical',       label: 'Medical Division',  icon: 'medical_services' },
-    { id: 'mercenary',     label: 'Mercenary Division', icon: 'security' },
-    { id: 'pirate',        label: 'Pirate Division',   icon: 'sailing' },
-    { id: 'venues',        label: 'Venues',            icon: 'storefront' },
-    { id: 'jobs',          label: 'Job Board',         icon: 'work' },
-    { id: 'cosmic',        label: 'Cosmic Exploration', icon: 'rocket_launch' },
-    { id: 'announcements', label: 'Announcements',     icon: 'campaign' },
-    { id: 'admin',         label: 'Admin Settings',    icon: 'settings' }
+    { id: 'members',          label: 'FC Members',         icon: 'group' },
+    { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
+    { id: 'medical-division', label: 'Medical Division',   icon: 'medical_services' },
+    { id: 'mercenary',        label: 'Mercenary Division', icon: 'security' },
+    { id: 'pirate',           label: 'Pirate Division',    icon: 'sailing' },
+    { id: 'venues',           label: 'Venues',             icon: 'storefront' },
+    { id: 'jobs',             label: 'Job Board',          icon: 'work' },
+    { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
+    { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
+    { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
   ];
 
   var ROLE_ACCESS = {
-    members:       ['officer', 'admin'],
-    medical:       ['medical', 'admin'],
-    mercenary:     ['mercenary', 'admin'],
-    pirate:        ['pirate', 'admin'],
-    venues:        ['officer', 'admin'],
-    jobs:          ['officer', 'admin'],
-    cosmic:        ['officer', 'admin'],
-    announcements: ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
-    admin:         ['admin']
+    members:          ['officer', 'admin'],
+    medical:          ['medical', 'admin'],
+    'medical-division': ['officer', 'admin'],
+    mercenary:        ['mercenary', 'admin'],
+    pirate:           ['pirate', 'admin'],
+    venues:           ['officer', 'admin'],
+    jobs:             ['officer', 'admin'],
+    cosmic:           ['officer', 'admin'],
+    announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
+    admin:            ['admin']
   };
 
   function canAccess(sectionId, roles) {
@@ -167,6 +169,8 @@
         return h(window.PVAdminMembers || Missing('members.js'), { session: session });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
+      case 'medical-division':
+        return h(window.PVAdminMedicalStaff || Missing('medical-staff.js'), { session: session });
       case 'venues':
         return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
       case 'jobs':
