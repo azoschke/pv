@@ -1,18 +1,17 @@
 // ============================================================================
-//  PVAdminAnnouncements — Officer bulletin board
+//  PVAdminAnnouncements — Channel-scoped bulletin boards
 //
-//  - Everyone signed in can read bulletins.
-//  - Officers and admins can post new ones (with optional Discord toggle).
-//  - Admins can delete.
+//  Exposes two globals:
+//    - PVAdminBulletinBoard   reusable board, rendered by faction sections
+//    - PVAdminAnnouncements   the main Announcements tab (general channel)
 //
-//  Worker routes:
-//    GET    /announcements
-//    POST   /announcements      officer|admin
+//  Worker routes (channel-aware):
+//    GET    /announcements?channel=general|pirate|mercenary
+//    POST   /announcements      body.channel decides allowed posters
 //    DELETE /announcements/:id  admin only
 //
-//  The Discord toggle passes `post_to_discord: true`; the med-database worker
-//  then forwards to pv-announcements-discord-worker. If either of those is
-//  unconfigured, the post still saves and we surface `discord_error` inline.
+//  Discord forwarding only exists on the `general` channel; the worker
+//  ignores `post_to_discord` for the other two.
 // ============================================================================
 
 (function () {
@@ -33,6 +32,8 @@
   function ComposeForm(props) {
     var onSubmit = props.onSubmit;
     var onCancel = props.onCancel;
+    var showDiscord = props.showDiscord;
+    var discordLabel = props.discordLabel || 'Post to Discord';
 
     var titleState = useState('');
     var title = titleState[0], setTitle = titleState[1];
@@ -59,10 +60,10 @@
           title: title.trim(),
           body: body.trim(),
           pinned: pinned,
-          post_to_discord: toDiscord
+          post_to_discord: showDiscord ? toDiscord : false
         });
       } catch (e) {
-        setErr(e.message || 'Failed to post announcement.');
+        setErr(e.message || 'Failed to post bulletin.');
         setSaving(false);
       }
     }
@@ -95,14 +96,14 @@
           }),
           h('span', null, 'Pin to top')
         ),
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        showDiscord ? h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
           h('input', {
             type: 'checkbox',
             checked: toDiscord,
             onChange: function (e) { setToDiscord(e.target.checked); }
           }),
-          h('span', null, 'Post to Discord #officer-announcements')
-        )
+          h('span', null, discordLabel)
+        ) : null
       ),
       h('div', { className: 'portal-form-actions' },
         h('button', {
@@ -153,8 +154,28 @@
     );
   }
 
-  function Announcements() {
-    var canPost = PVAdminAPI.hasRole('officer') || PVAdminAPI.hasRole('admin');
+  // Roles allowed to POST per channel. Mirrors the worker's channelPostRoles.
+  function postRolesForChannel(channel) {
+    if (channel === 'pirate')    return ['pirate', 'admin'];
+    if (channel === 'mercenary') return ['mercenary', 'admin'];
+    return ['officer', 'admin'];
+  }
+
+  // --------- Reusable board ----------
+  //  props:
+  //    channel        'general' | 'pirate' | 'mercenary'
+  //    heading        text shown at top of the compose card (default "Announcements")
+  //    composeTitle   modal title (default "New Announcement")
+  //    showDiscord    boolean (default false — only the general tab passes true)
+  //    discordLabel   override the checkbox label
+  function BulletinBoard(props) {
+    var channel = props.channel || 'general';
+    var heading = props.heading || 'Announcements';
+    var composeTitle = props.composeTitle || 'New Announcement';
+    var showDiscord = !!props.showDiscord;
+    var discordLabel = props.discordLabel;
+
+    var canPost = PVAdminAPI.hasAnyRole(postRolesForChannel(channel));
     var canDelete = PVAdminAPI.hasRole('admin');
 
     var listState = useState([]);
@@ -171,21 +192,26 @@
     async function reload() {
       setErr('');
       try {
-        var data = await PVAdminAPI.request('GET', '/announcements', undefined, true);
+        var data = await PVAdminAPI.request(
+          'GET',
+          '/announcements?channel=' + encodeURIComponent(channel),
+          undefined, true
+        );
         setList(Array.isArray(data) ? data : []);
       } catch (e) {
-        setErr(e.message || 'Failed to load announcements.');
+        setErr(e.message || 'Failed to load bulletins.');
       } finally {
         setLoading(false);
       }
     }
 
-    useEffect(function () { reload(); }, []);
+    useEffect(function () { reload(); }, [channel]);
 
     async function handleCreate(draft) {
-      var result = await PVAdminAPI.request('POST', '/announcements', draft, true);
+      var payload = Object.assign({}, draft, { channel: channel });
+      var result = await PVAdminAPI.request('POST', '/announcements', payload, true);
       setComposeOpen(false);
-      if (draft.post_to_discord) {
+      if (showDiscord && draft.post_to_discord) {
         if (result && result.discord_posted) setFlash('Bulletin posted. Posted to Discord.');
         else setFlash('Bulletin posted, but Discord post failed: ' + ((result && result.discord_error) || 'unknown error.'));
       } else {
@@ -208,14 +234,14 @@
     return h('div', null,
       canPost ? h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem' } },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Announcements'),
+          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, heading),
           h('button', {
             type: 'button',
             className: 'portal-btn',
             onClick: function () { setComposeOpen(true); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
-            h('span', null, 'New announcement')
+            h('span', null, 'New bulletin')
           )
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
@@ -236,17 +262,31 @@
               h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'No bulletins posted yet.')
             ),
       composeOpen ? h(window.PVAdminModal, {
-        title: 'New Announcement',
+        title: composeTitle,
         size: 'lg',
         onClose: function () { setComposeOpen(false); }
       },
         h(ComposeForm, {
           onSubmit: handleCreate,
-          onCancel: function () { setComposeOpen(false); }
+          onCancel: function () { setComposeOpen(false); },
+          showDiscord: showDiscord,
+          discordLabel: discordLabel
         })
       ) : null
     );
   }
 
+  // The Announcements tab is just the general-channel board with Discord on.
+  function Announcements() {
+    return h(BulletinBoard, {
+      channel: 'general',
+      heading: 'Announcements',
+      composeTitle: 'New Announcement',
+      showDiscord: true,
+      discordLabel: 'Post to Discord #officer-announcements'
+    });
+  }
+
+  window.PVAdminBulletinBoard = BulletinBoard;
   window.PVAdminAnnouncements = Announcements;
 })();
