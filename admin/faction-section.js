@@ -44,6 +44,24 @@
     return m;
   })();
 
+  // Same options as members.js so the filter dropdown matches the directory.
+  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data'];
+
+  // Display order for the Faction tag list — mirrors members.js FACTIONS.
+  var FACTION_ORDER = [
+    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Contractor', 'NA - No RP', 'No Data'
+  ];
+  function orderedFactions(arr) {
+    var seen = {};
+    arr.forEach(function (f) { if (f) seen[f] = true; });
+    var ordered = FACTION_ORDER.filter(function (f) { return seen[f]; });
+    var unknown = Object.keys(seen).filter(function (f) {
+      return FACTION_ORDER.indexOf(f) === -1;
+    });
+    return ordered.concat(unknown);
+  }
+
   function parseFactions(value) {
     if (!value) return [];
     return String(value)
@@ -74,6 +92,11 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
+    var nameFilterState = useState('');
+    var nameFilter = nameFilterState[0], setNameFilter = nameFilterState[1];
+    var interviewFilterState = useState('');
+    var interviewFilter = interviewFilterState[0], setInterviewFilter = interviewFilterState[1];
+
     useEffect(function () {
       var cancelled = false;
       (async function () {
@@ -94,13 +117,45 @@
       return function () { cancelled = true; };
     }, [faction]);
 
+    var q = nameFilter.trim().toLowerCase();
+    var filtered = members.filter(function (m) {
+      if (q && (!m.name || m.name.toLowerCase().indexOf(q) === -1)) return false;
+      if (interviewFilter && m.interview !== interviewFilter) return false;
+      return true;
+    });
+    var anyFilterActive = !!(nameFilter || interviewFilter);
+
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, label + ' Roster'),
-        members.length
-          ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-              members.length + (members.length === 1 ? ' member' : ' members'))
-          : null
+        h('div', { className: 'portal-card-actions' },
+          h('input', {
+            type: 'search',
+            className: 'portal-search',
+            placeholder: 'Search name…',
+            value: nameFilter,
+            onChange: function (e) { setNameFilter(e.target.value); }
+          }),
+          members.length
+            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+                filtered.length + ' of ' + members.length)
+            : null
+        )
+      ),
+      h('div', { className: 'portal-filter-row' },
+        h('select', {
+          className: 'portal-filter-select',
+          value: interviewFilter,
+          onChange: function (e) { setInterviewFilter(e.target.value); }
+        },
+          h('option', { value: '' }, 'All Interviews'),
+          INTERVIEWS.map(function (v) { return h('option', { key: v, value: v }, v); })
+        ),
+        anyFilterActive ? h('button', {
+          type: 'button',
+          className: 'portal-btn is-ghost is-small',
+          onClick: function () { setNameFilter(''); setInterviewFilter(''); }
+        }, 'Clear filters') : null
       ),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
@@ -112,25 +167,43 @@
                   h('tr', null,
                     h('th', null, 'Name'),
                     h('th', null, 'IC Rank'),
+                    h('th', null, 'Faction'),
                     h('th', null, 'Interview')
                   )
                 ),
                 h('tbody', null,
-                  members.map(function (m) {
-                    return h('tr', { key: m.id },
-                      h('td', null, m.name),
-                      h('td', null,
-                        m.ic_rank
-                          ? m.ic_rank
-                          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
-                      ),
-                      h('td', null,
-                        m.interview
-                          ? m.interview
-                          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                  filtered.length
+                    ? filtered.map(function (m) {
+                        var factions = orderedFactions(parseFactions(m.faction));
+                        return h('tr', { key: m.id },
+                          h('td', null, m.name),
+                          h('td', null,
+                            m.ic_rank
+                              ? m.ic_rank
+                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                          ),
+                          h('td', null,
+                            factions.length
+                              ? h('div', { className: 'portal-faction-tags' },
+                                  factions.map(function (f) {
+                                    return h('span', { key: f, className: 'portal-faction-tag' }, f);
+                                  })
+                                )
+                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                          ),
+                          h('td', null,
+                            m.interview
+                              ? m.interview
+                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                          )
+                        );
+                      })
+                    : h('tr', null,
+                        h('td', {
+                          colSpan: 4,
+                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                        }, 'No members match your filter.')
                       )
-                    );
-                  })
                 )
               )
             )
