@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Staff Roster</title>
+  <title>Staff Roster — Phoenix Vanguard Medical Division</title>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="/pv/css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 </head>
 <body>
-
   <div class="container">
     <div id="nav-placeholder"></div>
 
@@ -21,198 +20,74 @@
 
     <p class="landing-intro">
       Meet the medical team responsible for maintaining the health of the Phoenix Vanguard free company.
+      Filter by position or specialty to find the right medic for your case.
     </p>
 
-    <div class="half-card-grid">
+    <div class="campaign-layout" id="staff-layout">
 
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Fiora Acaeus</h2>
-          <p class="landing-card-subtitle">Medical Lead</p>
-          <p class="landing-card-desc">
-            Chirurgeon specializing in field medicine and traditional surgery. Prefers technology and clinical methods, using conjury as a last resort.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Surgery, Alchemical Concoctions, Specialized research cases
-          </p>
+      <!-- Filter sidebar -->
+      <aside class="campaign-sidebar venues-sidebar" id="staff-sidebar" aria-label="Staff filters">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Filters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
+        </div>
+
+        <div class="venues-filter-body">
+
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="staff-search">Search</label>
+            <input
+              id="staff-search"
+              class="venues-filter-input"
+              type="search"
+              placeholder="Name or keyword..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="venues-filter-group" id="filter-position-group">
+            <span class="venues-filter-label">Position</span>
+            <ul class="venues-filter-list" id="filter-position-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group" id="filter-tag-group">
+            <span class="venues-filter-label">Specialty</span>
+            <ul class="venues-filter-list" id="filter-tag-list" role="list"></ul>
+          </div>
+
+          <button type="button" class="venues-filter-reset" id="filter-reset">
+            Reset filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="campaign-main" id="staff-main">
+        <div class="campaign-toolbar venues-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+            &#9776; Filters
+          </button>
+          <span class="venues-result-count" id="staff-count" aria-live="polite"></span>
+        </div>
+
+        <div id="staff-grid" class="venues-grid">
+          <!-- populated by JS -->
+        </div>
+      </main>
+
+    </div>
+
+    <!-- Mobile overlay -->
+    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+
+    <!-- Detail modal -->
+    <div class="venue-modal-overlay" id="staff-modal-overlay" aria-hidden="true">
+      <div class="venue-modal" role="dialog" aria-modal="true" aria-labelledby="staff-modal-title">
+        <button type="button" class="venue-modal-close" id="staff-modal-close" aria-label="Close">&#10005;</button>
+        <div class="venue-modal-body" id="staff-modal-body">
+          <!-- populated by JS -->
         </div>
       </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Astares De’Ruahn</h2>
-          <p class="landing-card-subtitle">Assistant Medical Lead</p>
-          <p class="landing-card-desc">
-            Combat medic and aetherology specialist. Excels in rapid assessment, adaptive treatment, and battlefield triage.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Aetherological issues, research
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Addison Tyrrell</h2>
-          <p class="landing-card-subtitle">Secretary, Student Medic</p>
-          <p class="landing-card-desc">
-            Handles scheduling and administrative tasks for the medical ward. 
-            Sage in training assisting with patient care and check-ups. Prefers hands-on treatment, 
-            can use aether when needed.<br>
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer for:</em> Scheduling appointments, General physical checkups
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Anya Vesper</h2>
-          <p class="landing-card-subtitle">Staff Medic</p>
-          <p class="landing-card-desc">
-            Anya is a trained Astrologian with formal surgical education, specializing in hybrid 
-            techniques that combine traditional surgical methodology with aetheric manipulation. 
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Surgical procedures, Post-op care, Void-related maladies or conditions
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Lixiss Valra</h2>
-          <p class="landing-card-subtitle">Staff Medic</p>
-          <p class="landing-card-desc">
-            Nature-attuned healer specializing in field medicine and herbalism. Skilled in potions and restorative brews.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Herbal medicine, field treatment
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Camily Mily</h2>
-          <p class="landing-card-subtitle">Staff Medic</p>
-          <p class="landing-card-desc">
-            Pending.
-          </p>
-           <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Pending
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Yumiko Moonstone</h2>
-          <p class="landing-card-subtitle">Staff Medic</p>
-          <p class="landing-card-desc">
-            PHaving helped in her father's clinic since she could walk and carry things, growing to learn 
-            medical alchemy and the various flora used within, she holds a decent knowledge on healing and medical attention.
-          </p>
-         <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Aetheric Healing, Alchemy
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">M'iah Reid</h2>
-          <p class="landing-card-subtitle">Therapist</p>
-          <p class="landing-card-desc">
-            Passionate about the people around her and has studied the mind extensively. She treats her patients with kindness, positivity and empathy.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Counseling, Herbal Remedies
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Nikita Lynkasch</h2>
-          <p class="landing-card-subtitle">Physical Therapist</p>
-          <p class="landing-card-desc">
-            Responsible for coordinating physical wellness regimens for patients recovering from 
-            debilitating injuries and/or ailments to the body, both acute and chronic. 
-          </p>
-           <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Post-Medical Mobility Recovery, Fitness Training
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Orlando Oleander</h2>
-          <p class="landing-card-subtitle">Chef/Nutritionist</p>
-          <p class="landing-card-desc">
-            Nutrition-focused specialist using Gridanian and Garlean cuisine to support health, tailoring diets to individual needs and advising on food preparation and preservation.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer cases or follow-up appointments for:</em> Nutrition and Meal Planning
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Cassian Acaeus</h2>
-          <p class="landing-card-subtitle">Supply Coordinator</p>
-          <p class="landing-card-desc">
-            Expert in combat first aid, resource management, and repair of Magitek medical tools.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer for:</em> Gathering specialized ingredients, Managing stock
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Naf Moondancer</h2>
-          <p class="landing-card-subtitle">Supply Coordinator</p>
-          <p class="landing-card-desc">
-            Expert in fauna and flora in the Shroud, Astrologian student in training.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer for:</em> Gathering ingredients, Managing stock
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Rinh Dakwhil (Pota)</h2>
-          <p class="landing-card-subtitle">Student Medic</p>
-          <p class="landing-card-desc">
-            Conjury student in training, she is also learning potion making and herbalism.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer for:</em> Student medic shadowing
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="landing-card-inner">
-          <h2 class="landing-card-title">Tasha Theja</h2>
-          <p class="landing-card-subtitle">Student Medic</p>
-          <p class="landing-card-desc">
-            Possesses highly developed skills in the use and creation of Magitek instruments and tools as well as in crafting prosthetics. 
-            Has recently undertaken studies as a scholar.
-          </p>
-          <p class="landing-card-desc">
-            <em>Refer for:</em> Prosthetic Crafting, Student medic shadowing
-          </p>
-        </div>
-      </div>
-
     </div>
 
     <div class="disclaimer">
@@ -221,6 +96,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/pv/vanguard-medical/staff-roster.js"></script>
   <script src="/pv/js/nav.js"></script>
 </body>
 </html>
