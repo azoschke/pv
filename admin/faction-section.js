@@ -44,8 +44,9 @@
     return m;
   })();
 
-  // Same options as members.js so the filter dropdown matches the directory.
-  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data'];
+  // Mirrors members.js INTERVIEWS, minus "NA - No RP" which never applies
+  // to a roleplay faction roster.
+  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'No Data'];
 
   // Display order for the Faction tag list — mirrors members.js FACTIONS.
   var FACTION_ORDER = [
