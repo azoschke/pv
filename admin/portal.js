@@ -176,16 +176,16 @@
       case 'announcements':
         return h(window.PVAdminAnnouncements || Missing('announcements.js'), { session: session });
       case 'mercenary':
-        return h(window.PVAdminComingSoon, {
-          icon: 'security',
-          title: 'Mercenary Division',
-          subtitle: 'Contract tracking and bounty logs are on the way.'
+        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Mercenary',
+          channel: 'mercenary',
+          label: 'Mercenary'
         });
       case 'pirate':
-        return h(window.PVAdminComingSoon, {
-          icon: 'sailing',
-          title: 'Pirate Operations',
-          subtitle: 'Raid logs and ship manifests are on the way.'
+        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Pirate',
+          channel: 'pirate',
+          label: 'Pirate Ops'
         });
       case 'admin':
         return h(window.PVAdminSettings || Missing('admin-settings.js'), { session: session });
