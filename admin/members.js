@@ -409,7 +409,8 @@
       if (q) {
         var hit = (m.name && m.name.toLowerCase().indexOf(q) !== -1)
                || (m.faction && m.faction.toLowerCase().indexOf(q) !== -1)
-               || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1);
+               || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1)
+               || (m.notes && m.notes.toLowerCase().indexOf(q) !== -1);
         if (!hit) return false;
       }
       if (rankFilter      && m.ooc_rank  !== rankFilter)      return false;
@@ -444,7 +445,7 @@
             h('input', {
               type: 'search',
               className: 'portal-search',
-              placeholder: 'Search name…',
+              placeholder: 'Search name or notes…',
               value: filter,
               onChange: function (e) { setFilter(e.target.value); }
             }),
