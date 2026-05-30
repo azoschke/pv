@@ -19,8 +19,8 @@
   var SECTIONS = [
     { id: 'members',       label: 'FC Members',        icon: 'group' },
     { id: 'medical',       label: 'Medical Division',  icon: 'medical_services' },
-    { id: 'mercenary',     label: 'Mercenary',         icon: 'security' },
-    { id: 'pirate',        label: 'Pirate Ops',        icon: 'sailing' },
+    { id: 'mercenary',     label: 'Mercenary Division', icon: 'security' },
+    { id: 'pirate',        label: 'Pirate Division',   icon: 'sailing' },
     { id: 'venues',        label: 'Venues',            icon: 'storefront' },
     { id: 'jobs',          label: 'Job Board',         icon: 'work' },
     { id: 'cosmic',        label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -185,7 +185,7 @@
         return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'Pirate',
           channel: 'pirate',
-          label: 'Pirate Ops'
+          label: 'Pirate'
         });
       case 'admin':
         return h(window.PVAdminSettings || Missing('admin-settings.js'), { session: session });

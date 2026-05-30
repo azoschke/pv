@@ -111,7 +111,8 @@
                 h('thead', null,
                   h('tr', null,
                     h('th', null, 'Name'),
-                    h('th', null, 'IC Rank')
+                    h('th', null, 'IC Rank'),
+                    h('th', null, 'Interview')
                   )
                 ),
                 h('tbody', null,
@@ -121,6 +122,11 @@
                       h('td', null,
                         m.ic_rank
                           ? m.ic_rank
+                          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                      ),
+                      h('td', null,
+                        m.interview
+                          ? m.interview
                           : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
                       )
                     );
