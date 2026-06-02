@@ -33,6 +33,11 @@
     { value: 'declined',  label: 'Declined' }
   ];
 
+  // Stages that still need action. The read-only division card only surfaces
+  // these; accepted/declined are resolved and drop off (still visible in the
+  // full Job Board management card).
+  var ACTIONABLE_STAGES = ['new', 'scheduled'];
+
   // Mirrors the job board categories (and the worker's JOB_CATEGORIES).
   var DIVISIONS = [
     { value: 'medical',     label: 'Medical' },
@@ -609,22 +614,25 @@
       return function () { cancelled = true; };
     }, [division]);
 
+    var actionable = list.filter(function (a) {
+      return ACTIONABLE_STAGES.indexOf(a.stage) !== -1;
+    });
     var q = nameFilter.trim().toLowerCase();
-    var filtered = list.filter(function (a) {
+    var filtered = actionable.filter(function (a) {
       if (q && (!a.member_name || a.member_name.toLowerCase().indexOf(q) === -1)) return false;
       return true;
     });
 
-    // The card is informational and action-required only when populated. Stay
-    // out of the layout entirely while loading or when this division has no
-    // applications; only surface on a fetch error so failures aren't silent.
+    // The card is action-required only. Stay out of the layout entirely while
+    // loading or when this division has no actionable applications; only
+    // surface on a fetch error so failures aren't silent.
     if (loading) return null;
     if (err) {
       return h('div', { className: 'portal-card' },
         h('div', { className: 'portal-flash error' }, err)
       );
     }
-    if (!list.length) return null;
+    if (!actionable.length) return null;
 
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
@@ -638,7 +646,7 @@
             onChange: function (e) { setNameFilter(e.target.value); }
           }),
           h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-            filtered.length + ' of ' + list.length)
+            filtered.length + ' of ' + actionable.length)
         )
       ),
       h('div', { className: 'portal-table-wrap' },
