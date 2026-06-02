@@ -214,7 +214,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
-.portal-main .portal-section-header .material-icons {
+.portal-main .portal-section-header > .material-icons {
   font-size: 32px;
   color: var(--accent-red);
 }
@@ -405,6 +405,20 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   vertical-align: top;
 }
 .portal-table tbody tr:hover { background: var(--bg-card-light); }
+
+/* Tables sit flush to the card edges. Any header / subtitle / filter content
+   above the table keeps the card's normal padding; the table itself breaks
+   out to the card border so its banded header and rows run edge-to-edge.
+   First/last cell content is re-inset to line up with the padded content. */
+.portal-card:has(> .portal-table-wrap) { overflow: hidden; }
+.portal-card > .portal-table-wrap {
+  margin: 0 -1.25rem -1.25rem;
+}
+.portal-card > .portal-table-wrap:first-child { margin-top: -1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:first-child,
+.portal-card > .portal-table-wrap .portal-table td:first-child { padding-left: 1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:last-child,
+.portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
 
 /* --------------- Inline buttons --------------- */
 .portal-btn {
