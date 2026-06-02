@@ -716,7 +716,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 .dash-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
   gap: 1rem;
   margin-bottom: 1.25rem;
 }
@@ -762,10 +762,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 0.95rem;
   color: var(--text-secondary);
   white-space: nowrap;
-}
-.dash-attention-meta em {
-  font-family: 'La Belle Aurore', cursive;
-  font-style: normal;
 }
 
 .dash-attention-list { display: flex; flex-direction: column; }
@@ -816,7 +812,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 /* --------------- Responsive --------------- */
 @media (max-width: 900px) {
-  .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-attention-row { flex-wrap: wrap; }
   .dash-attention-text { flex-basis: 100%; order: 2; }
   .dash-open { margin-left: auto; }

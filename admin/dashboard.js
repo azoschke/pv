@@ -98,13 +98,13 @@
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
     var inactive      = members.filter(function (m) { return m.activity === 'Inactive'; });
     var openJobs      = jobs.filter(function (j) { return j.status === 'open'; });
-    var interviewsPending = scheduledApps.length + icPending.length;
 
     var stats = [
-      { num: members.length,    label: 'FC Members',         target: 'members' },
-      { num: newApps.length,    label: 'New Applications',   target: 'jobs', alert: newApps.length > 0 },
-      { num: interviewsPending, label: 'Interviews Pending', target: 'jobs', alert: interviewsPending > 0 },
-      { num: openJobs.length,   label: 'Open Positions',     target: 'jobs' }
+      { num: members.length,       label: 'FC Members',                  target: 'members' },
+      { num: icPending.length,     label: 'IC Interviews Pending',       target: 'members', alert: icPending.length > 0 },
+      { num: newApps.length,       label: 'New Job Applications Pending', target: 'jobs',    alert: newApps.length > 0 },
+      { num: scheduledApps.length, label: 'Job Interviews Pending',      target: 'jobs',    alert: scheduledApps.length > 0 },
+      { num: openJobs.length,      label: 'Open Positions',              target: 'jobs' }
     ];
 
     // Cross-feature attention feed, ordered: applications → job interviews →
@@ -122,7 +122,7 @@
       attention.push({
         key: 'sched-' + a.id, tag: 'Job Interview', tagCls: 'is-interview',
         name: a.member_name || a.name || 'Unknown',
-        desc: '— interview scheduled',
+        desc: 'Job interview pending',
         source: 'Job Board', target: 'jobs'
       });
     });
@@ -167,8 +167,7 @@
         h('div', { className: 'dash-attention-head' },
           h('p', { className: 'portal-card-title' }, 'Needs Attention'),
           h('span', { className: 'dash-attention-meta' },
-            attention.length + (attention.length === 1 ? ' item' : ' items'),
-            h('em', null, ' · across all features')
+            attention.length + (attention.length === 1 ? ' item' : ' items')
           )
         ),
         attention.length === 0
