@@ -44,9 +44,14 @@
     return m;
   })();
 
-  // Mirrors members.js INTERVIEWS, minus "NA - No RP" which never applies
-  // to a roleplay faction roster.
-  var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'No Data'];
+  // Interview states surfaced on the IC Interview card, in display order.
+  // "Completed" is excluded — the card only lists members still needing one.
+  var IC_PENDING = ['Not Started', 'Scheduled', 'No Data'];
+  function interviewPillClass(status) {
+    if (status === 'Not Started') return 'portal-pill is-red';
+    if (status === 'Scheduled')   return 'portal-pill is-gold';
+    return 'portal-pill is-muted'; // No Data
+  }
 
   // Display order for the Faction tag list — mirrors members.js FACTIONS.
   var FACTION_ORDER = [
@@ -82,81 +87,76 @@
     return na < nb ? -1 : na > nb ? 1 : 0;
   }
 
-  function RosterCard(props) {
-    var faction = props.faction;
-    var label = props.label;
+  // IC Interview card — lists faction members who still need an in-character
+  // interview (Not Started / Scheduled / No Data). Hidden entirely when none
+  // are pending. Interview status lives only here; the roster no longer shows
+  // an interview column.
+  function ICInterviewCard(props) {
+    var members = props.members;
+    var loading = props.loading;
+    if (loading) return null;
 
-    var membersState = useState([]);
-    var members = membersState[0], setMembers = membersState[1];
-    var loadingState = useState(true);
-    var loading = loadingState[0], setLoading = loadingState[1];
-    var errState = useState('');
-    var err = errState[0], setErr = errState[1];
-
-    var nameFilterState = useState('');
-    var nameFilter = nameFilterState[0], setNameFilter = nameFilterState[1];
-    var interviewFilterState = useState('');
-    var interviewFilter = interviewFilterState[0], setInterviewFilter = interviewFilterState[1];
-
-    useEffect(function () {
-      var cancelled = false;
-      (async function () {
-        try {
-          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
-          if (cancelled) return;
-          var rows = Array.isArray(data) ? data : [];
-          var matches = rows.filter(function (m) {
-            return parseFactions(m.faction).indexOf(faction) !== -1;
-          });
-          setMembers(matches.sort(compareMembers));
-        } catch (e) {
-          if (!cancelled) setErr(e.message || 'Failed to load roster.');
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      })();
-      return function () { cancelled = true; };
-    }, [faction]);
-
-    var q = nameFilter.trim().toLowerCase();
-    var filtered = members.filter(function (m) {
-      if (q && (!m.name || m.name.toLowerCase().indexOf(q) === -1)) return false;
-      if (interviewFilter && m.interview !== interviewFilter) return false;
-      return true;
+    var total = members.length;
+    var completed = members.filter(function (m) { return m.interview === 'Completed'; }).length;
+    var pending = members.filter(function (m) {
+      return IC_PENDING.indexOf(m.interview) !== -1;
+    }).slice().sort(function (a, b) {
+      var ia = IC_PENDING.indexOf(a.interview), ib = IC_PENDING.indexOf(b.interview);
+      if (ia !== ib) return ia - ib;
+      return compareMembers(a, b);
     });
-    var anyFilterActive = !!(nameFilter || interviewFilter);
+
+    if (!pending.length) return null;
 
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
-        h('h2', { className: 'portal-card-title' }, label + ' Roster'),
-        h('div', { className: 'portal-card-actions' },
-          h('input', {
-            type: 'search',
-            className: 'portal-search',
-            placeholder: 'Search name…',
-            value: nameFilter,
-            onChange: function (e) { setNameFilter(e.target.value); }
-          }),
-          members.length
-            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-                filtered.length + ' of ' + members.length)
-            : null
-        )
+        h('h2', { className: 'portal-card-title' }, 'IC Interview'),
+        h('span', { className: 'portal-card-count' }, completed + ' of ' + total + ' completed')
+      ),
+      h('p', { className: 'portal-card-subtitle' },
+        'In-character interview for entry into the Phoenix Vanguard Free Company.'),
+      h('div', { className: 'ic-interview-list' },
+        pending.map(function (m) {
+          return h('div', { className: 'ic-interview-row', key: m.id },
+            h('span', { className: interviewPillClass(m.interview) }, m.interview),
+            h('span', { className: 'ic-interview-name' }, m.name)
+          );
+        })
+      )
+    );
+  }
+
+  // Read-only roster: name, IC rank, faction tags. (Interview status moved to
+  // the IC Interview card.)
+  function RosterCard(props) {
+    var members = props.members;
+    var loading = props.loading;
+    var err = props.err;
+    var faction = props.faction;
+
+    var nameFilterState = useState('');
+    var nameFilter = nameFilterState[0], setNameFilter = nameFilterState[1];
+
+    var q = nameFilter.trim().toLowerCase();
+    var filtered = members.filter(function (m) {
+      return !q || (m.name && m.name.toLowerCase().indexOf(q) !== -1);
+    });
+
+    return h('div', { className: 'portal-card' },
+      h('div', { className: 'portal-card-header' },
+        h('h2', { className: 'portal-card-title' }, 'Roster'),
+        members.length
+          ? h('span', { className: 'portal-card-count' }, filtered.length + ' of ' + members.length)
+          : null
       ),
       h('div', { className: 'portal-filter-row' },
-        h('select', {
-          className: 'portal-filter-select',
-          value: interviewFilter,
-          onChange: function (e) { setInterviewFilter(e.target.value); }
-        },
-          h('option', { value: '' }, 'All Interviews'),
-          INTERVIEWS.map(function (v) { return h('option', { key: v, value: v }, v); })
-        ),
-        anyFilterActive ? h('button', {
-          type: 'button',
-          className: 'portal-btn is-ghost is-small',
-          onClick: function () { setNameFilter(''); setInterviewFilter(''); }
-        }, 'Clear filters') : null
+        h('input', {
+          type: 'search',
+          className: 'portal-search',
+          placeholder: 'Search name…',
+          value: nameFilter,
+          onChange: function (e) { setNameFilter(e.target.value); }
+        })
       ),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
@@ -168,8 +168,7 @@
                   h('tr', null,
                     h('th', null, 'Name'),
                     h('th', null, 'IC Rank'),
-                    h('th', null, 'Faction'),
-                    h('th', null, 'Interview')
+                    h('th', null, 'Faction')
                   )
                 ),
                 h('tbody', null,
@@ -191,17 +190,12 @@
                                   })
                                 )
                               : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
-                          ),
-                          h('td', null,
-                            m.interview
-                              ? m.interview
-                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
                           )
                         );
                       })
                     : h('tr', null,
                         h('td', {
-                          colSpan: 4,
+                          colSpan: 3,
                           style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
                         }, 'No members match your filter.')
                       )
@@ -219,17 +213,50 @@
     var division = props.division;
     var label = props.label || faction;
 
-    return h('div', null,
-      h(window.PVAdminBulletinBoard, {
-        channel: channel,
-        heading: label + ' Messages',
-        composeTitle: 'New ' + label + ' Message',
-        showDiscord: false
-      }),
-      (division && window.PVAdminApplicationsCard)
-        ? h(window.PVAdminApplicationsCard, { division: division, label: label })
-        : null,
-      h(RosterCard, { faction: faction, label: label })
+    var membersState = useState([]);
+    var members = membersState[0], setMembers = membersState[1];
+    var loadingState = useState(true);
+    var loading = loadingState[0], setLoading = loadingState[1];
+    var errState = useState('');
+    var err = errState[0], setErr = errState[1];
+
+    // One roster fetch feeds both the IC Interview card and the roster.
+    useEffect(function () {
+      var cancelled = false;
+      (async function () {
+        try {
+          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
+          if (cancelled) return;
+          var rows = Array.isArray(data) ? data : [];
+          var matches = rows.filter(function (m) {
+            return parseFactions(m.faction).indexOf(faction) !== -1;
+          });
+          setMembers(matches.sort(compareMembers));
+        } catch (e) {
+          if (!cancelled) setErr(e.message || 'Failed to load roster.');
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+      return function () { cancelled = true; };
+    }, [faction]);
+
+    return h('div', { className: 'division-grid' },
+      h('div', { className: 'division-col' },
+        h(ICInterviewCard, { members: members, loading: loading }),
+        (division && window.PVAdminApplicationsCard)
+          ? h(window.PVAdminApplicationsCard, { division: division, label: label })
+          : null,
+        h(window.PVAdminBulletinBoard, {
+          channel: channel,
+          heading: label + ' Messages',
+          composeTitle: 'New ' + label + ' Message',
+          showDiscord: false
+        })
+      ),
+      h('div', { className: 'division-col' },
+        h(RosterCard, { members: members, loading: loading, err: err, faction: faction })
+      )
     );
   }
 

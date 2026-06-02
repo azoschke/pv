@@ -118,9 +118,27 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-sidebar .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   padding: 0.5rem 0.5rem;
   flex: 1;
+}
+.portal-sidebar .sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-sidebar .sidebar-nav-group + .sidebar-nav-group {
+  margin-top: 0.9rem;
+}
+.portal-sidebar .sidebar-nav-group-title {
+  margin: 0;
+  padding: 0.3rem 0.85rem 0.35rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-nav-item {
   display: flex;
@@ -131,15 +149,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: 'Crimson Pro', serif;
-  font-size: 1.05rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .portal-sidebar .sidebar-nav-item .material-icons {
   font-size: 22px;
-  color: var(--accent-brown);
+  color: var(--text-primary);
 }
 .portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
 .portal-sidebar .sidebar-nav-item.is-active {
@@ -166,14 +185,15 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Stoke', serif;
   font-size: 1rem;
+  letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
 }
 .portal-sidebar .sidebar-footer-btn .material-icons {
   font-size: 20px;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-footer-btn:hover {
   background: var(--bg-card-light);
@@ -192,13 +212,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
 }
-.portal-main .portal-section-header .material-icons {
+.portal-main .portal-section-header > .material-icons {
   font-size: 32px;
-  color: var(--accent-brown);
+  color: var(--accent-red);
 }
 .portal-main .portal-section-header h1 {
   margin: 0;
@@ -367,13 +385,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   width: 100%;
   border-collapse: collapse;
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 .portal-table thead th {
   text-align: left;
   padding: 0.6rem 0.75rem;
   font-family: 'Stoke', serif;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -381,12 +399,26 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: var(--bg-card-light);
 }
 .portal-table tbody td {
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   vertical-align: top;
 }
 .portal-table tbody tr:hover { background: var(--bg-card-light); }
+
+/* Tables sit flush to the card edges. Any header / subtitle / filter content
+   above the table keeps the card's normal padding; the table itself breaks
+   out to the card border so its banded header and rows run edge-to-edge.
+   First/last cell content is re-inset to line up with the padded content. */
+.portal-card:has(> .portal-table-wrap) { overflow: hidden; }
+.portal-card > .portal-table-wrap {
+  margin: 0 -1.25rem -1.25rem;
+}
+.portal-card > .portal-table-wrap:first-child { margin-top: -1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:first-child,
+.portal-card > .portal-table-wrap .portal-table td:first-child { padding-left: 1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:last-child,
+.portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
 
 /* --------------- Inline buttons --------------- */
 .portal-btn {
@@ -398,8 +430,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: #fff;
   border: 1px solid var(--accent-brown);
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
   cursor: pointer;
 }
 .portal-btn:hover { filter: brightness(1.05); }
@@ -416,7 +449,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-btn.is-small {
   padding: 0.3rem 0.7rem;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 .portal-btn .material-icons { font-size: 18px; }
 
@@ -519,13 +552,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-faction-tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.55rem;
+  padding: 0.2rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--border-color);
-  background: var(--bg-card-light, var(--form-input-bg));
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
   white-space: nowrap;
+  line-height: 1;
 }
 
 /* --------------- Checkbox group (multi-select form field) --------------- */
@@ -680,8 +714,266 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   overflow-y: auto;
 }
 
+/* --------------- Dashboard --------------- */
+.dashboard-header .dashboard-date {
+  margin-left: auto;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.2rem;
+  color: var(--accent-brown);
+  white-space: nowrap;
+}
+
+.dash-loading {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Pending / Scheduled groups side by side on wide views, stacking when the
+   row can no longer fit two groups. */
+.dash-stat-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.dash-stat-heading {
+  margin: 0 0 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.dash-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dash-stat {
+  flex: 1 1 160px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.dash-stat:hover { background: var(--bg-card-light); }
+.dash-stat.is-alert { border-color: var(--accent-red); }
+.dash-stat-num {
+  font-family: 'Stoke', serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.dash-stat.is-alert .dash-stat-num { color: var(--accent-red); }
+.dash-stat-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.dash-attention-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.dash-attention-head .portal-card-title { flex: 1; }
+.dash-attention-meta {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.dash-attention-list { display: flex; flex-direction: column; }
+.dash-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border-color);
+}
+.dash-attention-row:first-child { border-top: none; }
+.dash-attention-text {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  color: var(--text-primary);
+}
+.dash-attention-source {
+  font-family: 'La Belle Aurore', cursive;
+  font-style: normal;
+  color: var(--text-secondary);
+  margin-left: 0.2rem;
+}
+.dash-attention-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0.4rem 0 0;
+}
+.dash-open { white-space: nowrap; }
+.dash-open .material-icons { font-size: 16px; }
+
+/* --------------- Pills ---------------
+   Outlined status chips shared by the dashboard, division cards, and the
+   applications/job stage badges. Variants: red-fill (action), red / gold /
+   green / muted outlines. */
+.portal-pill {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+.portal-pill.is-red-fill { background: var(--accent-red); color: #fff; border-color: var(--accent-red); }
+.portal-pill.is-red      { color: var(--accent-red);    border-color: var(--accent-red); }
+.portal-pill.is-gold     { color: var(--accent-brown);  border-color: var(--accent-brown); }
+.portal-pill.is-green    { color: var(--check-color);   border-color: var(--check-color); }
+.portal-pill.is-muted    { color: var(--text-secondary); border-color: var(--border-color); }
+
+/* --------------- Division layout --------------- */
+.division-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.division-col { min-width: 0; }
+
+.portal-card-subtitle {
+  margin: -0.25rem 0 0.9rem;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.98rem;
+}
+.portal-card-count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-family: 'Crimson Pro', serif;
+  white-space: nowrap;
+}
+
+/* IC Interview card */
+.ic-interview-list { display: flex; flex-direction: column; }
+.ic-interview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-color);
+}
+.ic-interview-row:first-child { border-top: none; }
+.ic-interview-name {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Bulletins (shared board) */
+.bulletin-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.bulletin-item {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  background: var(--bg-card-light);
+}
+.bulletin-item.is-pinned { border-color: var(--accent-red); }
+
+/* Dashed empty state */
+.portal-empty {
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+}
+
+/* --------------- FC Members directory --------------- */
+.members-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Segmented All / Needs attention toggle */
+.portal-chip-group {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.portal-chip {
+  padding: 0.45rem 0.95rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.portal-chip:last-child { border-right: none; }
+.portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
+.portal-chip.is-active { background: var(--accent-brown); color: #fff; }
+
+/* Notes inline link (replaces a bordered button in the Notes column) */
+.notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent-brown);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.notes-link:hover { text-decoration: underline; }
+
+/* Rank group banding */
+/* Table row banding for grouped tables (FC Members ranks, Job Board divisions) */
+.portal-table .portal-group-row td {
+  background: var(--bg-darker);
+  padding: 0.45rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
 /* --------------- Responsive --------------- */
+@media (max-width: 1100px) {
+  .division-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
+  .dash-attention-row { flex-wrap: wrap; }
+  .dash-attention-text { flex-basis: 100%; order: 2; }
+  .dash-open { margin-left: auto; }
   .portal-shell {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;

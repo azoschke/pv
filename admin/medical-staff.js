@@ -569,7 +569,7 @@
                   : 'No FC members have Faction = Medical yet. Set a member’s Faction to Medical in FC Members to add them here.'
               )
             )
-          : h('div', { className: 'portal-card', style: { padding: 0 } },
+          : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
                 h('table', { className: 'portal-table' },
                   h('thead', null,

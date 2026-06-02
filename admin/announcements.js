@@ -129,8 +129,7 @@
     var author = a.author_display_name || a.author_username || '— former member —';
 
     return h('article', {
-      className: 'portal-card',
-      style: a.pinned ? { borderColor: 'var(--accent-red)' } : null
+      className: 'bulletin-item' + (a.pinned ? ' is-pinned' : '')
     },
       h('header', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' } },
         a.pinned ? h('span', { className: 'portal-badge is-pinned' }, 'Pinned') : null,
@@ -232,35 +231,37 @@
     }
 
     return h('div', null,
-      canPost ? h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem' } },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, heading),
-          h('button', {
-            type: 'button',
-            className: 'portal-btn',
-            onClick: function () { setComposeOpen(true); }
-          },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
-            h('span', null, 'New bulletin')
-          )
+      h('div', { className: 'portal-card' },
+        h('div', { className: 'portal-card-header' },
+          h('h2', { className: 'portal-card-title' }, heading),
+          canPost ? h('div', { className: 'portal-card-actions' },
+            h('button', {
+              type: 'button',
+              className: 'portal-btn',
+              onClick: function () { setComposeOpen(true); }
+            },
+              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
+              h('span', null, 'New bulletin')
+            )
+          ) : null
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
-      ) : null,
-      err ? h('div', { className: 'portal-card' }, h('div', { className: 'portal-flash error' }, err)) : null,
-      loading
-        ? h('div', { className: 'portal-card' }, 'Loading bulletins…')
-        : list.length
-          ? list.map(function (a) {
-              return h(BulletinCard, {
-                key: a.id,
-                announcement: a,
-                onDelete: handleDelete,
-                allowDelete: canDelete
-              });
-            })
-          : h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'No bulletins posted yet.')
-            ),
+        flash ? h('div', { className: 'portal-flash success' }, flash) : null,
+        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        loading
+          ? h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'Loading bulletins…')
+          : list.length
+            ? h('div', { className: 'bulletin-list' },
+                list.map(function (a) {
+                  return h(BulletinCard, {
+                    key: a.id,
+                    announcement: a,
+                    onDelete: handleDelete,
+                    allowDelete: canDelete
+                  });
+                })
+              )
+            : h('div', { className: 'portal-empty' }, 'No bulletins posted yet.')
+      ),
       composeOpen ? h(window.PVAdminModal, {
         title: composeTitle,
         size: 'lg',

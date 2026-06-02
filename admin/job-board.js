@@ -112,6 +112,25 @@
     return val || '';
   }
 
+  // Group postings by division/category in CATEGORIES order (unknown last),
+  // preserving each group's existing sort. Mirrors the FC Members rank
+  // grouping. Returns [{ value, label, jobs }] for non-empty groups only.
+  function groupByDivision(jobs) {
+    var byCat = {};
+    jobs.forEach(function (j) {
+      var c = j.category || 'other';
+      (byCat[c] = byCat[c] || []).push(j);
+    });
+    var groups = CATEGORIES
+      .filter(function (c) { return byCat[c.value]; })
+      .map(function (c) { return { value: c.value, label: c.label, jobs: byCat[c.value] }; });
+    Object.keys(byCat).forEach(function (c) {
+      var known = CATEGORIES.some(function (x) { return x.value === c; });
+      if (!known) groups.push({ value: c, label: c, jobs: byCat[c] });
+    });
+    return groups;
+  }
+
   function emptyDraft() {
     return {
       title: '',
@@ -336,7 +355,6 @@
       h('td', null,
         h('span', { style: { fontWeight: 600 } }, j.title)
       ),
-      h('td', null, labelFor(CATEGORIES, j.category)),
       h('td', null,
         h('span', { className: statusCls }, labelFor(STATUSES, j.status))
       ),
@@ -472,26 +490,32 @@
                 list.length ? 'No postings match that search.' : 'No postings yet. Add the first one.'
               )
             )
-          : h('div', { className: 'portal-card', style: { padding: 0 } },
+          : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
                 h('table', { className: 'portal-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),
-                      h('th', null, 'Division'),
                       h('th', null, 'Status'),
                       h('th', null, 'Contact'),
                       h('th', null, '')
                     )
                   ),
                   h('tbody', null,
-                    filtered.map(function (j) {
-                      return h(JobRow, {
-                        key: j.id,
-                        job: j,
-                        onEdit: function (jj) { setFormOpen({ job: jj }); },
-                        onDelete: handleDelete
-                      });
+                    groupByDivision(filtered).map(function (g) {
+                      return [
+                        h('tr', { key: 'grp-' + g.value, className: 'portal-group-row' },
+                          h('td', { colSpan: 4, className: 'portal-group-cell' },
+                            g.label + ' · ' + g.jobs.length)
+                        )
+                      ].concat(g.jobs.map(function (j) {
+                        return h(JobRow, {
+                          key: j.id,
+                          job: j,
+                          onEdit: function (jj) { setFormOpen({ job: jj }); },
+                          onDelete: handleDelete
+                        });
+                      }));
                     })
                   )
                 )

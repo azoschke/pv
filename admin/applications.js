@@ -53,9 +53,11 @@
   }
 
   function stageBadgeClass(stage) {
-    if (stage === 'accepted') return 'portal-badge is-ok';
-    if (stage === 'new')      return 'portal-badge is-pinned';
-    return 'portal-badge';
+    if (stage === 'new')      return 'portal-pill is-red-fill';
+    if (stage === 'scheduled') return 'portal-pill is-gold';
+    if (stage === 'accepted') return 'portal-pill is-green';
+    if (stage === 'declined') return 'portal-pill is-red';
+    return 'portal-pill is-muted';
   }
 
   function formatDate(iso) {
@@ -520,7 +522,7 @@
                 list.length ? 'No applications match your filter.' : 'No applications yet. Add the first one.'
               )
             )
-          : h('div', { className: 'portal-card', style: { padding: 0 } },
+          : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
                 h('table', { className: 'portal-table' },
                   h('thead', null,
@@ -578,8 +580,6 @@
     var loading = loadingState[0], setLoading = loadingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var nameFilterState = useState('');
-    var nameFilter = nameFilterState[0], setNameFilter = nameFilterState[1];
 
     useEffect(function () {
       var cancelled = false;
@@ -610,11 +610,7 @@
     var actionable = list.filter(function (a) {
       return ACTIONABLE_STAGES.indexOf(a.stage) !== -1;
     });
-    var q = nameFilter.trim().toLowerCase();
-    var filtered = actionable.filter(function (a) {
-      if (q && (!a.member_name || a.member_name.toLowerCase().indexOf(q) === -1)) return false;
-      return true;
-    });
+    var newCount = actionable.filter(function (a) { return a.stage === 'new'; }).length;
 
     // The card is action-required only. Stay out of the layout entirely while
     // loading or when this division has no actionable applications; only
@@ -629,19 +625,13 @@
 
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
-        h('h2', { className: 'portal-card-title' }, label + ' Applications'),
-        h('div', { className: 'portal-card-actions' },
-          h('input', {
-            type: 'search',
-            className: 'portal-search',
-            placeholder: 'Search name…',
-            value: nameFilter,
-            onChange: function (e) { setNameFilter(e.target.value); }
-          }),
-          h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-            filtered.length + ' of ' + actionable.length)
-        )
+        h('h2', { className: 'portal-card-title' }, 'Job Applications'),
+        newCount
+          ? h('span', { className: 'portal-pill is-red-fill' }, newCount + ' NEW')
+          : null
       ),
+      h('p', { className: 'portal-card-subtitle' },
+        'Job Applications from current Phoenix Vanguard Company Members.'),
       h('div', { className: 'portal-table-wrap' },
         h('table', { className: 'portal-table' },
           h('thead', null,
@@ -653,21 +643,14 @@
             )
           ),
           h('tbody', null,
-            filtered.length
-              ? filtered.map(function (a) {
-                  return h('tr', { key: a.id },
-                    h('td', null, a.member_name),
-                    h('td', null, a.job_title),
-                    h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
-                    h('td', null, h(StageBadge, { stage: a.stage }))
-                  );
-                })
-              : h('tr', null,
-                  h('td', {
-                    colSpan: 4,
-                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
-                  }, 'No applications match your filter.')
-                )
+            actionable.map(function (a) {
+              return h('tr', { key: a.id },
+                h('td', null, a.member_name),
+                h('td', null, a.job_title),
+                h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+                h('td', null, h(StageBadge, { stage: a.stage }))
+              );
+            })
           )
         )
       )

@@ -16,21 +16,41 @@
   var useEffect = React.useEffect;
 
   // --------- Role + section metadata ----------
-  var SECTIONS = [
-    { id: 'members',          label: 'FC Members',         icon: 'group' },
-    { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
-    { id: 'medical-division', label: 'Medical Division',   icon: 'medical_services' },
-    { id: 'mercenary',        label: 'Mercenary Division', icon: 'security' },
-    { id: 'pirate',           label: 'Pirate Division',    icon: 'sailing' },
-    { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' },
-    { id: 'venues',           label: 'Venues',             icon: 'storefront' },
-    { id: 'jobs',             label: 'Job Board',          icon: 'work' },
-    { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
-    { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
-    { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
+  // NAV_GROUPS is the source of truth for sidebar layout: ordered groups, each
+  // with a small-caps header and its nav items. Headers are role-gated — a
+  // group whose items are all hidden for the current role renders nothing.
+  var NAV_GROUPS = [
+    { title: 'Overview', items: [
+      { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
+    ] },
+    { title: 'People', items: [
+      { id: 'members',          label: 'FC Members',         icon: 'group' },
+      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
+    ] },
+    { title: 'Divisions', items: [
+      { id: 'medical-division', label: 'Medical',            icon: 'medical_services' },
+      { id: 'mercenary',        label: 'Mercenary',          icon: 'security' },
+      { id: 'pirate',           label: 'Pirate',             icon: 'sailing' },
+      { id: 'house-staff',      label: 'House Staff',         icon: 'home_work' }
+    ] },
+    { title: 'Operations', items: [
+      { id: 'venues',           label: 'Venues',             icon: 'storefront' },
+      { id: 'jobs',             label: 'Job Board',          icon: 'work' }
+    ] },
+    { title: 'Tools / More', items: [
+      { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
+      { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
+      { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
+    ] }
   ];
 
+  // Flat list derived from NAV_GROUPS for lookups (active section, defaults).
+  var SECTIONS = NAV_GROUPS.reduce(function (acc, g) {
+    return acc.concat(g.items);
+  }, []);
+
   var ROLE_ACCESS = {
+    dashboard:        ['officer', 'admin'],
     members:          ['officer', 'admin'],
     medical:          ['medical', 'admin'],
     'medical-division': ['officer', 'admin'],
@@ -82,9 +102,14 @@
     var theme = props.theme;
     var roles = (session && session.roles) || [];
 
-    var visibleSections = SECTIONS.filter(function (s) {
-      return canAccess(s.id, roles);
-    });
+    // Build groups with only the items this role may see; drop empty groups so
+    // the section header never shows above an empty list.
+    var visibleGroups = NAV_GROUPS.map(function (g) {
+      return {
+        title: g.title,
+        items: g.items.filter(function (s) { return canAccess(s.id, roles); })
+      };
+    }).filter(function (g) { return g.items.length > 0; });
 
     return h('div', { className: 'portal-sidebar-body' },
       h('a', { href: '/pv/index.html', className: 'sidebar-brand', 'aria-label': 'Phoenix Vanguard' },
@@ -103,16 +128,21 @@
         )
       ),
       h('nav', { className: 'sidebar-nav' },
-        visibleSections.map(function (s) {
-          var cls = 'sidebar-nav-item' + (s.id === activeSection ? ' is-active' : '');
-          return h('button', {
-            key: s.id,
-            type: 'button',
-            className: cls,
-            onClick: function () { onSelect(s.id); }
-          },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, s.icon),
-            h('span', null, s.label)
+        visibleGroups.map(function (g) {
+          return h('div', { className: 'sidebar-nav-group', key: g.title },
+            h('p', { className: 'sidebar-nav-group-title' }, g.title),
+            g.items.map(function (s) {
+              var cls = 'sidebar-nav-item' + (s.id === activeSection ? ' is-active' : '');
+              return h('button', {
+                key: s.id,
+                type: 'button',
+                className: cls,
+                onClick: function () { onSelect(s.id); }
+              },
+                h('span', { className: 'material-icons', 'aria-hidden': 'true' }, s.icon),
+                h('span', null, s.label)
+              );
+            })
           );
         })
       ),
@@ -165,10 +195,19 @@
   function SectionOutlet(props) {
     var section = props.section;
     var session = props.session;
+    var onNavigate = props.onNavigate;
 
     switch (section) {
+      case 'dashboard':
+        return h(window.PVAdminDashboard || Missing('dashboard.js'), {
+          session: session,
+          onNavigate: onNavigate
+        });
       case 'members':
-        return h(window.PVAdminMembers || Missing('members.js'), { session: session });
+        return h(window.PVAdminMembers || Missing('members.js'), {
+          session: session,
+          initialSearch: (props.navParams && props.navParams.search) || ''
+        });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
       case 'medical-division':
@@ -238,6 +277,11 @@
     var drawerState = useState(false);
     var drawerOpen = drawerState[0], setDrawerOpen = drawerState[1];
 
+    // Optional params carried into a section on navigation (e.g. a search term
+    // to seed when opening FC Members from a dashboard Needs Attention row).
+    var navParamsState = useState(null);
+    var navParams = navParamsState[0], setNavParams = navParamsState[1];
+
     // Refresh /me on mount so stale role lists get corrected.
     useEffect(function () {
       var cancelled = false;
@@ -269,8 +313,9 @@
       return function () { document.removeEventListener('keydown', onKey); };
     }, [drawerOpen]);
 
-    function onSelect(nextId) {
+    function onSelect(nextId, params) {
       setSection(nextId);
+      setNavParams(params || null);
       setDrawerOpen(false);
       var main = document.querySelector('[data-scroll-main]');
       if (main) main.scrollTo({ top: 0, behavior: 'instant' });
@@ -335,12 +380,14 @@
 
       // Main
       h('main', { className: 'portal-main', 'data-scroll-main': '' },
-        activeMeta ? h('div', { className: 'portal-section-header' },
+        // The dashboard and FC Members sections render their own headers
+        // (with extra controls), so suppress the generic section header there.
+        (activeMeta && section !== 'dashboard' && section !== 'members') ? h('div', { className: 'portal-section-header' },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),
           h('h1', null, activeMeta.label)
         ) : null,
         accessible
-          ? h(SectionOutlet, { section: section, session: session })
+          ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect, navParams: navParams })
           : h('div', { className: 'portal-card' },
               h('p', { className: 'portal-flash error' },
                 'You do not have access to this section.'
