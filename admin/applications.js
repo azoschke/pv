@@ -522,7 +522,7 @@
                 list.length ? 'No applications match your filter.' : 'No applications yet. Add the first one.'
               )
             )
-          : h('div', { className: 'portal-card', style: { padding: 0 } },
+          : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
                 h('table', { className: 'portal-table' },
                   h('thead', null,
