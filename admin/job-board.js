@@ -443,17 +443,10 @@
           h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Job Board'),
           h('input', {
             type: 'search',
+            className: 'portal-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
-            placeholder: 'Search postings…',
-            style: {
-              padding: '0.4rem 0.6rem',
-              background: 'var(--bg-darker)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '0.3rem',
-              minWidth: '14rem'
-            }
+            placeholder: 'Search postings…'
           }),
           h('button', {
             type: 'button',
@@ -519,5 +512,15 @@
     );
   }
 
-  window.PVAdminJobBoard = JobBoard;
+  // The Job Board section stacks the jobs management card on top of the
+  // applications management card (loaded from applications.js), mirroring the
+  // bulletin-board-over-roster layout of the division sections.
+  function JobBoardSection() {
+    return h('div', null,
+      h(JobBoard),
+      window.PVAdminApplications ? h(window.PVAdminApplications) : null
+    );
+  }
+
+  window.PVAdminJobBoard = JobBoardSection;
 })();
