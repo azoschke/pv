@@ -50,7 +50,7 @@
   }, []);
 
   var ROLE_ACCESS = {
-    dashboard:        ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
+    dashboard:        ['officer', 'admin'],
     members:          ['officer', 'admin'],
     medical:          ['medical', 'admin'],
     'medical-division': ['officer', 'admin'],
@@ -195,13 +195,13 @@
   function SectionOutlet(props) {
     var section = props.section;
     var session = props.session;
+    var onNavigate = props.onNavigate;
 
     switch (section) {
       case 'dashboard':
-        return h(window.PVAdminComingSoon || Missing('coming-soon.js'), {
-          icon: 'space_dashboard',
-          title: 'Dashboard',
-          subtitle: 'The overview dashboard is being built.'
+        return h(window.PVAdminDashboard || Missing('dashboard.js'), {
+          session: session,
+          onNavigate: onNavigate
         });
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), { session: session });
@@ -371,12 +371,14 @@
 
       // Main
       h('main', { className: 'portal-main', 'data-scroll-main': '' },
-        activeMeta ? h('div', { className: 'portal-section-header' },
+        // The dashboard renders its own header (icon + title + Eorzean date),
+        // so suppress the generic section header for it.
+        (activeMeta && section !== 'dashboard') ? h('div', { className: 'portal-section-header' },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),
           h('h1', null, activeMeta.label)
         ) : null,
         accessible
-          ? h(SectionOutlet, { section: section, session: session })
+          ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect })
           : h('div', { className: 'portal-card' },
               h('p', { className: 'portal-flash error' },
                 'You do not have access to this section.'
