@@ -216,7 +216,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-main .portal-section-header .material-icons {
   font-size: 32px;
-  color: var(--accent-brown);
+  color: var(--accent-red);
 }
 .portal-main .portal-section-header h1 {
   margin: 0;
@@ -906,6 +906,22 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-chip:last-child { border-right: none; }
 .portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
 .portal-chip.is-active { background: var(--accent-brown); color: #fff; }
+
+/* Notes inline link (replaces a bordered button in the Notes column) */
+.notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent-brown);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.notes-link:hover { text-decoration: underline; }
 
 /* Rank group banding */
 .members-table .members-group-row td {

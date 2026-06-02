@@ -95,13 +95,16 @@
     var members = state.members, apps = state.apps, jobs = state.jobs;
     var newApps       = apps.filter(function (a) { return a.stage === 'new'; });
     var scheduledApps = apps.filter(function (a) { return a.stage === 'scheduled'; });
+    // Member attention buckets — kept in sync with members.js needsAttention.
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
-    var inactive      = members.filter(function (m) { return m.activity === 'Inactive'; });
+    var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
+    var inactive      = members.filter(function (m) { return m.activity === 'Inactive' && !m.talked_to; });
     var openJobs      = jobs.filter(function (j) { return j.status === 'open'; });
 
     var stats = [
       { num: members.length,       label: 'FC Members',                  target: 'members' },
       { num: icPending.length,     label: 'IC Interviews Pending',       target: 'members', alert: icPending.length > 0 },
+      { num: icScheduled.length,   label: 'IC Interviews Scheduled',     target: 'members', alert: icScheduled.length > 0 },
       { num: newApps.length,       label: 'New Job Applications Pending', target: 'jobs',    alert: newApps.length > 0 },
       { num: scheduledApps.length, label: 'Job Interviews Pending',      target: 'jobs',    alert: scheduledApps.length > 0 },
       { num: openJobs.length,      label: 'Open Positions',              target: 'jobs' }
@@ -131,6 +134,14 @@
         key: 'ic-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
         name: m.name || 'Unknown',
         desc: 'IC interview not started',
+        source: 'FC Members', target: 'members'
+      });
+    });
+    icScheduled.forEach(function (m) {
+      attention.push({
+        key: 'icsched-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
+        name: m.name || 'Unknown',
+        desc: 'IC interview scheduled',
         source: 'FC Members', target: 'members'
       });
     });

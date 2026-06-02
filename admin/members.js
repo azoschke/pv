@@ -93,11 +93,13 @@
     return TALKED_TO_ACTIVITIES.indexOf(activity) !== -1;
   }
 
-  // A member "needs attention" if their IC interview is still pending, or they
-  // are LOA/Inactive and haven't been talked to yet.
+  // A member "needs attention" if their IC interview is Not Started or
+  // Scheduled, or they are Inactive and haven't been talked to yet.
+  // NOTE: keep this rule in sync with the dashboard's member-derived
+  // attention items (admin/dashboard.js).
   function needsAttention(m) {
     var interviewPending = m.interview === 'Not Started' || m.interview === 'Scheduled';
-    var untalkedInactive = shouldShowTalkedTo(m.activity) && !m.talked_to;
+    var untalkedInactive = m.activity === 'Inactive' && !m.talked_to;
     return interviewPending || untalkedInactive;
   }
 
@@ -112,10 +114,10 @@
     return h(React.Fragment, null,
       h('button', {
         type: 'button',
-        className: 'portal-btn is-small is-ghost',
+        className: 'notes-link',
         onClick: function () { setOpen(true); }
       },
-        h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '16px' } }, 'sticky_note_2'),
+        h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '18px' } }, 'sticky_note_2'),
         h('span', null, 'Read notes')
       ),
       open ? h(window.PVAdminModal, {
