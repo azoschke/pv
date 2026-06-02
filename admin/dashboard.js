@@ -101,14 +101,19 @@
     var inactive      = members.filter(function (m) { return m.activity === 'Inactive' && !m.talked_to; });
     var openJobs      = jobs.filter(function (j) { return j.status === 'open'; });
 
-    var stats = [
-      { num: members.length,       label: 'FC Members',                  target: 'members' },
-      { num: icPending.length,     label: 'IC Interviews Pending',       target: 'members', alert: icPending.length > 0 },
-      { num: icScheduled.length,   label: 'IC Interviews Scheduled',     target: 'members', alert: icScheduled.length > 0 },
-      { num: newApps.length,       label: 'New Job Applications Pending', target: 'jobs',    alert: newApps.length > 0 },
-      { num: scheduledApps.length, label: 'Job Interviews Pending',      target: 'jobs',    alert: scheduledApps.length > 0 },
-      { num: openJobs.length,      label: 'Open Positions',              target: 'jobs' }
-    ];
+    function statTile(num, label, target, opts) {
+      opts = opts || {};
+      return h('button', {
+        type: 'button',
+        className: 'dash-stat'
+          + (opts.alert ? ' is-alert' : '')
+          + (opts.small ? ' is-small' : ''),
+        onClick: function () { onNavigate(target); }
+      },
+        h('span', { className: 'dash-stat-num' }, String(num)),
+        h('span', { className: 'dash-stat-label' }, label)
+      );
+    }
 
     // Cross-feature attention feed, ordered: applications → job interviews →
     // IC interviews → inactive members.
@@ -158,19 +163,25 @@
       header(),
       state.error ? h('p', { className: 'portal-flash error' }, state.error) : null,
 
-      // Stat tiles
-      h('div', { className: 'dash-stats' },
-        stats.map(function (s) {
-          return h('button', {
-            key: s.label,
-            type: 'button',
-            className: 'dash-stat' + (s.alert ? ' is-alert' : ''),
-            onClick: function () { onNavigate(s.target); }
-          },
-            h('span', { className: 'dash-stat-num' }, String(s.num)),
-            h('span', { className: 'dash-stat-label' }, s.label)
-          );
-        })
+      // Stat tiles grouped by stage, with FC Members / Open Positions as
+      // smaller reference tiles on their own row at the end.
+      h('div', { className: 'dash-stat-section' },
+        h('p', { className: 'dash-stat-heading' }, 'Pending'),
+        h('div', { className: 'dash-stats' },
+          statTile(icPending.length, 'IC Interviews', 'members', { alert: icPending.length > 0 }),
+          statTile(newApps.length, 'Job Applications', 'jobs', { alert: newApps.length > 0 })
+        )
+      ),
+      h('div', { className: 'dash-stat-section' },
+        h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
+        h('div', { className: 'dash-stats' },
+          statTile(icScheduled.length, 'IC Interviews', 'members', { alert: icScheduled.length > 0 }),
+          statTile(scheduledApps.length, 'Job Interviews', 'jobs', { alert: scheduledApps.length > 0 })
+        )
+      ),
+      h('div', { className: 'dash-stats dash-stats-small' },
+        statTile(members.length, 'FC Members', 'members', { small: true }),
+        statTile(openJobs.length, 'Open Positions', 'jobs', { small: true })
       ),
 
       // Needs Attention

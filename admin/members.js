@@ -549,8 +549,8 @@
                   filtered.length
                     ? groups.map(function (g) {
                         return [
-                          h('tr', { key: 'grp-' + g.rank, className: 'members-group-row' },
-                            h('td', { colSpan: 8, className: 'members-group-cell' },
+                          h('tr', { key: 'grp-' + g.rank, className: 'portal-group-row' },
+                            h('td', { colSpan: 8, className: 'portal-group-cell' },
                               g.rank + ' · ' + g.members.length)
                           )
                         ].concat(g.members.map(function (m) {
