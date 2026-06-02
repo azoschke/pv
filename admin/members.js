@@ -427,13 +427,19 @@
       if (factionFilter   && parseFactions(m.faction).indexOf(factionFilter) === -1) return false;
       if (interviewFilter && m.interview !== interviewFilter) return false;
       if (activityFilter  && m.activity  !== activityFilter)  return false;
-      if (attentionMode   && !needsAttention(m))              return false;
       return true;
     });
-    // Sort by OOC-rank index, then alphabetical within rank.
-    var filtered = filteredBase.slice().sort(compareMembers);
 
-    var attentionCount = members.filter(needsAttention).length;
+    // Chip counts reflect the active search + dropdown filters (but not the
+    // attention chip itself).
+    var allCount = filteredBase.length;
+    var attentionCount = filteredBase.filter(needsAttention).length;
+
+    // Apply the attention chip, then sort by OOC-rank index, then name.
+    var filtered = (attentionMode
+      ? filteredBase.filter(needsAttention)
+      : filteredBase
+    ).slice().sort(compareMembers);
 
     // Group the sorted rows under their OOC rank, in canonical rank order
     // (unknown ranks last). Only non-empty groups are produced.
@@ -498,7 +504,7 @@
             type: 'button',
             className: 'portal-chip' + (!attentionMode ? ' is-active' : ''),
             onClick: function () { setAttentionMode(false); }
-          }, 'All · ' + members.length),
+          }, 'All · ' + allCount),
           h('button', {
             type: 'button',
             className: 'portal-chip' + (attentionMode ? ' is-active' : ''),
