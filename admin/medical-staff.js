@@ -530,6 +530,9 @@
     var publishedCount = rows.length - needsProfileCount;
 
     return h('div', null,
+      window.PVAdminApplicationsCard
+        ? h(window.PVAdminApplicationsCard, { division: 'medical', label: 'Medical' })
+        : null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
         h('div', {
           style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
@@ -609,11 +612,7 @@
           onDelete: handleDelete,
           allowDelete: allowDelete
         })
-      ) : null,
-
-      window.PVAdminApplicationsCard
-        ? h(window.PVAdminApplicationsCard, { division: 'medical', label: 'Medical' })
-        : null
+      ) : null
     );
   }
 

@@ -615,6 +615,17 @@
       return true;
     });
 
+    // The card is informational and action-required only when populated. Stay
+    // out of the layout entirely while loading or when this division has no
+    // applications; only surface on a fetch error so failures aren't silent.
+    if (loading) return null;
+    if (err) {
+      return h('div', { className: 'portal-card' },
+        h('div', { className: 'portal-flash error' }, err)
+      );
+    }
+    if (!list.length) return null;
+
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, label + ' Applications'),
@@ -626,47 +637,39 @@
             value: nameFilter,
             onChange: function (e) { setNameFilter(e.target.value); }
           }),
-          list.length
-            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-                filtered.length + ' of ' + list.length)
-            : null
+          h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+            filtered.length + ' of ' + list.length)
         )
       ),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
-      loading
-        ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading applications…')
-        : list.length
-          ? h('div', { className: 'portal-table-wrap' },
-              h('table', { className: 'portal-table' },
-                h('thead', null,
-                  h('tr', null,
-                    h('th', null, 'Name'),
-                    h('th', null, 'Position'),
-                    h('th', null, 'Date'),
-                    h('th', null, 'Stage')
-                  )
-                ),
-                h('tbody', null,
-                  filtered.length
-                    ? filtered.map(function (a) {
-                        return h('tr', { key: a.id },
-                          h('td', null, a.member_name),
-                          h('td', null, a.job_title),
-                          h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
-                          h('td', null, h(StageBadge, { stage: a.stage }))
-                        );
-                      })
-                    : h('tr', null,
-                        h('td', {
-                          colSpan: 4,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
-                        }, 'No applications match your filter.')
-                      )
-                )
-              )
+      h('div', { className: 'portal-table-wrap' },
+        h('table', { className: 'portal-table' },
+          h('thead', null,
+            h('tr', null,
+              h('th', null, 'Name'),
+              h('th', null, 'Position'),
+              h('th', null, 'Date'),
+              h('th', null, 'Stage')
             )
-          : h('p', { style: { color: 'var(--text-secondary)' } },
-              'No applications for this division yet.')
+          ),
+          h('tbody', null,
+            filtered.length
+              ? filtered.map(function (a) {
+                  return h('tr', { key: a.id },
+                    h('td', null, a.member_name),
+                    h('td', null, a.job_title),
+                    h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+                    h('td', null, h(StageBadge, { stage: a.stage }))
+                  );
+                })
+              : h('tr', null,
+                  h('td', {
+                    colSpan: 4,
+                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                  }, 'No applications match your filter.')
+                )
+          )
+        )
+      )
     );
   }
 

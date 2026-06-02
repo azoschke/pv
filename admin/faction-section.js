@@ -226,10 +226,10 @@
         composeTitle: 'New ' + label + ' Message',
         showDiscord: false
       }),
-      h(RosterCard, { faction: faction, label: label }),
       (division && window.PVAdminApplicationsCard)
         ? h(window.PVAdminApplicationsCard, { division: division, label: label })
-        : null
+        : null,
+      h(RosterCard, { faction: faction, label: label })
     );
   }
 
