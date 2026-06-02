@@ -60,6 +60,119 @@
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  // Local YYYY-MM-DD for <input type="date"> defaults.
+  function todayStr() {
+    var d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + mm + '-' + dd;
+  }
+
+  // Pull the date portion out of a stored created_at ("YYYY-MM-DD HH:MM:SS").
+  function dateInputValue(iso) {
+    if (!iso) return todayStr();
+    var m = String(iso).match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : todayStr();
+  }
+
+  // Searchable member picker. Source of truth is the member id (value);
+  // backed by a free-text box that filters the roster as you type.
+  function MemberCombobox(props) {
+    var members = props.members;   // already name-sorted
+    var value = props.value;       // selected member id as a string ('' if none)
+    var onChange = props.onChange; // (idString) => void
+
+    var selected = null;
+    for (var i = 0; i < members.length; i++) {
+      if (String(members[i].id) === value) { selected = members[i]; break; }
+    }
+
+    var textState = useState(selected ? selected.name : '');
+    var text = textState[0], setText = textState[1];
+    var openState = useState(false);
+    var open = openState[0], setOpen = openState[1];
+
+    // Resync the visible text if the selection changes from outside.
+    useEffect(function () {
+      setText(selected ? selected.name : '');
+    // eslint-disable-next-line
+    }, [value]);
+
+    var q = text.trim().toLowerCase();
+    var matches = members.filter(function (m) {
+      return !q || (m.name || '').toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 50);
+
+    function pick(m) {
+      onChange(String(m.id));
+      setText(m.name);
+      setOpen(false);
+    }
+
+    function handleBlur() {
+      // Close after any option mousedown has had a chance to fire. If the typed
+      // text exactly names one member, adopt it; otherwise restore the current
+      // selection's name (or clear).
+      setTimeout(function () {
+        setOpen(false);
+        var typed = text.trim().toLowerCase();
+        var exact = members.filter(function (m) {
+          return (m.name || '').toLowerCase() === typed;
+        });
+        if (exact.length === 1) {
+          onChange(String(exact[0].id));
+          setText(exact[0].name);
+        } else {
+          setText(selected ? selected.name : '');
+        }
+      }, 150);
+    }
+
+    return h('div', { style: { position: 'relative' } },
+      h('input', {
+        type: 'text',
+        value: text,
+        placeholder: 'Type to search members…',
+        autoComplete: 'off',
+        onChange: function (e) {
+          setText(e.target.value);
+          setOpen(true);
+          if (value) onChange(''); // editing the text invalidates the prior pick
+        },
+        onFocus: function () { setOpen(true); },
+        onBlur: handleBlur
+      }),
+      open && matches.length
+        ? h('ul', {
+            style: {
+              position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%',
+              margin: '0.2rem 0 0', padding: '0.25rem', listStyle: 'none',
+              maxHeight: '12rem', overflowY: 'auto',
+              background: 'var(--bg-darker)',
+              border: '1px solid var(--border-color)', borderRadius: '0.3rem',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
+            }
+          },
+            matches.map(function (m) {
+              return h('li', { key: m.id },
+                h('button', {
+                  type: 'button',
+                  // mousedown (not click) so it fires before the input blur.
+                  onMouseDown: function (e) { e.preventDefault(); pick(m); },
+                  style: {
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '0.35rem 0.5rem', background: 'none', border: 'none',
+                    color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '0.2rem',
+                    font: 'inherit'
+                  }
+                }, m.name)
+              );
+            })
+          )
+        : null
+    );
+  }
+
   function StageBadge(props) {
     var stage = props.stage;
     var declined = stage === 'declined';
@@ -81,7 +194,8 @@
     var draftState = useState({
       member_id: initial && initial.member_id != null ? String(initial.member_id) : '',
       job_id: initial && initial.job_id != null ? String(initial.job_id) : '',
-      stage: (initial && initial.stage) || 'new'
+      stage: (initial && initial.stage) || 'new',
+      date: dateInputValue(initial && initial.created_at)
     });
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
@@ -117,12 +231,15 @@
       e.preventDefault();
       if (!draft.member_id) { setErr('Pick an FC member.'); return; }
       if (!draft.job_id)    { setErr('Pick a position.'); return; }
+      if (!draft.date)      { setErr('Pick a date.'); return; }
       setSaving(true); setErr('');
       try {
         await onSubmit({
           member_id: Number(draft.member_id),
           job_id: Number(draft.job_id),
-          stage: draft.stage
+          stage: draft.stage,
+          // Stored at noon so the displayed day is stable across time zones.
+          created_at: draft.date + ' 12:00:00'
         });
       } catch (e2) {
         setErr(e2.message || 'Failed to save application.');
@@ -135,15 +252,11 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Member *'),
-        h('select', {
+        h(MemberCombobox, {
+          members: sortedMembers,
           value: draft.member_id,
-          onChange: function (e) { setField('member_id', e.target.value); }
-        },
-          h('option', { value: '' }, 'Select a member…'),
-          sortedMembers.map(function (m) {
-            return h('option', { key: m.id, value: String(m.id) }, m.name);
-          })
-        ),
+          onChange: function (id) { setField('member_id', id); }
+        }),
         !sortedMembers.length ? h('p', { className: 'portal-field-help' },
           'No FC members loaded. Add them under FC Members first.') : null
       ),
@@ -166,14 +279,26 @@
           'No jobs posted yet. Create one in the Jobs card above first.') : null
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Stage *'),
-        h('select', {
-          value: draft.stage,
-          onChange: function (e) { setField('stage', e.target.value); }
-        }, STAGES.map(function (s) {
-          return h('option', { key: s.value, value: s.value }, s.label);
-        }))
+      h('div', { className: 'portal-field-row' },
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Stage *'),
+          h('select', {
+            value: draft.stage,
+            onChange: function (e) { setField('stage', e.target.value); }
+          }, STAGES.map(function (s) {
+            return h('option', { key: s.value, value: s.value }, s.label);
+          }))
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Date *'),
+          h('input', {
+            type: 'date',
+            value: draft.date,
+            max: todayStr(),
+            onChange: function (e) { setField('date', e.target.value); }
+          }),
+          h('p', { className: 'portal-field-help' }, 'Defaults to today. Set earlier to back-date.')
+        )
       ),
 
       h('div', { className: 'portal-form-actions' },
