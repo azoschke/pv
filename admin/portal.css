@@ -149,15 +149,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Stoke', serif;
   font-size: 1.05rem;
+  letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .portal-sidebar .sidebar-nav-item .material-icons {
   font-size: 22px;
-  color: var(--accent-brown);
+  color: var(--text-primary);
 }
 .portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
 .portal-sidebar .sidebar-nav-item.is-active {
@@ -184,14 +185,15 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Stoke', serif;
   font-size: 1rem;
+  letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
 }
 .portal-sidebar .sidebar-footer-btn .material-icons {
   font-size: 20px;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-footer-btn:hover {
   background: var(--bg-card-light);
