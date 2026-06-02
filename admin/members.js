@@ -337,7 +337,7 @@
   }
 
   // --------- Main component ----------
-  function Members() {
+  function Members(props) {
     var allowDelete = PVAdminAPI.hasRole('admin');
 
     var membersState = useState([]);
@@ -353,7 +353,9 @@
     var modalState = useState(null);
     var modalMember = modalState[0], setModalMember = modalState[1];
 
-    var filterState = useState('');
+    // Seed the search from a navigation param (e.g. opened from a dashboard
+    // Needs Attention row) so the member is filtered in on arrival.
+    var filterState = useState((props && props.initialSearch) || '');
     var filter = filterState[0], setFilter = filterState[1];
     var rankFilterState     = useState('');
     var rankFilter     = rankFilterState[0],     setRankFilter     = rankFilterState[1];

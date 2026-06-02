@@ -92,22 +92,18 @@
         h('p', { className: 'dash-loading' }, 'Loading…'));
     }
 
-    var members = state.members, apps = state.apps, jobs = state.jobs;
+    var members = state.members, apps = state.apps;
     var newApps       = apps.filter(function (a) { return a.stage === 'new'; });
     var scheduledApps = apps.filter(function (a) { return a.stage === 'scheduled'; });
     // Member attention buckets — kept in sync with members.js needsAttention.
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
     var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
     var inactive      = members.filter(function (m) { return m.activity === 'Inactive' && !m.talked_to; });
-    var openJobs      = jobs.filter(function (j) { return j.status === 'open'; });
 
-    function statTile(num, label, target, opts) {
-      opts = opts || {};
+    function statTile(num, label, target, alert) {
       return h('button', {
         type: 'button',
-        className: 'dash-stat'
-          + (opts.alert ? ' is-alert' : '')
-          + (opts.small ? ' is-small' : ''),
+        className: 'dash-stat' + (alert ? ' is-alert' : ''),
         onClick: function () { onNavigate(target); }
       },
         h('span', { className: 'dash-stat-num' }, String(num)),
@@ -165,23 +161,21 @@
 
       // Stat tiles grouped by stage, with FC Members / Open Positions as
       // smaller reference tiles on their own row at the end.
-      h('div', { className: 'dash-stat-section' },
-        h('p', { className: 'dash-stat-heading' }, 'Pending'),
-        h('div', { className: 'dash-stats' },
-          statTile(icPending.length, 'IC Interviews', 'members', { alert: icPending.length > 0 }),
-          statTile(newApps.length, 'Job Applications', 'jobs', { alert: newApps.length > 0 })
+      h('div', { className: 'dash-stat-groups' },
+        h('div', { className: 'dash-stat-section' },
+          h('p', { className: 'dash-stat-heading' }, 'Pending'),
+          h('div', { className: 'dash-stats' },
+            statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0),
+            statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0)
+          )
+        ),
+        h('div', { className: 'dash-stat-section' },
+          h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
+          h('div', { className: 'dash-stats' },
+            statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0),
+            statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0)
+          )
         )
-      ),
-      h('div', { className: 'dash-stat-section' },
-        h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
-        h('div', { className: 'dash-stats' },
-          statTile(icScheduled.length, 'IC Interviews', 'members', { alert: icScheduled.length > 0 }),
-          statTile(scheduledApps.length, 'Job Interviews', 'jobs', { alert: scheduledApps.length > 0 })
-        )
-      ),
-      h('div', { className: 'dash-stats dash-stats-small' },
-        statTile(members.length, 'FC Members', 'members', { small: true }),
-        statTile(openJobs.length, 'Open Positions', 'jobs', { small: true })
       ),
 
       // Needs Attention
@@ -206,7 +200,9 @@
                   h('button', {
                     type: 'button',
                     className: 'portal-btn is-ghost is-small dash-open',
-                    onClick: function () { onNavigate(it.target); }
+                    onClick: function () {
+                      onNavigate(it.target, it.target === 'members' ? { search: it.name } : null);
+                    }
                   },
                     h('span', null, 'Open'),
                     h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_forward')

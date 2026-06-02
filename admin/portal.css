@@ -728,7 +728,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-style: italic;
 }
 
-.dash-stat-section { margin-bottom: 1.25rem; }
+/* Pending / Scheduled groups side by side on wide views, stacking when the
+   row can no longer fit two groups. */
+.dash-stat-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
 .dash-stat-heading {
   margin: 0 0 0.5rem;
   font-family: 'Stoke', serif;
@@ -742,9 +749,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   flex-wrap: wrap;
   gap: 1rem;
 }
-.dash-stats-small { margin-bottom: 1.25rem; }
 .dash-stat {
-  flex: 1 1 180px;
+  flex: 1 1 160px;
   max-width: 280px;
   display: flex;
   flex-direction: column;
@@ -774,13 +780,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   color: var(--text-secondary);
 }
-/* Compact reference tiles (FC Members, Open Positions) */
-.dash-stat.is-small {
-  flex: 0 1 200px;
-  padding: 0.75rem 1rem;
-}
-.dash-stat.is-small .dash-stat-num { font-size: 1.7rem; }
-.dash-stat.is-small .dash-stat-label { font-size: 0.72rem; }
 
 .dash-attention-head {
   display: flex;
