@@ -371,9 +371,9 @@
 
       // Main
       h('main', { className: 'portal-main', 'data-scroll-main': '' },
-        // The dashboard renders its own header (icon + title + Eorzean date),
-        // so suppress the generic section header for it.
-        (activeMeta && section !== 'dashboard') ? h('div', { className: 'portal-section-header' },
+        // The dashboard and FC Members sections render their own headers
+        // (with extra controls), so suppress the generic section header there.
+        (activeMeta && section !== 'dashboard' && section !== 'members') ? h('div', { className: 'portal-section-header' },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),
           h('h1', null, activeMeta.label)
         ) : null,

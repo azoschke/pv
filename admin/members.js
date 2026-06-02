@@ -93,6 +93,14 @@
     return TALKED_TO_ACTIVITIES.indexOf(activity) !== -1;
   }
 
+  // A member "needs attention" if their IC interview is still pending, or they
+  // are LOA/Inactive and haven't been talked to yet.
+  function needsAttention(m) {
+    var interviewPending = m.interview === 'Not Started' || m.interview === 'Scheduled';
+    var untalkedInactive = shouldShowTalkedTo(m.activity) && !m.talked_to;
+    return interviewPending || untalkedInactive;
+  }
+
   function NoteCell(props) {
     var value = props.value || '';
     var label = props.label || 'Notes';
@@ -291,7 +299,6 @@
     var factions = parseFactions(m.faction);
     return h('tr', null,
       h('td', null, m.name),
-      h('td', null, m.ooc_rank),
       h('td', null, m.ic_rank || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', null,
         factions.length
@@ -354,6 +361,9 @@
     var interviewFilter = interviewFilterState[0], setInterviewFilter = interviewFilterState[1];
     var activityFilterState = useState('');
     var activityFilter = activityFilterState[0], setActivityFilter = activityFilterState[1];
+    // attentionMode: false = "All", true = "Needs attention".
+    var attentionModeState = useState(false);
+    var attentionMode = attentionModeState[0], setAttentionMode = attentionModeState[1];
 
     async function reload() {
       setErr('');
@@ -417,10 +427,30 @@
       if (factionFilter   && parseFactions(m.faction).indexOf(factionFilter) === -1) return false;
       if (interviewFilter && m.interview !== interviewFilter) return false;
       if (activityFilter  && m.activity  !== activityFilter)  return false;
+      if (attentionMode   && !needsAttention(m))              return false;
       return true;
     });
     // Sort by OOC-rank index, then alphabetical within rank.
     var filtered = filteredBase.slice().sort(compareMembers);
+
+    var attentionCount = members.filter(needsAttention).length;
+
+    // Group the sorted rows under their OOC rank, in canonical rank order
+    // (unknown ranks last). Only non-empty groups are produced.
+    var groups = (function () {
+      var byRank = {};
+      filtered.forEach(function (m) {
+        var r = m.ooc_rank || 'Unassigned';
+        (byRank[r] = byRank[r] || []).push(m);
+      });
+      var ordered = OOC_RANKS.filter(function (r) { return byRank[r]; });
+      var unknown = Object.keys(byRank).filter(function (r) {
+        return OOC_RANKS.indexOf(r) === -1;
+      });
+      return ordered.concat(unknown).map(function (r) {
+        return { rank: r, members: byRank[r] };
+      });
+    })();
 
     var modalOpen = modalMember !== null;
     var modalIsNew = modalOpen && !modalMember.id;
@@ -435,56 +465,72 @@
         options.map(function (v) { return h('option', { key: v, value: v }, v); })
       );
     }
-    var anyFilterActive = filter || rankFilter || factionFilter || interviewFilter || activityFilter;
+    var anyFilterActive = filter || rankFilter || factionFilter || interviewFilter || activityFilter || attentionMode;
 
     return h('div', null,
-      h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-card-header' },
-          h('h2', { className: 'portal-card-title' }, 'Member Directory'),
-          h('div', { className: 'portal-card-actions' },
-            h('input', {
-              type: 'search',
-              className: 'portal-search',
-              placeholder: 'Search name or notes…',
-              value: filter,
-              onChange: function (e) { setFilter(e.target.value); }
-            }),
-            h('button', {
-              type: 'button',
-              className: 'portal-btn',
-              onClick: function () { setModalMember({}); }
-            },
-              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
-              h('span', null, 'Add member')
-            )
-          )
-        ),
-        h('div', { className: 'portal-filter-row' },
-          filterSelect(rankFilter,      setRankFilter,      'All OOC Ranks', OOC_RANKS),
-          filterSelect(factionFilter,   setFactionFilter,   'All Factions',  FACTIONS),
-          filterSelect(interviewFilter, setInterviewFilter, 'All Interviews', INTERVIEWS),
-          filterSelect(activityFilter,  setActivityFilter,  'All Activity',   ACTIVITIES),
-          anyFilterActive ? h('button', {
+      // Own section header (the generic portal header is suppressed for the
+      // members section in portal.js) with search + Add member on the right.
+      h('div', { className: 'portal-section-header members-header' },
+        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'group'),
+        h('h1', null, 'FC Members'),
+        h('div', { className: 'members-header-actions' },
+          h('input', {
+            type: 'search',
+            className: 'portal-search',
+            placeholder: 'Search name or notes…',
+            value: filter,
+            onChange: function (e) { setFilter(e.target.value); }
+          }),
+          h('button', {
             type: 'button',
-            className: 'portal-btn is-ghost is-small',
-            onClick: function () {
-              setFilter(''); setRankFilter(''); setFactionFilter('');
-              setInterviewFilter(''); setActivityFilter('');
-            }
-          }, 'Clear filters') : null
+            className: 'portal-btn',
+            onClick: function () { setModalMember({}); }
+          },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
+            h('span', null, 'Add member')
+          )
+        )
+      ),
+
+      h('div', { className: 'portal-filter-row members-filter-row' },
+        h('div', { className: 'portal-chip-group' },
+          h('button', {
+            type: 'button',
+            className: 'portal-chip' + (!attentionMode ? ' is-active' : ''),
+            onClick: function () { setAttentionMode(false); }
+          }, 'All · ' + members.length),
+          h('button', {
+            type: 'button',
+            className: 'portal-chip' + (attentionMode ? ' is-active' : ''),
+            onClick: function () { setAttentionMode(true); }
+          }, 'Needs attention · ' + attentionCount)
         ),
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
-        loading
-          ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading members…')
-          : h('div', { className: 'portal-table-wrap' },
-              h('table', { className: 'portal-table' },
+        filterSelect(rankFilter,      setRankFilter,      'All OOC Ranks', OOC_RANKS),
+        filterSelect(factionFilter,   setFactionFilter,   'All Factions',  FACTIONS),
+        filterSelect(interviewFilter, setInterviewFilter, 'All IC Interviews', INTERVIEWS),
+        filterSelect(activityFilter,  setActivityFilter,  'All Activity',   ACTIVITIES),
+        anyFilterActive ? h('button', {
+          type: 'button',
+          className: 'portal-btn is-ghost is-small',
+          onClick: function () {
+            setFilter(''); setRankFilter(''); setFactionFilter('');
+            setInterviewFilter(''); setActivityFilter(''); setAttentionMode(false);
+          }
+        }, 'Clear filters') : null
+      ),
+
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      loading
+        ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading members…')
+        : h('div', { className: 'portal-card' },
+            h('div', { className: 'portal-table-wrap' },
+              h('table', { className: 'portal-table members-table' },
                 h('thead', null,
                   h('tr', null,
                     h('th', null, 'Name'),
-                    h('th', null, 'OOC Rank'),
                     h('th', null, 'IC Rank'),
                     h('th', null, 'Faction'),
-                    h('th', null, 'Interview'),
+                    h('th', null, 'IC Interview'),
                     h('th', null, 'Activity'),
                     h('th', null, 'Talked To'),
                     h('th', null, 'Notes'),
@@ -493,24 +539,31 @@
                 ),
                 h('tbody', null,
                   filtered.length
-                    ? filtered.map(function (m) {
-                        return h(ReadRow, {
-                          key: m.id,
-                          member: m,
-                          onEdit: function (member) { setModalMember(member); },
-                          onToggleTalkedTo: handleToggleTalkedTo
-                        });
+                    ? groups.map(function (g) {
+                        return [
+                          h('tr', { key: 'grp-' + g.rank, className: 'members-group-row' },
+                            h('td', { colSpan: 8, className: 'members-group-cell' },
+                              g.rank + ' · ' + g.members.length)
+                          )
+                        ].concat(g.members.map(function (m) {
+                          return h(ReadRow, {
+                            key: m.id,
+                            member: m,
+                            onEdit: function (member) { setModalMember(member); },
+                            onToggleTalkedTo: handleToggleTalkedTo
+                          });
+                        }));
                       })
                     : h('tr', null,
                         h('td', {
-                          colSpan: 9,
+                          colSpan: 8,
                           style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
-                        }, filter ? 'No members match your filter.' : 'No members yet. Click “Add member” to create the first.')
+                        }, anyFilterActive ? 'No members match your filter.' : 'No members yet. Click “Add member” to create the first.')
                       )
                 )
               )
             )
-      ),
+          ),
       modalOpen ? h(window.PVAdminModal, {
         title: modalIsNew ? 'New Member' : 'Edit Member — ' + (modalMember.name || ''),
         size: 'lg',

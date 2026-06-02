@@ -875,6 +875,49 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-family: 'Crimson Pro', serif;
 }
 
+/* --------------- FC Members directory --------------- */
+.members-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Segmented All / Needs attention toggle */
+.portal-chip-group {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.portal-chip {
+  padding: 0.45rem 0.95rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.portal-chip:last-child { border-right: none; }
+.portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
+.portal-chip.is-active { background: var(--accent-brown); color: #fff; }
+
+/* Rank group banding */
+.members-table .members-group-row td {
+  background: var(--bg-card-light);
+  padding: 0.45rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
 /* --------------- Responsive --------------- */
 @media (max-width: 1100px) {
   .division-grid { grid-template-columns: 1fr; }
