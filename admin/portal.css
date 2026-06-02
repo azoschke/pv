@@ -118,9 +118,27 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-sidebar .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   padding: 0.5rem 0.5rem;
   flex: 1;
+}
+.portal-sidebar .sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-sidebar .sidebar-nav-group + .sidebar-nav-group {
+  margin-top: 0.9rem;
+}
+.portal-sidebar .sidebar-nav-group-title {
+  margin: 0;
+  padding: 0.3rem 0.85rem 0.35rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-nav-item {
   display: flex;

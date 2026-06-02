@@ -16,21 +16,41 @@
   var useEffect = React.useEffect;
 
   // --------- Role + section metadata ----------
-  var SECTIONS = [
-    { id: 'members',          label: 'FC Members',         icon: 'group' },
-    { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
-    { id: 'medical-division', label: 'Medical Division',   icon: 'medical_services' },
-    { id: 'mercenary',        label: 'Mercenary Division', icon: 'security' },
-    { id: 'pirate',           label: 'Pirate Division',    icon: 'sailing' },
-    { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' },
-    { id: 'venues',           label: 'Venues',             icon: 'storefront' },
-    { id: 'jobs',             label: 'Job Board',          icon: 'work' },
-    { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
-    { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
-    { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
+  // NAV_GROUPS is the source of truth for sidebar layout: ordered groups, each
+  // with a small-caps header and its nav items. Headers are role-gated — a
+  // group whose items are all hidden for the current role renders nothing.
+  var NAV_GROUPS = [
+    { title: 'Overview', items: [
+      { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
+    ] },
+    { title: 'People', items: [
+      { id: 'members',          label: 'FC Members',         icon: 'group' },
+      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
+    ] },
+    { title: 'Divisions', items: [
+      { id: 'medical-division', label: 'Medical',            icon: 'medical_services' },
+      { id: 'mercenary',        label: 'Mercenary',          icon: 'security' },
+      { id: 'pirate',           label: 'Pirate',             icon: 'sailing' },
+      { id: 'house-staff',      label: 'House Staff',         icon: 'home_work' }
+    ] },
+    { title: 'Operations', items: [
+      { id: 'venues',           label: 'Venues',             icon: 'storefront' },
+      { id: 'jobs',             label: 'Job Board',          icon: 'work' }
+    ] },
+    { title: 'Tools / More', items: [
+      { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
+      { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
+      { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
+    ] }
   ];
 
+  // Flat list derived from NAV_GROUPS for lookups (active section, defaults).
+  var SECTIONS = NAV_GROUPS.reduce(function (acc, g) {
+    return acc.concat(g.items);
+  }, []);
+
   var ROLE_ACCESS = {
+    dashboard:        ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     members:          ['officer', 'admin'],
     medical:          ['medical', 'admin'],
     'medical-division': ['officer', 'admin'],
@@ -82,9 +102,14 @@
     var theme = props.theme;
     var roles = (session && session.roles) || [];
 
-    var visibleSections = SECTIONS.filter(function (s) {
-      return canAccess(s.id, roles);
-    });
+    // Build groups with only the items this role may see; drop empty groups so
+    // the section header never shows above an empty list.
+    var visibleGroups = NAV_GROUPS.map(function (g) {
+      return {
+        title: g.title,
+        items: g.items.filter(function (s) { return canAccess(s.id, roles); })
+      };
+    }).filter(function (g) { return g.items.length > 0; });
 
     return h('div', { className: 'portal-sidebar-body' },
       h('a', { href: '/pv/index.html', className: 'sidebar-brand', 'aria-label': 'Phoenix Vanguard' },
@@ -103,16 +128,21 @@
         )
       ),
       h('nav', { className: 'sidebar-nav' },
-        visibleSections.map(function (s) {
-          var cls = 'sidebar-nav-item' + (s.id === activeSection ? ' is-active' : '');
-          return h('button', {
-            key: s.id,
-            type: 'button',
-            className: cls,
-            onClick: function () { onSelect(s.id); }
-          },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, s.icon),
-            h('span', null, s.label)
+        visibleGroups.map(function (g) {
+          return h('div', { className: 'sidebar-nav-group', key: g.title },
+            h('p', { className: 'sidebar-nav-group-title' }, g.title),
+            g.items.map(function (s) {
+              var cls = 'sidebar-nav-item' + (s.id === activeSection ? ' is-active' : '');
+              return h('button', {
+                key: s.id,
+                type: 'button',
+                className: cls,
+                onClick: function () { onSelect(s.id); }
+              },
+                h('span', { className: 'material-icons', 'aria-hidden': 'true' }, s.icon),
+                h('span', null, s.label)
+              );
+            })
           );
         })
       ),
@@ -167,6 +197,12 @@
     var session = props.session;
 
     switch (section) {
+      case 'dashboard':
+        return h(window.PVAdminComingSoon || Missing('coming-soon.js'), {
+          icon: 'space_dashboard',
+          title: 'Dashboard',
+          subtitle: 'The overview dashboard is being built.'
+        });
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), { session: session });
       case 'medical':
