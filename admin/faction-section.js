@@ -216,6 +216,7 @@
   function FactionSection(props) {
     var faction = props.faction;
     var channel = props.channel;
+    var division = props.division;
     var label = props.label || faction;
 
     return h('div', null,
@@ -225,7 +226,10 @@
         composeTitle: 'New ' + label + ' Message',
         showDiscord: false
       }),
-      h(RosterCard, { faction: faction, label: label })
+      h(RosterCard, { faction: faction, label: label }),
+      (division && window.PVAdminApplicationsCard)
+        ? h(window.PVAdminApplicationsCard, { division: division, label: label })
+        : null
     );
   }
 

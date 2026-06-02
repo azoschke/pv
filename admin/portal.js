@@ -22,6 +22,7 @@
     { id: 'medical-division', label: 'Medical Division',   icon: 'medical_services' },
     { id: 'mercenary',        label: 'Mercenary Division', icon: 'security' },
     { id: 'pirate',           label: 'Pirate Division',    icon: 'sailing' },
+    { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' },
     { id: 'venues',           label: 'Venues',             icon: 'storefront' },
     { id: 'jobs',             label: 'Job Board',          icon: 'work' },
     { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -35,6 +36,7 @@
     'medical-division': ['officer', 'admin'],
     mercenary:        ['mercenary', 'admin'],
     pirate:           ['pirate', 'admin'],
+    'house-staff':    ['officer', 'admin'],
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
     cosmic:           ['officer', 'admin'],
@@ -183,13 +185,22 @@
         return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'Mercenary',
           channel: 'mercenary',
+          division: 'mercenary',
           label: 'Mercenary'
         });
       case 'pirate':
         return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'Pirate',
           channel: 'pirate',
+          division: 'pirate',
           label: 'Pirate'
+        });
+      case 'house-staff':
+        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'House Staff',
+          channel: 'house_staff',
+          division: 'house_staff',
+          label: 'House Staff'
         });
       case 'admin':
         return h(window.PVAdminSettings || Missing('admin-settings.js'), { session: session });

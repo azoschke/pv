@@ -609,7 +609,11 @@
           onDelete: handleDelete,
           allowDelete: allowDelete
         })
-      ) : null
+      ) : null,
+
+      window.PVAdminApplicationsCard
+        ? h(window.PVAdminApplicationsCard, { division: 'medical', label: 'Medical' })
+        : null
     );
   }
 

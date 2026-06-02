@@ -519,5 +519,15 @@
     );
   }
 
-  window.PVAdminJobBoard = JobBoard;
+  // The Job Board section stacks the jobs management card on top of the
+  // applications management card (loaded from applications.js), mirroring the
+  // bulletin-board-over-roster layout of the division sections.
+  function JobBoardSection() {
+    return h('div', null,
+      h(JobBoard),
+      window.PVAdminApplications ? h(window.PVAdminApplications) : null
+    );
+  }
+
+  window.PVAdminJobBoard = JobBoardSection;
 })();
