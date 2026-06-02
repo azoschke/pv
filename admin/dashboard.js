@@ -112,7 +112,7 @@
     var attention = [];
     newApps.forEach(function (a) {
       attention.push({
-        key: 'app-' + a.id, tag: 'Application', tagCls: 'is-application',
+        key: 'app-' + a.id, tag: 'Application', pillCls: 'is-red-fill',
         name: a.member_name || a.name || 'Unknown',
         desc: 'applied for ' + (a.job_title || 'a position'),
         source: 'Job Board', target: 'jobs'
@@ -120,7 +120,7 @@
     });
     scheduledApps.forEach(function (a) {
       attention.push({
-        key: 'sched-' + a.id, tag: 'Job Interview', tagCls: 'is-interview',
+        key: 'sched-' + a.id, tag: 'Job Interview', pillCls: 'is-gold',
         name: a.member_name || a.name || 'Unknown',
         desc: 'Job interview pending',
         source: 'Job Board', target: 'jobs'
@@ -128,7 +128,7 @@
     });
     icPending.forEach(function (m) {
       attention.push({
-        key: 'ic-' + m.id, tag: 'IC Interview', tagCls: 'is-interview',
+        key: 'ic-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
         name: m.name || 'Unknown',
         desc: 'IC interview not started',
         source: 'FC Members', target: 'members'
@@ -136,7 +136,7 @@
     });
     inactive.forEach(function (m) {
       attention.push({
-        key: 'inactive-' + m.id, tag: 'Inactive', tagCls: 'is-inactive',
+        key: 'inactive-' + m.id, tag: 'Inactive', pillCls: 'is-red',
         name: m.name || 'Unknown',
         desc: 'marked inactive',
         source: 'FC Members', target: 'members'
@@ -175,7 +175,7 @@
           : h('div', { className: 'dash-attention-list' },
               attention.map(function (it) {
                 return h('div', { className: 'dash-attention-row', key: it.key },
-                  h('span', { className: 'dash-tag ' + it.tagCls }, it.tag.toUpperCase()),
+                  h('span', { className: 'portal-pill ' + it.pillCls }, it.tag),
                   h('span', { className: 'dash-attention-text' },
                     h('strong', null, it.name), ' ',
                     h('span', null, it.desc), ' ',
