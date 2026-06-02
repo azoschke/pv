@@ -709,17 +709,10 @@
           h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Venue Directory'),
           h('input', {
             type: 'search',
+            className: 'portal-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
-            placeholder: 'Search venues…',
-            style: {
-              padding: '0.4rem 0.6rem',
-              background: 'var(--bg-darker)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '0.3rem',
-              minWidth: '14rem'
-            }
+            placeholder: 'Search venues…'
           }),
           h('button', {
             type: 'button',
