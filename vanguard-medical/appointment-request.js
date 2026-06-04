@@ -6,7 +6,6 @@ const MEDIC_IDS = {
     'Addison Tyrrell':   '271478962964791298',
     'Lixiss Valra':      '505184303198765060',
     "M'iah Reid":        '236311329550368771',
-    'Orlando Oleander':  '298500250815954944',
     'Nikita Lynkasch':   '224310874180026378',
     'Yumiko Moonstone':  '400723333517410315',
     'Camily Mily':       '593575045255659520',
