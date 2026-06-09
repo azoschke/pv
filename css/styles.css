@@ -2534,7 +2534,8 @@ body.nav-sidebar-open {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-family: inherit;
+  font-size: 0.85rem;
   padding: 0.2rem 0.5rem;
   border-radius: 0.25rem;
   border: none;
@@ -2734,6 +2735,7 @@ body.nav-sidebar-open {
 .cdb-data-chip--plum  { background: rgba(140,  94, 120, 0.18); border-color: rgba(140,  94, 120, 0.5); }
 .cdb-data-chip--rust  { background: rgba(158,  92,  58, 0.18); border-color: rgba(158,  92,  58, 0.5); }
 .cdb-data-chip--wine  { background: rgba(122,  46,  46, 0.18); border-color: rgba(122,  46,  46, 0.5); }
+.cdb-data-chip--indigo{ background: rgba( 74,  78, 122, 0.18); border-color: rgba( 74,  78, 122, 0.5); }
 .cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
 
 /* Badge row in the card header (location / job / food) */
@@ -2749,10 +2751,11 @@ body.nav-sidebar-open {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.8rem;
-  font-family: 'Crimson Pro', serif;
-  border-radius: 0.3rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  font-family: 'Stoke', serif;
+  line-height: 1;
+  border-radius: 999px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-darker);
   color: var(--text-primary);
@@ -2764,14 +2767,14 @@ body.nav-sidebar-open {
 
 /* Category badge with per-category accent colors */
 .cdb-cat-badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
   font-family: 'Stoke', serif;
-  border-radius: 0.3rem;
+  border-radius: 999px;
   border: 1px solid var(--border-color);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .cdb-cat-badge--class-a-expert  { background: rgba(122,  46,  46, 0.20); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.5); }

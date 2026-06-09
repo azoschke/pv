@@ -24,10 +24,11 @@
   // Configuration
   // --------------------------------------------------------------------------
 
-  const API_BASE         = 'https://cosmic-exploration.chlorinatorgreen.workers.dev';
-  const USER_STORAGE_KEY = 'cosmic-exploration-v2.userData';
-  const CACHE_KEY        = 'cosmic-exploration-v2.cache';
-  const V1_STORAGE_KEY   = 'cosmic-exploration-database';
+  const API_BASE          = 'https://cosmic-exploration.chlorinatorgreen.workers.dev';
+  const USER_STORAGE_KEY  = 'cosmic-exploration-v2.userData';
+  const CACHE_KEY         = 'cosmic-exploration-v2.cache';
+  const FILTER_STORAGE_KEY = 'cosmic-exploration-v2.filters';
+  const V1_STORAGE_KEY    = 'cosmic-exploration-database';
 
   // Hard-coded only as a fallback before /api/meta resolves; the live meta
   // response from the Worker is authoritative.
@@ -39,12 +40,13 @@
   ];
 
   const FALLBACK_DATA_REWARD_LEVELS = [
-    { key: 'i',   label: 'I',   accent: 'gray'  },
-    { key: 'ii',  label: 'II',  accent: 'tan'   },
-    { key: 'iii', label: 'III', accent: 'olive' },
-    { key: 'iv',  label: 'IV',  accent: 'plum'  },
-    { key: 'v',   label: 'V',   accent: 'rust'  },
-    { key: 'vi',  label: 'VI',  accent: 'wine'  }
+    { key: 'i',   label: 'I',   accent: 'gray'   },
+    { key: 'ii',  label: 'II',  accent: 'tan'    },
+    { key: 'iii', label: 'III', accent: 'olive'  },
+    { key: 'iv',  label: 'IV',  accent: 'plum'   },
+    { key: 'v',   label: 'V',   accent: 'rust'   },
+    { key: 'vi',  label: 'VI',  accent: 'wine'   },
+    { key: 'vii', label: 'VII', accent: 'indigo' }
   ];
 
   const COSMIC_POINTS_META = { key: 'cosmicPoints', label: 'Points', icon: 'public', accent: 'brown' };
@@ -52,6 +54,9 @@
   // --------------------------------------------------------------------------
   // Helpers
   // --------------------------------------------------------------------------
+
+  const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  const romanNumeral = (n) => ROMAN_NUMERALS[n - 1] || String(n);
 
   const splitMacroIntoChunks = (macroText) => {
     if (!macroText) return [''];
@@ -170,6 +175,41 @@
   const saveCache = (meta, quests) => {
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), meta, quests }));
+    } catch (_e) { /* quota — non-fatal */ }
+  };
+
+  // --------------------------------------------------------------------------
+  // Filter prefs (localStorage) — keeps search/filter choices sticky on refresh
+  // --------------------------------------------------------------------------
+
+  const DEFAULT_FILTERS = {
+    searchMode: 'numeric',
+    searchTerm: '',
+    difficultySearch: '',
+    qualitySearch: '',
+    durabilitySearch: '',
+    sortBy: 'questName',
+    filterCategory: 'all',
+    filterLocation: 'all',
+    filterJob: 'all',
+    onlyWithMacro: false
+  };
+
+  const loadFilters = () => {
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return { ...DEFAULT_FILTERS };
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return { ...DEFAULT_FILTERS };
+      return { ...DEFAULT_FILTERS, ...parsed };
+    } catch (_e) {
+      return { ...DEFAULT_FILTERS };
+    }
+  };
+
+  const saveFilters = (filters) => {
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
     } catch (_e) { /* quota — non-fatal */ }
   };
 
@@ -529,25 +569,33 @@
       className: 'cdb-inline-row',
       style: { padding: '0 1rem 0.75rem', flexWrap: 'wrap', gap: '0.4rem' }
     },
-      h('span', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
-      ...(quest.items || []).map((item) => {
+      h('span', { style: { fontSize: '0.9rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
+      ...(quest.items || []).flatMap((item) => {
         const userItem = rec.items[item.id];
         const macroText = (userItem && userItem.macro) || '';
-        const markerValue = quest.id + '-' + item.id;
         if (macroText) {
-          return h('button', {
-            key: item.id,
-            onClick: (e) => { e.stopPropagation(); copyText(macroText, setCopiedItemId, markerValue); },
-            className: 'cdb-copy-btn',
-            title: 'Copy macro'
-          },
-            h('span', { className: 'material-icons cdb-icon-xs' },
-              copiedItemId === markerValue ? 'check' : 'content_copy'
-            ),
-            item.name || 'Item'
-          );
+          // Split long macros so each chunk gets its own copy button, e.g.
+          //   "Item Name - Macro I", "Item Name - Macro II"
+          const chunks = splitMacroIntoChunks(macroText);
+          return chunks.map((chunk, chunkIdx) => {
+            const markerValue = quest.id + '-' + item.id + '-' + chunkIdx;
+            const label = chunks.length > 1
+              ? (item.name || 'Item') + ' - Macro ' + romanNumeral(chunkIdx + 1)
+              : (item.name || 'Item');
+            return h('button', {
+              key: item.id + '-' + chunkIdx,
+              onClick: (e) => { e.stopPropagation(); copyText(chunk, setCopiedItemId, markerValue); },
+              className: 'cdb-copy-btn',
+              title: 'Copy ' + label
+            },
+              h('span', { className: 'material-icons cdb-icon-xs' },
+                copiedItemId === markerValue ? 'check' : 'content_copy'
+              ),
+              label
+            );
+          });
         }
-        return h('button', {
+        return [h('button', {
           key: item.id,
           onClick: (e) => { e.stopPropagation(); startEdit({ focusItemId: item.id }); },
           className: 'cdb-copy-btn',
@@ -556,7 +604,7 @@
         },
           h('span', { className: 'material-icons cdb-icon-xs' }, 'add'),
           item.name || 'Item'
-        );
+        )];
       })
     );
 
@@ -754,17 +802,29 @@
 
     const [userData, setUserData] = useState(loadUserData);
 
-    // Search / filter state
-    const [searchMode, setSearchMode]             = useState('numeric');
-    const [searchTerm, setSearchTerm]             = useState('');
-    const [difficultySearch, setDifficultySearch] = useState('');
-    const [qualitySearch, setQualitySearch]       = useState('');
-    const [durabilitySearch, setDurabilitySearch] = useState('');
-    const [sortBy, setSortBy]                     = useState('questName');
-    const [filterCategory, setFilterCategory]     = useState('all');
-    const [filterLocation, setFilterLocation]     = useState('all');
-    const [filterJob, setFilterJob]               = useState('all');
-    const [onlyWithMacro, setOnlyWithMacro]       = useState(false);
+    // Search / filter state — initialized from saved prefs so it stays sticky
+    const savedFilters = useMemo(loadFilters, []);
+    const [searchMode, setSearchMode]             = useState(savedFilters.searchMode);
+    const [searchTerm, setSearchTerm]             = useState(savedFilters.searchTerm);
+    const [difficultySearch, setDifficultySearch] = useState(savedFilters.difficultySearch);
+    const [qualitySearch, setQualitySearch]       = useState(savedFilters.qualitySearch);
+    const [durabilitySearch, setDurabilitySearch] = useState(savedFilters.durabilitySearch);
+    const [sortBy, setSortBy]                     = useState(savedFilters.sortBy);
+    const [filterCategory, setFilterCategory]     = useState(savedFilters.filterCategory);
+    const [filterLocation, setFilterLocation]     = useState(savedFilters.filterLocation);
+    const [filterJob, setFilterJob]               = useState(savedFilters.filterJob);
+    const [onlyWithMacro, setOnlyWithMacro]       = useState(savedFilters.onlyWithMacro);
+
+    // Persist filter/search choices whenever they change
+    useEffect(() => {
+      saveFilters({
+        searchMode, searchTerm, difficultySearch, qualitySearch, durabilitySearch,
+        sortBy, filterCategory, filterLocation, filterJob, onlyWithMacro
+      });
+    }, [
+      searchMode, searchTerm, difficultySearch, qualitySearch, durabilitySearch,
+      sortBy, filterCategory, filterLocation, filterJob, onlyWithMacro
+    ]);
 
     const [expanded, setExpanded] = useState({});
     const [migrationMsg, setMigrationMsg] = useState('');
