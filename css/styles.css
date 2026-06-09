@@ -2535,7 +2535,7 @@ body.nav-sidebar-open {
   align-items: center;
   gap: 0.25rem;
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   padding: 0.2rem 0.5rem;
   border-radius: 0.25rem;
   border: none;
@@ -2754,8 +2754,6 @@ body.nav-sidebar-open {
   padding: 0.2rem 0.7rem;
   font-size: 0.75rem;
   font-family: 'Stoke', serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   line-height: 1;
   border-radius: 999px;
   border: 1px solid var(--border-color);
@@ -2776,8 +2774,6 @@ body.nav-sidebar-open {
   font-family: 'Stoke', serif;
   border-radius: 999px;
   border: 1px solid var(--border-color);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   line-height: 1;
 }
 

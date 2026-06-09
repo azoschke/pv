@@ -569,7 +569,7 @@
       className: 'cdb-inline-row',
       style: { padding: '0 1rem 0.75rem', flexWrap: 'wrap', gap: '0.4rem' }
     },
-      h('span', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
+      h('span', { style: { fontSize: '0.9rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
       ...(quest.items || []).flatMap((item) => {
         const userItem = rec.items[item.id];
         const macroText = (userItem && userItem.macro) || '';
