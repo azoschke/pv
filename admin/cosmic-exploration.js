@@ -22,6 +22,26 @@
   var useMemo = React.useMemo;
 
   var COSMIC_API_BASE = 'https://cosmic-exploration.chlorinatorgreen.workers.dev';
+  var FILTER_STORAGE_KEY = 'pv-admin.cosmic-exploration.filters';
+
+  function loadFilters() {
+    var defaults = { query: '', filterJob: 'all', filterLoc: 'all', filterCat: 'all' };
+    try {
+      var raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return defaults;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return defaults;
+      return Object.assign(defaults, parsed);
+    } catch (_e) {
+      return defaults;
+    }
+  }
+
+  function saveFilters(filters) {
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+    } catch (_e) { /* quota — non-fatal */ }
+  }
 
   var DATA_REWARD_LEVELS = [
     { key: 'i',   label: 'I'   },
@@ -29,7 +49,8 @@
     { key: 'iii', label: 'III' },
     { key: 'iv',  label: 'IV'  },
     { key: 'v',   label: 'V'   },
-    { key: 'vi',  label: 'VI'  }
+    { key: 'vi',  label: 'VI'  },
+    { key: 'vii', label: 'VII' }
   ];
 
   // ── Worker request helper ───────────────────────────────────────────────────
@@ -140,6 +161,7 @@
         iv:  Number(draft.dataReward.iv)  || 0,
         v:   Number(draft.dataReward.v)   || 0,
         vi:  Number(draft.dataReward.vi)  || 0,
+        vii: Number(draft.dataReward.vii) || 0,
         cosmicPoints: Number(draft.dataReward.cosmicPoints) || 0
       }
     };
@@ -356,15 +378,15 @@
                 onChange: function (e) { setReward(lv.key, e.target.value); }
               })
             );
-          }),
-          h('div', { className: 'portal-field' },
-            h('label', { style: { fontSize: '0.8rem' } }, 'Cosmic Points'),
-            h('input', {
-              type: 'number', min: 0,
-              value: draft.dataReward.cosmicPoints,
-              onChange: function (e) { setReward('cosmicPoints', e.target.value); }
-            })
-          )
+          })
+        ),
+        h('div', { className: 'portal-field', style: { marginTop: '0.5rem', maxWidth: '12rem' } },
+          h('label', { style: { fontSize: '0.8rem' } }, 'Cosmic Points'),
+          h('input', {
+            type: 'number', min: 0,
+            value: draft.dataReward.cosmicPoints,
+            onChange: function (e) { setReward('cosmicPoints', e.target.value); }
+          })
         )
       ),
 
@@ -438,12 +460,20 @@
     var flash = flashState[0], setFlash = flashState[1];
     var formState = useState(null); // null | { quest?: object }
     var formOpen = formState[0], setFormOpen = formState[1];
-    var queryState = useState('');
+    var savedFilters = useMemo(loadFilters, []);
+    var queryState = useState(savedFilters.query);
     var query = queryState[0], setQuery = queryState[1];
-    var filterJobState = useState('all');
+    var filterJobState = useState(savedFilters.filterJob);
     var filterJob = filterJobState[0], setFilterJob = filterJobState[1];
-    var filterLocState = useState('all');
+    var filterLocState = useState(savedFilters.filterLoc);
     var filterLoc = filterLocState[0], setFilterLoc = filterLocState[1];
+    var filterCatState = useState(savedFilters.filterCat);
+    var filterCat = filterCatState[0], setFilterCat = filterCatState[1];
+
+    // Keep search/filter choices sticky across refreshes
+    useEffect(function () {
+      saveFilters({ query: query, filterJob: filterJob, filterLoc: filterLoc, filterCat: filterCat });
+    }, [query, filterJob, filterLoc, filterCat]);
 
     async function reload() {
       setErr('');
@@ -475,13 +505,14 @@
       });
       if (filterJob !== 'all') out = out.filter(function (x) { return x.job === filterJob; });
       if (filterLoc !== 'all') out = out.filter(function (x) { return x.location === filterLoc; });
+      if (filterCat !== 'all') out = out.filter(function (x) { return x.category === filterCat; });
       if (!q) return out;
       return out.filter(function (x) {
         if ((x.questName || '').toLowerCase().indexOf(q) !== -1) return true;
         if ((x.items || []).some(function (it) { return (it.name || '').toLowerCase().indexOf(q) !== -1; })) return true;
         return false;
       });
-    }, [list, query, filterJob, filterLoc]);
+    }, [list, query, filterJob, filterLoc, filterCat]);
 
     async function handleSubmit(payload) {
       var editingId = formOpen && formOpen.quest && formOpen.quest.id;
@@ -506,8 +537,9 @@
       }
     }
 
-    var jobs      = (meta && meta.jobs)      || [];
-    var locations = (meta && meta.locations) || [];
+    var jobs       = (meta && meta.jobs)       || [];
+    var locations  = (meta && meta.locations)  || [];
+    var categories = (meta && meta.categories) || [];
 
     return h('div', null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
@@ -549,6 +581,20 @@
           },
             h('option', { value: 'all' }, 'All locations'),
             locations.map(function (l) { return h('option', { key: l.name, value: l.name }, l.name); })
+          ),
+          h('select', {
+            value: filterCat,
+            onChange: function (e) { setFilterCat(e.target.value); },
+            style: {
+              padding: '0.4rem 0.6rem',
+              background: 'var(--bg-darker)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '0.3rem'
+            }
+          },
+            h('option', { value: 'all' }, 'All classes'),
+            categories.map(function (c) { return h('option', { key: c.name, value: c.name }, c.name); })
           ),
           h('button', {
             type: 'button',
