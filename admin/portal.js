@@ -31,11 +31,11 @@
       { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
       { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
     ] },
-    { title: 'Divisions', items: [
+    { title: 'Factions', items: [
       { id: 'medical-division', label: 'Medical',            icon: 'medical_services' },
       { id: 'mercenary',        label: 'Mercenary',          icon: 'security' },
       { id: 'pirate',           label: 'Pirate',             icon: 'sailing' },
-      { id: 'house-staff',      label: 'House Staff',         icon: 'home_work' }
+      { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' }
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
