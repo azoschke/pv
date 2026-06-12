@@ -65,7 +65,11 @@
           ? 'Edit submitted — it will go live once an officer approves it.'
           : 'Submission updated.');
       } else {
-        await PVAdminAPI.request('POST', '/quests', payload, true);
+        // as_submission routes officers/admins through the same pending-
+        // approval flow as members, tracked under their own submissions.
+        // (Direct, instantly-listed creation lives in the Bounty Board section.)
+        await PVAdminAPI.request('POST', '/quests',
+          Object.assign({}, payload, { as_submission: true }), true);
         flashFor('Quest submitted! It will appear on the public board once an officer approves it.');
       }
       setModal(null);
