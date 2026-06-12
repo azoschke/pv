@@ -252,10 +252,11 @@ pre {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   font-family: 'Stoke', serif;
   font-size: 0.95rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
   color: var(--text-secondary);
   text-decoration: none;
   background: transparent;
@@ -1817,8 +1818,9 @@ body.nav-sidebar-open {
 
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
-/* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
-@media (max-width: 900px) {
+/* 1080px (not 900) since the menu gained Bounty Board + Factions: with
+   nowrap labels the full row no longer fits below that. */
+@media (max-width: 1080px) {
   .hamburger {
     display: flex;
     margin-left: auto;
