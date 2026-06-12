@@ -424,8 +424,8 @@
     var signupMeta = document.createElement("p");
     signupMeta.className = "job-card-meta quest-card-signups";
     signupMeta.textContent = signups.length === 1
-      ? "1 adventurer signed up"
-      : signups.length + " adventurers signed up";
+      ? "1 member signed up"
+      : signups.length + " members signed up";
     body.appendChild(signupMeta);
 
     card.appendChild(body);
