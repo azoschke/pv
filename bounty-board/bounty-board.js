@@ -471,7 +471,7 @@
     var t = parseQuestDate(q);
     var parts = [];
     if (q.schedule_mode === "tbd") {
-      parts.push("Date TBD — sign up to express interest. Once enough adventurers sign up, a date will be set.");
+      parts.push("Date TBD — sign up to express interest.");
     } else if (q.schedule_mode === "repeatable") {
       parts.push(t != null ? "Next run: " + formatLocal(t) : "Repeatable quest");
       if (q.cadence_note) parts.push(q.cadence_note);
