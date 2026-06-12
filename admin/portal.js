@@ -23,19 +23,25 @@
     { title: 'Overview', items: [
       { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
     ] },
+    { title: 'Personal', items: [
+      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' },
+      { id: 'my-applications',  label: 'My Applications',    icon: 'assignment' }
+    ] },
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
+      { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
       { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
     ] },
-    { title: 'Divisions', items: [
+    { title: 'Factions', items: [
       { id: 'medical-division', label: 'Medical',            icon: 'medical_services' },
       { id: 'mercenary',        label: 'Mercenary',          icon: 'security' },
       { id: 'pirate',           label: 'Pirate',             icon: 'sailing' },
-      { id: 'house-staff',      label: 'House Staff',         icon: 'home_work' }
+      { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' }
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
-      { id: 'jobs',             label: 'Job Board',          icon: 'work' }
+      { id: 'jobs',             label: 'Job Board',          icon: 'work' },
+      { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' }
     ] },
     { title: 'Tools / More', items: [
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -49,9 +55,15 @@
     return acc.concat(g.items);
   }, []);
 
+  // '*' means any logged-in account that has at least one role. Freshly
+  // registered accounts have no roles and see nothing until an admin assigns
+  // one (the App renders an "awaiting approval" notice instead).
   var ROLE_ACCESS = {
     dashboard:        ['officer', 'admin'],
+    'my-profile':     '*',
+    'my-applications': '*',
     members:          ['officer', 'admin'],
+    'member-profiles': ['officer', 'admin'],
     medical:          ['medical', 'admin'],
     'medical-division': ['officer', 'admin'],
     mercenary:        ['mercenary', 'admin'],
@@ -59,12 +71,14 @@
     'house-staff':    ['officer', 'admin'],
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
+    bounties:         ['officer', 'admin'],
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
   };
 
   function canAccess(sectionId, roles) {
+    if (ROLE_ACCESS[sectionId] === '*') return !!(roles && roles.length);
     if (!roles) return false;
     if (roles.indexOf('admin') !== -1) return true;
     var allowed = ROLE_ACCESS[sectionId] || [];
@@ -203,6 +217,14 @@
           session: session,
           onNavigate: onNavigate
         });
+      case 'my-profile':
+        return h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
+      case 'my-applications':
+        return h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
+      case 'member-profiles':
+        return h(window.PVAdminMemberProfiles || Missing('member-profiles.js'), { session: session });
+      case 'bounties':
+        return h(window.PVAdminBounties || Missing('bounties.js'), { session: session });
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), {
           session: session,
@@ -215,7 +237,12 @@
       case 'venues':
         return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
       case 'jobs':
-        return h(window.PVAdminJobBoard || Missing('job-board.js'), { session: session });
+        return h(window.PVAdminJobBoard || Missing('job-board.js'), {
+          session: session,
+          initialView: (props.navParams && props.navParams.view) || 'postings',
+          initialStage: (props.navParams && props.navParams.stage) || '',
+          initialSearch: (props.navParams && props.navParams.search) || ''
+        });
       case 'cosmic':
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
@@ -268,7 +295,15 @@
     var sessionState = useState(initialSession);
     var session = sessionState[0], setSession = sessionState[1];
 
-    var sectionState = useState(defaultSectionFor((initialSession && initialSession.roles) || []));
+    // ?section=<id> deep-links straight to a section (e.g. the public bounty
+    // board's "Submit a quest" button opens My Profile), if the role allows.
+    var initialRoles = (initialSession && initialSession.roles) || [];
+    var requestedSection = new URLSearchParams(window.location.search).get('section');
+    var sectionState = useState(
+      (requestedSection && canAccess(requestedSection, initialRoles))
+        ? requestedSection
+        : defaultSectionFor(initialRoles)
+    );
     var section = sectionState[0], setSection = sectionState[1];
 
     var themeState = useState(getTheme());
@@ -337,6 +372,11 @@
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });
     var accessible = activeMeta ? canAccess(activeMeta.id, session.roles || []) : false;
 
+    // Freshly registered accounts have no roles, which unlocks no sections at
+    // all — show an "awaiting approval" notice instead of an empty shell.
+    var roles = session.roles || [];
+    var hasAnyAccess = SECTIONS.some(function (s) { return canAccess(s.id, roles); });
+
     var sidebarProps = {
       session: session,
       activeSection: section,
@@ -386,7 +426,15 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),
           h('h1', null, activeMeta.label)
         ) : null,
-        accessible
+        !hasAnyAccess
+          ? h('div', { className: 'portal-card' },
+              h('h2', { className: 'portal-card-title' }, 'Account awaiting approval'),
+              h('p', { style: { margin: '0.6rem 0 0' } },
+                'Your account was created successfully, but an officer has not assigned it a role yet. ' +
+                'The portal stays locked until that happens — check back soon, or give an officer a nudge.'
+              )
+            )
+          : accessible
           ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect, navParams: navParams })
           : h('div', { className: 'portal-card' },
               h('p', { className: 'portal-flash error' },

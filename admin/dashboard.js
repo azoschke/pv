@@ -100,11 +100,11 @@
     var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
     var inactive      = members.filter(function (m) { return m.activity === 'Inactive' && !m.talked_to; });
 
-    function statTile(num, label, target, alert) {
+    function statTile(num, label, target, alert, params) {
       return h('button', {
         type: 'button',
         className: 'dash-stat' + (alert ? ' is-alert' : ''),
-        onClick: function () { onNavigate(target); }
+        onClick: function () { onNavigate(target, params || null); }
       },
         h('span', { className: 'dash-stat-num' }, String(num)),
         h('span', { className: 'dash-stat-label' }, label)
@@ -115,19 +115,23 @@
     // IC interviews → inactive members.
     var attention = [];
     newApps.forEach(function (a) {
+      var name = a.member_name || a.name || 'Unknown';
       attention.push({
         key: 'app-' + a.id, tag: 'Application', pillCls: 'is-red-fill',
-        name: a.member_name || a.name || 'Unknown',
+        name: name,
         desc: 'applied for ' + (a.job_title || 'a position'),
-        source: 'Job Board', target: 'jobs'
+        source: 'Job Board', target: 'jobs',
+        params: { view: 'applications', stage: 'new', search: name }
       });
     });
     scheduledApps.forEach(function (a) {
+      var name = a.member_name || a.name || 'Unknown';
       attention.push({
         key: 'sched-' + a.id, tag: 'Job Interview', pillCls: 'is-gold',
-        name: a.member_name || a.name || 'Unknown',
+        name: name,
         desc: 'Job interview pending',
-        source: 'Job Board', target: 'jobs'
+        source: 'Job Board', target: 'jobs',
+        params: { view: 'applications', stage: 'scheduled', search: name }
       });
     });
     icPending.forEach(function (m) {
@@ -135,7 +139,8 @@
         key: 'ic-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
         name: m.name || 'Unknown',
         desc: 'IC interview not started',
-        source: 'FC Members', target: 'members'
+        source: 'FC Members', target: 'members',
+        params: { search: m.name }
       });
     });
     icScheduled.forEach(function (m) {
@@ -143,7 +148,8 @@
         key: 'icsched-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
         name: m.name || 'Unknown',
         desc: 'IC interview scheduled',
-        source: 'FC Members', target: 'members'
+        source: 'FC Members', target: 'members',
+        params: { search: m.name }
       });
     });
     inactive.forEach(function (m) {
@@ -151,7 +157,8 @@
         key: 'inactive-' + m.id, tag: 'Inactive', pillCls: 'is-red',
         name: m.name || 'Unknown',
         desc: 'marked inactive',
-        source: 'FC Members', target: 'members'
+        source: 'FC Members', target: 'members',
+        params: { search: m.name }
       });
     });
 
@@ -166,14 +173,16 @@
           h('p', { className: 'dash-stat-heading' }, 'Pending'),
           h('div', { className: 'dash-stats' },
             statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0),
-            statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0)
+            statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
+              { view: 'applications', stage: 'new' })
           )
         ),
         h('div', { className: 'dash-stat-section' },
           h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
           h('div', { className: 'dash-stats' },
             statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0),
-            statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0)
+            statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0,
+              { view: 'applications', stage: 'scheduled' })
           )
         )
       ),
@@ -201,7 +210,7 @@
                     type: 'button',
                     className: 'portal-btn is-ghost is-small dash-open',
                     onClick: function () {
-                      onNavigate(it.target, it.target === 'members' ? { search: it.name } : null);
+                      onNavigate(it.target, it.params || null);
                     }
                   },
                     h('span', null, 'Open'),

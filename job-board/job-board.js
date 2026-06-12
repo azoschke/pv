@@ -5,12 +5,19 @@
 //  a card grid with click-to-expand modal. Filters by division (category) and
 //  a toggle to reveal closed/filled postings. Open jobs always float to top.
 //
+//  Logged-in members (session shared with the management portal) can apply to
+//  open postings from the detail modal and withdraw while still unreviewed.
+//
 //  Worker endpoints used:
-//    GET /jobs          -> list
+//    GET    /jobs                     -> list
+//    GET    /my/applications  (auth)  -> own applications
+//    POST   /jobs/:id/apply   (auth)
+//    DELETE /my/applications/:id (auth, stage 'new' only)
 // ============================================================================
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
+  var SESSION_KEY = "pv.admin.session";
   var SIDEBAR_KEY = "pv-jobs-sidebar-hidden";
   var FILTER_KEY  = "pv-jobs-filters";
   var SORT_KEY    = "pv-jobs-sort";
@@ -50,8 +57,45 @@
 
   if (window.marked && marked.use) marked.use({ breaks: true });
 
+  // ── Session (shared with the management portal) ──────────────────────────
+  function getSession() {
+    try {
+      var raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      if (!s || !s.token) return null;
+      if (s.expires_at) {
+        var exp = new Date(s.expires_at).getTime();
+        if (!isNaN(exp) && exp <= Date.now()) return null;
+      }
+      return s;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  async function authedRequest(method, path) {
+    var session = getSession();
+    if (!session) throw new Error("You are no longer logged in.");
+    var res = await fetch(API_BASE + path, {
+      method: method,
+      headers: {
+        "Accept": "application/json",
+        "Authorization": "Bearer " + session.token
+      }
+    });
+    var text = await res.text();
+    var data = null;
+    if (text) { try { data = JSON.parse(text); } catch (_e) { data = null; } }
+    if (!res.ok) {
+      throw new Error((data && data.error) || ("Request failed (" + res.status + ")"));
+    }
+    return data;
+  }
+
   // ── State ────────────────────────────────────────────────────────────────
   var allJobs = [];
+  var myApplications = [];   // own applications, loaded when logged in
   var filters = {
     search: "",
     categories: {},   // { medical: true, ... }
@@ -417,11 +461,92 @@
         '<h2 class="job-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
         contactHtml +
         '<div class="job-modal-desc">' + descHtml + '</div>' +
+        applyHtml(j) +
+        '<p id="job-action-error" class="quest-action-error" style="display:none;"></p>' +
       '</div>';
+
+    wireApplyActions(j);
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+  }
+
+  // ── Apply / withdraw ─────────────────────────────────────────────────────
+  var STAGE_LABEL = { new: "Submitted", scheduled: "Interview scheduled", accepted: "Accepted", declined: "Declined" };
+
+  function myApplicationFor(j) {
+    for (var i = 0; i < myApplications.length; i++) {
+      var a = myApplications[i];
+      if (a.job_id === j.id && a.stage !== "declined") return a;
+    }
+    return null;
+  }
+
+  function applyHtml(j) {
+    if (j.status !== "open") return "";
+    if (!getSession()) {
+      // Round-trip through login and come back to the board to finish applying.
+      return '<div class="quest-modal-actions">' +
+        '<a class="quest-action-btn" href="/pv/admin/login.html?redirect=' +
+        encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
+        '</div>';
+    }
+    var app = myApplicationFor(j);
+    if (!app) {
+      return '<div class="quest-modal-actions">' +
+        '<button type="button" class="quest-action-btn" id="job-apply-btn">Apply</button>' +
+        '</div>';
+    }
+    if (app.stage === "new") {
+      return '<div class="quest-modal-actions">' +
+        '<button type="button" class="quest-action-btn is-ghost" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
+        '<span class="quest-action-note">Application submitted.</span>' +
+        '</div>';
+    }
+    return '<div class="quest-modal-actions">' +
+      '<span class="quest-action-note">Application status: ' + escapeHTML(STAGE_LABEL[app.stage] || app.stage) + '</span>' +
+      '</div>';
+  }
+
+  function wireApplyActions(j) {
+    var applyBtn = document.getElementById("job-apply-btn");
+    var withdrawBtn = document.getElementById("job-withdraw-btn");
+    var errEl = document.getElementById("job-action-error");
+
+    function showError(msg) {
+      if (errEl) { errEl.textContent = msg; errEl.style.display = "block"; }
+    }
+
+    async function act(btn, fn) {
+      btn.disabled = true;
+      try {
+        await fn();
+        await loadMyApplications();
+        openModal(j);
+      } catch (e) {
+        btn.disabled = false;
+        showError(e.message || "Something went wrong.");
+      }
+    }
+
+    if (applyBtn) applyBtn.addEventListener("click", function () {
+      act(applyBtn, function () { return authedRequest("POST", "/jobs/" + j.id + "/apply"); });
+    });
+    if (withdrawBtn) withdrawBtn.addEventListener("click", function () {
+      var appId = withdrawBtn.dataset.appId;
+      act(withdrawBtn, function () { return authedRequest("DELETE", "/my/applications/" + appId); });
+    });
+  }
+
+  async function loadMyApplications() {
+    if (!getSession()) { myApplications = []; return; }
+    try {
+      var data = await authedRequest("GET", "/my/applications");
+      myApplications = Array.isArray(data) ? data : [];
+    } catch (_e) {
+      myApplications = [];
+    }
   }
 
   function closeModal() {
@@ -461,5 +586,5 @@
 
   loadFilters();
   buildFilterUI();
-  loadJobs();
+  loadMyApplications().then(loadJobs);
 })();

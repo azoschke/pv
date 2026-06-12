@@ -252,10 +252,11 @@ pre {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   font-family: 'Stoke', serif;
   font-size: 0.95rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
   color: var(--text-secondary);
   text-decoration: none;
   background: transparent;
@@ -1816,7 +1817,6 @@ body.nav-sidebar-open {
 }
 
 
-/* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 @media (max-width: 900px) {
   .hamburger {
@@ -3545,3 +3545,102 @@ body.nav-sidebar-open {
   .job-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
 }
 
+
+
+/* =============================================================================
+   16. BOUNTY BOARD + FACTION ROSTERS — public pages
+   Reuses the job-card / job-modal and venue-card / venue-modal patterns; the
+   classes below cover the quest schedule badges and the member action row
+   (sign up / apply) shown inside detail modals.
+   ========================================================================== */
+
+/* Schedule badge variants (layered on .job-badge.job-badge-status) */
+.job-badge-status.quest-sched-scheduled  { background: var(--accent-red); color: #fff; }
+.job-badge-status.quest-sched-tbd        { background: #8a6d2f; color: #fff; }
+.job-badge-status.quest-sched-repeatable { background: #2f6d62; color: #fff; }
+.job-badge-status.quest-sched-past       { background: rgba(0, 0, 0, 0.62); color: #f3e9d2; }
+
+/* Mission type badge variants (layered on .job-badge.job-badge-category) */
+.job-badge-category.quest-type-training      { background: #2f5d42; color: #f3e9d2; }
+.job-badge-category.quest-type-investigation { background: #4a3566; color: #f3e9d2; }
+.job-badge-category.quest-type-bounty        { background: #6e3a35; color: #f3e9d2; }
+.job-badge-category.quest-type-escort        { background: #2f4d62; color: #f3e9d2; }
+.job-badge-category.quest-type-gathering     { background: #6e5a2f; color: #f3e9d2; }
+
+.quest-card-stats { letter-spacing: 0.05em; }
+
+.quest-card-signups {
+  margin-top: auto;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.quest-participants { margin-top: 1.1rem; }
+
+.quest-modal-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.quest-action-btn {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  border-radius: 0.3rem;
+  padding: 0.55rem 1.3rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: filter 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.quest-action-btn:hover { filter: brightness(1.08); }
+
+.quest-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.quest-action-btn.is-ghost {
+  background: transparent;
+  color: var(--accent-brown);
+  border-color: var(--border-color);
+}
+
+.quest-action-btn.is-ghost:hover {
+  border-color: var(--accent-brown);
+  color: var(--accent-red);
+  filter: none;
+}
+
+.quest-action-note {
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.quest-action-error {
+  color: var(--accent-red);
+  font-size: 0.92rem;
+  margin-top: 0.5rem;
+}
+
+/* "Submit a quest" sits at the right edge of the bounty board toolbar */
+.quest-submit-btn {
+  margin-left: auto;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .quest-submit-btn { margin-left: 0; width: 100%; justify-content: center; }
+}

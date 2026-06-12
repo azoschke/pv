@@ -539,10 +539,38 @@
   // The Job Board section stacks the jobs management card on top of the
   // applications management card (loaded from applications.js), mirroring the
   // bulletin-board-over-roster layout of the division sections.
-  function JobBoardSection() {
+  // Segmented Postings / Applications toggle (mirrors the FC Members chips).
+  // The dashboard deep-links into the Applications view with a stage filter
+  // (and member search) via portal navParams.
+  function JobBoardSection(props) {
+    var viewState = useState(
+      props && props.initialView === 'applications' ? 'applications' : 'postings'
+    );
+    var view = viewState[0], setView = viewState[1];
+
     return h('div', null,
-      h(JobBoard),
-      window.PVAdminApplications ? h(window.PVAdminApplications) : null
+      h('div', { className: 'portal-filter-row', style: { marginBottom: '1rem' } },
+        h('div', { className: 'portal-chip-group' },
+          h('button', {
+            type: 'button',
+            className: 'portal-chip' + (view === 'postings' ? ' is-active' : ''),
+            onClick: function () { setView('postings'); }
+          }, 'Job Postings'),
+          h('button', {
+            type: 'button',
+            className: 'portal-chip' + (view === 'applications' ? ' is-active' : ''),
+            onClick: function () { setView('applications'); }
+          }, 'Applications')
+        )
+      ),
+      view === 'postings'
+        ? h(JobBoard)
+        : (window.PVAdminApplications
+            ? h(window.PVAdminApplications, {
+                initialStage: (props && props.initialStage) || '',
+                initialSearch: (props && props.initialSearch) || ''
+              })
+            : null)
     );
   }
 

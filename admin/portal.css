@@ -144,20 +144,20 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
+  padding: 0.5rem 0.85rem;
   background: transparent;
   border: none;
   border-radius: 4px;
   color: var(--text-primary);
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .portal-sidebar .sidebar-nav-item .material-icons {
-  font-size: 22px;
+  font-size: 18px;
   color: var(--text-primary);
 }
 .portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
@@ -998,4 +998,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   .portal-field-row { grid-template-columns: 1fr; }
   .portal-search { min-width: 0; width: 100%; }
   .portal-card-actions { width: 100%; }
+  /* Section headers with extra content (dashboard date, FC Members search +
+     add button) wrap instead of overflowing the viewport. */
+  .portal-main .portal-section-header { flex-wrap: wrap; }
+  .dashboard-header .dashboard-date {
+    flex-basis: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+  .members-header-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
 }
