@@ -96,7 +96,7 @@
         }, true);
         setFlash(draft.published
           ? 'Profile saved and published.'
-          : 'Profile saved. It stays off the public rosters until you publish it.');
+          : 'Profile saved. It will not be added to the public roster until you publish it.');
         setTimeout(function () { setFlash(''); }, 4000);
         onSaved();
       } catch (e2) {
@@ -113,7 +113,7 @@
         h('strong', null, member.name),
         rosterPages.length
           ? '. When published, it appears on the ' + rosterPages.join(' and ') + ' roster page' + (rosterPages.length > 1 ? 's' : '') + '.'
-          : '. Your faction does not currently have a public roster page — ask an officer if that seems wrong. You can still fill out and publish your profile; it will appear automatically once your faction is updated.'
+          : '. Your faction does not currently have a public roster page — ask an officer if you think this is inccorect. You can still fill out and publish your profile; it will appear automatically if your faction is updated.'
       ),
 
       flash ? h('div', { className: 'portal-flash success' }, flash) : null,
@@ -188,10 +188,10 @@
               checked: draft.published,
               onChange: function (e) { setField('published', e.target.checked); }
             }),
-            h('span', null, 'Publish my profile on the public roster')
+            h('span', null, 'Publish my profile')
           ),
           h('p', { className: 'portal-field-help' },
-            'Off by default. The public page shows only what you enter above plus your character name — never OOC information.'
+            'Off by default, select if you would like to list your profile on the public roster.'
           )
         ),
 
