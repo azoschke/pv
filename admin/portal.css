@@ -186,13 +186,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 4px;
   color: var(--text-secondary);
   font-family: 'Stoke', serif;
-  font-size: 1rem;
+  font-size: .85rem;
   letter-spacing: 0.02em;
   text-align: left;
   cursor: pointer;
 }
 .portal-sidebar .sidebar-footer-btn .material-icons {
-  font-size: 20px;
+  font-size: 18px;
   color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-footer-btn:hover {
