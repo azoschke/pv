@@ -398,7 +398,7 @@
           }, 'New quest')
         ),
         h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
-          'Quests never hide themselves: a one-off whose date has passed gets a "Past date" pill here — re-date it, hide it, or delete it. Repeatable quests just need their next run set after each outing.'
+          'Manage and approve bounty board quests. Make sure to update repeatable quests after the event date has passed.'
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
       ),
