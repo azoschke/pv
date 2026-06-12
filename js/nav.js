@@ -164,35 +164,68 @@
 
     placeholder.innerHTML = navHTML;
 
-    // Mark active dropdown + sub-link
+    // Mark active dropdown + sub-link. Exact href matches win — pages can
+    // live in a dropdown outside their own URL section (e.g. the Medical
+    // staff roster sits under Community) — with the data-page section match
+    // as the fallback for anything not linked verbatim.
     const loc = getCurrentLocation();
+    const currentPath = window.location.pathname;
+
+    let exactMatched = false;
     placeholder.querySelectorAll('.nav-dropdown[data-page]').forEach(function (dropdown) {
-      const pages = dropdown.dataset.page.split(/\s+/).filter(Boolean);
-      if (pages.indexOf(loc.section) !== -1) {
+      const sub = dropdown.querySelector('.nav-sublink[href="' + currentPath + '"]');
+      if (sub) {
+        exactMatched = true;
         dropdown.classList.add('active');
         const toggle = dropdown.querySelector('.nav-dropdown-toggle');
         if (toggle) toggle.classList.add('active');
-        const sub = dropdown.querySelector('.nav-sublink[data-subpage="' + loc.page + '"]');
-        if (sub) sub.classList.add('active');
+        sub.classList.add('active');
       }
     });
+
+    if (!exactMatched) {
+      placeholder.querySelectorAll('.nav-dropdown[data-page]').forEach(function (dropdown) {
+        const pages = dropdown.dataset.page.split(/\s+/).filter(Boolean);
+        if (pages.indexOf(loc.section) !== -1) {
+          dropdown.classList.add('active');
+          const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+          if (toggle) toggle.classList.add('active');
+          const sub = dropdown.querySelector('.nav-sublink[data-subpage="' + loc.page + '"]');
+          if (sub) sub.classList.add('active');
+        }
+      });
+    }
 
     // Also support any legacy top-level .nav-link[data-page]
     placeholder.querySelectorAll('.nav-link[data-page]').forEach(function (link) {
       if (link.dataset.page === loc.section) link.classList.add('active');
     });
 
-    // Mark active section in sidebar too
+    // Mark active section in sidebar too (same exact-href-first rule)
+    let sidebarExactMatched = false;
     document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
-      const pages = section.dataset.page.split(/\s+/).filter(Boolean);
-      if (pages.indexOf(loc.section) !== -1) {
+      const sub = section.querySelector('.nav-sublink[href="' + currentPath + '"]');
+      if (sub) {
+        sidebarExactMatched = true;
         section.classList.add('active', 'open');
         const toggle = section.querySelector('.nav-sidebar-toggle');
         if (toggle) toggle.setAttribute('aria-expanded', 'true');
-        const sub = section.querySelector('.nav-sublink[data-subpage="' + loc.page + '"]');
-        if (sub) sub.classList.add('active');
+        sub.classList.add('active');
       }
     });
+
+    if (!sidebarExactMatched) {
+      document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
+        const pages = section.dataset.page.split(/\s+/).filter(Boolean);
+        if (pages.indexOf(loc.section) !== -1) {
+          section.classList.add('active', 'open');
+          const toggle = section.querySelector('.nav-sidebar-toggle');
+          if (toggle) toggle.setAttribute('aria-expanded', 'true');
+          const sub = section.querySelector('.nav-sublink[data-subpage="' + loc.page + '"]');
+          if (sub) sub.classList.add('active');
+        }
+      });
+    }
 
     // Wire up dropdown toggles
     wireDropdowns(placeholder);

@@ -20,6 +20,7 @@
   var useEffect = React.useEffect;
 
   var ROLE_CATALOG = [
+    { slug: 'member',    label: 'Member' },
     { slug: 'medical',   label: 'Medical' },
     { slug: 'mercenary', label: 'Mercenary' },
     { slug: 'pirate',    label: 'Pirate' },

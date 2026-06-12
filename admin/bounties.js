@@ -35,6 +35,9 @@
   // Human labels for the fields a proposed edit may touch, in display order.
   var EDIT_FIELDS = [
     ['title', 'Title'],
+    ['mission_type', 'Mission type'],
+    ['difficulty', 'Difficulty'],
+    ['group_size', 'Group size'],
     ['schedule_mode', 'Schedule'],
     ['scheduled_at', 'Date/time'],
     ['cadence_note', 'Cadence'],
@@ -48,6 +51,7 @@
     if (value == null || value === '') return '—';
     if (key === 'scheduled_at') return U.formatLocal(value) || String(value);
     if (key === 'schedule_mode') return U.SCHEDULE_PILL[value] || String(value);
+    if (key === 'difficulty') return U.difficultyStars(value) || String(value);
     return String(value);
   }
 
@@ -101,6 +105,9 @@
     return h('div', null,
       row('Title', q.title),
       row('Submitted by', q.submitted_by_name),
+      row('Mission type', q.mission_type),
+      row('Difficulty', U.difficultyStars(q.difficulty)),
+      row('Group size', q.group_size),
       row('Schedule', U.scheduleSummary(q)),
       row('Reward', q.reward),
       row('Contact', q.contact),
@@ -209,6 +216,18 @@
       }
     }
 
+    async function clearSignups(q) {
+      if (!confirm('Clear all ' + (q.signups || []).length + ' signup(s) on "' + q.title + '"?')) return;
+      try {
+        await PVAdminAPI.request('POST', '/quests/' + q.id + '/signups/clear', {}, true);
+        flashFor('Signups cleared.');
+        setModal(null);
+        await reload();
+      } catch (e) {
+        setErr(e.message || 'Failed to clear signups.');
+      }
+    }
+
     async function approveEdit(item) {
       try {
         await PVAdminAPI.request('POST', '/quest-edits/' + item.edit.id + '/approve', {}, true);
@@ -298,6 +317,7 @@
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
             'by ' + q.submitted_by_name) : null
         ),
+        h('td', null, q.mission_type || '—'),
         h('td', null, U.scheduleSummary(q)),
         h('td', null, h('span', { className: pill.cls }, pill.label)),
         h('td', { style: { textAlign: 'center' } }, signupCount),
@@ -329,6 +349,14 @@
             signups.map(function (s) {
               return h('span', { key: s.member_id, className: 'portal-faction-tag' }, s.member_name);
             })
+          ),
+          h('button', {
+            type: 'button', className: 'portal-btn is-small is-ghost',
+            style: { marginTop: '0.5rem' },
+            onClick: function () { clearSignups(modal.quest); }
+          }, 'Clear signups'),
+          h('p', { className: 'portal-field-help' },
+            'Hidden quests clear automatically; repeatable quests reset themselves ~12 hours after their run date passes.'
           )
         ) : null,
         h(window.PVAdminQuestForm, {
@@ -423,6 +451,7 @@
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),
+                      h('th', null, 'Type'),
                       h('th', null, 'Schedule'),
                       h('th', null, 'Status'),
                       h('th', { style: { textAlign: 'center' } }, 'Signups'),

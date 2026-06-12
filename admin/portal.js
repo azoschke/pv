@@ -24,7 +24,8 @@
       { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
     ] },
     { title: 'Personal', items: [
-      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' }
+      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' },
+      { id: 'my-applications',  label: 'My Applications',    icon: 'assignment' }
     ] },
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
@@ -59,6 +60,7 @@
   var ROLE_ACCESS = {
     dashboard:        ['officer', 'admin'],
     'my-profile':     '*',
+    'my-applications': '*',
     members:          ['officer', 'admin'],
     'member-profiles': ['officer', 'admin'],
     medical:          ['medical', 'admin'],
@@ -216,6 +218,8 @@
         });
       case 'my-profile':
         return h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
+      case 'my-applications':
+        return h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
       case 'member-profiles':
         return h(window.PVAdminMemberProfiles || Missing('member-profiles.js'), { session: session });
       case 'bounties':

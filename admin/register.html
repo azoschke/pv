@@ -14,6 +14,16 @@
     .admin-login-wrap { max-width: 460px; margin: 3rem auto; }
     .admin-login-wrap .parchment { padding: 32px; }
     .portal-brand { text-align: center; margin-bottom: 1.5rem; }
+    .login-home-link { display: inline-block; margin-bottom: 0.75rem; }
+    .login-home-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.15s ease;
+    }
+    .login-home-link:hover .login-home-logo { transform: scale(1.06); }
     .portal-brand-title {
       font-family: 'Stoke', serif;
       font-size: 1.1rem;
@@ -69,6 +79,9 @@
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
+          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Create Account</p>
         </div>

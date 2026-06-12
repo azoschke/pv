@@ -109,7 +109,9 @@
       // Even if the server call fails (network, expired token), clear locally.
     }
     clearSession();
-    redirectToLogin();
+    // Deliberate sign-outs land on the public home page; only expired/invalid
+    // sessions (401s above) bounce to the login form.
+    window.location.replace('/pv/index.html');
   }
 
   global.PVAdminAPI = {

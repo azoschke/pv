@@ -34,8 +34,28 @@
     repeatable: "Repeatable"
   };
 
-  // Card backdrop when a quest has no image.
+  var MISSION_TYPES = ["Training", "Investigation", "Bounty", "Escort", "Gathering"];
+  function typeSlug(t) { return String(t || "").toLowerCase(); }
+
+  // Card backdrop when a quest has no image, keyed by mission type.
   var QUEST_PALETTE = { from: "#3a2c1e", to: "#1f1810" };
+  var TYPE_PALETTE = {
+    training:      { from: "#1f3a2e", to: "#10201a" },
+    investigation: { from: "#2e1f3a", to: "#170f20" },
+    bounty:        { from: "#3a2225", to: "#1f1214" },
+    escort:        { from: "#1f3340", to: "#101c25" },
+    gathering:     { from: "#3a2c1e", to: "#1f1810" }
+  };
+  function paletteFor(q) {
+    return TYPE_PALETTE[typeSlug(q.mission_type)] || QUEST_PALETTE;
+  }
+
+  // 0-5 difficulty -> star string; null -> '' (unrated).
+  function difficultyStars(n) {
+    if (n == null || n === "" || isNaN(Number(n))) return "";
+    var v = Math.max(0, Math.min(5, Math.round(Number(n))));
+    return "★★★★★".slice(0, v) + "☆☆☆☆☆".slice(0, 5 - v);
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl    = document.getElementById("quests-sidebar");
@@ -43,6 +63,7 @@
   var closeBtn     = document.getElementById("sidebar-close-btn");
   var overlay      = document.getElementById("campaign-overlay");
   var searchInput  = document.getElementById("quests-search");
+  var typeListEl   = document.getElementById("filter-type-list");
   var schedListEl  = document.getElementById("filter-schedule-list");
   var showPastChk  = document.getElementById("filter-show-past");
   var resetBtn     = document.getElementById("filter-reset");
@@ -73,10 +94,16 @@
     }
   }
 
-  // Logged-out users get sent to the login page instead of the portal.
+  // Quest submissions live in the portal's My Applications section; the
+  // logged-out path goes through login first, then straight there.
+  var PORTAL_SUBMIT_URL = "/pv/admin/portal.html?section=my-applications";
+  var LOGIN_URL = "/pv/admin/login.html?redirect=";
   (function () {
-    if (!getSession() && submitBtn) {
-      submitBtn.href = "/pv/admin/login.html";
+    if (!submitBtn) return;
+    if (getSession()) {
+      submitBtn.href = PORTAL_SUBMIT_URL;
+    } else {
+      submitBtn.href = LOGIN_URL + encodeURIComponent(PORTAL_SUBMIT_URL);
       submitBtn.title = "Log in to submit a quest";
     }
   })();
@@ -85,6 +112,7 @@
   var allQuests = [];
   var filters = {
     search: "",
+    types: {},       // { Bounty: true, ... }
     schedules: {},   // { scheduled: true, ... }
     showPast: false
   };
@@ -141,6 +169,7 @@
         var saved = JSON.parse(raw);
         if (saved && typeof saved === "object") {
           filters.search    = String(saved.search || "");
+          filters.types     = saved.types && typeof saved.types === "object" ? saved.types : {};
           filters.schedules = saved.schedules && typeof saved.schedules === "object" ? saved.schedules : {};
           filters.showPast  = !!saved.showPast;
         }
@@ -233,6 +262,11 @@
 
   function buildFilterUI() {
     renderCheckboxList(
+      typeListEl,
+      MISSION_TYPES.map(function (t) { return { value: t, label: t }; }),
+      "types"
+    );
+    renderCheckboxList(
       schedListEl,
       SCHEDULE_ORDER.map(function (s) { return { value: s, label: SCHEDULE_LABEL[s] }; }),
       "schedules"
@@ -259,12 +293,13 @@
     });
 
     resetBtn.addEventListener("click", function () {
-      filters = { search: "", schedules: {}, showPast: false };
+      filters = { search: "", types: {}, schedules: {}, showPast: false };
       sort = "soonest";
       saveFilters();
       searchInput.value = "";
       showPastChk.checked = false;
       sortSelect.value = sort;
+      typeListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
       schedListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
       renderGrid();
     });
@@ -273,6 +308,9 @@
   // ── Filtering / sorting ──────────────────────────────────────────────────
   function matchesFilters(q) {
     if (!filters.showPast && isPast(q)) return false;
+
+    var typeKeys = Object.keys(filters.types);
+    if (typeKeys.length && !filters.types[q.mission_type]) return false;
 
     var schedKeys = Object.keys(filters.schedules);
     if (schedKeys.length && !filters.schedules[q.schedule_mode]) return false;
@@ -286,6 +324,8 @@
         q.contact || "",
         q.submitted_by_name || "",
         q.cadence_note || "",
+        q.mission_type || "",
+        q.group_size || "",
         SCHEDULE_LABEL[q.schedule_mode] || ""
       ].join(" ").toLowerCase();
       if (hay.indexOf(s) === -1) return false;
@@ -325,22 +365,30 @@
 
   // ── Counts on filter checkboxes ──────────────────────────────────────────
   function updateCounts() {
-    function countForFacet(value) {
+    function countForFacet(kind, value) {
       return allQuests.reduce(function (acc, q) {
-        var temp = { search: filters.search, schedules: {}, showPast: filters.showPast };
+        var temp = {
+          search: filters.search,
+          types: kind === "types" ? {} : filters.types,
+          schedules: kind === "schedules" ? {} : filters.schedules,
+          showPast: filters.showPast
+        };
         var saved = filters;
         filters = temp;
         var ok = matchesFilters(q);
         filters = saved;
         if (!ok) return acc;
-        return acc + (q.schedule_mode === value ? 1 : 0);
+        if (kind === "types")     return acc + (q.mission_type === value ? 1 : 0);
+        if (kind === "schedules") return acc + (q.schedule_mode === value ? 1 : 0);
+        return acc;
       }, 0);
     }
 
     document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+      var kind = el.dataset.kind;
       var value = el.dataset.value;
-      if (!value) return;
-      el.textContent = String(countForFacet(value));
+      if (!kind || !value) return;
+      el.textContent = String(countForFacet(kind, value));
     });
   }
 
@@ -370,6 +418,7 @@
 
     var media = document.createElement("div");
     media.className = "job-card-media";
+    var palette = paletteFor(q);
 
     if (q.image_url) {
       var img = document.createElement("img");
@@ -380,16 +429,23 @@
       img.addEventListener("error", function () {
         img.remove();
         media.style.background =
-          "linear-gradient(135deg, " + QUEST_PALETTE.from + " 0%, " + QUEST_PALETTE.to + " 100%)";
+          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
       });
       media.appendChild(img);
     } else {
       media.style.background =
-        "linear-gradient(135deg, " + QUEST_PALETTE.from + " 0%, " + QUEST_PALETTE.to + " 100%)";
+        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
       var sig = document.createElement("span");
       sig.className = "job-card-sig";
       sig.textContent = (q.title || "").toLowerCase();
       media.appendChild(sig);
+    }
+
+    if (q.mission_type) {
+      var typeBadge = document.createElement("span");
+      typeBadge.className = "job-badge job-badge-category quest-type-" + typeSlug(q.mission_type);
+      typeBadge.textContent = q.mission_type.toUpperCase();
+      media.appendChild(typeBadge);
     }
 
     var schedBadge = document.createElement("span");
@@ -407,6 +463,17 @@
     title.className = "job-card-title";
     title.textContent = q.title || "Untitled quest";
     body.appendChild(title);
+
+    var stars = difficultyStars(q.difficulty);
+    if (stars || q.group_size) {
+      var statsMeta = document.createElement("p");
+      statsMeta.className = "job-card-meta quest-card-stats";
+      var bits = [];
+      if (stars) bits.push(stars);
+      if (q.group_size) bits.push("Group: " + q.group_size);
+      statsMeta.textContent = bits.join("  ·  ");
+      body.appendChild(statsMeta);
+    }
 
     if (q.reward) {
       var meta = document.createElement("p");
@@ -458,11 +525,12 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(q) {
+    var palette = paletteFor(q);
     if (q.image_url) {
       return '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img">';
     }
     return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      QUEST_PALETTE.from + ' 0%, ' + QUEST_PALETTE.to + ' 100%);">' +
+      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
       '<span class="job-card-sig">' + escapeHTML((q.title || "").toLowerCase()) + '</span>' +
       '</div>';
   }
@@ -525,8 +593,10 @@
   function actionHtml(q) {
     var session = getSession();
     if (!session) {
+      // Round-trip through login and come back to the board to finish the signup.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="/pv/admin/login.html">Log in to sign up</a>' +
+        '<a class="quest-action-btn" href="' + LOGIN_URL +
+        encodeURIComponent(window.location.pathname) + '">Log in to sign up</a>' +
         '</div>';
     }
     var mine = mySignup(q);
@@ -595,7 +665,12 @@
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(q.description)) : "<p>" + escapeHTML(q.description) + "</p>")
       : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
 
-    var badge =
+    var badges = "";
+    if (q.mission_type) {
+      badges += '<span class="job-badge job-badge-category quest-type-' + typeSlug(q.mission_type) +
+        '" style="position:static;">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
+    }
+    badges +=
       '<span class="job-badge job-badge-status quest-sched-' + q.schedule_mode +
       (isPast(q) ? " quest-sched-past" : "") + '" style="position:static;">' +
       escapeHTML(scheduleBadgeText(q)) + '</span>';
@@ -603,9 +678,11 @@
     modalBody.innerHTML =
       imgHtml +
       '<div class="job-modal-content">' +
-        '<div class="job-modal-badges">' + badge + '</div>' +
+        '<div class="job-modal-badges">' + badges + '</div>' +
         '<h2 class="job-modal-title" id="quest-modal-title">' + escapeHTML(q.title || "Untitled quest") + '</h2>' +
         scheduleDetailHtml(q) +
+        metaRow("Difficulty", difficultyStars(q.difficulty)) +
+        metaRow("Group size", q.group_size) +
         metaRow("Reward", q.reward) +
         metaRow("Contact", q.contact) +
         metaRow("Posted by", q.submitted_by_name) +

@@ -486,8 +486,10 @@
   function applyHtml(j) {
     if (j.status !== "open") return "";
     if (!getSession()) {
+      // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="/pv/admin/login.html">Log in to apply</a>' +
+        '<a class="quest-action-btn" href="/pv/admin/login.html?redirect=' +
+        encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
         '</div>';
     }
     var app = myApplicationFor(j);

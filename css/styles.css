@@ -1818,9 +1818,7 @@ body.nav-sidebar-open {
 
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
-/* 1080px (not 900) since the menu gained Bounty Board + Factions: with
-   nowrap labels the full row no longer fits below that. */
-@media (max-width: 1080px) {
+@media (max-width: 900px) {
   .hamburger {
     display: flex;
     margin-left: auto;
@@ -3561,6 +3559,15 @@ body.nav-sidebar-open {
 .job-badge-status.quest-sched-tbd        { background: #8a6d2f; color: #fff; }
 .job-badge-status.quest-sched-repeatable { background: #2f6d62; color: #fff; }
 .job-badge-status.quest-sched-past       { background: rgba(0, 0, 0, 0.62); color: #f3e9d2; }
+
+/* Mission type badge variants (layered on .job-badge.job-badge-category) */
+.job-badge-category.quest-type-training      { background: #2f5d42; color: #f3e9d2; }
+.job-badge-category.quest-type-investigation { background: #4a3566; color: #f3e9d2; }
+.job-badge-category.quest-type-bounty        { background: #6e3a35; color: #f3e9d2; }
+.job-badge-category.quest-type-escort        { background: #2f4d62; color: #f3e9d2; }
+.job-badge-category.quest-type-gathering     { background: #6e5a2f; color: #f3e9d2; }
+
+.quest-card-stats { letter-spacing: 0.05em; }
 
 .quest-card-signups {
   margin-top: auto;

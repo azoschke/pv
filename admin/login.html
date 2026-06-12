@@ -17,6 +17,16 @@
       text-align: center;
       margin-bottom: 1.5rem;
     }
+    .login-home-link { display: inline-block; margin-bottom: 0.75rem; }
+    .login-home-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.15s ease;
+    }
+    .login-home-link:hover .login-home-logo { transform: scale(1.06); }
     .portal-brand-title {
       font-family: 'Stoke', serif;
       font-size: 1.1rem;
@@ -47,6 +57,9 @@
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
+          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Management Portal</p>
         </div>
@@ -90,9 +103,19 @@
       flash.appendChild(div);
     }
 
-    // If we already hold a valid-looking session, go straight to the portal.
+    // Optional same-site return path (e.g. the bounty board sends users back
+    // after logging in to sign up). Anything else falls through to the portal.
+    var redirectTarget = (function () {
+      try {
+        var r = new URLSearchParams(window.location.search).get('redirect') || '';
+        if (r.indexOf('/pv/') === 0) return r;
+      } catch (_e) { /* ignore */ }
+      return '/pv/admin/portal.html';
+    })();
+
+    // If we already hold a valid-looking session, skip the form.
     if (PVAdminAPI.getSession()) {
-      window.location.replace('/pv/admin/portal.html');
+      window.location.replace(redirectTarget);
       return;
     }
 
@@ -121,7 +144,7 @@
           expires_at: data.expires_at || null
         });
         document.getElementById('login-password').value = '';
-        window.location.replace('/pv/admin/portal.html');
+        window.location.replace(redirectTarget);
       } catch (err) {
         showFlash('error', err.message || 'Login failed.');
         btn.disabled = false;

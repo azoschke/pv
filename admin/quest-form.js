@@ -19,6 +19,8 @@
   var UPLOAD_TARGET_WIDTH = 1400;
   var UPLOAD_WEBP_QUALITY = 0.8;
 
+  var MISSION_TYPES = ['Training', 'Investigation', 'Bounty', 'Escort', 'Gathering'];
+
   var SCHEDULE_MODES = ['scheduled', 'tbd', 'repeatable'];
   var SCHEDULE_LABEL = {
     scheduled: 'Scheduled (has a date)',
@@ -65,6 +67,13 @@
     return !isNaN(t) && t < Date.now();
   }
 
+  // 0–5 difficulty -> "★★★☆☆"; null/undefined -> '' (unrated).
+  function difficultyStars(n) {
+    if (n == null || n === '' || isNaN(Number(n))) return '';
+    var v = Math.max(0, Math.min(5, Math.round(Number(n))));
+    return '★★★★★'.slice(0, v) + '☆☆☆☆☆'.slice(0, 5 - v);
+  }
+
   // One-line schedule summary for tables / cards.
   function scheduleSummary(q) {
     if (!q) return '';
@@ -106,12 +115,24 @@
     if (!ctx) throw new Error('Could not get a 2D canvas context.');
     ctx.drawImage(bitmap, 0, 0, w, hgt);
     if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    return await new Promise(function (resolve, reject) {
+    var blob = await new Promise(function (resolve, reject) {
       canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode image as WebP (browser may not support it).'));
+        if (!b) reject(new Error('Could not encode the image.'));
         else resolve(b);
       }, 'image/webp', UPLOAD_WEBP_QUALITY);
     });
+    // Browsers without a WebP encoder silently hand back a PNG here, which
+    // the worker would reject. Re-encode as JPEG instead (universally
+    // supported, and far smaller than the PNG fallback).
+    if (blob.type !== 'image/webp') {
+      blob = await new Promise(function (resolve, reject) {
+        canvas.toBlob(function (b) {
+          if (!b) reject(new Error('Could not encode the image.'));
+          else resolve(b);
+        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
+      });
+    }
+    return blob;
   }
 
   // Generic multipart upload to one of the worker's */images endpoints.
@@ -123,7 +144,7 @@
     }
     var blob = await resizeImageToWebp(file);
     var form = new FormData();
-    form.append('file', blob, 'upload.webp');
+    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
     Object.keys(extraFields || {}).forEach(function (k) { form.append(k, extraFields[k]); });
     var res = await fetch(PVAdminAPI.API_BASE + path, {
       method: 'POST',
@@ -247,6 +268,9 @@
 
     var draftState = useState({
       title: quest ? (quest.title || '') : '',
+      mission_type: quest ? (quest.mission_type || '') : '',
+      difficulty: (quest && quest.difficulty != null) ? String(quest.difficulty) : '',
+      group_size: quest ? (quest.group_size || '') : '',
       description: quest ? (quest.description || '') : '',
       reward: quest ? (quest.reward || '') : '',
       contact: quest ? (quest.contact || '') : '',
@@ -269,12 +293,16 @@
     async function handleSubmit(e) {
       if (e) e.preventDefault();
       if (!draft.title.trim()) { setErr('Title is required.'); return; }
+      if (!draft.mission_type) { setErr('Pick a mission type.'); return; }
       if (draft.schedule_mode === 'scheduled' && !draft.scheduled_local) {
         setErr('Pick a date/time, or switch the schedule to Date TBD.');
         return;
       }
       var payload = {
         title: draft.title.trim(),
+        mission_type: draft.mission_type,
+        difficulty: draft.difficulty === '' ? null : Number(draft.difficulty),
+        group_size: draft.group_size.trim() || null,
         description: draft.description,
         reward: draft.reward.trim() || null,
         contact: draft.contact.trim() || null,
@@ -302,6 +330,41 @@
         h('input', {
           type: 'text', value: draft.title, maxLength: 120,
           onChange: function (e) { setField('title', e.target.value); }
+        })
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Mission type *'),
+        h('select', {
+          value: draft.mission_type,
+          onChange: function (e) { setField('mission_type', e.target.value); }
+        },
+          h('option', { value: '' }, '— Select type —'),
+          MISSION_TYPES.map(function (t) {
+            return h('option', { key: t, value: t }, t);
+          })
+        )
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Difficulty'),
+        h('select', {
+          value: draft.difficulty,
+          onChange: function (e) { setField('difficulty', e.target.value); }
+        },
+          h('option', { value: '' }, 'Unrated'),
+          ['0', '1', '2', '3', '4', '5'].map(function (n) {
+            return h('option', { key: n, value: n }, n + ' — ' + (difficultyStars(n) || '(no stars)'));
+          })
+        )
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Recommended group size'),
+        h('input', {
+          type: 'text', value: draft.group_size, maxLength: 40,
+          placeholder: 'e.g. 6 to 8, Any, Light party',
+          onChange: function (e) { setField('group_size', e.target.value); }
         })
       ),
 
@@ -408,8 +471,10 @@
 
   window.PVAdminQuestForm = QuestForm;
   window.PVAdminQuestUtils = {
+    MISSION_TYPES: MISSION_TYPES,
     SCHEDULE_PILL: SCHEDULE_PILL,
     ImageField: ImageField,
+    difficultyStars: difficultyStars,
     utcToLocalInput: utcToLocalInput,
     localInputToUtc: localInputToUtc,
     formatLocal: formatLocal,
