@@ -23,8 +23,12 @@
     { title: 'Overview', items: [
       { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
     ] },
+    { title: 'Personal', items: [
+      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' }
+    ] },
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
+      { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
       { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
     ] },
     { title: 'Divisions', items: [
@@ -35,7 +39,8 @@
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
-      { id: 'jobs',             label: 'Job Board',          icon: 'work' }
+      { id: 'jobs',             label: 'Job Board',          icon: 'work' },
+      { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' }
     ] },
     { title: 'Tools / More', items: [
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -49,9 +54,13 @@
     return acc.concat(g.items);
   }, []);
 
+  // '*' means any logged-in account, regardless of roles — used for My
+  // Profile so plain members (or accounts with no roles yet) get a home.
   var ROLE_ACCESS = {
     dashboard:        ['officer', 'admin'],
+    'my-profile':     '*',
     members:          ['officer', 'admin'],
+    'member-profiles': ['officer', 'admin'],
     medical:          ['medical', 'admin'],
     'medical-division': ['officer', 'admin'],
     mercenary:        ['mercenary', 'admin'],
@@ -59,12 +68,14 @@
     'house-staff':    ['officer', 'admin'],
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
+    bounties:         ['officer', 'admin'],
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
   };
 
   function canAccess(sectionId, roles) {
+    if (ROLE_ACCESS[sectionId] === '*') return true;
     if (!roles) return false;
     if (roles.indexOf('admin') !== -1) return true;
     var allowed = ROLE_ACCESS[sectionId] || [];
@@ -203,6 +214,12 @@
           session: session,
           onNavigate: onNavigate
         });
+      case 'my-profile':
+        return h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
+      case 'member-profiles':
+        return h(window.PVAdminMemberProfiles || Missing('member-profiles.js'), { session: session });
+      case 'bounties':
+        return h(window.PVAdminBounties || Missing('bounties.js'), { session: session });
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), {
           session: session,
@@ -268,7 +285,15 @@
     var sessionState = useState(initialSession);
     var session = sessionState[0], setSession = sessionState[1];
 
-    var sectionState = useState(defaultSectionFor((initialSession && initialSession.roles) || []));
+    // ?section=<id> deep-links straight to a section (e.g. the public bounty
+    // board's "Submit a quest" button opens My Profile), if the role allows.
+    var initialRoles = (initialSession && initialSession.roles) || [];
+    var requestedSection = new URLSearchParams(window.location.search).get('section');
+    var sectionState = useState(
+      (requestedSection && canAccess(requestedSection, initialRoles))
+        ? requestedSection
+        : defaultSectionFor(initialRoles)
+    );
     var section = sectionState[0], setSection = sectionState[1];
 
     var themeState = useState(getTheme());
