@@ -998,4 +998,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   .portal-field-row { grid-template-columns: 1fr; }
   .portal-search { min-width: 0; width: 100%; }
   .portal-card-actions { width: 100%; }
+  /* Section headers with extra content (dashboard date, FC Members search +
+     add button) wrap instead of overflowing the viewport. */
+  .portal-main .portal-section-header { flex-wrap: wrap; }
+  .dashboard-header .dashboard-date {
+    flex-basis: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+  .members-header-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
 }

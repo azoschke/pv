@@ -357,7 +357,7 @@
     );
   }
 
-  function Applications() {
+  function Applications(props) {
     var listState = useState([]);
     var list = listState[0], setList = listState[1];
     var membersState = useState([]);
@@ -374,10 +374,13 @@
 
     var formState = useState(null); // null | { app: object|null }
     var formOpen = formState[0], setFormOpen = formState[1];
-    var queryState = useState('');
+    // Search + stage can be seeded by the dashboard's "Open" deep links.
+    var queryState = useState((props && props.initialSearch) || '');
     var query = queryState[0], setQuery = queryState[1];
     var divisionState = useState('');
     var divisionFilter = divisionState[0], setDivisionFilter = divisionState[1];
+    var stageState = useState((props && props.initialStage) || '');
+    var stageFilter = stageState[0], setStageFilter = stageState[1];
 
     function flashFor(msg) {
       setFlash(msg);
@@ -422,6 +425,9 @@
       if (divisionFilter) {
         out = out.filter(function (a) { return a.division === divisionFilter; });
       }
+      if (stageFilter) {
+        out = out.filter(function (a) { return a.stage === stageFilter; });
+      }
       if (q) {
         out = out.filter(function (a) {
           return (
@@ -432,7 +438,7 @@
         });
       }
       return out;
-    }, [list, query, divisionFilter]);
+    }, [list, query, divisionFilter, stageFilter]);
 
     async function handleSubmit(payload) {
       var editingId = formOpen && formOpen.app && formOpen.app.id;
@@ -468,7 +474,7 @@
       }
     }
 
-    var anyFilterActive = !!(query || divisionFilter);
+    var anyFilterActive = !!(query || divisionFilter || stageFilter);
 
     return h('div', null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
@@ -501,10 +507,18 @@
             h('option', { value: '' }, 'All Divisions'),
             DIVISIONS.map(function (d) { return h('option', { key: d.value, value: d.value }, d.label); })
           ),
+          h('select', {
+            className: 'portal-filter-select',
+            value: stageFilter,
+            onChange: function (e) { setStageFilter(e.target.value); }
+          },
+            h('option', { value: '' }, 'All Stages'),
+            STAGES.map(function (st) { return h('option', { key: st.value, value: st.value }, st.label); })
+          ),
           anyFilterActive ? h('button', {
             type: 'button',
             className: 'portal-btn is-ghost is-small',
-            onClick: function () { setQuery(''); setDivisionFilter(''); }
+            onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); }
           }, 'Clear filters') : null
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null

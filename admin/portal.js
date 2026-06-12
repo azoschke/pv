@@ -55,8 +55,9 @@
     return acc.concat(g.items);
   }, []);
 
-  // '*' means any logged-in account, regardless of roles — used for My
-  // Profile so plain members (or accounts with no roles yet) get a home.
+  // '*' means any logged-in account that has at least one role. Freshly
+  // registered accounts have no roles and see nothing until an admin assigns
+  // one (the App renders an "awaiting approval" notice instead).
   var ROLE_ACCESS = {
     dashboard:        ['officer', 'admin'],
     'my-profile':     '*',
@@ -77,7 +78,7 @@
   };
 
   function canAccess(sectionId, roles) {
-    if (ROLE_ACCESS[sectionId] === '*') return true;
+    if (ROLE_ACCESS[sectionId] === '*') return !!(roles && roles.length);
     if (!roles) return false;
     if (roles.indexOf('admin') !== -1) return true;
     var allowed = ROLE_ACCESS[sectionId] || [];
@@ -236,7 +237,12 @@
       case 'venues':
         return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
       case 'jobs':
-        return h(window.PVAdminJobBoard || Missing('job-board.js'), { session: session });
+        return h(window.PVAdminJobBoard || Missing('job-board.js'), {
+          session: session,
+          initialView: (props.navParams && props.navParams.view) || 'postings',
+          initialStage: (props.navParams && props.navParams.stage) || '',
+          initialSearch: (props.navParams && props.navParams.search) || ''
+        });
       case 'cosmic':
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
@@ -366,6 +372,11 @@
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });
     var accessible = activeMeta ? canAccess(activeMeta.id, session.roles || []) : false;
 
+    // Freshly registered accounts have no roles, which unlocks no sections at
+    // all — show an "awaiting approval" notice instead of an empty shell.
+    var roles = session.roles || [];
+    var hasAnyAccess = SECTIONS.some(function (s) { return canAccess(s.id, roles); });
+
     var sidebarProps = {
       session: session,
       activeSection: section,
@@ -415,7 +426,15 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, activeMeta.icon),
           h('h1', null, activeMeta.label)
         ) : null,
-        accessible
+        !hasAnyAccess
+          ? h('div', { className: 'portal-card' },
+              h('h2', { className: 'portal-card-title' }, 'Account awaiting approval'),
+              h('p', { style: { margin: '0.6rem 0 0' } },
+                'Your account was created successfully, but an officer has not assigned it a role yet. ' +
+                'The portal stays locked until that happens — check back soon, or give an officer a nudge.'
+              )
+            )
+          : accessible
           ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect, navParams: navParams })
           : h('div', { className: 'portal-card' },
               h('p', { className: 'portal-flash error' },
