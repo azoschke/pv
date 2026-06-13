@@ -62,7 +62,7 @@
       if (modal && modal.quest) {
         var res = await PVAdminAPI.request('PATCH', '/my/quests/' + modal.quest.id, payload, true);
         flashFor(res && res.mode === 'edit_pending'
-          ? 'Edit submitted — it will go live once an officer approves it.'
+          ? 'Edit submitted! It will go live once an officer approves it.'
           : 'Submission updated.');
       } else {
         // as_submission routes officers/admins through the same pending-
@@ -111,7 +111,7 @@
       ),
       h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
         'Submissions go live on the public Bounty Board after an officer approves them. ' +
-        'Edits to an already-listed quest are also reviewed before they apply.'
+        'Edits to an approved quest will be reviewed before they apply.'
       ),
 
       flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem' } }, flash) : null,
@@ -151,7 +151,7 @@
           )
         )
       ) : h('p', { style: { marginTop: '0.85rem', color: 'var(--text-secondary)' } },
-        'Nothing yet — submit a quest or bounty for the public board.'
+        'No quest submissions. Submit a quest or bounty for the public board.'
       ),
 
       edits.length ? h('div', { style: { marginTop: '0.85rem' } },
