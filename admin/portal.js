@@ -431,7 +431,7 @@
               h('h2', { className: 'portal-card-title' }, 'Account awaiting approval'),
               h('p', { style: { margin: '0.6rem 0 0' } },
                 'Your account was created successfully, but an officer has not assigned it a role yet. ' +
-                'The portal stays locked until that happens — check back soon, or give an officer a nudge.'
+                'Check back soon, or give an officer a poke.'
               )
             )
           : accessible
