@@ -84,7 +84,7 @@
         h('strong', null, member.name),
         rosterPages.length
           ? '. When published, it appears on the ' + rosterPages.join(' and ') + ' roster page' + (rosterPages.length > 1 ? 's' : '') + '.'
-          : '. Your faction does not currently have a public roster page — ask an officer if you think this is inccorect. You can still fill out and publish your profile; it will appear automatically if your faction is updated.'
+          : '. Your faction does not currently have a public roster page. Talk to an officer if you think this is inccorect. You may still fill out and publish your profile; it will appear automatically if your faction is updated.'
       ),
 
       flash ? h('div', { className: 'portal-flash success' }, flash) : null,
@@ -98,7 +98,7 @@
           disabled: saving,
           uploadPath: '/my-profile/images',
           extraFields: {},
-          help: 'A portrait for your roster card. Paste a URL or upload an image.'
+          help: 'Paste a URL or upload an image for your roster portrait.'
         }),
 
         h('div', { className: 'portal-field' },
@@ -111,7 +111,7 @@
             },
             rows: 6,
             maxLength: 4000,
-            placeholder: 'Who is your character? Markdown allowed.'
+            placeholder: 'Describe your character. Markdown allowed.'
           })
         ),
 
@@ -124,7 +124,7 @@
             placeholder: 'Comma-separated, e.g. Swordplay, Field Medicine, Cartography'
           }),
           h('p', { className: 'portal-field-help' },
-            'Up to 12 skills, 32 characters each. Shown as tags and filterable on the roster page.'
+            'You may enter up to 12 skills, maximum 32 characters each.'
           )
         ),
 
@@ -138,7 +138,7 @@
             },
             rows: 4,
             maxLength: 4000,
-            placeholder: 'Story threads other players can pull on. Markdown allowed.'
+            placeholder: 'Write any specific RP hooks you would like others to be aware of. Markdown allowed.'
           })
         ),
 
