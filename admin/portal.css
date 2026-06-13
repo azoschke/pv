@@ -993,6 +993,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
     z-index: 30;
   }
   .portal-sidebar-drawer { display: flex; flex-direction: column; }
+  /* Use dynamic viewport height so the drawer matches the visible area when
+     mobile browser chrome (address bar) is shown — 100vh overshoots it. */
+  .portal-sidebar-drawer { height: 100dvh; }
+  /* The shared sidebar body pins its footer to the bottom via min-height:100%
+     and a flex:1 nav, which on the drawer (offset by the close-button header)
+     forced the footer below the fold. Let the body and nav size to their
+     content so the drawer itself scrolls and Log out + theme toggle stay
+     reachable. */
+  .portal-sidebar-drawer .portal-sidebar-body { min-height: 0; flex: 0 0 auto; }
+  .portal-sidebar-drawer .sidebar-nav { flex: 0 0 auto; }
   .portal-drawer-overlay { display: block; }
   .portal-main { padding: 1rem 1rem 3rem; }
   .portal-field-row { grid-template-columns: 1fr; }

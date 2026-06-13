@@ -155,8 +155,8 @@
 
   // Roles allowed to POST per channel. Mirrors the worker's channelPostRoles.
   function postRolesForChannel(channel) {
-    if (channel === 'pirate')    return ['pirate', 'admin'];
-    if (channel === 'mercenary') return ['mercenary', 'admin'];
+    if (channel === 'pirate')    return ['officer', 'pirate', 'admin'];
+    if (channel === 'mercenary') return ['officer', 'mercenary', 'admin'];
     return ['officer', 'admin'];
   }
 
