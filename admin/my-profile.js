@@ -84,7 +84,7 @@
         h('strong', null, member.name),
         rosterPages.length
           ? '. When published, it appears on the ' + rosterPages.join(' and ') + ' roster page' + (rosterPages.length > 1 ? 's' : '') + '.'
-          : '. Your faction does not currently have a public roster page. Talk to an officer if you think this is inccorect. You may still fill out and publish your profile; it will appear automatically if your faction is updated.'
+          : '. Your faction does not currently have a public roster page. Talk to an officer if you think this is incorrect. You may still fill out and publish your profile; it will appear automatically if your faction is updated.'
       ),
 
       flash ? h('div', { className: 'portal-flash success' }, flash) : null,
