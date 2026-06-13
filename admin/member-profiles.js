@@ -138,7 +138,7 @@
           })
         ),
         h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
-          'Members write and publish these themselves from My Profile; published ones appear on the public Mercenary / Pirate roster pages. Unpublish or delete anything that shouldn’t be public.'
+          'Published profiles will appear on the public Mercenary / Pirate roster pages.'
         ),
         h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
           publishedCount + ' published · ' + (profiles.length - publishedCount) + ' drafts'
