@@ -52,7 +52,7 @@
   function Dashboard(props) {
     var onNavigate = props.onNavigate || function () {};
 
-    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [] });
+    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [] });
     var state = st[0], setState = st[1];
 
     useEffect(function () {
@@ -62,16 +62,16 @@
           .then(function (d) { return Array.isArray(d) ? d : []; })
           .catch(function () { return null; }); // null marks a failed call
       }
-      Promise.all([getList('/members'), getList('/applications'), getList('/jobs')])
+      Promise.all([getList('/members'), getList('/applications'), getList('/jobs'), getList('/quests/admin')])
         .then(function (res) {
           if (cancelled) return;
-          if (res[0] === null && res[1] === null && res[2] === null) {
-            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [] });
+          if (res[0] === null && res[1] === null && res[2] === null && res[3] === null) {
+            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [], quests: [] });
             return;
           }
           setState({
             loading: false, error: '',
-            members: res[0] || [], apps: res[1] || [], jobs: res[2] || []
+            members: res[0] || [], apps: res[1] || [], jobs: res[2] || [], quests: res[3] || []
           });
         });
       return function () { cancelled = true; };
@@ -92,9 +92,19 @@
         h('p', { className: 'dash-loading' }, 'Loading…'));
     }
 
-    var members = state.members, apps = state.apps;
+    var members = state.members, apps = state.apps, quests = state.quests;
     var newApps       = apps.filter(function (a) { return a.stage === 'new'; });
     var scheduledApps = apps.filter(function (a) { return a.stage === 'scheduled'; });
+    // Bounty board items awaiting officer review: member-submitted quests
+    // (status 'pending') and member-proposed edits to listed quests.
+    var pendingQuests = quests.filter(function (q) { return q.status === 'pending'; });
+    var pendingEdits  = [];
+    quests.forEach(function (q) {
+      (q.pending_edits || []).forEach(function (e) {
+        pendingEdits.push({ quest: q, edit: e });
+      });
+    });
+    var bountyReviewCount = pendingQuests.length + pendingEdits.length;
     // Member attention buckets — kept in sync with members.js needsAttention.
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
     var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
@@ -132,6 +142,22 @@
         desc: 'Job interview pending',
         source: 'Job Board', target: 'jobs',
         params: { view: 'applications', stage: 'scheduled', search: name }
+      });
+    });
+    pendingQuests.forEach(function (q) {
+      attention.push({
+        key: 'quest-' + q.id, tag: 'Bounty Quest', pillCls: 'is-gold',
+        name: q.submitted_by_name || 'A member',
+        desc: 'submitted “' + (q.title || 'a quest') + '” for review',
+        source: 'Bounty Board', target: 'bounties'
+      });
+    });
+    pendingEdits.forEach(function (item) {
+      attention.push({
+        key: 'questedit-' + item.edit.id, tag: 'Bounty Edit', pillCls: 'is-gold',
+        name: item.edit.submitted_by_name || 'A member',
+        desc: 'proposed an edit to “' + (item.quest.title || 'a quest') + '”',
+        source: 'Bounty Board', target: 'bounties'
       });
     });
     icPending.forEach(function (m) {
@@ -174,7 +200,8 @@
           h('div', { className: 'dash-stats' },
             statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0),
             statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
-              { view: 'applications', stage: 'new' })
+              { view: 'applications', stage: 'new' }),
+            statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0)
           )
         ),
         h('div', { className: 'dash-stat-section' },
