@@ -209,6 +209,7 @@
     if (q) {
       var hay = [
         m.name || "",
+        m.ic_rank || "",
         m.description || "",
         m.rp_hooks || "",
         (m.skills || []).join(" ")
@@ -298,6 +299,15 @@
     title.textContent = m.name || "Unnamed";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
+
+    // IC rank under the name, mirroring the medical roster's position line.
+    // Blank when the member has no IC rank assigned.
+    if (m.ic_rank) {
+      var rank = document.createElement("p");
+      rank.className = "venue-card-location";
+      rank.textContent = String(m.ic_rank).toUpperCase();
+      body.appendChild(rank);
+    }
 
     var desc = document.createElement("p");
     desc.className = "venue-card-desc";
@@ -395,6 +405,10 @@
         '<div class="venue-modal-badges">' +
           '<span class="venue-badge venue-badge-size" style="position:static;">' +
             escapeHTML(FACTION_LABEL.toUpperCase()) + '</span>' +
+          (m.ic_rank
+            ? '<span class="venue-badge venue-badge-size" style="position:static;">' +
+                escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>'
+            : '') +
         '</div>' +
         '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
         skillsHtml +

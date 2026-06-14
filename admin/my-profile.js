@@ -20,6 +20,28 @@
   // Factions that have a public roster page; mirrors the worker's ROSTER_FACTIONS.
   var ROSTER_FACTIONS = ['Mercenary', 'Pirate'];
 
+  // Authoritative roster skill list — members pick from this fixed set rather
+  // than free-typing. Keep in sync with the worker's skill validation list.
+  var SKILLS = [
+    'Armsmanship',
+    'Marksmanship',
+    'Guardsmanship',
+    'Craftsmanship',
+    'Navigation',
+    'Scouting',
+    'Investigation',
+    'Espionage',
+    'Tracking',
+    'Negotiation',
+    'Translation',
+    'Logistics',
+    'Procurement',
+    'Chirurgery',
+    'Aetherology',
+    'Culinarian Arts'
+  ];
+  var MAX_SKILLS = 5;
+
   // --------- Profile editor card ----------
   function ProfileCard(props) {
     var member = props.member;
@@ -28,7 +50,12 @@
 
     var draftState = useState({
       description: profile ? (profile.description || '') : '',
-      skills: profile ? (profile.skills || []).join(', ') : '',
+      // Only pre-check skills that exist in the fixed list; any legacy
+      // free-typed skills stay on the public roster until this profile is
+      // re-saved (at which point they're replaced by the picked set).
+      skills: profile
+        ? (profile.skills || []).filter(function (s) { return SKILLS.indexOf(s) !== -1; })
+        : [],
       rp_hooks: profile ? (profile.rp_hooks || '') : '',
       url: profile ? (profile.url || '') : '',
       image_url: profile ? (profile.image_url || '') : '',
@@ -54,9 +81,9 @@
       if (e) e.preventDefault();
       setSaving(true); setErr(''); setFlash('');
       try {
-        var skills = draft.skills.split(',')
-          .map(function (s) { return s.trim(); })
-          .filter(Boolean);
+        var skills = (draft.skills || []).filter(function (s) {
+          return SKILLS.indexOf(s) !== -1;
+        }).slice(0, MAX_SKILLS);
         await PVAdminAPI.request('PUT', '/my-profile', {
           description: draft.description,
           skills: skills,
@@ -117,14 +144,34 @@
 
         h('div', { className: 'portal-field' },
           h('label', null, 'Skills'),
-          h('input', {
-            type: 'text',
-            value: draft.skills,
-            onChange: function (e) { setField('skills', e.target.value); },
-            placeholder: 'Comma-separated, e.g. Swordplay, Field Medicine, Cartography'
-          }),
+          h('div', { className: 'portal-checkbox-group', role: 'group', 'aria-label': 'Skills' },
+            SKILLS.map(function (skill) {
+              var checked = draft.skills.indexOf(skill) !== -1;
+              var atCap = draft.skills.length >= MAX_SKILLS;
+              return h('label', {
+                key: skill,
+                className: 'portal-checkbox-option' + (!checked && atCap ? ' is-disabled' : '')
+              },
+                h('input', {
+                  type: 'checkbox',
+                  checked: checked,
+                  disabled: !checked && atCap,
+                  onChange: function (e) {
+                    var next = draft.skills.slice();
+                    if (e.target.checked) {
+                      if (next.indexOf(skill) === -1 && next.length < MAX_SKILLS) next.push(skill);
+                    } else {
+                      next = next.filter(function (s) { return s !== skill; });
+                    }
+                    setField('skills', next);
+                  }
+                }),
+                h('span', null, skill)
+              );
+            })
+          ),
           h('p', { className: 'portal-field-help' },
-            'You may enter up to 12 skills, maximum 32 characters each.'
+            'Pick 1–' + MAX_SKILLS + ' skills. ' + draft.skills.length + ' of ' + MAX_SKILLS + ' selected.'
           )
         ),
 
