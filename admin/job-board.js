@@ -270,7 +270,7 @@
         })
       ),
 
-      h('div', { className: 'portal-field-row' },
+      h('div', { className: 'portal-field-row portal-field-row-triple' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Division *'),
           h('select', {
@@ -287,9 +287,7 @@
             onChange: function (e) { setField('job_type', e.target.value); }
           }, JOB_TYPES.map(function (t) {
             return h('option', { key: t.value, value: t.value }, t.label);
-          })),
-          h('p', { className: 'portal-field-help' },
-            'Members may apply to only one primary position at a time; secondary positions are unlimited.')
+          }))
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'Status *'),
@@ -301,6 +299,10 @@
           }))
         )
       ),
+
+      h('p', { className: 'portal-field-help', style: { marginTop: '-0.35rem' } },
+        'Job Type: members may apply to only one primary position at a time; secondary positions are unlimited.'),
+
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Contact'),
