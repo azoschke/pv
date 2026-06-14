@@ -379,10 +379,13 @@
   }
 
   function openModal(m) {
+    // In the open modal, skills get their own labeled section as plain text
+    // (no hashtag styling). The overview cards keep the # tags.
     var skillsHtml = (m.skills || []).length
-      ? '<div class="venue-modal-tags">' + m.skills.map(function (s) {
-          return '<span class="venue-card-tag">#' + escapeHTML(s) + '</span>';
-        }).join("") + '</div>'
+      ? '<p class="venue-modal-location" style="margin-top:1rem;">SKILLS</p>' +
+        '<div class="venue-modal-desc"><p>' +
+          m.skills.map(function (s) { return escapeHTML(s); }).join(", ") +
+        '</p></div>'
       : "";
 
     var descHtml = m.description
