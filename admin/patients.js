@@ -4,14 +4,15 @@
 //  Views:
 //    - list           : all patients, two actions per row
 //                       (Edit patient / Add or edit visits)
-//    - new            : create-patient form (patient_id captured here only)
+//    - new            : create-patient form (ID auto-assigned by the worker)
 //    - edit-patient   : edit the patient record
 //    - visits         : visit list for the selected patient; each visit is a
 //                       compact row (date / medic / discharge / complaint).
 //                       Editing or adding opens a modal popup. Delete only
 //                       on admin role.
 //
-//  Patient ID is set at creation and never shown or edited afterwards.
+//  Patient ID is auto-assigned by the worker (next sequential number) on
+//  create, and never shown or edited afterwards.
 //  Visits are sorted by sort_date DESC (falls back to visit_date DESC).
 //  sort_date is exposed on the visit form so it can be tuned manually.
 // ============================================================================
@@ -31,14 +32,13 @@
   //   2. Emergency Contact
   //   3. Pre-Existing Conditions
   //
-  // `newOnly: true` = field is only captured on create (Patient ID).
+  // `newOnly: true` = field is only captured on create.
   // `fullWidth: true` = field spans both columns of the form-row grid.
   var PATIENT_SECTIONS = [
     {
       id: 'patient-info',
       title: 'Patient Information',
       fields: [
-        { key: 'patient_id',         label: 'Patient ID',        type: 'text', required: true, newOnly: true, fullWidth: true },
         { key: 'patient_name',       label: 'Patient Name',      type: 'text', required: true, fullWidth: true },
         { key: 'race',               label: 'Race',              type: 'text' },
         { key: 'gender',             label: 'Gender',            type: 'text' },
@@ -566,8 +566,9 @@
     var onCancel = props.onCancel;
 
     async function handleCreate(draft) {
-      await PVAdminAPI.request('POST', '/patients', draft, true);
-      onCreated(draft.patient_id);
+      // The worker assigns the next sequential Patient ID and returns it.
+      var res = await PVAdminAPI.request('POST', '/patients', draft, true);
+      onCreated(res && res.patient_id);
     }
 
     return h('div', { className: 'portal-card' },
