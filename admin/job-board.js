@@ -107,6 +107,14 @@
     { value: 'filled', label: 'Filled' }
   ];
 
+  // Whether a posting is a primary (main) position — a member may only hold an
+  // active application to one primary at a time — or a secondary position, of
+  // which a member may apply to any number. Enforced by the worker on apply.
+  var JOB_TYPES = [
+    { value: 'primary',   label: 'Primary' },
+    { value: 'secondary', label: 'Secondary' }
+  ];
+
   function labelFor(list, val) {
     for (var i = 0; i < list.length; i++) if (list[i].value === val) return list[i].label;
     return val || '';
@@ -135,6 +143,7 @@
     return {
       title: '',
       category: 'medical',
+      job_type: 'primary',
       status: 'open',
       description: '',
       contact: '',
@@ -148,6 +157,7 @@
       id: j.id,
       title: j.title || '',
       category: j.category || 'medical',
+      job_type: j.job_type || 'primary',
       status: j.status || 'open',
       description: j.description || '',
       contact: j.contact || '',
@@ -159,6 +169,7 @@
     return {
       title: draft.title.trim(),
       category: draft.category,
+      job_type: draft.job_type,
       status: draft.status,
       description: draft.description.trim() || null,
       contact: draft.contact.trim() || null,
@@ -270,6 +281,17 @@
           }))
         ),
         h('div', { className: 'portal-field' },
+          h('label', null, 'Job Type *'),
+          h('select', {
+            value: draft.job_type,
+            onChange: function (e) { setField('job_type', e.target.value); }
+          }, JOB_TYPES.map(function (t) {
+            return h('option', { key: t.value, value: t.value }, t.label);
+          })),
+          h('p', { className: 'portal-field-help' },
+            'Members may apply to only one primary position at a time; secondary positions are unlimited.')
+        ),
+        h('div', { className: 'portal-field' },
           h('label', null, 'Status *'),
           h('select', {
             value: draft.status,
@@ -350,10 +372,14 @@
     var onDelete = props.onDelete;
 
     var statusCls = 'portal-badge' + (j.status === 'open' ? ' is-pinned' : '');
+    var typeCls = 'portal-pill ' + (j.job_type === 'secondary' ? 'is-muted' : 'is-gold');
 
     return h('tr', null,
       h('td', null,
         h('span', { style: { fontWeight: 600 } }, j.title)
+      ),
+      h('td', null,
+        h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))
       ),
       h('td', null,
         h('span', { className: statusCls }, labelFor(STATUSES, j.status))
@@ -420,7 +446,8 @@
           (j.title || '').toLowerCase().indexOf(q) !== -1 ||
           (j.description || '').toLowerCase().indexOf(q) !== -1 ||
           (j.contact || '').toLowerCase().indexOf(q) !== -1 ||
-          labelFor(CATEGORIES, j.category).toLowerCase().indexOf(q) !== -1
+          labelFor(CATEGORIES, j.category).toLowerCase().indexOf(q) !== -1 ||
+          labelFor(JOB_TYPES, j.job_type || 'primary').toLowerCase().indexOf(q) !== -1
         );
       });
     }, [list, query]);
@@ -496,6 +523,7 @@
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),
+                      h('th', null, 'Type'),
                       h('th', null, 'Status'),
                       h('th', null, 'Contact'),
                       h('th', null, '')
@@ -505,7 +533,7 @@
                     groupByDivision(filtered).map(function (g) {
                       return [
                         h('tr', { key: 'grp-' + g.value, className: 'portal-group-row' },
-                          h('td', { colSpan: 4, className: 'portal-group-cell' },
+                          h('td', { colSpan: 5, className: 'portal-group-cell' },
                             g.label + ' · ' + g.jobs.length)
                         )
                       ].concat(g.jobs.map(function (j) {

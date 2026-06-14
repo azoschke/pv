@@ -30,6 +30,12 @@
 
   var STATUS_LABEL = { open: "Open", closed: "Closed", filled: "Filled" };
 
+  // Primary postings are main positions (a member may hold an active
+  // application to only one at a time); secondary postings are unlimited.
+  var JOB_TYPE_ORDER = ["primary", "secondary"];
+  var JOB_TYPE_LABEL = { primary: "Primary", secondary: "Secondary" };
+  function jobTypeOf(j) { return j.job_type === "secondary" ? "secondary" : "primary"; }
+
   // Per-category palette for the colored card backdrop (used when no image_url).
   var CATEGORY_PALETTE = {
     medical:     { from: "#1f3a2e", to: "#10201a" },
@@ -46,6 +52,7 @@
   var overlay      = document.getElementById("campaign-overlay");
   var searchInput  = document.getElementById("jobs-search");
   var catListEl    = document.getElementById("filter-category-list");
+  var typeListEl   = document.getElementById("filter-type-list");
   var showClosedChk = document.getElementById("filter-show-closed");
   var resetBtn     = document.getElementById("filter-reset");
   var sortSelect   = document.getElementById("jobs-sort-select");
@@ -99,6 +106,7 @@
   var filters = {
     search: "",
     categories: {},   // { medical: true, ... }
+    jobTypes: {},     // { primary: true, secondary: true }
     showClosed: false
   };
   var sort = "newest";
@@ -126,6 +134,7 @@
         if (saved && typeof saved === "object") {
           filters.search     = String(saved.search || "");
           filters.categories = saved.categories && typeof saved.categories === "object" ? saved.categories : {};
+          filters.jobTypes   = saved.jobTypes && typeof saved.jobTypes === "object" ? saved.jobTypes : {};
           filters.showClosed = !!saved.showClosed;
         }
       }
@@ -222,6 +231,12 @@
       "categories"
     );
 
+    renderCheckboxList(
+      typeListEl,
+      JOB_TYPE_ORDER.map(function (t) { return { value: t, label: JOB_TYPE_LABEL[t] }; }),
+      "jobTypes"
+    );
+
     searchInput.value = filters.search;
     showClosedChk.checked = filters.showClosed;
     sortSelect.value = sort;
@@ -243,13 +258,14 @@
     });
 
     resetBtn.addEventListener("click", function () {
-      filters = { search: "", categories: {}, showClosed: false };
+      filters = { search: "", categories: {}, jobTypes: {}, showClosed: false };
       sort = "newest";
       saveFilters();
       searchInput.value = "";
       showClosedChk.checked = false;
       sortSelect.value = sort;
       catListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      typeListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
       renderGrid();
     });
   }
@@ -261,6 +277,9 @@
     var catKeys = Object.keys(filters.categories);
     if (catKeys.length && !filters.categories[j.category]) return false;
 
+    var typeKeys = Object.keys(filters.jobTypes);
+    if (typeKeys.length && !filters.jobTypes[jobTypeOf(j)]) return false;
+
     var q = (filters.search || "").trim().toLowerCase();
     if (q) {
       var hay = [
@@ -268,6 +287,7 @@
         j.description || "",
         j.contact || "",
         CATEGORY_LABEL[j.category] || "",
+        JOB_TYPE_LABEL[jobTypeOf(j)] || "",
         STATUS_LABEL[j.status] || ""
       ].join(" ").toLowerCase();
       if (hay.indexOf(q) === -1) return false;
@@ -305,6 +325,7 @@
         var temp = {
           search: filters.search,
           categories: kind === "categories" ? {} : filters.categories,
+          jobTypes: kind === "jobTypes" ? {} : filters.jobTypes,
           showClosed: filters.showClosed
         };
         var saved = filters;
@@ -313,6 +334,7 @@
         filters = saved;
         if (!ok) return acc;
         if (kind === "categories") return acc + (j.category === value ? 1 : 0);
+        if (kind === "jobTypes") return acc + (jobTypeOf(j) === value ? 1 : 0);
         return acc;
       }, 0);
     }
@@ -373,6 +395,11 @@
     statusBadge.className = "job-badge job-badge-status job-status-" + j.status;
     statusBadge.textContent = (STATUS_LABEL[j.status] || "").toUpperCase();
     media.appendChild(statusBadge);
+
+    var typeBadge = document.createElement("span");
+    typeBadge.className = "job-badge job-badge-type job-type-" + jobTypeOf(j);
+    typeBadge.textContent = (JOB_TYPE_LABEL[jobTypeOf(j)] || "").toUpperCase();
+    media.appendChild(typeBadge);
 
     card.appendChild(media);
 
@@ -447,7 +474,9 @@
       '<span class="job-badge job-badge-category job-cat-' + j.category + '" style="position:static;">' +
         escapeHTML((CATEGORY_LABEL[j.category] || "").toUpperCase()) + '</span>' +
       '<span class="job-badge job-badge-status job-status-' + j.status + '" style="position:static;">' +
-        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
+        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>' +
+      '<span class="job-badge job-badge-type job-type-' + jobTypeOf(j) + '" style="position:static;">' +
+        escapeHTML((JOB_TYPE_LABEL[jobTypeOf(j)] || "").toUpperCase()) + '</span>';
 
     var contactHtml = j.contact
       ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
@@ -483,6 +512,27 @@
     return null;
   }
 
+  function jobById(id) {
+    for (var i = 0; i < allJobs.length; i++) {
+      if (allJobs[i].id === id) return allJobs[i];
+    }
+    return null;
+  }
+
+  // The active (non-declined) application this member already holds to a primary
+  // posting other than j, if any. Used to mirror the worker's one-primary rule
+  // in the UI so applying is blocked before the request is sent.
+  function activePrimaryElsewhere(j) {
+    for (var i = 0; i < myApplications.length; i++) {
+      var a = myApplications[i];
+      if (a.stage === "declined") continue;
+      if (a.job_id === j.id) continue;
+      var other = jobById(a.job_id);
+      if (other && jobTypeOf(other) === "primary") return other;
+    }
+    return null;
+  }
+
   function applyHtml(j) {
     if (j.status !== "open") return "";
     if (!getSession()) {
@@ -494,6 +544,17 @@
     }
     var app = myApplicationFor(j);
     if (!app) {
+      if (jobTypeOf(j) === "primary") {
+        var conflict = activePrimaryElsewhere(j);
+        if (conflict) {
+          return '<div class="quest-modal-actions">' +
+            '<button type="button" class="quest-action-btn" id="job-apply-btn" disabled>Apply</button>' +
+            '<span class="quest-action-note">You already have an active application for a primary position (' +
+            escapeHTML(conflict.title) + '). Withdraw it before applying to another primary position. ' +
+            'Secondary positions have no limit.</span>' +
+            '</div>';
+        }
+      }
       return '<div class="quest-modal-actions">' +
         '<button type="button" class="quest-action-btn" id="job-apply-btn">Apply</button>' +
         '</div>';
