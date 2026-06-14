@@ -589,6 +589,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   height: 18px;
   cursor: pointer;
 }
+.portal-checkbox-option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.portal-checkbox-option.is-disabled input[type="checkbox"] {
+  cursor: not-allowed;
+}
 
 /* --------------- Coming soon --------------- */
 .portal-coming-soon {

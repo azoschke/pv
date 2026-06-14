@@ -209,6 +209,7 @@
     if (q) {
       var hay = [
         m.name || "",
+        m.ic_rank || "",
         m.description || "",
         m.rp_hooks || "",
         (m.skills || []).join(" ")
@@ -299,6 +300,15 @@
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
+    // IC rank under the name, mirroring the medical roster's position line.
+    // Blank when the member has no IC rank assigned.
+    if (m.ic_rank) {
+      var rank = document.createElement("p");
+      rank.className = "venue-card-location";
+      rank.textContent = String(m.ic_rank).toUpperCase();
+      body.appendChild(rank);
+    }
+
     var desc = document.createElement("p");
     desc.className = "venue-card-desc";
     desc.textContent = truncate(m.description, 160) ||
@@ -369,10 +379,13 @@
   }
 
   function openModal(m) {
+    // In the open modal, skills get their own labeled section as plain text
+    // (no hashtag styling). The overview cards keep the # tags.
     var skillsHtml = (m.skills || []).length
-      ? '<div class="venue-modal-tags">' + m.skills.map(function (s) {
-          return '<span class="venue-card-tag">#' + escapeHTML(s) + '</span>';
-        }).join("") + '</div>'
+      ? '<p class="venue-modal-location" style="margin-top:1rem;">SKILLS</p>' +
+        '<div class="venue-modal-desc"><p>' +
+          m.skills.map(function (s) { return escapeHTML(s); }).join(", ") +
+        '</p></div>'
       : "";
 
     var descHtml = m.description
@@ -385,8 +398,8 @@
       : "";
 
     var urlHtml = m.url
-      ? '<p class="venue-modal-location" style="margin-top:1rem;">' +
-        '<a href="' + escapeHTML(m.url) + '" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
+      ? '<p style="margin-top:1rem;">' +
+        '<a href="' + escapeHTML(m.url) + '" class="venue-modal-btn" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
       : "";
 
     modalBody.innerHTML =
@@ -395,11 +408,15 @@
         '<div class="venue-modal-badges">' +
           '<span class="venue-badge venue-badge-size" style="position:static;">' +
             escapeHTML(FACTION_LABEL.toUpperCase()) + '</span>' +
+          (m.ic_rank
+            ? '<span class="venue-badge venue-badge-size" style="position:static;">' +
+                escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>'
+            : '') +
         '</div>' +
         '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
-        skillsHtml +
         descHtml +
         hooksHtml +
+        skillsHtml +
         urlHtml +
       '</div>';
 
