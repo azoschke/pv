@@ -52,6 +52,8 @@
     return val || '';
   }
 
+  var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
+
   function stageBadgeClass(stage) {
     if (stage === 'new')      return 'portal-pill is-red-fill';
     if (stage === 'scheduled') return 'portal-pill is-gold';
@@ -326,11 +328,16 @@
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
     var onStage = props.onStage;
+    var jobsById = props.jobsById || {};
+
+    var job = jobsById[a.job_id];
+    var jobType = job && job.job_type ? job.job_type : null;
 
     return h('tr', null,
       h('td', null, h('span', { style: { fontWeight: 600 } }, a.member_name)),
       h('td', null, a.job_title),
       h('td', null, labelFor(DIVISIONS, a.division)),
+      h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
       h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
       h('td', null,
         h('select', {
@@ -413,6 +420,13 @@
     }
 
     useEffect(function () { reload(); loadPickers(); }, []);
+
+    // Index loaded postings by id so each row can show its Primary/Secondary type.
+    var jobsById = useMemo(function () {
+      var byId = {};
+      (jobs || []).forEach(function (j) { byId[j.id] = j; });
+      return byId;
+    }, [jobs]);
 
     var filtered = useMemo(function () {
       var q = query.trim().toLowerCase();
@@ -544,6 +558,7 @@
                       h('th', null, 'Name'),
                       h('th', null, 'Position'),
                       h('th', null, 'Division'),
+                      h('th', null, 'Type'),
                       h('th', null, 'Date'),
                       h('th', null, 'Stage'),
                       h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
@@ -554,6 +569,7 @@
                       return h(AppRow, {
                         key: a.id,
                         app: a,
+                        jobsById: jobsById,
                         onEdit: function (aa) { setFormOpen({ app: aa }); },
                         onDelete: handleDelete,
                         onStage: handleStage

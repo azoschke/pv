@@ -489,11 +489,15 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-style: italic;
+  margin: 0.35rem 0 0.85rem;
 }
 .portal-field-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
+}
+.portal-field-row-triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .portal-form-actions {
   display: flex;
@@ -1017,7 +1021,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   .portal-sidebar-drawer .sidebar-nav { flex: 0 0 auto; }
   .portal-drawer-overlay { display: block; }
   .portal-main { padding: 1rem 1rem 3rem; }
-  .portal-field-row { grid-template-columns: 1fr; }
+  .portal-field-row,
+  .portal-field-row-triple { grid-template-columns: 1fr; }
   .portal-search { min-width: 0; width: 100%; }
   .portal-card-actions { width: 100%; }
   /* Section headers with extra content (dashboard date, FC Members search +

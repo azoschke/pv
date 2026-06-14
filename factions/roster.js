@@ -494,6 +494,11 @@
   }
 
   function closeModal() {
+    // Move focus out before hiding: leaving focus inside an aria-hidden subtree
+    // trips Chrome's "Blocked aria-hidden on a focused element" warning.
+    if (document.activeElement && modalOverlay.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";

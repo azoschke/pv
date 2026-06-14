@@ -35,6 +35,14 @@
     declined:  { label: 'Declined',            cls: 'portal-pill is-muted' }
   };
 
+  // Division slugs are stored on the application; map to display labels.
+  var DIVISION_LABEL = {
+    medical: 'Medical', pirate: 'Pirate', mercenary: 'Mercenary',
+    house_staff: 'House Staff', contractor: 'Contractor'
+  };
+  var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
+  function divisionLabel(v) { return DIVISION_LABEL[v] || v || '—'; }
+
   function fmtDate(s) {
     if (!s) return '';
     var t = Date.parse(String(s).replace(' ', 'T') + 'Z');
@@ -245,6 +253,7 @@
   // --------- My job applications card ----------
   function MyJobApplicationsCard(props) {
     var apps = props.apps || [];
+    var jobsById = props.jobsById || {};
     var onChanged = props.onChanged;
     var onError = props.onError;
 
@@ -271,6 +280,7 @@
             h('tr', null,
               h('th', null, 'Posting'),
               h('th', null, 'Division'),
+              h('th', null, 'Type'),
               h('th', null, 'Applied'),
               h('th', null, 'Status'),
               h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
@@ -279,9 +289,12 @@
           h('tbody', null,
             apps.map(function (a) {
               var pill = APP_STAGE_PILL[a.stage] || APP_STAGE_PILL.new;
+              var job = jobsById[a.job_id];
+              var jobType = job && job.job_type ? job.job_type : null;
               return h('tr', { key: a.id },
                 h('td', { style: { fontWeight: 600 } }, a.job_title),
-                h('td', null, a.division),
+                h('td', null, divisionLabel(a.division)),
+                h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
                 h('td', null, fmtDate(a.created_at)),
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
                 h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
@@ -308,6 +321,8 @@
     var mySignups = signupsState[0], setMySignups = signupsState[1];
     var appsState = useState([]);
     var myApps = appsState[0], setMyApps = appsState[1];
+    var jobsState = useState({});
+    var jobsById = jobsState[0], setJobsById = jobsState[1];
 
     var loadingState = useState(true);
     var loading = loadingState[0], setLoading = loadingState[1];
@@ -320,11 +335,17 @@
         var results = await Promise.all([
           PVAdminAPI.request('GET', '/my/quests', undefined, true),
           PVAdminAPI.request('GET', '/my/signups', undefined, true),
-          PVAdminAPI.request('GET', '/my/applications', undefined, true)
+          PVAdminAPI.request('GET', '/my/applications', undefined, true),
+          // Postings carry job_type / category; index by id so My Job
+          // Applications can show the division label and Primary/Secondary type.
+          PVAdminAPI.request('GET', '/jobs', undefined, true).catch(function () { return []; })
         ]);
         setMyQuests(results[0] && results[0].quests ? results[0] : { quests: [], edits: [] });
         setMySignups(Array.isArray(results[1]) ? results[1] : []);
         setMyApps(Array.isArray(results[2]) ? results[2] : []);
+        var byId = {};
+        (Array.isArray(results[3]) ? results[3] : []).forEach(function (j) { byId[j.id] = j; });
+        setJobsById(byId);
       } catch (e) {
         setErr(e.message || 'Failed to load your activity.');
       } finally {
@@ -345,7 +366,7 @@
 
       h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }),
       h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }),
-      h(MyJobApplicationsCard, { apps: myApps, onChanged: reload, onError: setErr })
+      h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr })
     );
   }
 
