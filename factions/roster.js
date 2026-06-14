@@ -398,8 +398,8 @@
       : "";
 
     var urlHtml = m.url
-      ? '<p class="venue-modal-location" style="margin-top:1rem;">' +
-        '<a href="' + escapeHTML(m.url) + '" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
+      ? '<p style="margin-top:1rem;">' +
+        '<a href="' + escapeHTML(m.url) + '" class="venue-modal-btn" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
       : "";
 
     modalBody.innerHTML =

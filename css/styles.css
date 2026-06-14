@@ -3295,6 +3295,26 @@ body.nav-sidebar-open {
 .venue-modal-desc p { margin: 0 0 0.85rem; }
 .venue-modal-desc p:last-child { margin-bottom: 0; }
 
+/* Button-style link in the roster modal (Character page) */
+.venue-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  background: var(--ink-color);
+  color: var(--parchment-bg);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--shadow-color);
+}
+.venue-modal-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
+.venue-modal-btn:active { transform: translateY(0); }
+
 .venue-modal-tags { margin-top: 1.1rem; }
 
 @media (max-width: 768px) {
