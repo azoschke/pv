@@ -489,6 +489,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-style: italic;
+  margin: 0.35rem 0 0.85rem;
 }
 .portal-field-row {
   display: grid;
