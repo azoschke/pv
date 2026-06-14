@@ -467,6 +467,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   color: var(--text-secondary);
 }
+   .portal-field label.portal-checkbox-option {
+       font-size: 0.8rem;
+       letter-spacing: 0;
+       text-transform: none;
+   }
 .portal-field input[type="text"],
 .portal-field input[type="date"],
 .portal-field textarea,
