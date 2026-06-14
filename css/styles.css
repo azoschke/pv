@@ -3425,17 +3425,6 @@ body.nav-sidebar-open {
 .job-badge-status.job-status-closed { background: rgba(0, 0, 0, 0.62); }
 .job-badge-status.job-status-filled { background: rgba(0, 0, 0, 0.62); }
 
-/* Job-type badge — sits directly beneath the status badge (top-right). */
-.job-badge-type {
-  top: 2.1rem;
-  right: 0.6rem;
-  color: #f3e9d2;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.job-badge-type.job-type-primary   { background: #8a6d2f; color: #fff; }
-.job-badge-type.job-type-secondary { background: #3f4a55; color: #f3e9d2; }
-
 .job-card-body {
   padding: 1rem 1.1rem 1.1rem;
   display: flex;

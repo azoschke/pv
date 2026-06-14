@@ -36,6 +36,12 @@
   var JOB_TYPE_LABEL = { primary: "Primary", secondary: "Secondary" };
   function jobTypeOf(j) { return j.job_type === "secondary" ? "secondary" : "primary"; }
 
+  // The on-image division badge folds in the job type so it reads, e.g.,
+  // "Primary · Mercenary" — one tag instead of two.
+  function jobBadgeLabel(j) {
+    return (JOB_TYPE_LABEL[jobTypeOf(j)] + " · " + (CATEGORY_LABEL[j.category] || "")).trim();
+  }
+
   // Per-category palette for the colored card backdrop (used when no image_url).
   var CATEGORY_PALETTE = {
     medical:     { from: "#1f3a2e", to: "#10201a" },
@@ -388,18 +394,13 @@
 
     var catBadge = document.createElement("span");
     catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
-    catBadge.textContent = (CATEGORY_LABEL[j.category] || "").toUpperCase();
+    catBadge.textContent = jobBadgeLabel(j).toUpperCase();
     media.appendChild(catBadge);
 
     var statusBadge = document.createElement("span");
     statusBadge.className = "job-badge job-badge-status job-status-" + j.status;
     statusBadge.textContent = (STATUS_LABEL[j.status] || "").toUpperCase();
     media.appendChild(statusBadge);
-
-    var typeBadge = document.createElement("span");
-    typeBadge.className = "job-badge job-badge-type job-type-" + jobTypeOf(j);
-    typeBadge.textContent = (JOB_TYPE_LABEL[jobTypeOf(j)] || "").toUpperCase();
-    media.appendChild(typeBadge);
 
     card.appendChild(media);
 
@@ -472,11 +473,9 @@
 
     var badges =
       '<span class="job-badge job-badge-category job-cat-' + j.category + '" style="position:static;">' +
-        escapeHTML((CATEGORY_LABEL[j.category] || "").toUpperCase()) + '</span>' +
+        escapeHTML(jobBadgeLabel(j).toUpperCase()) + '</span>' +
       '<span class="job-badge job-badge-status job-status-' + j.status + '" style="position:static;">' +
-        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>' +
-      '<span class="job-badge job-badge-type job-type-' + jobTypeOf(j) + '" style="position:static;">' +
-        escapeHTML((JOB_TYPE_LABEL[jobTypeOf(j)] || "").toUpperCase()) + '</span>';
+        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
 
     var contactHtml = j.contact
       ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
