@@ -414,9 +414,9 @@
             : '') +
         '</div>' +
         '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
-        skillsHtml +
         descHtml +
         hooksHtml +
+        skillsHtml +
         urlHtml +
       '</div>';
 

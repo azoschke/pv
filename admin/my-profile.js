@@ -143,6 +143,20 @@
         ),
 
         h('div', { className: 'portal-field' },
+          h('label', null, 'RP Hooks'),
+          h('textarea', {
+            value: draft.rp_hooks,
+            onChange: function (e) {
+              var v = e.target.value;
+              setDraft(function (d) { return Object.assign({}, d, { rp_hooks: v }); });
+            },
+            rows: 4,
+            maxLength: 4000,
+            placeholder: 'Write any specific RP hooks you would like others to be aware of. Markdown allowed.'
+          })
+        ),
+
+        h('div', { className: 'portal-field' },
           h('label', null, 'Skills'),
           h('div', { className: 'portal-checkbox-group', role: 'group', 'aria-label': 'Skills' },
             SKILLS.map(function (skill) {
@@ -173,20 +187,6 @@
           h('p', { className: 'portal-field-help' },
             'Pick 1–' + MAX_SKILLS + ' skills. ' + draft.skills.length + ' of ' + MAX_SKILLS + ' selected.'
           )
-        ),
-
-        h('div', { className: 'portal-field' },
-          h('label', null, 'RP Hooks'),
-          h('textarea', {
-            value: draft.rp_hooks,
-            onChange: function (e) {
-              var v = e.target.value;
-              setDraft(function (d) { return Object.assign({}, d, { rp_hooks: v }); });
-            },
-            rows: 4,
-            maxLength: 4000,
-            placeholder: 'Write any specific RP hooks you would like others to be aware of. Markdown allowed.'
-          })
         ),
 
         h('div', { className: 'portal-field' },
