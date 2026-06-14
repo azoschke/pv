@@ -1,53 +1,67 @@
 // ============================================================================
-//  Phoenix Vanguard Faction Roster — public directory (Mercenary / Pirate)
+//  Phoenix Vanguard Company Roster — public directory (all factions)
 //
-//  Shared by /pv/factions/mercenary.html and /pv/factions/pirate.html; the
-//  page declares its faction via <body data-faction="..." data-faction-label>.
-//
-//  Mirrors the venues / staff-roster pattern: a campaign-style filter sidebar
-//  plus a card grid with click-to-expand modal. The skill filter list is built
-//  from whatever skills published members actually have.
+//  Drives /pv/factions/company-roster.html. Combines every published member
+//  profile across all factions into a single browsable directory, mirroring
+//  the venues / staff-roster pattern: a campaign-style filter sidebar plus a
+//  card grid with click-to-expand modal. Filter lists (faction + skills) are
+//  built from whatever the loaded roster actually contains.
 //
 //  Roster entries are member-edited profiles (portal → My Profile) that the
 //  member has opted to publish, joined against the FC roster's faction field.
 //
 //  Worker endpoint used:
-//    GET /roster?faction=<slug>
-//      -> [{ member_id, name, description, skills: [...], rp_hooks, url,
-//            image_url, updated_at }]
+//    GET /roster
+//      -> [{ member_id, name, faction, ic_rank, description, skills: [...],
+//            rp_hooks, url, image_url, updated_at }]
+//      `faction` is the member's raw FC roster value (comma-separated list).
 // ============================================================================
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
 
-  var FACTION = (document.body.dataset.faction || "mercenary").toLowerCase();
-  var FACTION_LABEL = document.body.dataset.factionLabel || "Mercenary";
+  var SIDEBAR_KEY = "pv-roster-company-sidebar-hidden";
+  var FILTER_KEY  = "pv-roster-company-filters";
 
-  var SIDEBAR_KEY = "pv-roster-" + FACTION + "-sidebar-hidden";
-  var FILTER_KEY  = "pv-roster-" + FACTION + "-filters";
+  // Display order for faction tags/filters — mirrors the admin members.js /
+  // faction-section.js FACTION_ORDER so the public roster reads the same way.
+  var FACTION_ORDER = [
+    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Contractor', 'NA - No RP', 'No Data'
+  ];
 
   // Card backdrop when a member has no portrait — one palette per faction so
-  // the two roster pages read differently at a glance.
+  // the grid still reads with variety. Keyed by the member's primary faction.
   var FACTION_PALETTE = {
-    mercenary: { from: "#3a2225", to: "#1f1214" },
-    pirate:    { from: "#1f3340", to: "#101c25" }
+    'Pirate':      { from: "#1f3340", to: "#101c25" },
+    'Mercenary':   { from: "#3a2225", to: "#1f1214" },
+    'Medical':     { from: "#1f3a2f", to: "#101f18" },
+    'House Staff': { from: "#33291f", to: "#1c1610" },
+    'Contractor':  { from: "#2d2a3a", to: "#16141f" }
   };
-  var palette = FACTION_PALETTE[FACTION] || FACTION_PALETTE.mercenary;
+  var DEFAULT_PALETTE = { from: "#2a1f1c", to: "#14100e" };
+
+  function paletteFor(m) {
+    var primary = (m.factions || [])[0];
+    return FACTION_PALETTE[primary] || DEFAULT_PALETTE;
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
-  var sidebarEl    = document.getElementById("roster-sidebar");
-  var toggleBtn    = document.getElementById("sidebar-toggle-btn");
-  var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
-  var searchInput  = document.getElementById("roster-search");
-  var skillListEl  = document.getElementById("filter-skill-list");
-  var skillGroupEl = document.getElementById("filter-skill-group");
-  var resetBtn     = document.getElementById("filter-reset");
-  var gridEl       = document.getElementById("roster-grid");
-  var countEl      = document.getElementById("roster-count");
-  var modalOverlay = document.getElementById("roster-modal-overlay");
-  var modalBody    = document.getElementById("roster-modal-body");
-  var modalClose   = document.getElementById("roster-modal-close");
+  var sidebarEl     = document.getElementById("roster-sidebar");
+  var toggleBtn     = document.getElementById("sidebar-toggle-btn");
+  var closeBtn      = document.getElementById("sidebar-close-btn");
+  var overlay       = document.getElementById("campaign-overlay");
+  var searchInput   = document.getElementById("roster-search");
+  var factionListEl = document.getElementById("filter-faction-list");
+  var factionGroupEl= document.getElementById("filter-faction-group");
+  var skillListEl   = document.getElementById("filter-skill-list");
+  var skillGroupEl  = document.getElementById("filter-skill-group");
+  var resetBtn      = document.getElementById("filter-reset");
+  var gridEl        = document.getElementById("roster-grid");
+  var countEl       = document.getElementById("roster-count");
+  var modalOverlay  = document.getElementById("roster-modal-overlay");
+  var modalBody     = document.getElementById("roster-modal-body");
+  var modalClose    = document.getElementById("roster-modal-close");
 
   if (window.marked && marked.use) marked.use({ breaks: true });
 
@@ -55,7 +69,8 @@
   var allMembers = [];
   var filters = {
     search: "",
-    skills: {}    // { "Swordplay": true, ... }
+    factions: {},  // { "Pirate": true, ... }
+    skills: {}     // { "Swordplay": true, ... }
   };
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -67,14 +82,35 @@
 
   function isMobile() { return window.innerWidth <= 768; }
 
+  // Split the raw comma-separated faction field into a clean list.
+  function parseFactions(value) {
+    if (!value) return [];
+    return String(value)
+      .split(",")
+      .map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 0; });
+  }
+
+  // Order a member's factions by FACTION_ORDER, appending any unknown values.
+  function orderedFactions(arr) {
+    var seen = {};
+    arr.forEach(function (f) { if (f) seen[f] = true; });
+    var ordered = FACTION_ORDER.filter(function (f) { return seen[f]; });
+    var unknown = Object.keys(seen).filter(function (f) {
+      return FACTION_ORDER.indexOf(f) === -1;
+    });
+    return ordered.concat(unknown);
+  }
+
   function loadFilters() {
     try {
       var raw = localStorage.getItem(FILTER_KEY);
       if (raw) {
         var saved = JSON.parse(raw);
         if (saved && typeof saved === "object") {
-          filters.search = String(saved.search || "");
-          filters.skills = saved.skills && typeof saved.skills === "object" ? saved.skills : {};
+          filters.search   = String(saved.search || "");
+          filters.factions = saved.factions && typeof saved.factions === "object" ? saved.factions : {};
+          filters.skills   = saved.skills && typeof saved.skills === "object" ? saved.skills : {};
         }
       }
     } catch (_e) { /* ignore */ }
@@ -120,7 +156,15 @@
   overlay.addEventListener("click", closeSidebar);
   restoreSidebarState();
 
-  // ── Skill filter list (derived from the loaded roster) ──────────────────
+  // ── Filter lists (derived from the loaded roster) ───────────────────────
+  function allFactions() {
+    var seen = {};
+    allMembers.forEach(function (m) {
+      (m.factions || []).forEach(function (f) { if (f) seen[f] = true; });
+    });
+    return orderedFactions(Object.keys(seen));
+  }
+
   function allSkills() {
     var seen = {};
     allMembers.forEach(function (m) {
@@ -131,17 +175,19 @@
     });
   }
 
-  function buildSkillFilter() {
-    var skills = allSkills();
-    skillGroupEl.style.display = skills.length ? "" : "none";
-    skillListEl.innerHTML = "";
+  // Build one checkbox list (faction or skill) into `listEl`. `selected` is the
+  // backing filter map; `getValues` returns the available option values.
+  function buildCheckList(listEl, groupEl, getValues, selected) {
+    var values = getValues();
+    groupEl.style.display = values.length ? "" : "none";
+    listEl.innerHTML = "";
 
-    // Drop saved filters that no longer correspond to a published skill.
-    Object.keys(filters.skills).forEach(function (k) {
-      if (skills.indexOf(k) === -1) delete filters.skills[k];
+    // Drop saved selections that no longer correspond to a live value.
+    Object.keys(selected).forEach(function (k) {
+      if (values.indexOf(k) === -1) delete selected[k];
     });
 
-    skills.forEach(function (skill) {
+    values.forEach(function (value) {
       var li = document.createElement("li");
       li.className = "venues-filter-item";
 
@@ -150,30 +196,36 @@
 
       var input = document.createElement("input");
       input.type = "checkbox";
-      input.value = skill;
-      input.checked = !!filters.skills[skill];
+      input.value = value;
+      input.checked = !!selected[value];
       input.addEventListener("change", function () {
-        if (input.checked) filters.skills[skill] = true;
-        else delete filters.skills[skill];
+        if (input.checked) selected[value] = true;
+        else delete selected[value];
         saveFilters();
         renderGrid();
       });
 
       var text = document.createElement("span");
       text.className = "venues-filter-check-text";
-      text.textContent = skill;
+      text.textContent = value;
 
       var count = document.createElement("span");
       count.className = "venues-filter-count";
-      count.dataset.value = skill;
+      count.dataset.kind = (listEl === factionListEl) ? "faction" : "skill";
+      count.dataset.value = value;
       count.textContent = "0";
 
       label.appendChild(input);
       label.appendChild(text);
       label.appendChild(count);
       li.appendChild(label);
-      skillListEl.appendChild(li);
+      listEl.appendChild(li);
     });
+  }
+
+  function buildFilterLists() {
+    buildCheckList(factionListEl, factionGroupEl, allFactions, filters.factions);
+    buildCheckList(skillListEl, skillGroupEl, allSkills, filters.skills);
   }
 
   function buildFilterUI() {
@@ -186,16 +238,25 @@
     });
 
     resetBtn.addEventListener("click", function () {
-      filters = { search: "", skills: {} };
+      filters = { search: "", factions: {}, skills: {} };
       saveFilters();
       searchInput.value = "";
-      skillListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      sidebarEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
       renderGrid();
     });
   }
 
   // ── Filtering ────────────────────────────────────────────────────────────
   function matchesFilters(m) {
+    var factionKeys = Object.keys(filters.factions);
+    if (factionKeys.length) {
+      var fHit = false;
+      for (var j = 0; j < factionKeys.length; j++) {
+        if ((m.factions || []).indexOf(factionKeys[j]) !== -1) { fHit = true; break; }
+      }
+      if (!fHit) return false;
+    }
+
     var skillKeys = Object.keys(filters.skills);
     if (skillKeys.length) {
       var hit = false;
@@ -210,6 +271,7 @@
       var hay = [
         m.name || "",
         m.ic_rank || "",
+        (m.factions || []).join(" "),
         m.description || "",
         m.rp_hooks || "",
         (m.skills || []).join(" ")
@@ -220,23 +282,30 @@
   }
 
   // ── Counts on filter checkboxes ──────────────────────────────────────────
+  // Each count reflects how many members would match if that option were added
+  // to the current filters (ignoring the option's own group).
   function updateCounts() {
-    function countForSkill(value) {
+    function countFor(kind, value) {
       return allMembers.reduce(function (acc, m) {
-        var temp = { search: filters.search, skills: {} };
+        var temp = {
+          search: filters.search,
+          factions: kind === "faction" ? {} : filters.factions,
+          skills: kind === "skill" ? {} : filters.skills
+        };
         var saved = filters;
         filters = temp;
         var ok = matchesFilters(m);
         filters = saved;
         if (!ok) return acc;
-        return acc + ((m.skills || []).indexOf(value) !== -1 ? 1 : 0);
+        var list = kind === "faction" ? (m.factions || []) : (m.skills || []);
+        return acc + (list.indexOf(value) !== -1 ? 1 : 0);
       }, 0);
     }
 
     document.querySelectorAll(".venues-filter-count").forEach(function (el) {
       var value = el.dataset.value;
       if (!value) return;
-      el.textContent = String(countForSkill(value));
+      el.textContent = String(countFor(el.dataset.kind, value));
     });
   }
 
@@ -249,6 +318,8 @@
   }
 
   function buildCardEl(m) {
+    var palette = paletteFor(m);
+
     var card = document.createElement("button");
     card.type = "button";
     card.className = "venue-card";
@@ -282,10 +353,13 @@
       media.appendChild(sig);
     }
 
-    var badge = document.createElement("span");
-    badge.className = "venue-badge venue-badge-size";
-    badge.textContent = FACTION_LABEL.toUpperCase();
-    media.appendChild(badge);
+    // Badge pulls in the member's actual faction(s).
+    if ((m.factions || []).length) {
+      var badge = document.createElement("span");
+      badge.className = "venue-badge venue-badge-size";
+      badge.textContent = m.factions.join(" · ").toUpperCase();
+      media.appendChild(badge);
+    }
 
     card.appendChild(media);
 
@@ -315,17 +389,8 @@
       "Open the full profile for details and RP hooks.";
     body.appendChild(desc);
 
-    if ((m.skills || []).length) {
-      var tagWrap = document.createElement("div");
-      tagWrap.className = "venue-card-tags";
-      m.skills.forEach(function (s) {
-        var sp = document.createElement("span");
-        sp.className = "venue-card-tag";
-        sp.textContent = "#" + s;
-        tagWrap.appendChild(sp);
-      });
-      body.appendChild(tagWrap);
-    }
+    // Skills are intentionally not shown on the closed card — they live only
+    // under the Skills section of the open modal.
 
     card.appendChild(body);
 
@@ -351,8 +416,8 @@
       empty.innerHTML = allMembers.length
         ? '<p>No members match these filters.</p>'
         : '<p>No published profiles yet.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">' + escapeHTML(FACTION_LABEL) +
-          ' members can publish a profile from the portal’s My Profile section.</p>';
+          '<p style="font-size:0.95rem; color:var(--text-secondary);">' +
+          'Members can publish a profile from the portal’s My Profile section.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -369,6 +434,7 @@
   }
 
   function buildImageHtml(m) {
+    var palette = paletteFor(m);
     if (m.image_url) {
       return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img">';
     }
@@ -379,8 +445,7 @@
   }
 
   function openModal(m) {
-    // In the open modal, skills get their own labeled section as plain text
-    // (no hashtag styling). The overview cards keep the # tags.
+    // In the open modal, skills get their own labeled section as plain text.
     var skillsHtml = (m.skills || []).length
       ? '<p class="venue-modal-location" style="margin-top:1rem;">SKILLS</p>' +
         '<div class="venue-modal-desc"><p>' +
@@ -402,17 +467,20 @@
         '<a href="' + escapeHTML(m.url) + '" class="venue-modal-btn" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
       : "";
 
+    // Badges: one per faction, then IC rank.
+    var badgesHtml = (m.factions || []).map(function (f) {
+      return '<span class="venue-badge venue-badge-size" style="position:static;">' +
+        escapeHTML(f.toUpperCase()) + '</span>';
+    }).join("");
+    if (m.ic_rank) {
+      badgesHtml += '<span class="venue-badge venue-badge-size" style="position:static;">' +
+        escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>';
+    }
+
     modalBody.innerHTML =
       buildImageHtml(m) +
       '<div class="venue-modal-content">' +
-        '<div class="venue-modal-badges">' +
-          '<span class="venue-badge venue-badge-size" style="position:static;">' +
-            escapeHTML(FACTION_LABEL.toUpperCase()) + '</span>' +
-          (m.ic_rank
-            ? '<span class="venue-badge venue-badge-size" style="position:static;">' +
-                escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>'
-            : '') +
-        '</div>' +
+        (badgesHtml ? '<div class="venue-modal-badges">' + badgesHtml + '</div>' : '') +
         '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
         descHtml +
         hooksHtml +
@@ -444,14 +512,17 @@
   async function loadRoster() {
     gridEl.innerHTML = '<div class="venues-empty"><p>Loading roster&hellip;</p></div>';
     try {
-      var res = await fetch(API_BASE + "/roster?faction=" + encodeURIComponent(FACTION), {
+      var res = await fetch(API_BASE + "/roster", {
         method: "GET",
         headers: { "Accept": "application/json" }
       });
       if (!res.ok) throw new Error("Request failed (" + res.status + ")");
       var data = await res.json();
-      allMembers = Array.isArray(data) ? data : [];
-      buildSkillFilter();
+      allMembers = (Array.isArray(data) ? data : []).map(function (m) {
+        m.factions = orderedFactions(parseFactions(m.faction));
+        return m;
+      });
+      buildFilterLists();
       renderGrid();
     } catch (err) {
       console.error("Error loading roster:", err);
