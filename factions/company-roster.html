@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pirate Roster — Phoenix Vanguard</title>
+  <title>Company Roster — Phoenix Vanguard</title>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="/pv/css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 </head>
-<body data-faction="pirate" data-faction-label="Pirate">
+<body>
   <div class="container">
     <div id="nav-placeholder"></div>
 
     <header class="app-header">
       <p class="app-subtitle">Phoenix Vanguard</p>
-      <h1 class="app-title">Pirate Roster</h1>
+      <h1 class="app-title">Company Roster</h1>
     </header>
 
     <p class="landing-intro">
-      Browse the Phoenix Vanguard's Pirate roster, check out RP hooks and more.
+      Browse the Phoenix Vanguard's roster, check out RP hooks and more.
     </p>
 
     <div class="campaign-layout" id="roster-layout">
@@ -42,6 +42,11 @@
               placeholder="Name or keyword..."
               autocomplete="off"
             />
+          </div>
+
+          <div class="venues-filter-group" id="filter-faction-group">
+            <span class="venues-filter-label">Faction</span>
+            <ul class="venues-filter-list" id="filter-faction-list" role="list"></ul>
           </div>
 
           <div class="venues-filter-group" id="filter-skill-group">

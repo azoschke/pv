@@ -17,8 +17,10 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  // Factions that have a public roster page; mirrors the worker's ROSTER_FACTIONS.
-  var ROSTER_FACTIONS = ['Mercenary', 'Pirate'];
+  // Factions excluded from the public Company Roster; mirrors the worker's
+  // HIDDEN_ROSTER_FACTIONS. A member with any other faction appears on the
+  // single public roster once their profile is published.
+  var HIDDEN_ROSTER_FACTIONS = ['NA - No RP', 'No Data'];
 
   // Authoritative roster skill list — members pick from this fixed set rather
   // than free-typing. Keep in sync with the worker's skill validation list.
@@ -73,8 +75,8 @@
       setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
     }
 
-    var rosterPages = (member.factions || []).filter(function (f) {
-      return ROSTER_FACTIONS.indexOf(f) !== -1;
+    var onPublicRoster = (member.factions || []).some(function (f) {
+      return HIDDEN_ROSTER_FACTIONS.indexOf(f) === -1;
     });
 
     async function handleSubmit(e) {
@@ -109,9 +111,9 @@
       h('p', { style: { margin: '0 0 1rem', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
         'Your public roster entry for ',
         h('strong', null, member.name),
-        rosterPages.length
-          ? '. When published, it appears on the ' + rosterPages.join(' and ') + ' roster page' + (rosterPages.length > 1 ? 's' : '') + '.'
-          : '. Your faction does not currently have a public roster page. Talk to an officer if you think this is incorrect. You may still fill out and publish your profile; it will appear automatically if your faction is updated.'
+        onPublicRoster
+          ? '. When published, it appears on the Company roster page.'
+          : '. Your faction information is not set, so your profile will not appear on the public roster. Talk to an officer if you think this is incorrect. You may still fill out and publish your profile; it will appear automatically once your faction is updated.'
       ),
 
       flash ? h('div', { className: 'portal-flash success' }, flash) : null,
