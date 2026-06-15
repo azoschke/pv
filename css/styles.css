@@ -383,6 +383,7 @@ pre {
   padding: 0.3rem 0.9rem;
   gap: 0.6rem;
 }
+.nav-login-dash { font-size: 22px; line-height: 1; flex-shrink: 0; }
 .nav-login-stack {
   display: inline-flex;
   flex-direction: column;
