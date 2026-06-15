@@ -76,24 +76,12 @@
     }
   }
 
-  // The portal sidebar renders its Dashboard entry with the Material Icons
-  // `space_dashboard` glyph. Public pages don't all load that font, so pull it
-  // in on demand (idempotently) when we need it for the signed-in nav button.
-  function ensureMaterialIconsFont() {
-    if (document.querySelector('link[href*="Material+Icons"]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
-    document.head.appendChild(link);
-  }
-
   // When signed in, the Login button becomes the member's character name and
   // points at the portal dashboard. Logged out, the injected default is left
   // untouched. Both the desktop and the sidebar button carry .nav-login-btn.
   function applyAuthState(placeholder) {
     const session = getAdminSession();
     if (!session) return;
-    ensureMaterialIconsFont();
     const name = String(session.display_name || session.username || 'Account').trim();
     const portalUrl = BASE_PATH + '/admin/portal.html';
     placeholder.querySelectorAll('.nav-login-btn').forEach(function (btn) {
@@ -102,11 +90,13 @@
       btn.setAttribute('aria-label', 'Go to dashboard (' + name + ')');
       btn.setAttribute('title', 'Go to dashboard');
       btn.classList.add('is-authed');
-      // "Dashboard" with the same space_dashboard glyph the portal uses, and
-      // the character name small beneath — keeps a long name from driving the
-      // button width.
+      // "Dashboard" with the same user icon the signed-out Login button uses,
+      // and the character name small beneath — keeps a long name from driving
+      // the button width.
       btn.innerHTML =
-        '<span class="material-icons nav-login-dash" aria-hidden="true">space_dashboard</span>' +
+        '<svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>' +
+        '</svg>' +
         '<span class="nav-login-stack">' +
           '<span class="nav-login-primary">Dashboard</span>' +
           '<span class="nav-login-name"></span>' +
