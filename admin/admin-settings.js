@@ -192,8 +192,6 @@
       selfId = self ? self.id : null;
     }
 
-    var pending = users.filter(function (u) { return !u.roles || !u.roles.length; }).length;
-
     return h('div', null,
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
@@ -208,11 +206,6 @@
             })
           )
         ),
-        pending > 0
-          ? h('div', { className: 'portal-flash', style: { background: 'rgba(107, 68, 35, 0.1)', color: 'var(--accent-gold)', border: '1px solid rgba(107, 68, 35, 0.35)' } },
-              pending + ' account' + (pending === 1 ? '' : 's') + ' pending role assignment.'
-            )
-          : null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
           ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading users…')
