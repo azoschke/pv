@@ -407,10 +407,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-table tbody tr:hover { background: var(--bg-card-light); }
 
 /* Accounts awaiting a role assignment, floated to the top of the list. */
-.portal-table tbody tr.is-needs-role { background: rgba(107, 68, 35, 0.08); }
-.portal-table tbody tr.is-needs-role:hover { background: rgba(107, 68, 35, 0.14); }
+.portal-table tbody tr.is-needs-role { background: rgba(165, 77, 68, 0.12); }
+.portal-table tbody tr.is-needs-role:hover { background: rgba(165, 77, 68, 0.2); }
 .portal-table tbody tr.is-needs-role td:first-child {
-  box-shadow: inset 3px 0 0 var(--accent-gold);
+  box-shadow: inset 4px 0 0 var(--accent-red);
 }
 
 /* Tables sit flush to the card edges. Any header / subtitle / filter content
@@ -657,7 +657,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-badge.is-pinned { background: rgba(165, 77, 68, 0.15); color: var(--accent-red); }
 .portal-badge.is-ok     { background: rgba(90, 138, 60, 0.15); color: var(--check-color); }
-.portal-badge.is-warn   { background: rgba(107, 68, 35, 0.15); color: var(--accent-gold); }
+.portal-badge.is-warn   { background: var(--accent-red); color: #fff; }
 
 /* --------------- Admin Settings role checkboxes --------------- */
 .admin-role-checkboxes {

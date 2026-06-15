@@ -90,8 +90,18 @@
       btn.setAttribute('aria-label', 'Go to dashboard (' + name + ')');
       btn.setAttribute('title', 'Go to dashboard');
       btn.classList.add('is-authed');
-      const label = btn.querySelector('span');
-      if (label) label.textContent = name;
+      // "Dashboard" with a grid icon, character name small beneath — keeps a
+      // long name from driving the button width.
+      btn.innerHTML =
+        '<svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>' +
+        '</svg>' +
+        '<span class="nav-login-stack">' +
+          '<span class="nav-login-primary">Dashboard</span>' +
+          '<span class="nav-login-name"></span>' +
+        '</span>';
+      const nameEl = btn.querySelector('.nav-login-name');
+      if (nameEl) nameEl.textContent = name; // textContent: never inject the name as HTML
     });
   }
 
