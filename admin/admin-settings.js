@@ -54,12 +54,14 @@
     (u.roles || []).forEach(function (r) { currentSet[r] = true; });
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
+    var needsRole = !(u.roles && u.roles.length);
 
-    return h('tr', null,
+    return h('tr', { className: needsRole ? 'is-needs-role' : null },
       h('td', null,
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
           h('span', { style: { fontWeight: 600 } }, u.username),
-          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null
+          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null,
+          needsRole ? h('span', { className: 'portal-badge is-warn', title: 'No role assigned yet' }, 'Needs role') : null
         ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
@@ -175,6 +177,14 @@
               || (u.display_name && u.display_name.toLowerCase().indexOf(q) !== -1);
         })
       : users;
+
+    // Surface accounts awaiting a role: float the roleless ones to the top,
+    // keeping the server's order stable within each group.
+    filtered = filtered.slice().sort(function (a, b) {
+      var an = (a.roles && a.roles.length) ? 1 : 0;
+      var bn = (b.roles && b.roles.length) ? 1 : 0;
+      return an - bn;
+    });
 
     var selfId = null;
     if (selfUsername) {

@@ -377,6 +377,14 @@ pre {
 }
 .nav-login-btn:hover  { background-color: var(--bg-darker); }
 .nav-login-btn:active { transform: scale(0.97); }
+/* Signed-in: the button shows the member's character name; keep a long name
+   from stretching the top nav (the full-width sidebar copy is exempt). */
+.nav-login-btn.is-authed:not(.nav-login-btn-sidebar) span {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .nav-login-icon {
   width: 18px;
   height: 18px;

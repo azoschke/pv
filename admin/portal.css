@@ -406,6 +406,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-table tbody tr:hover { background: var(--bg-card-light); }
 
+/* Accounts awaiting a role assignment, floated to the top of the list. */
+.portal-table tbody tr.is-needs-role { background: rgba(107, 68, 35, 0.08); }
+.portal-table tbody tr.is-needs-role:hover { background: rgba(107, 68, 35, 0.14); }
+.portal-table tbody tr.is-needs-role td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent-gold);
+}
+
 /* Tables sit flush to the card edges. Any header / subtitle / filter content
    above the table keeps the card's normal padding; the table itself breaks
    out to the card border so its banded header and rows run edge-to-edge.
@@ -650,6 +657,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-badge.is-pinned { background: rgba(165, 77, 68, 0.15); color: var(--accent-red); }
 .portal-badge.is-ok     { background: rgba(90, 138, 60, 0.15); color: var(--check-color); }
+.portal-badge.is-warn   { background: rgba(107, 68, 35, 0.15); color: var(--accent-gold); }
 
 /* --------------- Admin Settings role checkboxes --------------- */
 .admin-role-checkboxes {

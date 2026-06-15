@@ -73,7 +73,7 @@
   // ── Session (shared with the management portal) ──────────────────────────
   function getSession() {
     try {
-      var raw = sessionStorage.getItem(SESSION_KEY);
+      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       var s = JSON.parse(raw);
       if (!s || !s.token) return null;
