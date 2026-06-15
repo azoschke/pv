@@ -54,12 +54,14 @@
     (u.roles || []).forEach(function (r) { currentSet[r] = true; });
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
+    var needsRole = !(u.roles && u.roles.length);
 
-    return h('tr', null,
+    return h('tr', { className: needsRole ? 'is-needs-role' : null },
       h('td', null,
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
           h('span', { style: { fontWeight: 600 } }, u.username),
-          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null
+          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null,
+          needsRole ? h('span', { className: 'portal-badge is-warn', title: 'No role assigned yet' }, 'Needs role') : null
         ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
@@ -176,13 +178,19 @@
         })
       : users;
 
+    // Surface accounts awaiting a role: float the roleless ones to the top,
+    // keeping the server's order stable within each group.
+    filtered = filtered.slice().sort(function (a, b) {
+      var an = (a.roles && a.roles.length) ? 1 : 0;
+      var bn = (b.roles && b.roles.length) ? 1 : 0;
+      return an - bn;
+    });
+
     var selfId = null;
     if (selfUsername) {
       var self = users.find(function (u) { return u.username === selfUsername; });
       selfId = self ? self.id : null;
     }
-
-    var pending = users.filter(function (u) { return !u.roles || !u.roles.length; }).length;
 
     return h('div', null,
       h('div', { className: 'portal-card' },
@@ -198,11 +206,6 @@
             })
           )
         ),
-        pending > 0
-          ? h('div', { className: 'portal-flash', style: { background: 'rgba(107, 68, 35, 0.1)', color: 'var(--accent-gold)', border: '1px solid rgba(107, 68, 35, 0.35)' } },
-              pending + ' account' + (pending === 1 ? '' : 's') + ' pending role assignment.'
-            )
-          : null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
           ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading users…')

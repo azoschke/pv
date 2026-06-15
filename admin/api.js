@@ -6,7 +6,12 @@
 //  so it can be dropped into a <script> tag on any admin page.
 //
 //  Backs onto the same Cloudflare worker as the existing med-admin.html,
-//  but keeps its own sessionStorage key so the two UIs never share a token.
+//  but keeps its own storage key so the two UIs never share a token.
+//
+//  The session lives in localStorage (not sessionStorage) so a sign-in
+//  survives new tabs and browser restarts up to the token's expires_at;
+//  the expiry check below still invalidates stale tokens, and logout()
+//  clears the key explicitly.
 // ============================================================================
 
 (function (global) {
@@ -16,7 +21,17 @@
 
   function getSession() {
     try {
-      var raw = sessionStorage.getItem(SESSION_KEY);
+      var raw = localStorage.getItem(SESSION_KEY);
+      // One-time migration: carry over a session left by the old
+      // sessionStorage-based build so active users aren't logged out.
+      if (!raw) {
+        var legacy = sessionStorage.getItem(SESSION_KEY);
+        if (legacy) {
+          localStorage.setItem(SESSION_KEY, legacy);
+          sessionStorage.removeItem(SESSION_KEY);
+          raw = legacy;
+        }
+      }
       if (!raw) return null;
       var s = JSON.parse(raw);
       if (!s || !s.token) return null;
@@ -31,10 +46,12 @@
   }
 
   function setSession(s) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
 
   function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
+    // Also drop any leftover from the old sessionStorage-based build.
     sessionStorage.removeItem(SESSION_KEY);
   }
 

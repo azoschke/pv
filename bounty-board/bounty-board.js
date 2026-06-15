@@ -80,7 +80,7 @@
   // ── Session (shared with the management portal) ──────────────────────────
   function getSession() {
     try {
-      var raw = sessionStorage.getItem(SESSION_KEY);
+      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       var s = JSON.parse(raw);
       if (!s || !s.token) return null;
@@ -544,7 +544,7 @@
       parts.push(t != null ? "Next run: " + formatLocal(t) : "Repeatable quest");
       if (q.cadence_note) parts.push(q.cadence_note);
     } else if (t != null) {
-      parts.push(formatLocal(t) + " (your local time)" + (isPast(q) ? " — this date has passed" : ""));
+      parts.push(formatLocal(t) + (isPast(q) ? " — this date has passed" : ""));
     }
     if (!parts.length) return "";
     return '<p class="job-modal-contact"><span class="job-modal-contact-label">When</span>' +

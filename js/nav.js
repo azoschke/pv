@@ -54,6 +54,58 @@
     return { section: section, page: page };
   }
 
+  // ── 1b. Admin session (shared with the management portal) ──────────────────
+  // Public pages don't load admin/api.js, so read the session directly. Mirrors
+  // PVAdminAPI.getSession: token must be present and not past expires_at. Falls
+  // back to the legacy sessionStorage slot so a pre-migration login still reads.
+  const SESSION_KEY = 'pv.admin.session';
+
+  function getAdminSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (!s || !s.token) return null;
+      if (s.expires_at) {
+        const exp = new Date(s.expires_at).getTime();
+        if (!isNaN(exp) && exp <= Date.now()) return null;
+      }
+      return s;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  // When signed in, the Login button becomes the member's character name and
+  // points at the portal dashboard. Logged out, the injected default is left
+  // untouched. Both the desktop and the sidebar button carry .nav-login-btn.
+  function applyAuthState(placeholder) {
+    const session = getAdminSession();
+    if (!session) return;
+    const name = String(session.display_name || session.username || 'Account').trim();
+    const portalUrl = BASE_PATH + '/admin/portal.html';
+    placeholder.querySelectorAll('.nav-login-btn').forEach(function (btn) {
+      btn.href = portalUrl;
+      btn.setAttribute('data-subpage', 'admin-portal');
+      btn.setAttribute('aria-label', 'Go to dashboard (' + name + ')');
+      btn.setAttribute('title', 'Go to dashboard');
+      btn.classList.add('is-authed');
+      // "Dashboard" with the same user icon the signed-out Login button uses,
+      // and the character name small beneath — keeps a long name from driving
+      // the button width.
+      btn.innerHTML =
+        '<svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>' +
+        '</svg>' +
+        '<span class="nav-login-stack">' +
+          '<span class="nav-login-primary">Dashboard</span>' +
+          '<span class="nav-login-name"></span>' +
+        '</span>';
+      const nameEl = btn.querySelector('.nav-login-name');
+      if (nameEl) nameEl.textContent = name; // textContent: never inject the name as HTML
+    });
+  }
+
   // ── 2. Theme management ────────────────────────────────────────────────────
   const THEME_KEY = 'crafting-tools-theme';
 
@@ -226,6 +278,9 @@
         }
       });
     }
+
+    // Reflect signed-in state on the Login button (name + dashboard link)
+    applyAuthState(placeholder);
 
     // Wire up dropdown toggles
     wireDropdowns(placeholder);
