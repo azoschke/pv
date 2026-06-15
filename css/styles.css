@@ -378,11 +378,16 @@ pre {
 .nav-login-btn:hover  { background-color: var(--bg-darker); }
 .nav-login-btn:active { transform: scale(0.97); }
 /* Signed-in: button reads "Dashboard" with the character name small beneath. */
+.nav-login-btn.is-authed {
+  height: auto;
+  padding: 0.3rem 0.9rem;
+  gap: 0.6rem;
+}
 .nav-login-stack {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .nav-login-btn-sidebar .nav-login-stack { align-items: center; }
 .nav-login-primary { font-size: 0.95rem; }
