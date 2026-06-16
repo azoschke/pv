@@ -139,9 +139,13 @@
 
   // Click anywhere in the cell to copy its text; the whole area hovers and a
   // brief "Copied!" note confirms. Empty values render a non-interactive dash.
+  // With props.truncate (a char count), long values are clipped to a preview
+  // with a Show more/less toggle — but a click always copies the FULL value.
   function ClickToCopy(props) {
     var copiedState = useState(false);
     var copied = copiedState[0], setCopied = copiedState[1];
+    var expandedState = useState(false);
+    var expanded = expandedState[0], setExpanded = expandedState[1];
     var value = props.value || '';
     if (!value) return h('div', { className: 'ea-cell-empty' }, '—');
     function doCopy() {
@@ -150,6 +154,11 @@
         setTimeout(function () { setCopied(false); }, 1500);
       }).catch(function () {});
     }
+    var limit = props.truncate || 0;
+    var truncatable = limit && value.length > limit;
+    var shown = (truncatable && !expanded)
+      ? value.slice(0, limit).replace(/\s+$/, '') + '…'
+      : value;
     return h('div', {
       className: 'ea-copy',
       role: 'button',
@@ -163,7 +172,14 @@
           { whiteSpace: props.preserve ? 'pre-wrap' : 'normal' },
           props.bold ? { fontWeight: 600 } : null
         )
-      }, value),
+      }, shown),
+      truncatable ? h('button', {
+        type: 'button',
+        className: 'ea-expand',
+        // Don't let the toggle trigger the cell's copy handler.
+        onClick: function (e) { e.stopPropagation(); e.preventDefault(); setExpanded(!expanded); },
+        onKeyDown: function (e) { e.stopPropagation(); }
+      }, expanded ? 'Show less' : 'Show more') : null,
       copied ? h('span', {
         style: { display: 'block', marginTop: '0.2rem', fontSize: '0.78rem', color: 'var(--accent-brown, var(--text-secondary))' }
       }, 'Copied!') : null
@@ -507,7 +523,7 @@
     return h('tr', null,
       // Image fills the cell (no padding) with a seamless full-width Download
       // button directly underneath it.
-      h('td', { style: { padding: 0, width: '200px', verticalAlign: 'middle' } },
+      h('td', { style: { padding: 0, width: '400px', verticalAlign: 'middle' } },
         a.image_url ? h('div', null,
           h('img', {
             src: a.image_url, alt: a.event_topic || '',
@@ -545,7 +561,7 @@
       ),
       // Description (full text, click to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle', minWidth: '360px' } },
-        h(ClickToCopy, { value: a.description, preserve: true })
+        h(ClickToCopy, { value: a.description, preserve: true, truncate: 200 })
       ),
       // Tags
       h('td', { style: { verticalAlign: 'middle' } },
