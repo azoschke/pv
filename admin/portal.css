@@ -1005,10 +1005,33 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: 1px solid var(--border-color);
   vertical-align: middle;
 }
-/* Accent the bottom edge of each event row so consecutive events read as
-   visually distinct sets rather than one continuous grid. */
-.event-assets-table tbody tr:not(.portal-group-row) td {
-  border-bottom: 2px solid var(--accent-brown);
+/* Download control overlaid on the image's top-right corner, in the brand
+   accent so it stands out against the artwork. */
+.event-assets-table .ea-download-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: var(--accent-brown);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.event-assets-table .ea-download-btn:hover {
+  background: var(--accent-red);
+  transform: translateY(-1px);
+}
+.event-assets-table .ea-download-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
 }
 /* Highlight only the hovered cell (the row/column intersection), not the whole
    row — so override the shared row-hover background for this table. */

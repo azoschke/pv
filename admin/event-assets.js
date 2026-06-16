@@ -506,30 +506,26 @@
       // Image fills the cell (no padding) with a seamless full-width Download
       // button directly underneath it.
       h('td', { style: { padding: 0, width: '400px', verticalAlign: 'middle' } },
-        a.image_url ? h('div', null,
+        a.image_url ? h('div', { style: { position: 'relative' } },
           h('img', {
             src: a.image_url, alt: a.event_topic || '',
             style: { display: 'block', width: '100%', height: 'auto' },
             onError: function (e) { e.target.style.display = 'none'; }
           }),
+          // Download control floats over the image's top-right corner.
           h('a', {
             href: a.image_url,
             download: downloadName(a),
             target: '_blank',
             rel: 'noopener noreferrer',
             title: 'Download image',
+            'aria-label': 'Download image',
             // Fetch the bytes and save them so it downloads rather than just
             // navigating; the href is the no-JS fallback.
             onClick: function (e) { e.preventDefault(); downloadImage(a); },
-            style: {
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
-              width: '100%', boxSizing: 'border-box', padding: '0.45rem 0.5rem',
-              background: 'var(--bg-card-light)', color: 'var(--text-primary)',
-              borderTop: '1px solid var(--border-color)', textDecoration: 'none', cursor: 'pointer'
-            }
+            className: 'ea-download-btn'
           },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.1rem' } }, 'download'),
-            h('span', null, 'Download')
+            h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.2rem' } }, 'download')
           )
         ) : h('div', { style: { padding: '0.6rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary)' } }, '—')
       ),
