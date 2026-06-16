@@ -458,6 +458,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   padding: 0.3rem 0.7rem;
   font-size: 0.82rem;
 }
+/* Icon-only buttons: square, no text, just the glyph (used for compact
+   row actions like Edit/Delete in the Event Assets table). */
+.portal-btn.is-icon {
+  gap: 0;
+  padding: 0.3rem;
+  line-height: 1;
+}
+.portal-btn.is-icon.is-small { padding: 0.3rem; }
 .portal-btn .material-icons { font-size: 18px; }
 
 /* --------------- Form fields --------------- */
@@ -996,6 +1004,33 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .event-assets-table td {
   border: 1px solid var(--border-color);
   vertical-align: middle;
+}
+/* Download control overlaid on the image's top-right corner, in the brand
+   accent so it stands out against the artwork. */
+.event-assets-table .ea-download-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: var(--accent-brown);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.event-assets-table .ea-download-btn:hover {
+  transform: translateY(-1px);
+}
+.event-assets-table .ea-download-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
 }
 /* Highlight only the hovered cell (the row/column intersection), not the whole
    row — so override the shared row-hover background for this table. */
