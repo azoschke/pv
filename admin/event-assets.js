@@ -548,16 +548,18 @@
       // Actions (managers only)
       manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'middle' } },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'portal-btn is-small is-ghost is-icon',
+          title: 'Edit', 'aria-label': 'Edit',
           onClick: function () { onEdit(a); }
-        }, 'Edit'),
+        }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger',
+          type: 'button', className: 'portal-btn is-small is-danger is-icon',
+          title: 'Delete', 'aria-label': 'Delete',
           onClick: function () {
             if (confirm('Delete event asset "' + (a.event_topic || 'Untitled') + '"?')) onDelete(a);
           }
-        }, 'Delete')
+        }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'delete'))
       ) : null
     );
   }
@@ -600,9 +602,8 @@
     var filtered = useMemo(function () {
       var q = query.trim().toLowerCase();
       var sorted = list.slice().sort(function (a, b) {
-        var at = a.created_at ? new Date(a.created_at).getTime() : 0;
-        var bt = b.created_at ? new Date(b.created_at).getTime() : 0;
-        if (at !== bt) return bt - at;
+        // Alphabetical by Event name; rows are grouped by type below, so this
+        // yields an A–Z order within each type group.
         return (a.event_topic || '').localeCompare(b.event_topic || '', undefined, { sensitivity: 'base' });
       });
       return sorted.filter(function (a) {

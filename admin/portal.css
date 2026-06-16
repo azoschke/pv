@@ -458,6 +458,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   padding: 0.3rem 0.7rem;
   font-size: 0.82rem;
 }
+/* Icon-only buttons: square, no text, just the glyph (used for compact
+   row actions like Edit/Delete in the Event Assets table). */
+.portal-btn.is-icon {
+  gap: 0;
+  padding: 0.3rem;
+  line-height: 1;
+}
+.portal-btn.is-icon.is-small { padding: 0.3rem; }
 .portal-btn .material-icons { font-size: 18px; }
 
 /* --------------- Form fields --------------- */
@@ -996,6 +1004,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .event-assets-table td {
   border: 1px solid var(--border-color);
   vertical-align: middle;
+}
+/* Accent the bottom edge of each event row so consecutive events read as
+   visually distinct sets rather than one continuous grid. */
+.event-assets-table tbody tr:not(.portal-group-row) td {
+  border-bottom: 2px solid var(--accent-brown);
 }
 /* Highlight only the hovered cell (the row/column intersection), not the whole
    row — so override the shared row-hover background for this table. */
