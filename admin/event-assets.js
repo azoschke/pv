@@ -440,6 +440,39 @@
     return base + '-image';
   }
 
+  // Pull a file extension off the stored URL (e.g. ".webp"), ignoring any query.
+  function extFromUrl(url) {
+    var clean = String(url || '').split('?')[0].split('#')[0];
+    var m = clean.match(/\.([a-z0-9]{2,5})$/i);
+    return m ? '.' + m[1].toLowerCase() : '';
+  }
+
+  // Force a real download. The images are served from a different subdomain, so
+  // the <a download> attribute is ignored and the browser would just navigate;
+  // fetching the bytes and saving the blob downloads instead. If the fetch is
+  // blocked (e.g. the image host sends no CORS header), fall back to opening
+  // the image in a new tab so the user can still save it manually.
+  async function downloadImage(asset) {
+    var url = asset.image_url;
+    if (!url) return;
+    var filename = downloadName(asset) + extFromUrl(url);
+    try {
+      var res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var blob = await res.blob();
+      var objUrl = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = objUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(objUrl); }, 1000);
+    } catch (_e) {
+      window.open(url, '_blank', 'noopener');
+    }
+  }
+
   function TagChips(props) {
     var tags = props.tags || [];
     if (!tags.length) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
@@ -478,16 +511,17 @@
           h('a', {
             href: a.image_url,
             download: downloadName(a),
-            // Cross-origin URLs ignore the download attribute and open in a new
-            // tab to save manually; same-origin uploads download directly.
             target: '_blank',
             rel: 'noopener noreferrer',
             title: 'Download image',
+            // Fetch the bytes and save them so it downloads rather than just
+            // navigating; the href is the no-JS fallback.
+            onClick: function (e) { e.preventDefault(); downloadImage(a); },
             style: {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
               width: '100%', boxSizing: 'border-box', padding: '0.45rem 0.5rem',
               background: 'var(--bg-card-light)', color: 'var(--text-primary)',
-              borderTop: '1px solid var(--border-color)', textDecoration: 'none'
+              borderTop: '1px solid var(--border-color)', textDecoration: 'none', cursor: 'pointer'
             }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.1rem' } }, 'download'),
@@ -676,7 +710,6 @@
         ),
         h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
           'Click any text to copy it, and use Download to save an image.'
-          + (manage ? ' Use New asset to add an entry.' : '')
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
       ),
