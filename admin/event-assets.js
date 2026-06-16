@@ -278,8 +278,7 @@
           maxLength: 200,
           placeholder: '[PVE] Treasure Hunt',
           required: true
-        }),
-        h('p', { className: 'portal-field-help' }, 'e.g. [PVE] Treasure Hunt')
+        })
       ),
 
       h('div', { className: 'portal-field' },
