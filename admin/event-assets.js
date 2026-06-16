@@ -362,8 +362,7 @@
           onChange: function (e) { setField('description', e.target.value); },
           rows: 6, maxLength: 4000,
           placeholder: 'Details to copy for the Discord event description…'
-        }),
-        h('p', { className: 'portal-field-help' }, 'Details to copy for the Discord event description.')
+        })
       ),
 
       h('div', { className: 'portal-field' },
@@ -469,7 +468,7 @@
     return h('tr', null,
       // Image fills the cell (no padding) with a seamless full-width Download
       // button directly underneath it.
-      h('td', { style: { padding: 0, width: '250px', verticalAlign: 'top' } },
+      h('td', { style: { padding: 0, width: '200px', verticalAlign: 'middle' } },
         a.image_url ? h('div', null,
           h('img', {
             src: a.image_url, alt: a.event_topic || '',
@@ -497,23 +496,23 @@
         ) : h('div', { style: { padding: '0.6rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary)' } }, '—')
       ),
       // Event (click anywhere in the cell to copy)
-      h('td', { style: { padding: 0, verticalAlign: 'top' } },
+      h('td', { style: { padding: 0, verticalAlign: 'middle' } },
         h(ClickToCopy, { value: a.event_topic || 'Untitled', bold: true })
       ),
       // Location (click to copy)
-      h('td', { style: { padding: 0, verticalAlign: 'top' } },
+      h('td', { style: { padding: 0, verticalAlign: 'middle' } },
         h(ClickToCopy, { value: a.location })
       ),
       // Description (full text, click to copy)
-      h('td', { style: { padding: 0, verticalAlign: 'top', minWidth: '360px' } },
+      h('td', { style: { padding: 0, verticalAlign: 'middle', minWidth: '360px' } },
         h(ClickToCopy, { value: a.description, preserve: true })
       ),
       // Tags
-      h('td', { style: { verticalAlign: 'top' } },
+      h('td', { style: { verticalAlign: 'middle' } },
         h(TagChips, { tags: a.tags })
       ),
       // Actions (managers only)
-      manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'top' } },
+      manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'middle' } },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
