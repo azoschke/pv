@@ -990,6 +990,47 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-secondary);
 }
 
+/* --------------- Event Assets --------------- */
+/* Bordered cells so each copyable section reads as its own bounded area. */
+.event-assets-table th,
+.event-assets-table td {
+  border: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+/* Highlight only the hovered cell (the row/column intersection), not the whole
+   row — so override the shared row-hover background for this table. */
+.event-assets-table tbody tr:hover { background: transparent; }
+.event-assets-table tbody tr:not(.portal-group-row) td:hover {
+  background: var(--bg-card-light);
+}
+/* The click-to-copy block fills its cell so the whole copyable area responds. */
+.event-assets-table .ea-copy {
+  cursor: pointer;
+  padding: 0.6rem 0.75rem;
+  transition: background 0.12s ease;
+}
+.event-assets-table .ea-copy:focus-visible {
+  background: var(--bg-card-light);
+  outline: none;
+}
+.event-assets-table .ea-cell-empty {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-secondary);
+}
+/* Show more/less toggle for long descriptions (does not trigger the copy). */
+.event-assets-table .ea-expand {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--accent-brown, var(--text-secondary));
+  text-decoration: underline;
+}
+
 /* --------------- Responsive --------------- */
 @media (max-width: 1100px) {
   .division-grid { grid-template-columns: 1fr; }
