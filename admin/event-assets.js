@@ -457,7 +457,13 @@
     if (!url) return;
     var filename = downloadName(asset) + extFromUrl(url);
     try {
-      var res = await fetch(url, { mode: 'cors' });
+      // Cache-bust so we don't get served a copy that Cloudflare cached from an
+      // earlier <img> load (those lack the Access-Control-Allow-Origin header,
+      // which would make this cross-origin fetch fail). A unique query forces a
+      // fresh response that carries the bucket's CORS header.
+      var sep = url.indexOf('?') === -1 ? '?' : '&';
+      var fetchUrl = url + sep + 'dl=' + Date.now();
+      var res = await fetch(fetchUrl, { mode: 'cors', cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var blob = await res.blob();
       var objUrl = URL.createObjectURL(blob);
