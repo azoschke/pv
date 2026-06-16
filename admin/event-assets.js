@@ -137,27 +137,35 @@
     });
   }
 
-  // Small copy affordance (icon + label) that flips to "Copied!" briefly.
-  function CopyButton(props) {
+  // Click the text itself to copy it; a brief "Copied!" note confirms.
+  function ClickToCopy(props) {
     var copiedState = useState(false);
     var copied = copiedState[0], setCopied = copiedState[1];
     var value = props.value || '';
-    if (!value) return null;
-    return h('button', {
-      type: 'button',
-      className: 'portal-btn is-small is-ghost',
-      title: props.title || 'Copy',
-      'aria-label': props.title || 'Copy',
-      onClick: function () {
-        copyToClipboard(value).then(function () {
-          setCopied(true);
-          setTimeout(function () { setCopied(false); }, 1500);
-        }).catch(function () {});
-      }
+    if (!value) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
+    function doCopy() {
+      copyToClipboard(value).then(function () {
+        setCopied(true);
+        setTimeout(function () { setCopied(false); }, 1500);
+      }).catch(function () {});
+    }
+    return h('div', {
+      role: 'button',
+      tabIndex: 0,
+      title: 'Click to copy',
+      onClick: doCopy,
+      onKeyDown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doCopy(); } },
+      style: { cursor: 'pointer' }
     },
-      h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } },
-        copied ? 'check' : 'content_copy'),
-      h('span', null, copied ? 'Copied!' : 'Copy')
+      h('span', {
+        style: Object.assign(
+          { whiteSpace: props.preserve ? 'pre-wrap' : 'normal' },
+          props.bold ? { fontWeight: 600 } : null
+        )
+      }, value),
+      copied ? h('span', {
+        style: { display: 'block', marginTop: '0.2rem', fontSize: '0.78rem', color: 'var(--accent-brown, var(--text-secondary))' }
+      }, 'Copied!') : null
     );
   }
 
@@ -458,19 +466,16 @@
     var onDelete = props.onDelete;
 
     return h('tr', null,
-      // Image (250px wide, auto height) with an inline Download button.
-      h('td', null,
-        a.image_url ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem' } },
+      // Image fills the cell (no padding) with a seamless full-width Download
+      // button directly underneath it.
+      h('td', { style: { padding: 0, width: '250px', verticalAlign: 'top' } },
+        a.image_url ? h('div', null,
           h('img', {
             src: a.image_url, alt: a.event_topic || '',
-            style: {
-              width: '250px', height: 'auto',
-              border: '1px solid var(--border-color)', borderRadius: '0.3rem'
-            },
+            style: { display: 'block', width: '100%', height: 'auto' },
             onError: function (e) { e.target.style.display = 'none'; }
           }),
           h('a', {
-            className: 'portal-btn is-ghost',
             href: a.image_url,
             download: downloadName(a),
             // Cross-origin URLs ignore the download attribute and open in a new
@@ -478,40 +483,36 @@
             target: '_blank',
             rel: 'noopener noreferrer',
             title: 'Download image',
-            style: { whiteSpace: 'nowrap' }
+            style: {
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+              width: '100%', boxSizing: 'border-box', padding: '0.45rem 0.5rem',
+              background: 'var(--bg-card-light)', color: 'var(--text-primary)',
+              borderTop: '1px solid var(--border-color)', textDecoration: 'none'
+            }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.1rem' } }, 'download'),
             h('span', null, 'Download')
           )
-        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+        ) : h('div', { style: { padding: '0.6rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary)' } }, '—')
       ),
-      // Event + copy underneath
-      h('td', null,
-        h('div', { style: { fontWeight: 600 } }, a.event_topic || 'Untitled'),
-        h('div', { style: { marginTop: '0.3rem' } },
-          h(CopyButton, { value: a.event_topic, title: 'Copy event' })
-        )
+      // Event (click to copy)
+      h('td', { style: { textAlign: 'center' } },
+        h(ClickToCopy, { value: a.event_topic || 'Untitled', bold: true })
       ),
-      // Location + copy underneath
-      h('td', null,
-        a.location ? h('div', null,
-          h('div', null, a.location),
-          h('div', { style: { marginTop: '0.3rem' } },
-            h(CopyButton, { value: a.location, title: 'Copy location' })
-          )
-        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      // Location (click to copy)
+      h('td', { style: { textAlign: 'center' } },
+        h(ClickToCopy, { value: a.location })
       ),
-      // Description (full text) + copy underneath
-      h('td', { style: { minWidth: '360px' } },
-        a.description ? h('div', null,
-          h('div', { style: { whiteSpace: 'pre-wrap' } }, a.description),
-          h('div', { style: { marginTop: '0.3rem' } },
-            h(CopyButton, { value: a.description, title: 'Copy description' })
-          )
-        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      // Description (full text, click to copy)
+      h('td', { style: { textAlign: 'center', minWidth: '360px' } },
+        h(ClickToCopy, { value: a.description, preserve: true })
       ),
       // Tags
-      h('td', null, h(TagChips, { tags: a.tags })),
+      h('td', { style: { textAlign: 'center' } },
+        h('div', { style: { display: 'inline-flex', flexWrap: 'wrap', gap: '0.25rem', justifyContent: 'center' } },
+          h(TagChips, { tags: a.tags })
+        )
+      ),
       // Actions (managers only)
       manage ? h('td', { style: { whiteSpace: 'nowrap' } },
         h('button', {
@@ -674,6 +675,10 @@
             h('option', { value: '' }, 'All tags'),
             TAGS.map(function (t) { return h('option', { key: t, value: t }, t); })
           )
+        ),
+        h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
+          'Click any text to copy it, and use Download to save an image.'
+          + (manage ? ' Use New asset to add an entry.' : '')
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
       ),
