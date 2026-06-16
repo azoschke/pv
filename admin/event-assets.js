@@ -417,7 +417,7 @@
           )
         ),
         h('p', { className: 'portal-field-help' },
-          'Paste an image URL, or upload a file. The event topic must be set before uploading. Uploaded images are saved and reused via their stored URL.'
+          'Paste an image URL, or upload a file. The event topic must be set before uploading.'
         ),
         uploadErr ? h('p', {
           className: 'portal-field-help',
@@ -495,24 +495,6 @@
     }
   }
 
-  function TagChips(props) {
-    var tags = props.tags || [];
-    if (!tags.length) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
-    return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.25rem' } },
-      tags.map(function (t) {
-        return h('span', {
-          key: t,
-          style: {
-            display: 'inline-block', padding: '0.05rem 0.4rem',
-            fontSize: '0.78rem', borderRadius: '0.25rem',
-            background: 'var(--bg-card-light)', border: '1px solid var(--border-color)',
-            color: 'var(--text-secondary)'
-          }
-        }, t);
-      })
-    );
-  }
-
   // ── Table row (everyone) ─────────────────────────────────────────────────
   function AssetRow(props) {
     var a = props.asset;
@@ -562,10 +544,6 @@
       // Description (full text, click to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle', minWidth: '360px' } },
         h(ClickToCopy, { value: a.description, preserve: true, truncate: 200 })
-      ),
-      // Tags
-      h('td', { style: { verticalAlign: 'middle' } },
-        h(TagChips, { tags: a.tags })
       ),
       // Actions (managers only)
       manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'middle' } },
@@ -670,7 +648,7 @@
       }
     }
 
-    var colCount = manage ? 6 : 5;
+    var colCount = manage ? 5 : 4;
 
     // Group the filtered rows under their type, in canonical TYPES order
     // (untyped last) — mirrors how FC Members groups by rank.
@@ -759,7 +737,6 @@
                       h('th', null, 'Event'),
                       h('th', null, 'Location'),
                       h('th', null, 'Description'),
-                      h('th', null, 'Tags'),
                       manage ? h('th', null, '') : null
                     )
                   ),
