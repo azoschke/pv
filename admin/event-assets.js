@@ -524,7 +524,7 @@
     var query = queryState[0], setQuery = queryState[1];
     var typeFilterState = useState('');
     var typeFilter = typeFilterState[0], setTypeFilter = typeFilterState[1];
-    var tagFilterState = useState([]);
+    var tagFilterState = useState('');
     var tagFilter = tagFilterState[0], setTagFilter = tagFilterState[1];
 
     var manage = canManage();
@@ -543,13 +543,6 @@
 
     useEffect(function () { reload(); }, []);
 
-    function toggleTagFilter(t) {
-      setTagFilter(function (cur) {
-        var has = cur.indexOf(t) !== -1;
-        return has ? cur.filter(function (x) { return x !== t; }) : cur.concat([t]);
-      });
-    }
-
     var filtered = useMemo(function () {
       var q = query.trim().toLowerCase();
       var sorted = list.slice().sort(function (a, b) {
@@ -560,11 +553,9 @@
       });
       return sorted.filter(function (a) {
         if (typeFilter && a.type !== typeFilter) return false;
-        // Tags: match ANY selected tag.
-        if (tagFilter.length) {
+        if (tagFilter) {
           var assetTags = Array.isArray(a.tags) ? a.tags : [];
-          var hit = tagFilter.some(function (t) { return assetTags.indexOf(t) !== -1; });
-          if (!hit) return false;
+          if (assetTags.indexOf(tagFilter) === -1) return false;
         }
         if (q) {
           var hay = [a.event_topic, a.location, a.description, a.type]
@@ -618,14 +609,6 @@
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search assets…'
           }),
-          h('select', {
-            value: typeFilter,
-            onChange: function (e) { setTypeFilter(e.target.value); },
-            'aria-label': 'Filter by type'
-          },
-            h('option', { value: '' }, 'All types'),
-            TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
-          ),
           manage ? h('button', {
             type: 'button',
             className: 'portal-btn',
@@ -635,29 +618,24 @@
             h('span', null, 'New asset')
           ) : null
         ),
-        // Tag filter toggles (match any)
-        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.6rem' } },
-          TAGS.map(function (t) {
-            var active = tagFilter.indexOf(t) !== -1;
-            return h('button', {
-              key: t,
-              type: 'button',
-              onClick: function () { toggleTagFilter(t); },
-              className: 'portal-btn is-small ' + (active ? '' : 'is-ghost'),
-              style: { fontSize: '0.8rem' }
-            }, t);
-          }),
-          tagFilter.length ? h('button', {
-            type: 'button',
-            className: 'portal-btn is-small is-ghost',
-            onClick: function () { setTagFilter([]); },
-            style: { fontSize: '0.8rem' }
-          }, 'Clear tags') : null
-        ),
-        h('p', { className: 'portal-field-help', style: { margin: '0.5rem 0 0' } },
-          manage
-            ? 'Add event assets for the team. Everyone with a role can copy the text fields and download the images.'
-            : 'Copy the text fields or download the images you need for events.'
+        // Filters on their own line: type + tag dropdowns.
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.6rem' } },
+          h('select', {
+            value: typeFilter,
+            onChange: function (e) { setTypeFilter(e.target.value); },
+            'aria-label': 'Filter by type'
+          },
+            h('option', { value: '' }, 'All types'),
+            TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
+          ),
+          h('select', {
+            value: tagFilter,
+            onChange: function (e) { setTagFilter(e.target.value); },
+            'aria-label': 'Filter by tag'
+          },
+            h('option', { value: '' }, 'All tags'),
+            TAGS.map(function (t) { return h('option', { key: t, value: t }, t); })
+          )
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
       ),
