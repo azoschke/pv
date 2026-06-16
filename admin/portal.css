@@ -1023,10 +1023,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.12s ease, transform 0.12s ease;
+  transition: transform 0.12s ease;
 }
 .event-assets-table .ea-download-btn:hover {
-  background: var(--check-color);
   transform: translateY(-1px);
 }
 .event-assets-table .ea-download-btn:focus-visible {
