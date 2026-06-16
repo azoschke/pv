@@ -2,18 +2,22 @@
 //  PVAdminEventAssets — shared event asset library for role-holders
 //
 //  Every signed-in account with at least one role can view the assets, copy
-//  the text fields, and download the images. Officers and admins can add,
-//  edit, and delete entries, and upload images.
+//  the individual text fields, and download the images. Officers and admins
+//  can add, edit, and delete entries, and upload images.
+//
+//  Type is a single required value; tags are optional. Both are filter-only
+//  (not copyable). Listing is a table with a small image thumbnail, matching
+//  the other admin sections.
 //
 //  Worker routes:
-//    GET    /event-assets          any valid session
+//    GET    /event-assets          any role-holder
 //    POST   /event-assets          officer | admin
 //    PATCH  /event-assets/:id       officer | admin
 //    DELETE /event-assets/:id       officer | admin
 //    POST   /event-assets/images    officer | admin   (multipart, returns {url})
 //
-//  An entry is: { id, event_topic, location, description, image_url,
-//                 created_by, created_at, updated_at }
+//  An entry is: { id, event_topic, type, location, description, image_url,
+//                 tags: string[], created_at, updated_at }
 // ============================================================================
 
 (function () {
@@ -26,6 +30,14 @@
   var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
   var UPLOAD_TARGET_WIDTH = 1400;
   var UPLOAD_WEBP_QUALITY = 0.8;
+
+  // Fixed vocabularies — keep in sync with the worker's EVENT_ASSET_TYPES /
+  // EVENT_ASSET_TAGS so client and server validation agree.
+  var TYPES = ['Roleplay', 'PVE', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
+  var TAGS = [
+    'Maps', 'FATEs', 'Field Operations', 'Deep Dungeons', 'V&C Dungeons',
+    'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove'
+  ];
 
   // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
   // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
@@ -125,7 +137,7 @@
     });
   }
 
-  // Small inline "Copy" affordance that flips to "Copied!" briefly on click.
+  // Small inline copy affordance that flips to a check briefly on click.
   function CopyButton(props) {
     var copiedState = useState(false);
     var copied = copiedState[0], setCopied = copiedState[1];
@@ -135,6 +147,8 @@
       type: 'button',
       className: 'portal-btn is-small is-ghost',
       title: props.title || 'Copy',
+      'aria-label': props.title || 'Copy',
+      style: { padding: '0.1rem 0.35rem', lineHeight: 1 },
       onClick: function () {
         copyToClipboard(value).then(function () {
           setCopied(true);
@@ -143,17 +157,18 @@
       }
     },
       h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } },
-        copied ? 'check' : 'content_copy'),
-      h('span', null, copied ? 'Copied!' : (props.label || 'Copy'))
+        copied ? 'check' : 'content_copy')
     );
   }
 
   function emptyDraft() {
     return {
       event_topic: '',
+      type: '',
       location: '',
       description: '',
-      image_url: ''
+      image_url: '',
+      tags: []
     };
   }
 
@@ -162,18 +177,22 @@
     return {
       id: a.id,
       event_topic: a.event_topic || '',
+      type: a.type || '',
       location: a.location || '',
       description: a.description || '',
-      image_url: a.image_url || ''
+      image_url: a.image_url || '',
+      tags: Array.isArray(a.tags) ? a.tags.slice() : []
     };
   }
 
   function draftToPayload(draft) {
     return {
       event_topic: draft.event_topic.trim(),
+      type: draft.type,
       location: draft.location.trim() || null,
       description: draft.description.trim() || null,
-      image_url: draft.image_url.trim() || null
+      image_url: draft.image_url.trim() || null,
+      tags: (draft.tags || []).slice()
     };
   }
 
@@ -201,6 +220,14 @@
       setDraft(function (d) { return Object.assign({}, d, { [k]: v }); });
     }
 
+    function toggleTag(t) {
+      setDraft(function (d) {
+        var has = d.tags.indexOf(t) !== -1;
+        var next = has ? d.tags.filter(function (x) { return x !== t; }) : d.tags.concat([t]);
+        return Object.assign({}, d, { tags: next });
+      });
+    }
+
     async function handleImageUpload(file) {
       if (!file) return;
       if (!topicReady) {
@@ -226,6 +253,7 @@
     async function submit(e) {
       e.preventDefault();
       if (!topicReady) { setErr('Event topic is required.'); return; }
+      if (!draft.type) { setErr('Type is required.'); return; }
       setErr('');
       setSaving(true);
       try {
@@ -251,6 +279,18 @@
           placeholder: 'e.g. Summer Solstice Gala',
           required: true
         })
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Type *'),
+        h('select', {
+          value: draft.type,
+          onChange: function (e) { setField('type', e.target.value); },
+          required: true
+        },
+          h('option', { value: '' }, 'Select a type…'),
+          TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
+        )
       ),
 
       h('div', { className: 'portal-field' },
@@ -328,6 +368,26 @@
         }) : null
       ),
 
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Tags (filter only)'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.85rem' } },
+          TAGS.map(function (t) {
+            var checked = draft.tags.indexOf(t) !== -1;
+            return h('label', {
+              key: t,
+              style: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
+            },
+              h('input', {
+                type: 'checkbox',
+                checked: checked,
+                onChange: function () { toggleTag(t); }
+              }),
+              h('span', null, t)
+            );
+          })
+        )
+      ),
+
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit', className: 'portal-btn', disabled: saving
@@ -349,83 +409,102 @@
     return base + '-image';
   }
 
-  // ── Asset card (everyone) ────────────────────────────────────────────────
-  function AssetCard(props) {
+  function TagChips(props) {
+    var tags = props.tags || [];
+    if (!tags.length) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
+    return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.25rem' } },
+      tags.map(function (t) {
+        return h('span', {
+          key: t,
+          style: {
+            display: 'inline-block', padding: '0.05rem 0.4rem',
+            fontSize: '0.78rem', borderRadius: '0.25rem',
+            background: 'var(--bg-card-light)', border: '1px solid var(--border-color)',
+            color: 'var(--text-secondary)'
+          }
+        }, t);
+      })
+    );
+  }
+
+  // ── Table row (everyone) ─────────────────────────────────────────────────
+  function AssetRow(props) {
     var a = props.asset;
     var manage = props.manage;
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
 
-    // "Copy all" combines the text fields into one block for quick reuse.
-    var allText = [
-      a.event_topic ? a.event_topic : '',
-      a.location ? ('Location: ' + a.location) : '',
-      a.description ? ('\n' + a.description) : ''
-    ].filter(function (s) { return !!s; }).join('\n');
-
-    return h('div', { className: 'portal-card', style: { display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
-      a.image_url ? h('div', { style: { position: 'relative' } },
-        h('img', {
-          src: a.image_url, alt: a.event_topic || '',
-          style: {
-            display: 'block', width: '100%', maxHeight: '220px',
-            objectFit: 'cover', borderRadius: '0.4rem',
-            border: '1px solid var(--border-color)'
+    return h('tr', null,
+      // Image thumbnail + download
+      h('td', null,
+        a.image_url ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' } },
+          h('img', {
+            src: a.image_url, alt: a.event_topic || '',
+            style: {
+              width: '72px', height: '48px', objectFit: 'cover',
+              border: '1px solid var(--border-color)', borderRadius: '0.3rem'
+            },
+            onError: function (e) { e.target.style.display = 'none'; }
+          }),
+          h('a', {
+            className: 'portal-btn is-small is-ghost',
+            href: a.image_url,
+            download: downloadName(a),
+            // Cross-origin URLs ignore the download attribute and open in a new
+            // tab to save manually; same-origin uploads download directly.
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            style: { padding: '0.1rem 0.35rem' },
+            title: 'Download image'
           },
-          onError: function (e) { e.target.style.display = 'none'; }
-        })
-      ) : null,
-
-      h('div', null,
-        h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '0.5rem' } },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, a.event_topic || 'Untitled event'),
-          h(CopyButton, { value: a.event_topic, label: 'Copy', title: 'Copy event topic' })
-        ),
-        a.location ? h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem', color: 'var(--text-secondary)' }
-        },
-          h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.05rem' } }, 'place'),
-          h('span', { style: { flex: 1 } }, a.location),
-          h(CopyButton, { value: a.location, label: 'Copy', title: 'Copy location' })
-        ) : null
+            h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, 'download')
+          )
+        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
-
-      a.description ? h('div', null,
-        h('p', { style: { whiteSpace: 'pre-wrap', margin: '0 0 0.4rem' } }, a.description),
-        h(CopyButton, { value: a.description, label: 'Copy description', title: 'Copy description' })
-      ) : null,
-
-      h('div', {
-        style: {
-          display: 'flex', flexWrap: 'wrap', gap: '0.4rem',
-          paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)'
-        }
-      },
-        h(CopyButton, { value: allText, label: 'Copy all text', title: 'Copy topic, location, and description' }),
-        a.image_url ? h('a', {
-          className: 'portal-btn is-small is-ghost',
-          href: a.image_url,
-          download: downloadName(a),
-          // Cross-origin URLs ignore the download attribute and open in a new
-          // tab to save manually; same-origin uploads download directly.
-          target: '_blank',
-          rel: 'noopener noreferrer'
-        },
-          h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, 'download'),
-          h('span', null, 'Download image')
-        ) : null,
-        manage ? h('span', { style: { flex: 1 } }) : null,
-        manage ? h('button', {
+      // Event topic + copy
+      h('td', null,
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+          h('span', { style: { fontWeight: 600 } }, a.event_topic || 'Untitled'),
+          h(CopyButton, { value: a.event_topic, title: 'Copy event topic' })
+        )
+      ),
+      // Type
+      h('td', { style: { whiteSpace: 'nowrap' } }, a.type || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
+      // Location + copy
+      h('td', null,
+        a.location ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+          h('span', null, a.location),
+          h(CopyButton, { value: a.location, title: 'Copy location' })
+        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      ),
+      // Description (clamped) + copy
+      h('td', null,
+        a.description ? h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '0.35rem' } },
+          h('span', {
+            style: {
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+              overflow: 'hidden', maxWidth: '320px', whiteSpace: 'pre-wrap'
+            }
+          }, a.description),
+          h(CopyButton, { value: a.description, title: 'Copy description' })
+        ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+      ),
+      // Tags
+      h('td', null, h(TagChips, { tags: a.tags })),
+      // Actions (managers only)
+      manage ? h('td', { style: { whiteSpace: 'nowrap' } },
+        h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
-        }, 'Edit') : null,
-        manage ? h('button', {
+        }, 'Edit'),
+        ' ',
+        h('button', {
           type: 'button', className: 'portal-btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete event asset "' + (a.event_topic || 'Untitled') + '"?')) onDelete(a);
           }
-        }, 'Delete') : null
-      )
+        }, 'Delete')
+      ) : null
     );
   }
 
@@ -443,6 +522,10 @@
     var formOpen = formState[0], setFormOpen = formState[1];
     var queryState = useState('');
     var query = queryState[0], setQuery = queryState[1];
+    var typeFilterState = useState('');
+    var typeFilter = typeFilterState[0], setTypeFilter = typeFilterState[1];
+    var tagFilterState = useState([]);
+    var tagFilter = tagFilterState[0], setTagFilter = tagFilterState[1];
 
     var manage = canManage();
 
@@ -460,24 +543,37 @@
 
     useEffect(function () { reload(); }, []);
 
+    function toggleTagFilter(t) {
+      setTagFilter(function (cur) {
+        var has = cur.indexOf(t) !== -1;
+        return has ? cur.filter(function (x) { return x !== t; }) : cur.concat([t]);
+      });
+    }
+
     var filtered = useMemo(function () {
       var q = query.trim().toLowerCase();
       var sorted = list.slice().sort(function (a, b) {
-        // Newest first when timestamps exist, else by topic.
         var at = a.created_at ? new Date(a.created_at).getTime() : 0;
         var bt = b.created_at ? new Date(b.created_at).getTime() : 0;
         if (at !== bt) return bt - at;
         return (a.event_topic || '').localeCompare(b.event_topic || '', undefined, { sensitivity: 'base' });
       });
-      if (!q) return sorted;
       return sorted.filter(function (a) {
-        return (
-          (a.event_topic || '').toLowerCase().indexOf(q) !== -1 ||
-          (a.location || '').toLowerCase().indexOf(q) !== -1 ||
-          (a.description || '').toLowerCase().indexOf(q) !== -1
-        );
+        if (typeFilter && a.type !== typeFilter) return false;
+        // Tags: match ANY selected tag.
+        if (tagFilter.length) {
+          var assetTags = Array.isArray(a.tags) ? a.tags : [];
+          var hit = tagFilter.some(function (t) { return assetTags.indexOf(t) !== -1; });
+          if (!hit) return false;
+        }
+        if (q) {
+          var hay = [a.event_topic, a.location, a.description, a.type]
+            .filter(Boolean).join(' ').toLowerCase();
+          if (hay.indexOf(q) === -1) return false;
+        }
+        return true;
       });
-    }, [list, query]);
+    }, [list, query, typeFilter, tagFilter]);
 
     function flashFor(msg) {
       setFlash(msg);
@@ -507,6 +603,8 @@
       }
     }
 
+    var colCount = manage ? 7 : 6;
+
     return h('div', null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
         h('div', {
@@ -520,6 +618,14 @@
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search assets…'
           }),
+          h('select', {
+            value: typeFilter,
+            onChange: function (e) { setTypeFilter(e.target.value); },
+            'aria-label': 'Filter by type'
+          },
+            h('option', { value: '' }, 'All types'),
+            TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
+          ),
           manage ? h('button', {
             type: 'button',
             className: 'portal-btn',
@@ -529,10 +635,29 @@
             h('span', null, 'New asset')
           ) : null
         ),
+        // Tag filter toggles (match any)
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.6rem' } },
+          TAGS.map(function (t) {
+            var active = tagFilter.indexOf(t) !== -1;
+            return h('button', {
+              key: t,
+              type: 'button',
+              onClick: function () { toggleTagFilter(t); },
+              className: 'portal-btn is-small ' + (active ? '' : 'is-ghost'),
+              style: { fontSize: '0.8rem' }
+            }, t);
+          }),
+          tagFilter.length ? h('button', {
+            type: 'button',
+            className: 'portal-btn is-small is-ghost',
+            onClick: function () { setTagFilter([]); },
+            style: { fontSize: '0.8rem' }
+          }, 'Clear tags') : null
+        ),
         h('p', { className: 'portal-field-help', style: { margin: '0.5rem 0 0' } },
           manage
-            ? 'Add event assets for the team. Everyone with a role can copy the text and download the images.'
-            : 'Copy the text or download the images you need for events.'
+            ? 'Add event assets for the team. Everyone with a role can copy the text fields and download the images.'
+            : 'Copy the text fields or download the images you need for events.'
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
       ),
@@ -547,26 +672,37 @@
           ? h('div', { className: 'portal-card' },
               h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
                 list.length
-                  ? 'No event assets match that search.'
+                  ? 'No event assets match those filters.'
                   : (manage ? 'No event assets yet. Add the first one.' : 'No event assets yet.')
               )
             )
-          : h('div', {
-              style: {
-                display: 'grid',
-                gap: '1rem',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))'
-              }
-            },
-              filtered.map(function (a) {
-                return h(AssetCard, {
-                  key: a.id,
-                  asset: a,
-                  manage: manage,
-                  onEdit: function (aa) { setFormOpen({ asset: aa }); },
-                  onDelete: handleDelete
-                });
-              })
+          : h('div', { className: 'portal-card' },
+              h('div', { className: 'portal-table-wrap' },
+                h('table', { className: 'portal-table' },
+                  h('thead', null,
+                    h('tr', null,
+                      h('th', null, 'Image'),
+                      h('th', null, 'Event Topic'),
+                      h('th', null, 'Type'),
+                      h('th', null, 'Location'),
+                      h('th', null, 'Description'),
+                      h('th', null, 'Tags'),
+                      manage ? h('th', null, '') : null
+                    )
+                  ),
+                  h('tbody', null,
+                    filtered.map(function (a) {
+                      return h(AssetRow, {
+                        key: a.id,
+                        asset: a,
+                        manage: manage,
+                        onEdit: function (aa) { setFormOpen({ asset: aa }); },
+                        onDelete: handleDelete
+                      });
+                    })
+                  )
+                )
+              )
             ),
 
       formOpen ? h(window.PVAdminModal, {
