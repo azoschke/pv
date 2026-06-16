@@ -137,7 +137,7 @@
     });
   }
 
-  // Small inline copy affordance that flips to a check briefly on click.
+  // Small copy affordance (icon + label) that flips to "Copied!" briefly.
   function CopyButton(props) {
     var copiedState = useState(false);
     var copied = copiedState[0], setCopied = copiedState[1];
@@ -148,7 +148,6 @@
       className: 'portal-btn is-small is-ghost',
       title: props.title || 'Copy',
       'aria-label': props.title || 'Copy',
-      style: { padding: '0.1rem 0.35rem', lineHeight: 1 },
       onClick: function () {
         copyToClipboard(value).then(function () {
           setCopied(true);
@@ -157,7 +156,8 @@
       }
     },
       h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } },
-        copied ? 'check' : 'content_copy')
+        copied ? 'check' : 'content_copy'),
+      h('span', null, copied ? 'Copied!' : 'Copy')
     );
   }
 
@@ -270,7 +270,7 @@
       err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.75rem' } }, err) : null,
 
       h('div', { className: 'portal-field' },
-        h('label', null, 'Event topic *'),
+        h('label', null, 'Event *'),
         h('input', {
           type: 'text',
           value: draft.event_topic,
@@ -458,58 +458,56 @@
     var onDelete = props.onDelete;
 
     return h('tr', null,
-      // Image thumbnail + download
+      // Image (250px wide, auto height) with an inline Download button.
       h('td', null,
-        a.image_url ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' } },
+        a.image_url ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem' } },
           h('img', {
             src: a.image_url, alt: a.event_topic || '',
             style: {
-              width: '72px', height: '48px', objectFit: 'cover',
+              width: '250px', height: 'auto',
               border: '1px solid var(--border-color)', borderRadius: '0.3rem'
             },
             onError: function (e) { e.target.style.display = 'none'; }
           }),
           h('a', {
-            className: 'portal-btn is-small is-ghost',
+            className: 'portal-btn is-ghost',
             href: a.image_url,
             download: downloadName(a),
             // Cross-origin URLs ignore the download attribute and open in a new
             // tab to save manually; same-origin uploads download directly.
             target: '_blank',
             rel: 'noopener noreferrer',
-            style: { padding: '0.1rem 0.35rem' },
-            title: 'Download image'
+            title: 'Download image',
+            style: { whiteSpace: 'nowrap' }
           },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, 'download')
+            h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.1rem' } }, 'download'),
+            h('span', null, 'Download')
           )
         ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
-      // Event topic + copy
+      // Event + copy underneath
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
-          h('span', { style: { fontWeight: 600 } }, a.event_topic || 'Untitled'),
-          h(CopyButton, { value: a.event_topic, title: 'Copy event topic' })
+        h('div', { style: { fontWeight: 600 } }, a.event_topic || 'Untitled'),
+        h('div', { style: { marginTop: '0.3rem' } },
+          h(CopyButton, { value: a.event_topic, title: 'Copy event' })
         )
       ),
-      // Type
-      h('td', { style: { whiteSpace: 'nowrap' } }, a.type || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      // Location + copy
+      // Location + copy underneath
       h('td', null,
-        a.location ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
-          h('span', null, a.location),
-          h(CopyButton, { value: a.location, title: 'Copy location' })
+        a.location ? h('div', null,
+          h('div', null, a.location),
+          h('div', { style: { marginTop: '0.3rem' } },
+            h(CopyButton, { value: a.location, title: 'Copy location' })
+          )
         ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
-      // Description (clamped) + copy
-      h('td', null,
-        a.description ? h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '0.35rem' } },
-          h('span', {
-            style: {
-              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
-              overflow: 'hidden', maxWidth: '320px', whiteSpace: 'pre-wrap'
-            }
-          }, a.description),
-          h(CopyButton, { value: a.description, title: 'Copy description' })
+      // Description (full text) + copy underneath
+      h('td', { style: { minWidth: '360px' } },
+        a.description ? h('div', null,
+          h('div', { style: { whiteSpace: 'pre-wrap' } }, a.description),
+          h('div', { style: { marginTop: '0.3rem' } },
+            h(CopyButton, { value: a.description, title: 'Copy description' })
+          )
         ) : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
       // Tags
@@ -617,7 +615,7 @@
       }
     }
 
-    var colCount = manage ? 7 : 6;
+    var colCount = manage ? 6 : 5;
 
     // Group the filtered rows under their type, in canonical TYPES order
     // (untyped last) — mirrors how FC Members groups by rank.
@@ -700,8 +698,7 @@
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Image'),
-                      h('th', null, 'Event Topic'),
-                      h('th', null, 'Type'),
+                      h('th', null, 'Event'),
                       h('th', null, 'Location'),
                       h('th', null, 'Description'),
                       h('th', null, 'Tags'),
