@@ -137,12 +137,13 @@
     });
   }
 
-  // Click the text itself to copy it; a brief "Copied!" note confirms.
+  // Click anywhere in the cell to copy its text; the whole area hovers and a
+  // brief "Copied!" note confirms. Empty values render a non-interactive dash.
   function ClickToCopy(props) {
     var copiedState = useState(false);
     var copied = copiedState[0], setCopied = copiedState[1];
     var value = props.value || '';
-    if (!value) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
+    if (!value) return h('div', { className: 'ea-cell-empty' }, '—');
     function doCopy() {
       copyToClipboard(value).then(function () {
         setCopied(true);
@@ -150,12 +151,12 @@
       }).catch(function () {});
     }
     return h('div', {
+      className: 'ea-copy',
       role: 'button',
       tabIndex: 0,
       title: 'Click to copy',
       onClick: doCopy,
-      onKeyDown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doCopy(); } },
-      style: { cursor: 'pointer' }
+      onKeyDown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doCopy(); } }
     },
       h('span', {
         style: Object.assign(
@@ -495,26 +496,24 @@
           )
         ) : h('div', { style: { padding: '0.6rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary)' } }, '—')
       ),
-      // Event (click to copy)
-      h('td', { style: { textAlign: 'center' } },
+      // Event (click anywhere in the cell to copy)
+      h('td', { style: { padding: 0, verticalAlign: 'top' } },
         h(ClickToCopy, { value: a.event_topic || 'Untitled', bold: true })
       ),
       // Location (click to copy)
-      h('td', { style: { textAlign: 'center' } },
+      h('td', { style: { padding: 0, verticalAlign: 'top' } },
         h(ClickToCopy, { value: a.location })
       ),
       // Description (full text, click to copy)
-      h('td', { style: { textAlign: 'center', minWidth: '360px' } },
+      h('td', { style: { padding: 0, verticalAlign: 'top', minWidth: '360px' } },
         h(ClickToCopy, { value: a.description, preserve: true })
       ),
       // Tags
-      h('td', { style: { textAlign: 'center' } },
-        h('div', { style: { display: 'inline-flex', flexWrap: 'wrap', gap: '0.25rem', justifyContent: 'center' } },
-          h(TagChips, { tags: a.tags })
-        )
+      h('td', { style: { verticalAlign: 'top' } },
+        h(TagChips, { tags: a.tags })
       ),
       // Actions (managers only)
-      manage ? h('td', { style: { whiteSpace: 'nowrap' } },
+      manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'top' } },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
@@ -699,7 +698,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table event-assets-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Image'),
