@@ -41,7 +41,8 @@
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
       { id: 'jobs',             label: 'Job Board',          icon: 'work' },
-      { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' }
+      { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' },
+      { id: 'event-assets',     label: 'Event Assets',       icon: 'photo_library' }
     ] },
     { title: 'Tools / More', items: [
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -72,6 +73,7 @@
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
     bounties:         ['officer', 'admin'],
+    'event-assets':   '*',
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
@@ -225,6 +227,8 @@
         return h(window.PVAdminMemberProfiles || Missing('member-profiles.js'), { session: session });
       case 'bounties':
         return h(window.PVAdminBounties || Missing('bounties.js'), { session: session });
+      case 'event-assets':
+        return h(window.PVAdminEventAssets || Missing('event-assets.js'), { session: session });
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), {
           session: session,
