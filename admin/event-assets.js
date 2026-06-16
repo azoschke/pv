@@ -276,9 +276,10 @@
           value: draft.event_topic,
           onChange: function (e) { setField('event_topic', e.target.value); },
           maxLength: 200,
-          placeholder: 'e.g. Summer Solstice Gala',
+          placeholder: '[PVE] Treasure Hunt',
           required: true
-        })
+        }),
+        h('p', { className: 'portal-field-help' }, 'e.g. [PVE] Treasure Hunt')
       ),
 
       h('div', { className: 'portal-field' },
@@ -291,6 +292,48 @@
           h('option', { value: '' }, 'Select a type…'),
           TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
         )
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Tags'),
+        h('select', {
+          value: '',
+          onChange: function (e) {
+            var t = e.target.value;
+            if (t) toggleTag(t);
+          }
+        },
+          h('option', { value: '' }, draft.tags.length ? 'Add another tag…' : 'Add a tag…'),
+          TAGS.filter(function (t) { return draft.tags.indexOf(t) === -1; })
+            .map(function (t) { return h('option', { key: t, value: t }, t); })
+        ),
+        draft.tags.length ? h('div', {
+          style: { display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.5rem' }
+        }, draft.tags.map(function (t) {
+          return h('span', {
+            key: t,
+            style: {
+              display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+              padding: '0.15rem 0.5rem',
+              background: 'var(--bg-card-light)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '0.25rem',
+              fontSize: '0.85rem',
+              color: 'var(--text-secondary)'
+            }
+          },
+            h('span', null, t),
+            h('button', {
+              type: 'button',
+              onClick: function () { toggleTag(t); },
+              'aria-label': 'Remove tag ' + t,
+              style: {
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-secondary)', padding: 0, lineHeight: 1, fontSize: '0.9rem'
+              }
+            }, '✕')
+          );
+        })) : null
       ),
 
       h('div', { className: 'portal-field' },
@@ -310,8 +353,9 @@
           value: draft.description,
           onChange: function (e) { setField('description', e.target.value); },
           rows: 6, maxLength: 4000,
-          placeholder: 'Details to copy into Discord, flyers, etc.'
-        })
+          placeholder: 'Details to copy for the Discord event description…'
+        }),
+        h('p', { className: 'portal-field-help' }, 'Details to copy for the Discord event description.')
       ),
 
       h('div', { className: 'portal-field' },
@@ -366,26 +410,6 @@
           },
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
-      ),
-
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Tags (filter only)'),
-        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.85rem' } },
-          TAGS.map(function (t) {
-            var checked = draft.tags.indexOf(t) !== -1;
-            return h('label', {
-              key: t,
-              style: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
-            },
-              h('input', {
-                type: 'checkbox',
-                checked: checked,
-                onChange: function () { toggleTag(t); }
-              }),
-              h('span', null, t)
-            );
-          })
-        )
       ),
 
       h('div', { className: 'portal-form-actions' },
@@ -596,6 +620,21 @@
 
     var colCount = manage ? 7 : 6;
 
+    // Group the filtered rows under their type, in canonical TYPES order
+    // (untyped last) — mirrors how FC Members groups by rank.
+    var groups = (function () {
+      var byType = {};
+      filtered.forEach(function (a) {
+        var t = a.type || 'Untyped';
+        (byType[t] = byType[t] || []).push(a);
+      });
+      var ordered = TYPES.filter(function (t) { return byType[t]; });
+      var unknown = Object.keys(byType).filter(function (t) { return TYPES.indexOf(t) === -1; });
+      return ordered.concat(unknown).map(function (t) {
+        return { type: t, assets: byType[t] };
+      });
+    })();
+
     return h('div', null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
         h('div', {
@@ -619,8 +658,9 @@
           ) : null
         ),
         // Filters on their own line: type + tag dropdowns.
-        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.6rem' } },
+        h('div', { className: 'portal-filter-row', style: { marginBottom: 0 } },
           h('select', {
+            className: 'portal-filter-select',
             value: typeFilter,
             onChange: function (e) { setTypeFilter(e.target.value); },
             'aria-label': 'Filter by type'
@@ -629,6 +669,7 @@
             TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
           ),
           h('select', {
+            className: 'portal-filter-select',
             value: tagFilter,
             onChange: function (e) { setTagFilter(e.target.value); },
             'aria-label': 'Filter by tag'
@@ -669,14 +710,21 @@
                     )
                   ),
                   h('tbody', null,
-                    filtered.map(function (a) {
-                      return h(AssetRow, {
-                        key: a.id,
-                        asset: a,
-                        manage: manage,
-                        onEdit: function (aa) { setFormOpen({ asset: aa }); },
-                        onDelete: handleDelete
-                      });
+                    groups.map(function (g) {
+                      return [
+                        h('tr', { key: 'grp-' + g.type, className: 'portal-group-row' },
+                          h('td', { colSpan: colCount, className: 'portal-group-cell' },
+                            g.type + ' · ' + g.assets.length)
+                        )
+                      ].concat(g.assets.map(function (a) {
+                        return h(AssetRow, {
+                          key: a.id,
+                          asset: a,
+                          manage: manage,
+                          onEdit: function (aa) { setFormOpen({ asset: aa }); },
+                          onDelete: handleDelete
+                        });
+                      }));
                     })
                   )
                 )
