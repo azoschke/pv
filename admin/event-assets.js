@@ -36,7 +36,7 @@
   var TYPES = ['Roleplay', 'PVE', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
   var TAGS = [
     'Maps', 'FATEs', 'Field Operations', 'Deep Dungeons', 'V&C Dungeons',
-    'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove'
+    'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove', 'Unlock'
   ];
 
   // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
