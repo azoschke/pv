@@ -42,7 +42,7 @@ async function submitAppointmentRequest(event) {
             title: 'New Appointment Request',
             color: 0xa54d44,
             thumbnail: {
-                url: 'https://crafting-tools.github.io/pv/assets/pdf-emblem-web.png'
+                url: 'https://phoenixvanguard-tools.com/assets/pdf-emblem-web.png'
             },
             fields: [
                 { name: 'Patient Name', value: name, inline: false },
