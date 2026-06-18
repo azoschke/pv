@@ -17,7 +17,9 @@ async function submitAppointmentRequest(event) {
     event.preventDefault();
 
     const name = document.getElementById('appt-name').value.trim();
-    const reason = document.getElementById('appt-reason').value.trim();
+    // Discord caps an embed field value at 1024 chars; clamp so a long reason
+    // can't make the webhook 400 (which would surface as "Discord Error").
+    const reason = document.getElementById('appt-reason').value.trim().slice(0, 1024);
     const medic = document.getElementById('appt-medic').value;
 
     const submitBtn = document.getElementById('submit-btn');
@@ -42,7 +44,7 @@ async function submitAppointmentRequest(event) {
             title: 'New Appointment Request',
             color: 0xa54d44,
             thumbnail: {
-                url: 'https://crafting-tools.github.io/pv/assets/pdf-emblem-web.png'
+                url: 'https://phoenixvanguard-tools.com/assets/pdf-emblem-web.png'
             },
             fields: [
                 { name: 'Patient Name', value: name, inline: false },

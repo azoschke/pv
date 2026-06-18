@@ -48,12 +48,24 @@
     if (!ctx) throw new Error('Could not get a 2D canvas context.');
     ctx.drawImage(bitmap, 0, 0, w, h);
     if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    return await new Promise(function (resolve, reject) {
+    var blob = await new Promise(function (resolve, reject) {
       canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode image as WebP (browser may not support it).'));
+        if (!b) reject(new Error('Could not encode the image.'));
         else resolve(b);
       }, 'image/webp', UPLOAD_WEBP_QUALITY);
     });
+    // Browsers without a WebP encoder (notably Safari) silently hand back a
+    // PNG here, which the worker would reject. Re-encode as JPEG instead
+    // (universally supported, and far smaller than the PNG fallback).
+    if (blob.type !== 'image/webp') {
+      blob = await new Promise(function (resolve, reject) {
+        canvas.toBlob(function (b) {
+          if (!b) reject(new Error('Could not encode the image.'));
+          else resolve(b);
+        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
+      });
+    }
+    return blob;
   }
 
   async function uploadVenueImage(file, venueName) {
@@ -64,7 +76,7 @@
     }
     var blob = await resizeImageToWebp(file);
     var form = new FormData();
-    form.append('file', blob, 'upload.webp');
+    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
     form.append('venue_name', venueName);
     var res = await fetch(PVAdminAPI.API_BASE + '/venues/images', {
       method: 'POST',
