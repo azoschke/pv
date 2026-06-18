@@ -17,7 +17,9 @@ async function submitAppointmentRequest(event) {
     event.preventDefault();
 
     const name = document.getElementById('appt-name').value.trim();
-    const reason = document.getElementById('appt-reason').value.trim();
+    // Discord caps an embed field value at 1024 chars; clamp so a long reason
+    // can't make the webhook 400 (which would surface as "Discord Error").
+    const reason = document.getElementById('appt-reason').value.trim().slice(0, 1024);
     const medic = document.getElementById('appt-medic').value;
 
     const submitBtn = document.getElementById('submit-btn');
