@@ -106,6 +106,84 @@
     });
   }
 
+  // ── 1c. Campaign menus (flooded in from the campaigns worker) ──────────────
+  // The Campaigns dropdown/sidebar list "All Campaigns" statically; every
+  // individual campaign is injected from the worker so new ones appear without
+  // editing nav.html. Cached in sessionStorage for instant render on later
+  // page loads, then refreshed in the background so the list self-heals.
+  const CAMPAIGNS_API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
+  const CAMPAIGNS_CACHE_KEY = 'pv.campaigns.navcache';
+
+  function readCampaignCache() {
+    try {
+      const raw = sessionStorage.getItem(CAMPAIGNS_CACHE_KEY);
+      if (!raw) return null;
+      const c = JSON.parse(raw);
+      return (c && Array.isArray(c.data)) ? c.data : null;
+    } catch (_e) { return null; }
+  }
+
+  function writeCampaignCache(data) {
+    try { sessionStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); }
+    catch (_e) { /* ignore quota */ }
+  }
+
+  // The active campaign slug, when viewing a campaign (view.html?c=<slug>).
+  function currentCampaignSlug() {
+    try {
+      const loc = getCurrentLocation();
+      if (loc.section !== 'campaigns' || loc.page !== 'view') return null;
+      return new URLSearchParams(window.location.search).get('c');
+    } catch (_e) { return null; }
+  }
+
+  function renderCampaignMenus(placeholder, campaigns) {
+    const activeSlug = currentCampaignSlug();
+    placeholder.querySelectorAll('[data-campaign-menu]').forEach(function (menu) {
+      // Drop any previously injected items so a background refresh can re-render.
+      menu.querySelectorAll('.nav-campaign-dynamic').forEach(function (el) { el.remove(); });
+      const isDesktop = menu.classList.contains('nav-submenu');
+      campaigns.forEach(function (c) {
+        if (!c || !c.slug) return;
+        const li = document.createElement('li');
+        li.className = 'nav-campaign-dynamic';
+        if (isDesktop) li.setAttribute('role', 'none');
+        const a = document.createElement('a');
+        if (isDesktop) a.setAttribute('role', 'menuitem');
+        a.className = 'nav-sublink';
+        a.href = BASE_PATH + '/campaigns/view.html?c=' + encodeURIComponent(c.slug);
+        a.setAttribute('data-subpage', 'campaign-' + c.slug);
+        a.textContent = c.name || c.slug; // textContent: never inject names as HTML
+        if (activeSlug && c.slug === activeSlug) {
+          a.classList.add('active');
+          const parent = menu.closest('.nav-dropdown, .nav-sidebar-section');
+          if (parent) {
+            parent.classList.add('active');
+            if (parent.classList.contains('nav-sidebar-section')) parent.classList.add('open');
+            const tog = parent.querySelector('.nav-dropdown-toggle, .nav-sidebar-toggle');
+            if (tog) { tog.classList.add('active'); tog.setAttribute('aria-expanded', 'true'); }
+          }
+        }
+        li.appendChild(a);
+        menu.appendChild(li);
+      });
+    });
+  }
+
+  function populateCampaigns(placeholder) {
+    if (!placeholder.querySelector('[data-campaign-menu]')) return;
+    const cached = readCampaignCache();
+    if (cached) renderCampaignMenus(placeholder, cached);
+    fetch(CAMPAIGNS_API_BASE + '/campaigns')
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) {
+        if (!Array.isArray(data)) return;
+        writeCampaignCache(data);
+        renderCampaignMenus(placeholder, data);
+      })
+      .catch(function (err) { console.warn('[nav.js] Could not load campaigns:', err); });
+  }
+
   // ── 2. Theme management ────────────────────────────────────────────────────
   const THEME_KEY = 'crafting-tools-theme';
 
@@ -281,6 +359,9 @@
 
     // Reflect signed-in state on the Login button (name + dashboard link)
     applyAuthState(placeholder);
+
+    // Flood the Campaigns menus with every campaign from the worker
+    populateCampaigns(placeholder);
 
     // Wire up dropdown toggles
     wireDropdowns(placeholder);
