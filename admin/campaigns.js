@@ -279,6 +279,7 @@
   }
 
   // ── Reusable reorder/edit/delete row controls ────────────────────────────────
+  // Delete is gated to admins (props.canDelete); officers see reorder + edit only.
   function RowControls(props) {
     return h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
@@ -286,12 +287,18 @@
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
         title: 'Move down', disabled: props.isLast, onClick: props.onDown }, '↓'),
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onEdit }, 'Edit'),
-      h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: props.onDelete }, 'Delete')
+      props.canDelete
+        ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: props.onDelete }, 'Delete')
+        : null
     );
   }
 
   // ── Main component ────────────────────────────────────────────────────────────
-  function PVAdminCampaigns() {
+  function PVAdminCampaigns(props) {
+    // Only admins may delete campaigns/chapters; officers get add/edit/reorder.
+    var roles = (props.session && props.session.roles) || [];
+    var isAdmin = roles.indexOf('admin') !== -1;
+
     var campaignsState = useState([]);
     var campaigns = campaignsState[0], setCampaigns = campaignsState[1];
     var loadingState = useState(true);
@@ -499,6 +506,7 @@
                     (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /campaigns/view.html?c=' + c.slug)
                 ),
                 h(RowControls, {
+                  canDelete: isAdmin,
                   isFirst: idx === 0, isLast: idx === campaigns.length - 1,
                   onUp: function () { reorderCampaigns(idx, idx - 1); },
                   onDown: function () { reorderCampaigns(idx, idx + 1); },
@@ -531,6 +539,7 @@
                               h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } }, ch.chapter_date || '—')
                             ),
                             h(RowControls, {
+                              canDelete: isAdmin,
                               isFirst: cidx === 0, isLast: cidx === chapters.length - 1,
                               onUp: function () { reorderChapters(c, cidx, cidx - 1); },
                               onDown: function () { reorderChapters(c, cidx, cidx + 1); },
