@@ -45,6 +45,7 @@
       { id: 'event-assets',     label: 'Event Assets',       icon: 'photo_library' }
     ] },
     { title: 'Tools / More', items: [
+      { id: 'campaigns',        label: 'Campaigns',          icon: 'auto_stories' },
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
       { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
       { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
@@ -74,6 +75,7 @@
     jobs:             ['officer', 'admin'],
     bounties:         ['officer', 'admin'],
     'event-assets':   '*',
+    campaigns:        ['officer', 'admin'],
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
@@ -247,6 +249,8 @@
           initialStage: (props.navParams && props.navParams.stage) || '',
           initialSearch: (props.navParams && props.navParams.search) || ''
         });
+      case 'campaigns':
+        return h(window.PVAdminCampaigns || Missing('campaigns.js'), { session: session });
       case 'cosmic':
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':

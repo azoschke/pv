@@ -14,7 +14,19 @@
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-
+    <style>
+        .appt-name-note {
+            margin: 0.35rem 0 0;
+            font-family: 'Crimson Pro', serif;
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+        #appt-name[readonly] {
+            opacity: 0.85;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -29,8 +41,27 @@
             Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="/pv/vanguard-medical/staff-roster">review the Staff Roster</a> <br><em>All fields are required</em>.
         </p>
 
-        <!-- Request Form -->
-        <div id="form-wrapper">
+        <!-- Login gate: shown when no valid session. Mirrors the job board's
+             "log in to apply" round-trip — sign in, then land back here. -->
+        <div id="login-gate" style="display: none;">
+            <div class="parchment">
+                <div class="confirmation-panel" style="display: block;">
+                    <span class="material-icons check-icon" style="color: var(--accent-red);">lock</span>
+                    <h2>Sign in to request an appointment</h2>
+                    <p>
+                        Appointment requests are tied to your Phoenix Vanguard account, please
+                        log in to request an appointment.
+                    </p>
+                    <a href="#" id="login-redirect-btn" class="intake-btn">
+                        <span class="material-icons">login</span>
+                        Log In to Continue
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Form (revealed only once logged in) -->
+        <div id="form-wrapper" style="display: none;">
             <div class="form-container active" id="form-appointment">
                 <form id="appointmentForm" onsubmit="submitAppointmentRequest(event)">
                     <div class="parchment">
@@ -41,7 +72,8 @@
                                 <span class="material-icons">person</span>
                                 Name
                             </label>
-                            <input type="text" id="appt-name" name="name" required placeholder="Your character's name">
+                            <input type="text" id="appt-name" name="name" required readonly placeholder="Your character's name">
+                            <p class="appt-name-note" id="appt-name-note">Requesting as your logged-in account.</p>
                         </div>
 
                         <div class="form-group">
@@ -115,6 +147,7 @@
         </div>
     </div>
 
+    <script src="/pv/admin/api.js"></script>
     <script src="/pv/vanguard-medical/appointment-request.js"></script>
     <script src="/pv/js/nav.js"></script>
 </body>

@@ -21,52 +21,278 @@
 
     <p class="landing-intro">
       Session recaps for Phoenix Vanguard campaigns.
-      Select a campaign below to browse its chapters.
+      Filter by type, then select a campaign to browse its chapters.
     </p>
 
-    <div class="landing-grid">
+    <div class="campaign-layout" id="campaigns-layout">
 
-      <a href="/pv/campaigns/eclipse/eclipse.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">Main Campaign</p>
-          <h3 class="landing-card-title">Symphony of the Eclipse</h3>
-          <p class="landing-card-desc">
-            The Phoenix Vanguard crosses the portal into a realm of crimson light,
-            where familiar aether gives way to something the locals call anima.
-          </p>
-          <span class="landing-card-cta">Read Symphony of the Eclipse chapters &rarr;</span>
+      <!-- Filter sidebar (mirrors the Venues directory pattern) -->
+      <aside class="campaign-sidebar venues-sidebar" id="campaigns-sidebar" aria-label="Campaign filters">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Filters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
         </div>
-      </a>
 
-      <a href="/pv/campaigns/stormveil/stormveil.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">Side Campaign</p>
-          <h3 class="landing-card-title">Stormveil</h3>
-          <p class="landing-card-desc">
-            What awaits the mercenary team on Stormveil Isle?
-          </p>
-          <span class="landing-card-cta">Read Stormveil chapters &rarr;</span>
-        </div>
-      </a>
+        <div class="venues-filter-body">
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="campaigns-search">Search</label>
+            <input id="campaigns-search" class="venues-filter-input" type="search" placeholder="Name or keyword..." autocomplete="off" />
+          </div>
 
-      <a href="/pv/campaigns/one-shots/one-shots.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">One-Shots</p>
-          <h3 class="landing-card-title">One-Shots</h3>
-          <p class="landing-card-desc">
-            Standalone adventures and side stories from the Phoenix Vanguard.
-          </p>
-          <span class="landing-card-cta">Read One-Shots &rarr;</span>
+          <div class="venues-filter-group" id="filter-category-group">
+            <span class="venues-filter-label">Type</span>
+            <ul class="venues-filter-list" id="filter-category-list" role="list"></ul>
+          </div>
+
+          <button type="button" class="venues-filter-reset" id="filter-reset">Reset filters</button>
         </div>
-      </a>
+      </aside>
+
+      <!-- Main content -->
+      <main class="campaign-main" id="campaigns-main">
+        <div class="campaign-toolbar venues-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+            &#9776; Filters
+          </button>
+          <span class="venues-result-count" id="campaigns-count" aria-live="polite"></span>
+        </div>
+
+        <div class="landing-grid" id="campaign-landing-grid">
+          <div class="chapter-loading" style="grid-column:1/-1;">Loading campaigns&hellip;</div>
+        </div>
+      </main>
 
     </div>
+
+    <!-- Mobile overlay -->
+    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
 
     <div class="disclaimer">
       FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
       FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
     </div>
   </div>
+
+  <script>
+  (function () {
+    var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
+    var SIDEBAR_KEY = 'pv-campaigns-sidebar-hidden';
+    var FILTER_KEY  = 'pv-campaigns-filters';
+
+    // The three campaign types, in display order. Keys match the worker's `tag`.
+    var CATEGORY_ORDER = ['main', 'side', 'oneshot'];
+    var CATEGORY_LABEL = { main: 'Main Campaign', side: 'Side Campaign', oneshot: 'One-Shots' };
+
+    // ── DOM refs ─────────────────────────────────────────────────────────────
+    var sidebarEl  = document.getElementById('campaigns-sidebar');
+    var toggleBtn  = document.getElementById('sidebar-toggle-btn');
+    var closeBtn   = document.getElementById('sidebar-close-btn');
+    var overlay    = document.getElementById('campaign-overlay');
+    var searchInput = document.getElementById('campaigns-search');
+    var catListEl  = document.getElementById('filter-category-list');
+    var resetBtn   = document.getElementById('filter-reset');
+    var grid       = document.getElementById('campaign-landing-grid');
+    var countEl    = document.getElementById('campaigns-count');
+
+    // ── State ────────────────────────────────────────────────────────────────
+    var allCampaigns = [];
+    var filters = { search: '', categories: {} };  // categories: { main: true, ... }
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function isMobile() { return window.innerWidth <= 768; }
+
+    // ── Filter persistence + URL deep-link (?tag=main|side|oneshot) ───────────
+    function loadFilters() {
+      // A ?tag= param (e.g. the nav's One-Shots link) wins and pins a single type.
+      var urlTag = '';
+      try { urlTag = (new URLSearchParams(window.location.search).get('tag') || '').toLowerCase(); }
+      catch (_e) { urlTag = ''; }
+      if (CATEGORY_ORDER.indexOf(urlTag) !== -1) {
+        filters.search = '';
+        filters.categories = {}; filters.categories[urlTag] = true;
+        return;
+      }
+      try {
+        var raw = localStorage.getItem(FILTER_KEY);
+        if (raw) {
+          var saved = JSON.parse(raw);
+          if (saved && typeof saved === 'object') {
+            filters.search = String(saved.search || '');
+            filters.categories = (saved.categories && typeof saved.categories === 'object') ? saved.categories : {};
+          }
+        }
+      } catch (_e) { /* ignore */ }
+    }
+    function saveFilters() {
+      try { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); } catch (_e) { /* ignore */ }
+    }
+
+    // ── Sidebar (campaign/venues pattern) ─────────────────────────────────────
+    function openSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.add('sidebar-open');
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden', 'false');
+      } else {
+        sidebarEl.classList.remove('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_KEY, '0'); } catch (_) {}
+      }
+    }
+    function closeSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.remove('sidebar-open');
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+      } else {
+        sidebarEl.classList.add('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_KEY, '1'); } catch (_) {}
+      }
+    }
+    function toggleSidebar() {
+      if (isMobile()) { openSidebar(); return; }
+      sidebarEl.classList.contains('sidebar-hidden') ? openSidebar() : closeSidebar();
+    }
+    function restoreSidebarState() {
+      if (isMobile()) return;
+      try { if (localStorage.getItem(SIDEBAR_KEY) === '1') sidebarEl.classList.add('sidebar-hidden'); } catch (_) {}
+    }
+
+    // ── Filter checkboxes (with live counts) ──────────────────────────────────
+    function buildCategoryList() {
+      catListEl.innerHTML = '';
+      CATEGORY_ORDER.forEach(function (cat) {
+        var li = document.createElement('li');
+        li.className = 'venues-filter-item';
+
+        var label = document.createElement('label');
+        label.className = 'venues-filter-check';
+
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = cat;
+        input.checked = !!filters.categories[cat];
+        input.addEventListener('change', function () {
+          if (input.checked) filters.categories[cat] = true;
+          else delete filters.categories[cat];
+          saveFilters();
+          renderGrid();
+        });
+
+        var text = document.createElement('span');
+        text.className = 'venues-filter-check-text';
+        text.textContent = CATEGORY_LABEL[cat];
+
+        var count = document.createElement('span');
+        count.className = 'venues-filter-count';
+        count.dataset.value = cat;
+        count.textContent = '0';
+
+        label.appendChild(input);
+        label.appendChild(text);
+        label.appendChild(count);
+        li.appendChild(label);
+        catListEl.appendChild(li);
+      });
+    }
+
+    // ── Filtering ──────────────────────────────────────────────────────────────
+    function matchesSearch(c) {
+      var q = (filters.search || '').trim().toLowerCase();
+      if (!q) return true;
+      var hay = [c.name || '', c.blurb || '', CATEGORY_LABEL[c.tag] || ''].join(' ').toLowerCase();
+      return hay.indexOf(q) !== -1;
+    }
+    function matchesFilters(c) {
+      if (!matchesSearch(c)) return false;
+      var catKeys = Object.keys(filters.categories);
+      if (catKeys.length && !filters.categories[c.tag]) return false;
+      return true;
+    }
+
+    function updateCounts() {
+      // Each type's count reflects the search box but ignores the type filter,
+      // so the numbers show what selecting that type would yield.
+      CATEGORY_ORDER.forEach(function (cat) {
+        var n = allCampaigns.reduce(function (acc, c) {
+          return acc + ((matchesSearch(c) && c.tag === cat) ? 1 : 0);
+        }, 0);
+        var el = catListEl.querySelector('.venues-filter-count[data-value="' + cat + '"]');
+        if (el) el.textContent = String(n);
+      });
+    }
+
+    // ── Card grid (keeps the existing landing-card look) ──────────────────────
+    function buildCard(c) {
+      var a = document.createElement('a');
+      a.href = '/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug);
+      a.className = 'landing-card';
+      a.innerHTML =
+        '<div class="landing-card-inner">' +
+          '<p class="landing-card-subtitle">' + escapeHtml(CATEGORY_LABEL[c.tag] || c.tag) + '</p>' +
+          '<h3 class="landing-card-title">' + escapeHtml(c.name) + '</h3>' +
+          '<p class="landing-card-desc">' + escapeHtml(c.blurb || '') + '</p>' +
+          '<span class="landing-card-cta">Read ' + escapeHtml(c.name) + ' &rarr;</span>' +
+        '</div>';
+      return a;
+    }
+
+    function renderGrid() {
+      updateCounts();
+      var filtered = allCampaigns.filter(matchesFilters);
+      countEl.textContent = filtered.length === 1 ? '1 campaign' : filtered.length + ' campaigns';
+      grid.innerHTML = '';
+      if (!filtered.length) {
+        var empty = document.createElement('div');
+        empty.className = 'venues-empty';
+        empty.style.gridColumn = '1 / -1';
+        empty.innerHTML = '<p>No campaigns match these filters.</p>' +
+          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+        grid.appendChild(empty);
+        return;
+      }
+      filtered.forEach(function (c) { grid.appendChild(buildCard(c)); });
+    }
+
+    // ── Wiring ──────────────────────────────────────────────────────────────────
+    toggleBtn.addEventListener('click', toggleSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    searchInput.addEventListener('input', function () {
+      filters.search = searchInput.value;
+      saveFilters();
+      renderGrid();
+    });
+    resetBtn.addEventListener('click', function () {
+      filters = { search: '', categories: {} };
+      saveFilters();
+      searchInput.value = '';
+      catListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      renderGrid();
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    loadFilters();
+    restoreSidebarState();
+    buildCategoryList();
+    searchInput.value = filters.search;
+
+    fetch(API_BASE + '/campaigns')
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) {
+        allCampaigns = Array.isArray(data) ? data : [];
+        renderGrid();
+      })
+      .catch(function (err) {
+        grid.innerHTML = '<p class="chapter-error" style="grid-column:1/-1;">Could not load campaigns. Please try again later.</p>';
+        countEl.textContent = '';
+        console.error('[campaigns] landing load error:', err);
+      });
+  })();
+  </script>
 
   <script src="/pv/js/nav.js"></script>
 </body>

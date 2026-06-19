@@ -1319,7 +1319,11 @@ pre {
 
 .landing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* Cap at 3 cards per row while staying responsive: on wide screens the track
+     min grows to a third of the row (gap-aware) so a 4th card never fits, but it
+     never drops below 240px, so cards stay readable and wrap to fewer columns
+     when the viewport is narrow. */
+  grid-template-columns: repeat(auto-fit, minmax(max(240px, calc((100% - 2rem) / 3)), 1fr));
   gap: 1rem;
   margin-bottom: 0;
 }
@@ -1912,15 +1916,34 @@ body.nav-sidebar-open {
   color: var(--text-secondary) !important;
 }
 
-/* ── Back-link in app-header (eclipse.html) ─────────────────────────────────── */
+/* Breadcrumb under the campaign title: Campaigns / <current> (current disabled) */
+.campaign-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+}
 
-.campaign-back-link {
-  color: inherit;
+.campaign-breadcrumb-link {
+  color: var(--accent-red);
   text-decoration: none;
 }
 
-.campaign-back-link:hover {
-  color: var(--accent-red);
+.campaign-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.campaign-breadcrumb-sep {
+  color: var(--text-secondary);
+}
+
+.campaign-breadcrumb-current {
+  color: var(--text-secondary);
+  cursor: default;
 }
 
 /* ── Two-column layout: sidebar + main ──────────────────────────────────────── */
@@ -2053,6 +2076,13 @@ body.nav-sidebar-open {
 
 .campaign-toolbar {
   margin-bottom: 1rem;
+}
+
+/* Single-chapter campaigns hide the Chapters toolbar; add back roughly its
+   vertical footprint (toggle button height + 1rem margin) so the content sits
+   as comfortably below the title as it does on multi-chapter pages. */
+.campaign-main.is-single-chapter {
+  margin-top: 2.85rem;
 }
 
 .campaign-sidebar-toggle-btn {

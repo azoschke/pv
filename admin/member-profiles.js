@@ -19,9 +19,12 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  // Factions with a public roster page; profiles outside these can exist but
-  // are not reachable publicly until the member's faction changes.
-  var ROSTER_FACTIONS = ['Mercenary', 'Pirate'];
+  // Faction display order — mirrors the public Company Roster (roster.js) and
+  // admin members.js so faction tags read the same everywhere.
+  var FACTION_ORDER = [
+    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Contractor', 'NA - No RP', 'No Data'
+  ];
 
   function ProfilePreview(props) {
     var p = props.profile;
@@ -117,10 +120,11 @@
       }
     }
 
-    function rosterFactionsOf(p) {
-      return (p.factions || []).filter(function (f) {
-        return ROSTER_FACTIONS.indexOf(f) !== -1;
-      });
+    function orderedFactionsOf(p) {
+      var fs = (p.factions || []).slice();
+      var known = FACTION_ORDER.filter(function (f) { return fs.indexOf(f) !== -1; });
+      var unknown = fs.filter(function (f) { return FACTION_ORDER.indexOf(f) === -1; });
+      return known.concat(unknown);
     }
 
     var publishedCount = profiles.filter(function (p) { return p.published; }).length;
@@ -138,7 +142,7 @@
           })
         ),
         h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
-          'Published profiles will appear on the public Mercenary / Pirate roster pages.'
+          'Published profiles appear on the public Company Roster.'
         ),
         h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
           publishedCount + ' published · ' + (profiles.length - publishedCount) + ' drafts'
@@ -164,7 +168,7 @@
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Name'),
-                      h('th', null, 'Roster pages'),
+                      h('th', null, 'Factions'),
                       h('th', null, 'Skills'),
                       h('th', null, 'Visibility'),
                       h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
@@ -172,13 +176,13 @@
                   ),
                   h('tbody', null,
                     filtered.map(function (p) {
-                      var pages = rosterFactionsOf(p);
+                      var factionTags = orderedFactionsOf(p);
                       return h('tr', { key: p.member_id },
                         h('td', { style: { fontWeight: 600 } }, p.name),
                         h('td', null,
-                          pages.length
+                          factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },
-                                pages.map(function (f) {
+                                factionTags.map(function (f) {
                                   return h('span', { key: f, className: 'portal-faction-tag' }, f);
                                 })
                               )
