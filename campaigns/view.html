@@ -24,8 +24,10 @@
     <!-- Two-column layout: sidebar + main -->
     <div class="campaign-layout" id="campaign-layout">
 
-      <!-- Chapter sidebar -->
-      <aside class="campaign-sidebar" id="campaign-sidebar" aria-label="Chapter navigation">
+      <!-- Chapter sidebar. Hidden until load decides: single-chapter campaigns
+           never reveal it (avoids a flash), multi-chapter campaigns show it once
+           the chapter list is ready. -->
+      <aside class="campaign-sidebar" id="campaign-sidebar" aria-label="Chapter navigation" style="display:none;">
         <div class="campaign-sidebar-header">
           <span class="campaign-sidebar-title">Chapters</span>
           <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close chapter list">&#10005;</button>
@@ -37,7 +39,7 @@
 
       <!-- Main content area -->
       <main class="campaign-main" id="campaign-main">
-        <div class="campaign-toolbar">
+        <div class="campaign-toolbar" style="display:none;">
           <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle chapter list">
             &#9776; Chapters
           </button>
@@ -277,13 +279,14 @@
             return;
           }
 
-          // Single-chapter campaigns (e.g. one-shots) don't need chapter
-          // navigation: hide the sidebar, its toggle, and the "Chapter" label.
+          // The sidebar + toggle start hidden (see markup). Reveal them only for
+          // multi-chapter campaigns; single-chapter campaigns (e.g. one-shots)
+          // keep them hidden and also drop the "Chapter" label, with no flash.
           singleChapter = chapters.length === 1;
-          if (singleChapter) {
-            sidebarEl.style.display = 'none';
+          if (!singleChapter) {
+            sidebarEl.style.display = '';
             var toolbar = document.querySelector('.campaign-toolbar');
-            if (toolbar) toolbar.style.display = 'none';
+            if (toolbar) toolbar.style.display = '';
           }
 
           var wanted = (params.get('ch') || '').trim();
