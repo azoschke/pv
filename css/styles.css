@@ -2089,6 +2089,13 @@ body.nav-sidebar-open {
   margin-bottom: 1rem;
 }
 
+/* Single-chapter campaigns hide the Chapters toolbar; add back roughly its
+   vertical footprint (toggle button height + 1rem margin) so the content sits
+   as comfortably below the title as it does on multi-chapter pages. */
+.campaign-main.is-single-chapter {
+  margin-top: 2.85rem;
+}
+
 .campaign-sidebar-toggle-btn {
   display: inline-flex;
   align-items: center;

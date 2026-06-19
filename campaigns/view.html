@@ -297,6 +297,10 @@
             sidebarEl.style.display = '';
             var toolbar = document.querySelector('.campaign-toolbar');
             if (toolbar) toolbar.style.display = '';
+          } else {
+            // No toolbar to space the content out — add its footprint back.
+            var mainEl = document.getElementById('campaign-main');
+            if (mainEl) mainEl.classList.add('is-single-chapter');
           }
 
           var wanted = (params.get('ch') || '').trim();
