@@ -15,7 +15,7 @@
     <div id="nav-placeholder"></div>
 
     <header class="app-header">
-      <p class="app-subtitle">Phoenix Vanguard</p>
+      <p class="app-subtitle" id="campaign-subtitle">Phoenix Vanguard</p>
       <h1 class="app-title" id="campaign-title">Campaign</h1>
       <nav class="campaign-breadcrumb" aria-label="Breadcrumb">
         <a href="/pv/campaigns/campaigns.html" class="campaign-breadcrumb-link">Campaigns</a>
@@ -70,6 +70,9 @@
   (function () {
 
     var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
+
+    // Campaign type → the small-caps subtitle shown above the title.
+    var CATEGORY_LABEL = { main: 'Main Campaign', side: 'Side Campaign', oneshot: 'One-Shots' };
 
     // Campaign slug comes from ?c=<slug>; the active chapter from ?ch=<slug>.
     // Both live in the URL so every chapter has a permanent, shareable link.
@@ -274,6 +277,8 @@
 
           document.title = campaign.name + ' — Phoenix Vanguard';
           document.getElementById('campaign-title').textContent = campaign.name;
+          var subtitle = document.getElementById('campaign-subtitle');
+          if (subtitle) subtitle.textContent = CATEGORY_LABEL[campaign.tag] || 'Phoenix Vanguard';
           var crumb = document.getElementById('campaign-breadcrumb-current');
           if (crumb) crumb.textContent = campaign.name;
 
