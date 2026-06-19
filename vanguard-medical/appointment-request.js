@@ -13,8 +13,56 @@ const MEDIC_IDS = {
     'Tasha Theja':       '1472340765702225994'
 };
 
+// ── Auth gate ───────────────────────────────────────────────────────────────
+// Requests can only be sent by a logged-in account. When signed out we hide the
+// form and show a "log in to continue" panel that round-trips through the admin
+// login and returns here (same pattern as the job board's apply button). When
+// signed in we prefill the Name field from the account's display name and lock
+// it so the request always matches the logged-in identity.
+function initAppointmentGate() {
+    const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
+    const formWrapper = document.getElementById('form-wrapper');
+    const loginGate = document.getElementById('login-gate');
+
+    if (!session) {
+        if (formWrapper) formWrapper.style.display = 'none';
+        if (loginGate) loginGate.style.display = 'block';
+        const btn = document.getElementById('login-redirect-btn');
+        if (btn) {
+            btn.href = '/pv/admin/login.html?redirect=' +
+                encodeURIComponent(window.location.pathname);
+        }
+        return;
+    }
+
+    if (loginGate) loginGate.style.display = 'none';
+    if (formWrapper) formWrapper.style.display = 'block';
+
+    const accountName = (session.display_name || session.username || '').trim();
+    const nameInput = document.getElementById('appt-name');
+    if (nameInput && accountName) {
+        nameInput.value = accountName;
+        nameInput.readOnly = true;
+    }
+    const note = document.getElementById('appt-name-note');
+    if (note && accountName) {
+        note.textContent = 'Requesting as ' + accountName + '.';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initAppointmentGate);
+
 async function submitAppointmentRequest(event) {
     event.preventDefault();
+
+    // Reassert the session at submit time — a token can expire while the form
+    // sits open. If it has, bounce back through login rather than sending.
+    const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
+    if (!session) {
+        window.location.href = '/pv/admin/login.html?redirect=' +
+            encodeURIComponent(window.location.pathname);
+        return;
+    }
 
     const name = document.getElementById('appt-name').value.trim();
     // Discord caps an embed field value at 1024 chars; clamp so a long reason
@@ -47,7 +95,7 @@ async function submitAppointmentRequest(event) {
                 url: 'https://phoenixvanguard-tools.com/assets/pdf-emblem-web.png'
             },
             fields: [
-                { name: 'Patient Name', value: name, inline: false },
+                { name: 'Name', value: name, inline: false },
                 { name: 'Requested Medic', value: medic, inline: false },
                 { name: 'Reason for Appointment', value: reason, inline: false }
             ],
