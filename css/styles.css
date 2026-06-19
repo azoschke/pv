@@ -1319,7 +1319,11 @@ pre {
 
 .landing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* Cap at 3 cards per row while staying responsive: on wide screens the track
+     min grows to a third of the row (gap-aware) so a 4th card never fits, but it
+     never drops below 240px, so cards stay readable and wrap to fewer columns
+     when the viewport is narrow. */
+  grid-template-columns: repeat(auto-fit, minmax(max(240px, calc((100% - 2rem) / 3)), 1fr));
   gap: 1rem;
   margin-bottom: 0;
 }
