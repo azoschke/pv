@@ -24,42 +24,8 @@
       Select a campaign below to browse its chapters.
     </p>
 
-    <div class="landing-grid">
-
-      <a href="/pv/campaigns/eclipse/eclipse.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">Main Campaign</p>
-          <h3 class="landing-card-title">Symphony of the Eclipse</h3>
-          <p class="landing-card-desc">
-            The Phoenix Vanguard crosses the portal into a realm of crimson light,
-            where familiar aether gives way to something the locals call anima.
-          </p>
-          <span class="landing-card-cta">Read Symphony of the Eclipse chapters &rarr;</span>
-        </div>
-      </a>
-
-      <a href="/pv/campaigns/stormveil/stormveil.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">Side Campaign</p>
-          <h3 class="landing-card-title">Stormveil</h3>
-          <p class="landing-card-desc">
-            What awaits the mercenary team on Stormveil Isle?
-          </p>
-          <span class="landing-card-cta">Read Stormveil chapters &rarr;</span>
-        </div>
-      </a>
-
-      <a href="/pv/campaigns/one-shots/one-shots.html" class="landing-card">
-        <div class="landing-card-inner">
-          <p class="landing-card-subtitle">One-Shots</p>
-          <h3 class="landing-card-title">One-Shots</h3>
-          <p class="landing-card-desc">
-            Standalone adventures and side stories from the Phoenix Vanguard.
-          </p>
-          <span class="landing-card-cta">Read One-Shots &rarr;</span>
-        </div>
-      </a>
-
+    <div class="landing-grid" id="campaign-landing-grid">
+      <div class="chapter-loading" style="grid-column:1/-1;">Loading campaigns&hellip;</div>
     </div>
 
     <div class="disclaimer">
@@ -67,6 +33,52 @@
       FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
     </div>
   </div>
+
+  <script>
+  (function () {
+    var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
+    var grid = document.getElementById('campaign-landing-grid');
+
+    // Tag → the small-caps label shown above each card title.
+    var TAG_LABEL = { main: 'Main Campaign', side: 'Side Campaign', oneshot: 'One-Shots' };
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function render(campaigns) {
+      if (!campaigns.length) {
+        grid.innerHTML = '<p class="chapter-loading" style="grid-column:1/-1;">No campaigns yet. Check back soon.</p>';
+        return;
+      }
+      grid.innerHTML = '';
+      campaigns.forEach(function (c) {
+        var href = '/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug);
+        var a = document.createElement('a');
+        a.href = href;
+        a.className = 'landing-card';
+        a.innerHTML =
+          '<div class="landing-card-inner">' +
+            '<p class="landing-card-subtitle">' + escapeHtml(TAG_LABEL[c.tag] || c.tag) + '</p>' +
+            '<h3 class="landing-card-title">' + escapeHtml(c.name) + '</h3>' +
+            '<p class="landing-card-desc">' + escapeHtml(c.blurb || '') + '</p>' +
+            '<span class="landing-card-cta">Read ' + escapeHtml(c.name) + ' &rarr;</span>' +
+          '</div>';
+        grid.appendChild(a);
+      });
+    }
+
+    fetch(API_BASE + '/campaigns')
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) { render(Array.isArray(data) ? data : []); })
+      .catch(function (err) {
+        grid.innerHTML = '<p class="chapter-error" style="grid-column:1/-1;">Could not load campaigns. Please try again later.</p>';
+        console.error('[campaigns] landing load error:', err);
+      });
+  })();
+  </script>
 
   <script src="/pv/js/nav.js"></script>
 </body>
