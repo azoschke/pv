@@ -15,10 +15,13 @@
     <div id="nav-placeholder"></div>
 
     <header class="app-header">
-      <p class="app-subtitle">
-        <a href="/pv/campaigns/campaigns.html" class="campaign-back-link">Campaigns</a>
-      </p>
+      <p class="app-subtitle">Phoenix Vanguard</p>
       <h1 class="app-title" id="campaign-title">Campaign</h1>
+      <nav class="campaign-breadcrumb" aria-label="Breadcrumb">
+        <a href="/pv/campaigns/campaigns.html" class="campaign-breadcrumb-link">Campaigns</a>
+        <span class="campaign-breadcrumb-sep" aria-hidden="true">/</span>
+        <span class="campaign-breadcrumb-current" id="campaign-breadcrumb-current" aria-current="page">Campaign</span>
+      </nav>
     </header>
 
     <!-- Two-column layout: sidebar + main -->
@@ -271,6 +274,8 @@
 
           document.title = campaign.name + ' — Phoenix Vanguard';
           document.getElementById('campaign-title').textContent = campaign.name;
+          var crumb = document.getElementById('campaign-breadcrumb-current');
+          if (crumb) crumb.textContent = campaign.name;
 
           buildChapterList();
 

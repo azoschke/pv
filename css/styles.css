@@ -1927,6 +1927,36 @@ body.nav-sidebar-open {
   color: var(--accent-red);
 }
 
+/* Breadcrumb under the campaign title: Campaigns / <current> (current disabled) */
+.campaign-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+}
+
+.campaign-breadcrumb-link {
+  color: var(--accent-red);
+  text-decoration: none;
+}
+
+.campaign-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.campaign-breadcrumb-sep {
+  color: var(--text-secondary);
+}
+
+.campaign-breadcrumb-current {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
 /* ── Two-column layout: sidebar + main ──────────────────────────────────────── */
 
 .campaign-layout {
