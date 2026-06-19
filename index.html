@@ -137,32 +137,38 @@
   </div>
 
   <script>
-  // Flood the Campaigns row with every campaign from the worker; "All Campaigns"
-  // stays as the static first entry and each campaign links to the new viewer.
+  // Flood the Campaigns row from the worker: "All Campaigns" stays first, then
+  // each main + side campaign links to the viewer, and One-Shots collapses to a
+  // single link into the landing's one-shots filter (mirrors the nav dropdown).
   (function () {
     var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
     var list = document.getElementById('index-campaign-list');
     if (!list) return;
+    function addLink(href, label) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = href;
+      var name = document.createElement('span');
+      name.className = 'tool-list-name';
+      name.textContent = label;
+      var arrow = document.createElement('span');
+      arrow.className = 'tool-list-arrow';
+      arrow.innerHTML = '&rarr;';
+      a.appendChild(name);
+      a.appendChild(arrow);
+      li.appendChild(a);
+      list.appendChild(li);
+    }
     fetch(API_BASE + '/campaigns')
       .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(function (campaigns) {
         if (!Array.isArray(campaigns)) return;
-        campaigns.forEach(function (c) {
-          if (!c || !c.slug) return;
-          var li = document.createElement('li');
-          var a = document.createElement('a');
-          a.href = '/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug);
-          var name = document.createElement('span');
-          name.className = 'tool-list-name';
-          name.textContent = c.name || c.slug;
-          var arrow = document.createElement('span');
-          arrow.className = 'tool-list-arrow';
-          arrow.innerHTML = '&rarr;';
-          a.appendChild(name);
-          a.appendChild(arrow);
-          li.appendChild(a);
-          list.appendChild(li);
+        var mains = campaigns.filter(function (c) { return c && c.slug && c.tag === 'main'; });
+        var sides = campaigns.filter(function (c) { return c && c.slug && c.tag === 'side'; });
+        mains.concat(sides).forEach(function (c) {
+          addLink('/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug), c.name || c.slug);
         });
+        addLink('/pv/campaigns/campaigns.html?tag=oneshot', 'One-Shots');
       })
       .catch(function (err) { console.warn('[index] Could not load campaigns:', err); });
   })();

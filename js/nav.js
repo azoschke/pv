@@ -139,34 +139,74 @@
 
   function renderCampaignMenus(placeholder, campaigns) {
     const activeSlug = currentCampaignSlug();
+
+    // Are we on the landing filtered to one-shots (the One-Shots menu target)?
+    let oneshotActive = false;
+    try {
+      const loc = getCurrentLocation();
+      if (loc.section === 'campaigns' && loc.page === 'campaigns') {
+        oneshotActive = (new URLSearchParams(window.location.search).get('tag') || '').toLowerCase() === 'oneshot';
+      }
+    } catch (_e) { oneshotActive = false; }
+
+    // Main + side campaigns are listed individually so they're always visible;
+    // one-shots collapse into a single "One-Shots" entry that opens the landing
+    // pre-filtered, keeping the dropdown from growing without bound.
+    const mains = campaigns.filter(function (c) { return c && c.slug && c.tag === 'main'; });
+    const sides = campaigns.filter(function (c) { return c && c.slug && c.tag === 'side'; });
+    const listed = mains.concat(sides);
+
     placeholder.querySelectorAll('[data-campaign-menu]').forEach(function (menu) {
       // Drop any previously injected items so a background refresh can re-render.
       menu.querySelectorAll('.nav-campaign-dynamic').forEach(function (el) { el.remove(); });
       const isDesktop = menu.classList.contains('nav-submenu');
-      campaigns.forEach(function (c) {
-        if (!c || !c.slug) return;
+      const parent = menu.closest('.nav-dropdown, .nav-sidebar-section');
+      const toggle = parent && parent.querySelector('.nav-dropdown-toggle, .nav-sidebar-toggle');
+
+      function activateParent() {
+        if (!parent) return;
+        parent.classList.add('active');
+        if (parent.classList.contains('nav-sidebar-section')) parent.classList.add('open');
+        if (toggle) { toggle.classList.add('active'); toggle.setAttribute('aria-expanded', 'true'); }
+      }
+      function makeItem(href, label, subpage, isActive) {
         const li = document.createElement('li');
         li.className = 'nav-campaign-dynamic';
         if (isDesktop) li.setAttribute('role', 'none');
         const a = document.createElement('a');
         if (isDesktop) a.setAttribute('role', 'menuitem');
         a.className = 'nav-sublink';
-        a.href = BASE_PATH + '/campaigns/view.html?c=' + encodeURIComponent(c.slug);
-        a.setAttribute('data-subpage', 'campaign-' + c.slug);
-        a.textContent = c.name || c.slug; // textContent: never inject names as HTML
-        if (activeSlug && c.slug === activeSlug) {
-          a.classList.add('active');
-          const parent = menu.closest('.nav-dropdown, .nav-sidebar-section');
-          if (parent) {
-            parent.classList.add('active');
-            if (parent.classList.contains('nav-sidebar-section')) parent.classList.add('open');
-            const tog = parent.querySelector('.nav-dropdown-toggle, .nav-sidebar-toggle');
-            if (tog) { tog.classList.add('active'); tog.setAttribute('aria-expanded', 'true'); }
-          }
-        }
+        a.href = href;
+        a.setAttribute('data-subpage', subpage);
+        a.textContent = label; // textContent: never inject names as HTML
+        if (isActive) { a.classList.add('active'); activateParent(); }
         li.appendChild(a);
         menu.appendChild(li);
+      }
+
+      listed.forEach(function (c) {
+        makeItem(
+          BASE_PATH + '/campaigns/view.html?c=' + encodeURIComponent(c.slug),
+          c.name || c.slug,
+          'campaign-' + c.slug,
+          !!(activeSlug && c.slug === activeSlug)
+        );
       });
+
+      // One-Shots always shows, even with none yet (a known category).
+      makeItem(
+        BASE_PATH + '/campaigns/campaigns.html?tag=oneshot',
+        'One-Shots',
+        'campaigns-oneshots',
+        oneshotActive
+      );
+
+      // When One-Shots is the active view, drop the implicit "All Campaigns"
+      // highlight so only one item reads as current.
+      if (oneshotActive) {
+        const all = menu.querySelector('.nav-sublink[data-subpage="campaigns"]');
+        if (all) all.classList.remove('active');
+      }
     });
   }
 
