@@ -1916,17 +1916,6 @@ body.nav-sidebar-open {
   color: var(--text-secondary) !important;
 }
 
-/* ── Back-link in app-header (eclipse.html) ─────────────────────────────────── */
-
-.campaign-back-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.campaign-back-link:hover {
-  color: var(--accent-red);
-}
-
 /* Breadcrumb under the campaign title: Campaigns / <current> (current disabled) */
 .campaign-breadcrumb {
   display: flex;
