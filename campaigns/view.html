@@ -75,6 +75,7 @@
     var chapters      = [];     // [{ id, slug, title, chapter_date, has_tldr }]
     var activeSlug    = null;
     var showingTldr   = false;
+    var singleChapter = false;  // hide chapter nav/label when a campaign has one chapter
     var chapterCache  = {};     // chapterSlug -> { main: html, tldr: html|null }
 
     // DOM refs (resolved after DOMContentLoaded)
@@ -200,7 +201,7 @@
       chapterContent.innerHTML =
         '<div class="chapter-view-header">' +
           '<div class="chapter-view-meta">' +
-            '<p class="chapter-view-label">Chapter</p>' +
+            (singleChapter ? '' : '<p class="chapter-view-label">Chapter</p>') +
             '<h2 class="chapter-view-title">' + escapeHtml(data.title) + '</h2>' +
             '<p class="chapter-view-date">'  + escapeHtml(data.date)  + '</p>' +
           '</div>' +
@@ -274,6 +275,15 @@
           if (!chapters.length) {
             showFatal('This campaign has no chapters yet.');
             return;
+          }
+
+          // Single-chapter campaigns (e.g. one-shots) don't need chapter
+          // navigation: hide the sidebar, its toggle, and the "Chapter" label.
+          singleChapter = chapters.length === 1;
+          if (singleChapter) {
+            sidebarEl.style.display = 'none';
+            var toolbar = document.querySelector('.campaign-toolbar');
+            if (toolbar) toolbar.style.display = 'none';
           }
 
           var wanted = (params.get('ch') || '').trim();
