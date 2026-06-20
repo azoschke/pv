@@ -9,7 +9,7 @@ const MEDIC_IDS = {
     'Nikita Lynkasch':   '224310874180026378',
     'Yumiko Moonstone':  '400723333517410315',
     'Camily Mily':       '593575045255659520',
-    'Rivienne Zevraz':   '215649054120476674',
+    'Tsukiko Fujiwara':   '215649054120476674',
     'Tasha Theja':       '1472340765702225994'
 };
 
