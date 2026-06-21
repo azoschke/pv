@@ -485,7 +485,7 @@
                       h('div', { className: 'portal-field' }, h('label', null, 'Armor'),
                         h('select', { value: pickArmor, onChange: function (e) { setPickArmor(e.target.value); } },
                           ARMOR_TYPES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-                      h('button', { type: 'button', className: 'portal-btn is-small', onClick: addCharacter }, 'Add')
+                      h('button', { type: 'button', className: 'portal-btn', onClick: addCharacter }, 'Add')
                     )
                 )
               ) : null

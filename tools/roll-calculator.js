@@ -134,7 +134,7 @@
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'lock'),
       h('h2', null, 'Members only'),
       h('p', null, 'Sign in with your character account to use the Roll Calculator.'),
-      h('a', { className: 'rp-btn', href: '/pv/admin/login.html' }, 'Sign in')
+      h('a', { className: 'rp-btn', href: '/pv/admin/login.html?redirect=/pv/tools/roll-calculator.html' }, 'Sign in')
     );
   }
   function PausedCard(props) {
@@ -250,6 +250,41 @@
     );
   }
 
+  // One buff slot: a roll-type dropdown plus a free-typed value. The value
+  // commits on blur / Enter (or when the type changes) so we don't PATCH on
+  // every keystroke.
+  function BuffSlotRow(props) {
+    var slot = props.slot;
+    var type = slot ? slot.type : '';
+    var valState = useState(slot ? String(slot.value) : '1');
+    var val = valState[0], setVal = valState[1];
+    useEffect(function () { setVal(slot ? String(slot.value) : '1'); }, [type, slot ? slot.value : null]);
+
+    function commit(nextType, raw) {
+      if (!nextType) { props.onChange(null); return; }
+      var n = parseInt(raw, 10);
+      if (isNaN(n)) n = 0;
+      props.onChange({ type: nextType, value: n });
+    }
+
+    return h('div', { className: 'rp-buff-row' },
+      h('span', { className: 'rp-buff-label' }, props.label),
+      h('div', { className: 'rp-buff-controls' },
+        h('select', { className: 'rp-select', value: type, disabled: props.disabled,
+          onChange: function (e) { commit(e.target.value, val); } },
+          h('option', { value: '' }, '— empty —'),
+          h('option', { value: 'attack_roll' }, 'Attack'),
+          h('option', { value: 'defense_roll' }, 'Defense'),
+          h('option', { value: 'heal_roll' }, 'Heal')
+        ),
+        type ? h('input', { className: 'rp-buff-val', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
+          onChange: function (e) { setVal(e.target.value); },
+          onBlur: function () { commit(type, val); },
+          onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }) : null
+      )
+    );
+  }
+
   // ── Buff & shield panel ───────────────────────────────────────────────────
   function BuffPanel(props) {
     var c = props.character;
@@ -291,18 +326,8 @@
       h('h3', null, 'Buffs & Shield'),
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       slots.map(function (slot, idx) {
-        return h('div', { className: 'rp-buff-row', key: idx },
-          h('span', { className: 'rp-buff-label' }, 'Slot ' + (idx + 1)),
-          h('select', {
-            className: 'rp-select', value: slot ? slot.type : '', disabled: saving,
-            onChange: function (e) { setSlot(idx, e.target.value ? { type: e.target.value, value: 1 } : null); }
-          },
-            h('option', { value: '' }, '— empty —'),
-            h('option', { value: 'attack_roll' }, 'Attack +1'),
-            h('option', { value: 'defense_roll' }, 'Defense +1'),
-            h('option', { value: 'heal_roll' }, 'Heal +1')
-          )
-        );
+        return h(BuffSlotRow, { key: idx, label: 'Slot ' + (idx + 1), slot: slot, disabled: saving,
+          onChange: function (value) { setSlot(idx, value); } });
       }),
       h('div', { className: 'rp-buff-row' },
         h('span', { className: 'rp-buff-label' }, 'Shield'),
@@ -314,7 +339,7 @@
             onClick: function () { setShield(shield + 1); } }, '+')
         )
       ),
-      h('p', { className: 'rp-note' }, 'Stat buffs cap at +1. Shield absorbs flat damage (0–3). Max 3 slots total.')
+      h('p', { className: 'rp-note' }, 'Pick a roll type and enter the buff value. Shield absorbs flat damage (0–3). Max 3 slots total.')
     );
   }
 

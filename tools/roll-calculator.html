@@ -62,7 +62,9 @@
 
     .rp-buff-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.35rem 0; }
     .rp-buff-label { color: var(--text-secondary); font-size: 0.9rem; }
+    .rp-buff-controls { display: flex; gap: 0.4rem; align-items: center; }
     .rp-select { padding: 0.35rem 0.5rem; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; }
+    .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
 
     .rp-stepper { display: inline-flex; align-items: center; gap: 0.5rem; }
     .rp-stepper-val, .rp-hp { min-width: 3.5rem; text-align: center; font-variant-numeric: tabular-nums; }
@@ -100,6 +102,10 @@
   <div class="container">
     <div id="nav-placeholder"></div>
     <div id="app"></div>
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
   </div>
 
   <script src="/pv/admin/api.js"></script>
