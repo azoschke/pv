@@ -46,7 +46,19 @@
     var hpState = useState(String(ch.max_hp)); var maxHp = hpState[0], setMaxHp = hpState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
 
+    var itemsState = useState(null); var items = itemsState[0], setItems = itemsState[1]; // attached items, null = loading
+    var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
+    var itemErrState = useState(''); var itemErr = itemErrState[0], setItemErr = itemErrState[1];
+
     var dirty = role !== ch.class_role || armor !== ch.armor_type || String(ch.max_hp) !== maxHp;
+
+    async function loadItems() {
+      try {
+        var rows = await PVRollAPI.request('GET', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items');
+        setItems(rows || []);
+      } catch (e) { setItemErr(e.message); setItems([]); }
+    }
+    useEffect(function () { loadItems(); /* eslint-disable-next-line */ }, [ch.member_id]);
 
     async function save() {
       setSaving(true);
@@ -54,6 +66,25 @@
         await props.onSave(ch.member_id, { class_role: role, armor_type: armor, max_hp: parseInt(maxHp, 10) || ch.max_hp });
       } finally { setSaving(false); }
     }
+
+    async function addItem() {
+      if (!pick) return;
+      setItemErr('');
+      try {
+        await PVRollAPI.request('POST', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items', { item_id: pick, equipped: true });
+        setPick(''); await loadItems();
+      } catch (e) { setItemErr(e.message); }
+    }
+    async function removeItem(it) {
+      setItemErr('');
+      try {
+        await PVRollAPI.request('DELETE', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items/' + it.item_id);
+        await loadItems();
+      } catch (e) { setItemErr(e.message); }
+    }
+
+    var attachedIds = {}; (items || []).forEach(function (i) { attachedIds[i.item_id] = true; });
+    var available = (props.catalogue || []).filter(function (c) { return !attachedIds[c.id]; });
 
     return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
@@ -77,62 +108,34 @@
           h('input', { type: 'number', value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })
         )
       ),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
+
+      // Attached items (inline)
+      h('div', { style: { marginTop: '0.6rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' } },
+        h('label', { style: { display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: '0.35rem' } }, 'Items'),
+        itemErr ? h('div', { className: 'portal-flash error' }, itemErr) : null,
+        items === null ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'Loading…') :
+          (!items.length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 0.4rem' } }, 'No items attached.') :
+            items.map(function (it) {
+              return h('div', { key: it.item_id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' } },
+                h('span', null, it.name),
+                props.canEquip ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+                  onClick: function () { removeItem(it); } }, 'Remove') : null
+              );
+            })),
+        props.canEquip ? h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
+          h('select', { value: pick, style: { flex: '1 1 12rem' }, onChange: function (e) { setPick(e.target.value); } },
+            h('option', { value: '' }, available.length ? '— add an item —' : 'No more items to add'),
+            available.map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); })),
+          h('button', { type: 'button', className: 'portal-btn is-small', disabled: !pick, onClick: addItem }, 'Add item')
+        ) : null
+      ),
+
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' } },
         h('button', { type: 'button', className: 'portal-btn is-small', disabled: !dirty || saving, onClick: save },
           saving ? 'Saving…' : 'Save'),
-        props.canEquip ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
-          onClick: function () { props.onManageItems(ch); } }, 'Items') : null,
         h('button', { type: 'button', className: 'portal-btn is-small is-danger',
           onClick: function () { props.onRemove(ch); } }, 'Remove')
       )
-    );
-  }
-
-  // ── Item equip modal ──────────────────────────────────────────────────────
-  function EquipModal(props) {
-    var ch = props.character;
-    var items = props.items;          // full catalogue
-    var equippedState = useState(null); var equipped = equippedState[0], setEquipped = equippedState[1];
-    var errState = useState(''); var err = errState[0], setErr = errState[1];
-
-    async function load() {
-      try {
-        var rows = await PVRollAPI.request('GET',
-          '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items');
-        var map = {}; (rows || []).forEach(function (r) { map[r.item_id] = !!r.equipped; });
-        setEquipped(map);
-      } catch (e) { setErr(e.message); }
-    }
-    useEffect(function () { load(); /* eslint-disable-next-line */ }, []);
-
-    async function toggle(item, on) {
-      setErr('');
-      try {
-        if (on) {
-          await PVRollAPI.request('POST', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items',
-            { item_id: item.id, equipped: true });
-        } else {
-          await PVRollAPI.request('DELETE', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items/' + item.id);
-        }
-        var next = Object.assign({}, equipped); next[item.id] = on; setEquipped(next);
-      } catch (e) { setErr(e.message); }
-    }
-
-    return h(PVAdminModal, { title: 'Items — ' + ch.member_name, onClose: props.onClose },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
-      equipped === null ? h('p', null, 'Loading…') :
-        (!items.length ? h('p', null, 'No items in the catalogue yet.') :
-          items.map(function (it) {
-            var on = !!equipped[it.id];
-            return h('div', { key: it.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)' } },
-              h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
-                h('strong', null, it.name),
-                it.description ? h('div', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, it.description) : null
-              ),
-              h('button', { type: 'button', className: 'portal-btn is-small' + (on ? ' is-danger' : ''),
-                onClick: function () { toggle(it, !on); } }, on ? 'Unequip' : 'Equip')
-            );
-          }))
     );
   }
 
@@ -340,7 +343,6 @@
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
     var itemFormState = useState(null); var itemForm = itemFormState[0], setItemForm = itemFormState[1];
-    var equipState = useState(null); var equipFor = equipState[0], setEquipFor = equipState[1];
 
     async function loadCampaigns() {
       try { setCampaigns(await PVRollAPI.request('GET', '/rp/campaigns') || []); }
@@ -471,7 +473,8 @@
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 roster.map(function (ch) {
                   return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
-                    onSave: saveCharacter, onRemove: removeCharacter, onManageItems: function (x) { setEquipFor(x); } });
+                    campaignId: selected.id, catalogue: items,
+                    onSave: saveCharacter, onRemove: removeCharacter });
                 }),
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginTop: '0.5rem' } },
                   h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Add a member'),
@@ -502,10 +505,7 @@
           items.map(function (it) {
             return h(ItemCard, { key: it.id, item: it, onEdit: function (x) { setItemForm({ item: x }); }, onDelete: deleteItem });
           })
-      ) : null,
-
-      equipFor ? h(EquipModal, { character: equipFor, campaignId: selected.id, items: items,
-        onClose: function () { setEquipFor(null); loadRoster(selected.id); } }) : null
+      ) : null
     );
   }
 
