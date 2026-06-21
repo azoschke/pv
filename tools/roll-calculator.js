@@ -51,6 +51,17 @@
 
   function fmt(n) { return (n >= 0 ? '+' : '') + n; }
 
+  // Apply fresh ability use counts (by ability id) onto the nested items list.
+  function mergeUses(items, uses) {
+    return (items || []).map(function (it) {
+      return Object.assign({}, it, {
+        abilities: (it.abilities || []).map(function (a) {
+          return uses[a.id] != null ? Object.assign({}, a, { uses_this_session: uses[a.id] }) : a;
+        })
+      });
+    });
+  }
+
   // Compute one roll's modifier stack. kind: 'attack' | 'defense' | 'heal'.
   function computeRoll(kind, raw, ctx) {
     var rollType = kind === 'attack' ? 'attack_roll' : kind === 'defense' ? 'defense_roll' : 'heal_roll';
@@ -71,13 +82,13 @@
     if (kind === 'attack'  && c.class_role === 'dps')  add('DPS Passive', 1);
     if (kind === 'defense' && c.class_role === 'tank') add('Tank Passive', 2);
 
-    // 3. Equipped item passives (roll-type)
-    ctx.equipped.forEach(function (it) {
-      if (it.equipped && it.modifier_type === rollType && it.passive_modifier) add(it.name, it.passive_modifier);
+    // 3. Equipped item passive abilities (self scope, roll-type)
+    ctx.selfPassives.forEach(function (p) {
+      if (p.modifier_type === rollType) add(p.name, p.modifier_value);
     });
 
-    // 4. Active group-action bonuses (eligible to my class)
-    ctx.groupBonuses.forEach(function (g) {
+    // 4. Group modifiers — activated bonuses + always-on passive auras (eligible to my class)
+    ctx.groupMods.forEach(function (g) {
       if (g.modifier_type === rollType && eligibleForGroup(g, c.class_role)) {
         add('Group: ' + g.item_name + ' (' + g.ability_name + ')', g.modifier_value);
       }
@@ -98,10 +109,10 @@
     var outputTotal = 0;
     if (outputType) {
       function addOut(label, value) { if (value) { outputRows.push({ label: label, value: value }); outputTotal += value; } }
-      ctx.equipped.forEach(function (it) {
-        if (it.equipped && it.modifier_type === outputType && it.passive_modifier) addOut(it.name, it.passive_modifier);
+      ctx.selfPassives.forEach(function (p) {
+        if (p.modifier_type === outputType) addOut(p.name, p.modifier_value);
       });
-      ctx.groupBonuses.forEach(function (g) {
+      ctx.groupMods.forEach(function (g) {
         if (g.modifier_type === outputType && eligibleForGroup(g, c.class_role)) addOut('Group: ' + g.item_name, g.modifier_value);
       });
       ctx.activeAbilities.forEach(function (a) {
@@ -219,32 +230,50 @@
     );
   }
 
-  // ── Abilities ─────────────────────────────────────────────────────────────
-  function AbilitiesPanel(props) {
-    var abilities = props.abilities;
-    if (!abilities.length) return null;
+  // ── My Items (full descriptions + activation buttons) ─────────────────────
+  function modSummary(a) {
+    if (a.modifier_type === 'none') return null;
+    if (a.modifier_type === 'shield') return fmt(a.modifier_value) + ' shield (' + a.target_scope + ')';
+    return fmt(a.modifier_value) + ' ' + a.modifier_type.replace('_', ' ') + ' · ' + a.target_scope;
+  }
+
+  function ItemsPanel(props) {
+    var items = props.items;
+    if (!items.length) return h('div', { className: 'rp-card' },
+      h('h3', null, 'My Items'), h('p', { className: 'rp-note' }, 'No items equipped. An admin assigns and equips items.'));
+
     return h('div', { className: 'rp-card' },
-      h('h3', null, 'Item Abilities'),
-      abilities.map(function (a) {
-        var remaining = a.uses_per_session - a.uses_this_session;
-        var eligible = a.eligible_roles.indexOf('all') !== -1 || a.eligible_roles.indexOf(props.classRole) !== -1;
-        var spent = remaining <= 0;
-        var active = props.activeIds.indexOf(a.id) !== -1;
-        return h('div', { className: 'rp-ability', key: a.id },
-          h('div', { className: 'rp-ability-info' },
-            h('strong', null, a.name),
-            h('span', { className: 'rp-ability-meta' },
-              a.item_name + ' · ' + fmt(a.modifier_value) + ' ' + a.modifier_type.replace('_', ' ') +
-              ' · ' + a.target_scope + ' · ' + remaining + '/' + a.uses_per_session + ' uses'),
-            a.description ? h('span', { className: 'rp-ability-desc' }, a.description) : null
-          ),
-          h('button', {
-            type: 'button',
-            className: 'rp-btn is-small' + (active ? ' is-active' : ''),
-            disabled: !eligible || spent || props.busy,
-            title: !eligible ? 'Your class can’t use this' : (spent ? 'No uses left this session' : ''),
-            onClick: function () { props.onActivate(a); }
-          }, spent ? 'Spent' : (active ? 'Active' : 'Activate'))
+      h('h3', null, 'My Items'),
+      items.map(function (it) {
+        return h('div', { className: 'rp-item', key: it.item_id },
+          h('div', { className: 'rp-item-name' }, it.name),
+          it.description ? h('p', { className: 'rp-item-flavor' }, it.description) : null,
+          (it.abilities || []).map(function (a) {
+            var isPassive = a.activation === 'passive';
+            var eligible = a.eligible_roles.indexOf('all') !== -1 || a.eligible_roles.indexOf(props.classRole) !== -1;
+            var remaining = a.uses_per_session - a.uses_this_session;
+            var spent = remaining <= 0;
+            var active = props.activeIds.indexOf(a.id) !== -1;
+            var summary = modSummary(a);
+            return h('div', { className: 'rp-ability', key: a.id },
+              h('div', { className: 'rp-ability-info' },
+                h('div', null,
+                  h('span', { className: 'rp-ability-tag' + (isPassive ? ' is-passive' : '') }, isPassive ? 'Passive' : 'Active'),
+                  h('strong', null, ' ' + a.name)
+                ),
+                summary ? h('span', { className: 'rp-ability-meta' }, summary +
+                  (isPassive ? '' : ' · ' + remaining + '/' + a.uses_per_session + ' uses')) : null,
+                a.description ? h('span', { className: 'rp-ability-desc' }, a.description) : null
+              ),
+              isPassive ? null : h('button', {
+                type: 'button',
+                className: 'rp-btn is-small' + (active ? ' is-active' : ''),
+                disabled: !eligible || spent || props.busy,
+                title: !eligible ? 'Your class can’t use this' : (spent ? 'No uses left this session' : ''),
+                onClick: function () { props.onActivate(a); }
+              }, spent ? 'Spent' : (active ? 'Active' : 'Activate'))
+            );
+          })
         );
       })
     );
@@ -285,6 +314,21 @@
     );
   }
 
+  // Shield is free-typed now (auto-pushed group shields can exceed the old 0–3).
+  function ShieldRow(props) {
+    var valState = useState(String(props.value));
+    var val = valState[0], setVal = valState[1];
+    useEffect(function () { setVal(String(props.value)); }, [props.value]);
+    function commit() { var n = parseInt(val, 10); if (isNaN(n)) n = 0; props.onCommit(n); }
+    return h('div', { className: 'rp-buff-row' },
+      h('span', { className: 'rp-buff-label' }, 'Shield'),
+      h('input', { className: 'rp-buff-val', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
+        onChange: function (e) { setVal(e.target.value); },
+        onBlur: commit,
+        onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } })
+    );
+  }
+
   // ── Buff & shield panel ───────────────────────────────────────────────────
   function BuffPanel(props) {
     var c = props.character;
@@ -317,7 +361,7 @@
     }
 
     function setShield(v) {
-      var val = Math.max(0, Math.min(3, v));
+      var val = Math.max(0, v);
       if (occupied(slots, val) > 3) { setErr('Buff slots full (max 3; shield counts as one).'); return; }
       patch({ shield_value: val });
     }
@@ -329,17 +373,8 @@
         return h(BuffSlotRow, { key: idx, label: 'Slot ' + (idx + 1), slot: slot, disabled: saving,
           onChange: function (value) { setSlot(idx, value); } });
       }),
-      h('div', { className: 'rp-buff-row' },
-        h('span', { className: 'rp-buff-label' }, 'Shield'),
-        h('div', { className: 'rp-stepper' },
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: saving || shield <= 0,
-            onClick: function () { setShield(shield - 1); } }, '−'),
-          h('span', { className: 'rp-stepper-val' }, String(shield)),
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: saving || shield >= 3,
-            onClick: function () { setShield(shield + 1); } }, '+')
-        )
-      ),
-      h('p', { className: 'rp-note' }, 'Pick a roll type and enter the buff value. Shield absorbs flat damage (0–3). Max 3 slots total.')
+      h(ShieldRow, { value: shield, disabled: saving, onCommit: setShield }),
+      h('p', { className: 'rp-note' }, 'Pick a roll type and enter the buff value. Shield absorbs flat damage. Max 3 slots total (shield counts as one). Group shields from abilities are added automatically.')
     );
   }
 
@@ -438,17 +473,14 @@
           var cur = dataRef.current;
           if (!cur) return;
           var me = s.party.filter(function (p) { return p.member_id === cur.character.member_id; })[0];
-          // Merge ability use counts into the bootstrap ability list.
           var uses = {};
           (s.ability_uses || []).forEach(function (u) { uses[u.ability_id] = u.uses_this_session; });
-          var abilities = cur.abilities.map(function (a) {
-            return Object.assign({}, a, { uses_this_session: uses[a.id] != null ? uses[a.id] : a.uses_this_session });
-          });
           setData(Object.assign({}, cur, {
             party: s.party,
             group_bonuses: s.group_bonuses,
+            group_auras: s.group_auras,
             character: me || cur.character,
-            abilities: abilities
+            items: mergeUses(cur.items, uses)
           }));
         } catch (_e) { /* transient; next tick retries */ }
       }, POLL_MS);
@@ -461,7 +493,7 @@
       try {
         var s = await PVRollAPI.request('GET', '/rp/campaigns/' + cur.campaign.id + '/sync');
         var me = s.party.filter(function (p) { return p.member_id === cur.character.member_id; })[0];
-        setData(Object.assign({}, dataRef.current, { party: s.party, group_bonuses: s.group_bonuses, character: me || cur.character }));
+        setData(Object.assign({}, dataRef.current, { party: s.party, group_bonuses: s.group_bonuses, group_auras: s.group_auras, character: me || cur.character }));
       } catch (_e) {}
     }
 
@@ -485,8 +517,11 @@
       setBusy(true); setErr('');
       try {
         var res = await PVRollAPI.request('POST', '/rp/abilities/' + a.id + '/activate', { campaign_id: cur.campaign.id });
-        // self abilities become a local active modifier on this turn's stack
-        if (a.target_scope === 'self') {
+        // A self roll/output ability becomes a local modifier on this turn's stack.
+        // Group bonuses arrive as a banner on refresh; group shields are auto-pushed
+        // server-side; self shields are set manually.
+        var isRollOutput = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output'].indexOf(a.modifier_type) !== -1;
+        if (a.target_scope === 'self' && isRollOutput) {
           setActiveAbilities(function (prev) {
             if (prev.some(function (x) { return x.id === a.id; })) return prev;
             return prev.concat([a]);
@@ -495,11 +530,8 @@
         // reflect the spent use immediately
         setData(function (prev) {
           if (!prev) return prev;
-          return Object.assign({}, prev, {
-            abilities: prev.abilities.map(function (x) {
-              return x.id === a.id ? Object.assign({}, x, { uses_this_session: res.uses_this_session }) : x;
-            })
-          });
+          var u = {}; u[a.id] = res.uses_this_session;
+          return Object.assign({}, prev, { items: mergeUses(prev.items, u) });
         });
         await refresh();
       } catch (e) { setErr(e.message || 'Failed to activate.'); }
@@ -525,10 +557,20 @@
     }
 
     var c = data.character;
+    var items = data.items || [];
+    // Flat self-passive modifiers (roll/output) drawn from equipped passive abilities.
+    var selfPassives = [];
+    items.forEach(function (it) {
+      (it.abilities || []).forEach(function (a) {
+        if (a.activation === 'passive' && a.target_scope === 'self') selfPassives.push({ name: a.name, modifier_type: a.modifier_type, modifier_value: a.modifier_value });
+      });
+    });
+    // Group modifiers = activated bonuses + always-on passive auras.
+    var groupMods = (data.group_bonuses || []).concat(data.group_auras || []);
     var ctx = {
       character: c,
-      equipped: data.equipped_items || [],
-      groupBonuses: data.group_bonuses || [],
+      selfPassives: selfPassives,
+      groupMods: groupMods,
       activeAbilities: activeAbilities
     };
 
@@ -557,8 +599,8 @@
           h(AttackPanel, { ctx: ctx }),
           h(DefensePanel, { ctx: ctx }),
           c.class_role === 'healer' ? h(HealPanel, { ctx: ctx }) : null,
-          h(AbilitiesPanel, {
-            abilities: data.abilities || [], classRole: c.class_role, busy: busy,
+          h(ItemsPanel, {
+            items: items, classRole: c.class_role, busy: busy,
             activeIds: activeAbilities.map(function (a) { return a.id; }), onActivate: onActivate
           })
         ),
