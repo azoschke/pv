@@ -326,6 +326,8 @@
     var selectedState = useState(null); var selected = selectedState[0], setSelected = selectedState[1]; // campaign object
     var rosterState = useState([]); var roster = rosterState[0], setRoster = rosterState[1];
     var newNameState = useState(''); var newName = newNameState[0], setNewName = newNameState[1];
+    var showNewState = useState(false); var showNew = showNewState[0], setShowNew = showNewState[1];
+    var newErrState = useState(''); var newErr = newErrState[0], setNewErr = newErrState[1];
 
     // member picker
     var membersState = useState(null); var members = membersState[0], setMembers = membersState[1];
@@ -362,11 +364,11 @@
     }
 
     async function createCampaign() {
-      if (!newName.trim()) return;
+      if (!newName.trim()) { setNewErr('Enter a campaign name.'); return; }
       try {
         await PVRollAPI.request('POST', '/rp/campaigns', { name: newName.trim() });
-        setNewName(''); flash[1]('Campaign created.'); await loadCampaigns();
-      } catch (e) { setErr(e.message); }
+        setNewName(''); setNewErr(''); setShowNew(false); flash[1]('Campaign created.'); await loadCampaigns();
+      } catch (e) { setNewErr(e.message); }
     }
     async function startSession(c) {
       try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/start'); flash[1]('Session started.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
@@ -428,11 +430,23 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       tab === 'campaigns' ? h('div', null,
-        h('div', { style: { display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' } },
-          h('input', { type: 'text', placeholder: 'New campaign name', value: newName,
-            onChange: function (e) { setNewName(e.target.value); }, style: { flex: '1 1 14rem' } }),
-          h('button', { type: 'button', className: 'portal-btn', onClick: createCampaign }, '+ Create')
-        ),
+        showNew
+          ? h('form', { className: 'portal-card', style: { marginBottom: '1rem' },
+              onSubmit: function (e) { e.preventDefault(); createCampaign(); } },
+              h('h3', { style: { marginTop: 0 } }, 'New campaign'),
+              newErr ? h('div', { className: 'portal-flash error' }, newErr) : null,
+              h('div', { className: 'portal-field' },
+                h('label', null, 'Campaign name *'),
+                h('input', { type: 'text', autoFocus: true, value: newName,
+                  placeholder: 'e.g. Embers of the Vanguard',
+                  onChange: function (e) { setNewName(e.target.value); } })),
+              h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+                h('button', { type: 'submit', className: 'portal-btn' }, 'Create campaign'),
+                h('button', { type: 'button', className: 'portal-btn is-ghost',
+                  onClick: function () { setShowNew(false); setNewErr(''); } }, 'Cancel'))
+            )
+          : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' },
+              onClick: function () { setNewName(''); setNewErr(''); setShowNew(true); } }, '+ New campaign'),
         !campaigns.length ? h('div', { className: 'portal-card' }, 'No campaigns yet.') :
           campaigns.map(function (c) {
             var isSel = selected && selected.id === c.id;
