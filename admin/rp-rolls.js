@@ -27,10 +27,21 @@
     { value: 'medium', label: 'Medium' },
     { value: 'light', label: 'Light' }
   ];
-  // Abilities (passive or activated) carry every modifier. 'shield' grants a
-  // shield (auto-pushed only for activated group abilities); 'none' is pure
-  // descriptive/narrative text the player applies manually.
-  var ABILITY_MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output', 'shield', 'none'];
+  // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
+  // for activated/always; manual for targeted), 'none' is narrative-only text.
+  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output', 'shield', 'none'];
+  var TARGET_KINDS = [
+    { value: 'self', label: 'Self' },
+    { value: 'group', label: 'Group (everyone)' },
+    { value: 'class', label: 'Class' },
+    { value: 'holder_item', label: 'Holder of item' },
+    { value: 'party_member', label: 'Party member (picked on use)' }
+  ];
+  var MODES = [
+    { value: 'always', label: 'Always on' },
+    { value: 'toggle', label: 'Toggle (manual on/off)' },
+    { value: 'activated', label: 'Activated (press)' }
+  ];
 
   function flashHook() {
     var st = useState(''); var msg = st[0], set = st[1];
@@ -141,92 +152,111 @@
 
   function fmtNum(n) { return (n >= 0 ? '+' : '') + n; }
 
-  // ── Ability form ──────────────────────────────────────────────────────────
+  // ── Ability form (name + text + activate-all) ─────────────────────────────
   function AbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
-    var activationState = useState(a.activation || 'passive'); var activation = activationState[0], setActivation = activationState[1];
-    var valState = useState(String(a.modifier_value != null ? a.modifier_value : 1)); var val = valState[0], setVal = valState[1];
-    var typeState = useState(a.modifier_type || 'attack_roll'); var type = typeState[0], setType = typeState[1];
-    var scopeState = useState(a.target_scope || 'self'); var scope = scopeState[0], setScope = scopeState[1];
-    var usesState = useState(String(a.uses_per_session || 1)); var uses = usesState[0], setUses = usesState[1];
-    var initialRoles = a.eligible_roles ? String(a.eligible_roles).split(',') : ['all'];
-    var rolesState = useState({
-      tank: initialRoles.indexOf('all') !== -1 || initialRoles.indexOf('tank') !== -1,
-      dps: initialRoles.indexOf('all') !== -1 || initialRoles.indexOf('dps') !== -1,
-      healer: initialRoles.indexOf('all') !== -1 || initialRoles.indexOf('healer') !== -1
-    });
-    var roles = rolesState[0], setRoles = rolesState[1];
+    var allState = useState(!!a.activate_all); var activateAll = allState[0], setActivateAll = allState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
-
-    function eligibleCsv() {
-      if (roles.tank && roles.dps && roles.healer) return 'all';
-      var out = [];
-      if (roles.tank) out.push('tank');
-      if (roles.dps) out.push('dps');
-      if (roles.healer) out.push('healer');
-      return out.length ? out.join(',') : 'all';
-    }
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try {
-        await props.onSubmit({
-          name: name.trim(), description: desc.trim() || null, activation: activation,
-          modifier_value: parseInt(val, 10) || 0, modifier_type: type,
-          target_scope: scope, eligible_roles: eligibleCsv(), uses_per_session: parseInt(uses, 10) || 1
-        });
-      } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll }); }
+      catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
-
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.5rem', background: 'var(--bg-card-light)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Ability name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to the player)'),
         h('textarea', { rows: 4, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' } },
-        h('div', { className: 'portal-field' }, h('label', null, 'Activation'),
-          h('select', { value: activation, onChange: function (e) { setActivation(e.target.value); } },
-            h('option', { value: 'passive' }, 'Passive (always on)'),
-            h('option', { value: 'activated' }, 'Activated (button)'))),
-        h('div', { className: 'portal-field' }, h('label', null, 'Modifier'),
+      h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
+        h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
+        'Offer an “Activate all” master control on this ability'),
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
+  }
+
+  // ── Modifier form ─────────────────────────────────────────────────────────
+  function ModifierForm(props) {
+    var m = props.initial || {};
+    var labelState = useState(m.label || ''); var label = labelState[0], setLabel = labelState[1];
+    var valState = useState(String(m.value != null ? m.value : 1)); var val = valState[0], setVal = valState[1];
+    var typeState = useState(m.type || 'attack_roll'); var type = typeState[0], setType = typeState[1];
+    var tkState = useState(m.target_kind || 'self'); var tk = tkState[0], setTk = tkState[1];
+    var refState = useState(m.target_ref || ''); var ref = refState[0], setRef = refState[1];
+    var modeState = useState(m.mode || 'always'); var mode = modeState[0], setMode = modeState[1];
+    var usesState = useState(String(m.uses_per_session != null ? m.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
+    var durState = useState(String(m.duration_turns != null ? m.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    async function submit(e) {
+      e.preventDefault();
+      var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: type, target_kind: tk,
+        mode: mode, uses_per_session: parseInt(uses, 10) || 0, duration_turns: parseInt(dur, 10) || 0 };
+      if (tk === 'class') payload.target_ref = ref || 'tank';
+      else if (tk === 'holder_item') { if (!ref) { setErr('Pick the item whose holder is targeted.'); return; } payload.target_ref = ref; }
+      else payload.target_ref = null;
+      try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem' } },
+        h('div', { className: 'portal-field' }, h('label', null, 'Label'),
+          h('input', { type: 'text', value: label, placeholder: 'optional', onChange: function (e) { setLabel(e.target.value); } })),
+        h('div', { className: 'portal-field' }, h('label', null, 'Value'),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } })),
         h('div', { className: 'portal-field' }, h('label', null, 'Type'),
           h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
-            ABILITY_MOD_TYPES.map(function (t) { return h('option', { key: t, value: t }, t.replace('_', ' ')); }))),
-        h('div', { className: 'portal-field' }, h('label', null, 'Scope'),
-          h('select', { value: scope, onChange: function (e) { setScope(e.target.value); } },
-            h('option', { value: 'self' }, 'Self'), h('option', { value: 'group' }, 'Group'))),
-        activation === 'activated' ? h('div', { className: 'portal-field' }, h('label', null, 'Uses / session'),
-          h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null
+            MOD_TYPES.map(function (t) { return h('option', { key: t, value: t }, t.replace('_', ' ')); }))),
+        h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+          h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
+            TARGET_KINDS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
+        tk === 'class' ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
+          h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
+            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
+        tk === 'holder_item' ? h('div', { className: 'portal-field' }, h('label', null, 'Of item'),
+          h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
+            h('option', { value: '' }, '— pick —'),
+            (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null,
+        h('div', { className: 'portal-field' }, h('label', null, 'Mode'),
+          h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
+            MODES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+        mode === 'activated' ? h('div', { className: 'portal-field' }, h('label', null, 'Uses (0=∞)'),
+          h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null,
+        h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=none)'),
+          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } }))
       ),
-      h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } },
-        'Use “none” for narrative-only effects (no auto-math). “shield” auto-adds to all eligible players only when an Activated + Group ability fires.'),
-      h('div', { className: 'portal-field' }, h('label', null, 'Eligible classes'),
-        h('div', { style: { display: 'flex', gap: '1rem' } },
-          ['tank', 'dps', 'healer'].map(function (r) {
-            return h('label', { key: r, style: { display: 'flex', alignItems: 'center', gap: '0.3rem' } },
-              h('input', { type: 'checkbox', checked: roles[r], onChange: function (e) {
-                var next = Object.assign({}, roles); next[r] = e.target.checked; setRoles(next);
-              } }), r);
-          }))
-      ),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
-        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')
-      )
-    );
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
+        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save modifier' : 'Add modifier'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
 
-  // ── Item card (with its abilities) ────────────────────────────────────────
+  function modifierSummary(m, catalogue) {
+    var t;
+    switch (m.target_kind) {
+      case 'self': t = 'self'; break;
+      case 'group': t = 'group'; break;
+      case 'class': t = String(m.target_ref || '').toUpperCase(); break;
+      case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'holder of ' + (it ? it.name : 'item'); break; }
+      case 'party_member': t = 'chosen target'; break;
+      default: t = '';
+    }
+    return (m.type === 'none' ? 'narrative' : fmtNum(m.value) + ' ' + m.type.replace('_', ' ')) + ' · → ' + t + ' · ' + m.mode +
+      (m.duration_turns > 0 ? ' · ' + m.duration_turns + 't' : '') +
+      (m.mode === 'activated' && m.uses_per_session > 0 ? ' · ' + m.uses_per_session + '×' : '');
+  }
+
+  // ── Item card (item → abilities → modifiers) ──────────────────────────────
   function ItemCard(props) {
     var it = props.item;
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var abilitiesState = useState(null); var abilities = abilitiesState[0], setAbilities = abilitiesState[1];
-    var formState = useState(null); var form = formState[0], setForm = formState[1]; // null | {ability?}
+    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
+    var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function loadAbilities() {
@@ -236,54 +266,61 @@
     function toggleOpen() { var n = !open; setOpen(n); if (n && abilities === null) loadAbilities(); }
 
     async function submitAbility(payload) {
-      if (form && form.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + form.ability.id, payload);
+      if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + abForm.ability.id, payload);
       else await PVRollAPI.request('POST', '/rp/items/' + it.id + '/abilities', payload);
-      setForm(null); await loadAbilities();
+      setAbForm(null); await loadAbilities();
     }
     async function deleteAbility(ab) {
-      if (!confirm('Delete ability “' + ab.name + '”?')) return;
-      try { await PVRollAPI.request('DELETE', '/rp/abilities/' + ab.id); await loadAbilities(); }
-      catch (e) { setErr(e.message); }
+      if (!confirm('Delete ability “' + ab.name + '” and its modifiers?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/abilities/' + ab.id); await loadAbilities(); } catch (e) { setErr(e.message); }
+    }
+    async function submitModifier(payload) {
+      if (modForm.modifier) await PVRollAPI.request('PATCH', '/rp/modifiers/' + modForm.modifier.id, payload);
+      else await PVRollAPI.request('POST', '/rp/abilities/' + modForm.abilityId + '/modifiers', payload);
+      setModForm(null); await loadAbilities();
+    }
+    async function deleteModifier(mod) {
+      if (!confirm('Delete this modifier?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
     }
 
     return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', flexWrap: 'wrap' } },
         h('div', null,
           h('strong', null, it.name),
-          it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic' } }, it.description) : null
-        ),
+          it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic' } }, it.description) : null),
         h('div', { style: { display: 'flex', gap: '0.35rem' } },
           h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(it); } }, 'Edit'),
-          h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')
-        )
-      ),
+          h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete'))),
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.5rem' }, onClick: toggleOpen },
         open ? '▾ Hide abilities' : '▸ Abilities'),
       open ? h('div', { style: { marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' } },
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abilities === null ? h('p', null, 'Loading…') :
           abilities.map(function (ab) {
-            var meta = (ab.activation === 'passive' ? 'Passive' : 'Activated') +
-              ' · ' + (ab.modifier_type === 'none' ? 'narrative' : fmtNum(ab.modifier_value) + ' ' + ab.modifier_type.replace('_', ' ')) +
-              ' · ' + ab.target_scope + ' · ' + ab.eligible_roles +
-              (ab.activation === 'activated' ? ' · ' + ab.uses_per_session + '×' : '');
-            return h('div', { key: ab.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', padding: '0.35rem 0', borderTop: '1px solid var(--border-color)' } },
-              h('div', null,
-                h('strong', null, ab.name),
-                h('div', { style: { fontSize: '0.76rem', color: 'var(--text-secondary)' } }, meta),
-                ab.description ? h('div', { style: { fontSize: '0.82rem', marginTop: '0.15rem' } }, ab.description) : null
-              ),
-              h('div', { style: { display: 'flex', gap: '0.3rem' } },
-                h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setForm({ ability: ab }); } }, 'Edit'),
-                h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕')
-              )
-            );
+            return h('div', { key: ab.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
+              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
+                h('div', null,
+                  h('strong', null, ab.name),
+                  ab.activate_all ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0 0.3rem' } }, 'activate all') : null,
+                  ab.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem' } }, ab.description) : null),
+                h('div', { style: { display: 'flex', gap: '0.3rem' } },
+                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
+                  h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕'))),
+              (ab.modifiers || []).map(function (mod) {
+                return h('div', { key: mod.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0 0.2rem 0.75rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.25rem' } },
+                  h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue)),
+                  h('span', { style: { display: 'flex', gap: '0.3rem' } },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
+                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteModifier(mod); } }, '✕')));
+              }),
+              (modForm && modForm.abilityId === ab.id)
+                ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
+                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', marginLeft: '0.75rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add modifier'));
           }),
-        form ? h(AbilityForm, { initial: form.ability, onSubmit: submitAbility, onCancel: function () { setForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginTop: '0.4rem' },
-              onClick: function () { setForm({}); } }, '+ Add ability')
-      ) : null
-    );
+        abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
+          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginTop: '0.5rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability')
+      ) : null);
   }
 
   // ── Item form ─────────────────────────────────────────────────────────────
@@ -418,6 +455,10 @@
       try { await PVRollAPI.request('DELETE', '/rp/items/' + it.id); await loadItems(); }
       catch (e) { setErr(e.message); }
     }
+    async function setDmFor(c, memberId) {
+      try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
+      catch (e) { setErr(e.message); }
+    }
 
     // available members = roster-eligible not already in this campaign
     var inCampaign = {}; roster.forEach(function (r) { inCampaign[r.member_id] = true; });
@@ -470,6 +511,13 @@
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
+                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                  h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
+                    members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
+                      h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
+                        h('option', { value: '' }, '— none —'),
+                        (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))),
+                  h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Controls turns and the active-effects panel. May also be a rostered character.')),
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 roster.map(function (ch) {
                   return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
@@ -503,7 +551,7 @@
           : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' }, onClick: function () { setItemForm({}); } }, '+ New item'),
         !items.length ? h('div', { className: 'portal-card' }, 'No items yet.') :
           items.map(function (it) {
-            return h(ItemCard, { key: it.id, item: it, onEdit: function (x) { setItemForm({ item: x }); }, onDelete: deleteItem });
+            return h(ItemCard, { key: it.id, item: it, catalogue: items, onEdit: function (x) { setItemForm({ item: x }); }, onDelete: deleteItem });
           })
       ) : null
     );
