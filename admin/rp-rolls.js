@@ -531,7 +531,7 @@
               h('div', { className: 'portal-field' },
                 h('label', null, 'Campaign name *'),
                 h('input', { type: 'text', autoFocus: true, value: newName,
-                  placeholder: 'e.g. Embers of the Vanguard',
+                  placeholder: 'e.g. Symphony of the Eclipse',
                   onChange: function (e) { setNewName(e.target.value); } })),
               h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
                 h('button', { type: 'submit', className: 'portal-btn' }, 'Create campaign'),

@@ -31,8 +31,8 @@
     'Crewmate',
     'Deckhand',
     'Cinders',
-    'Ally',
-    'LOA'
+    'LOA',
+    'Ally'
   ];
   var OOC_RANK_INDEX = (function () {
     var m = {};
