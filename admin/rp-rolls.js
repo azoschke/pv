@@ -219,7 +219,7 @@
       h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setGuide(!guide); } },
           (guide ? '▾ ' : '▸ ') + 'Modifier guide')),
-      guide ? h('div', { style: { fontSize: '0.8rem', lineHeight: 1.5, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.6rem 0.75rem', margin: '0.25rem 0 0.5rem' } },
+      guide ? h('div', { style: { fontSize: '0.8rem', lineHeight: 1.5, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.6rem 0.75rem', margin: '0.25rem 0 1.1rem' } },
         h('div', null, h('strong', null, 'Type'), ' — roll/output types (attack, defense, heal_roll, …) feed the player’s roll math. ', h('strong', null, 'shield'), '/', h('strong', null, 'heal'), ' apply straight to shield / HP. ', h('strong', null, 'none'), ' is narrative text only.'),
         h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Target'), ' — self · group · a class · holder of another item · a party member chosen when used.'),
         h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Mode'), ' — always on · toggle (manual on/off) · activated (a press; set Uses, 0 = unlimited).'),
