@@ -326,6 +326,8 @@
         open ? '▾ Hide abilities' : '▸ Abilities'),
       open ? h('div', { style: { marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' } },
         err ? h('div', { className: 'portal-flash error' }, err) : null,
+        abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
+          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability'),
         abilities === null ? h('p', null, 'Loading…') :
           abilities.map(function (ab) {
             return h('div', { key: ab.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
@@ -338,18 +340,16 @@
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕'))),
               (ab.modifiers || []).map(function (mod) {
-                return h('div', { key: mod.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0 0.2rem 0.75rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.25rem' } },
+                return h('div', { key: mod.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
                   h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue)),
-                  h('span', { style: { display: 'flex', gap: '0.3rem' } },
-                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
-                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteModifier(mod); } }, '✕')));
+                  h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
+                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteModifier(mod); } }, '✕')));
               }),
               (modForm && modForm.abilityId === ab.id)
                 ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
                 : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', marginLeft: '0.75rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add modifier'));
-          }),
-        abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginTop: '0.5rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability')
+          })
       ) : null);
   }
 
