@@ -199,7 +199,7 @@
   function Stepper(props) {
     return h('div', { className: 'rp-stepper' },
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value - 1); } }, '−'),
-      h('span', { className: 'rp-step-val' }, props.label),
+      h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
   }
   function PartyPanel(props) {
@@ -210,10 +210,12 @@
           return h('div', { className: 'rp-party-row' + (elim ? ' is-elim' : '') + (p.member_id === props.myId ? ' is-me' : ''), key: p.member_id },
             h('div', { className: 'rp-party-id' }, h('strong', null, p.member_name), h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
-              h(Stepper, { value: p.current_hp, label: p.current_hp + ' / ' + p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } }),
+              h('div', { className: 'rp-hp-edit' },
+                h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
+                h(Stepper, { value: p.current_hp, label: p.current_hp + ' / ' + p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
               h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : '') },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
-                h(Stepper, { value: p.shield_value, label: String(p.shield_value), disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
+                h(Stepper, { value: p.shield_value, label: String(p.shield_value), compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
               elim ? h('span', { className: 'rp-elim-tag' }, 'Eliminated') : null));
         })));
   }

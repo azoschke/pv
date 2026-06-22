@@ -265,6 +265,7 @@
   function ItemCard(props) {
     var it = props.item;
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    var editState = useState(false); var editing = editState[0], setEditing = editState[1];
     var abilitiesState = useState(null); var abilities = abilitiesState[0], setAbilities = abilitiesState[1];
     var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
     var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
@@ -276,6 +277,10 @@
     }
     function toggleOpen() { var n = !open; setOpen(n); if (n && abilities === null) loadAbilities(); }
 
+    async function saveItem(payload) {
+      await PVRollAPI.request('PATCH', '/rp/items/' + it.id, payload);
+      setEditing(false); if (props.onChanged) props.onChanged();
+    }
     async function submitAbility(payload) {
       if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + abForm.ability.id, payload);
       else await PVRollAPI.request('POST', '/rp/items/' + it.id + '/abilities', payload);
@@ -296,13 +301,15 @@
     }
 
     return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', flexWrap: 'wrap' } },
-        h('div', null,
-          h('strong', null, it.name),
-          it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic' } }, it.description) : null),
-        h('div', { style: { display: 'flex', gap: '0.35rem' } },
-          h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(it); } }, 'Edit'),
-          h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete'))),
+      editing
+        ? h(ItemForm, { initial: it, onSubmit: saveItem, onCancel: function () { setEditing(false); } })
+        : h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' } },
+            h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
+              h('strong', null, it.name),
+              it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic' } }, it.description) : null),
+            h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
+              h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setEditing(true); } }, 'Edit'),
+              h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete'))),
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.5rem' }, onClick: toggleOpen },
         open ? '▾ Hide abilities' : '▸ Abilities'),
       open ? h('div', { style: { marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' } },
@@ -582,7 +589,7 @@
           : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' }, onClick: function () { setItemForm({}); } }, '+ New item'),
         !items.length ? h('div', { className: 'portal-card' }, 'No items yet.') :
           items.map(function (it) {
-            return h(ItemCard, { key: it.id, item: it, catalogue: items, onEdit: function (x) { setItemForm({ item: x }); }, onDelete: deleteItem });
+            return h(ItemCard, { key: it.id, item: it, catalogue: items, onChanged: loadItems, onDelete: deleteItem });
           })
       ) : null
     );
