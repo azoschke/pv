@@ -121,7 +121,7 @@
     summary.push(targetText(m));
     if (m.duration_turns > 0) summary.push(m.duration_turns + '-turn');
     if (m.mode === 'activated' && m.uses_per_session > 0) summary.push((m.uses_per_session - (m.uses_this_session || 0)) + '/' + m.uses_per_session + ' uses');
-    if (m.active && m.remaining_turns != null) summary.push('active · ' + m.remaining_turns + ' left');
+    if (m.active && m.remaining_turns != null) summary.push('active · ' + m.remaining_turns + (m.duration_turns ? '/' + m.duration_turns : '') + ' turns left');
     else if (m.active) summary.push('active');
 
     var spent = m.mode === 'activated' && m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session;
@@ -238,7 +238,7 @@
               h('span', { className: 'rp-effect-meta' },
                 (e.ability_name ? e.ability_name + ' · ' : '') + (e.label ? e.label + ' · ' : '') +
                 (e.type === 'none' ? 'narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
-                (e.remaining_turns != null ? ' · ' + e.remaining_turns + ' left' : ''))),
+                (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : ''))),
             h('div', { className: 'rp-effect-ctl' },
               e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
               h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),

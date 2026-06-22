@@ -29,7 +29,7 @@
   ];
   // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
   // for activated/always; manual for targeted), 'none' is narrative-only text.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output', 'shield', 'none'];
+  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output', 'shield', 'heal', 'none'];
   var TARGET_KINDS = [
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Group (everyone)' },
@@ -85,6 +85,7 @@
       try {
         await PVRollAPI.request('POST', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items', { item_id: pick, equipped: true });
         setPick(''); setShowAdd(false); await loadItems();
+        if (props.onItemsChanged) props.onItemsChanged();
       } catch (e) { setItemErr(e.message); }
     }
     async function removeItem(it) {
@@ -92,11 +93,16 @@
       try {
         await PVRollAPI.request('DELETE', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items/' + it.item_id);
         await loadItems();
+        if (props.onItemsChanged) props.onItemsChanged();
       } catch (e) { setItemErr(e.message); }
     }
 
     var attachedIds = {}; (items || []).forEach(function (i) { attachedIds[i.item_id] = true; });
-    var available = (props.catalogue || []).filter(function (c) { return !attachedIds[c.id]; });
+    // Each item is unique: hide ones already assigned to a different member.
+    var available = (props.catalogue || []).filter(function (c) {
+      if (attachedIds[c.id]) return false;
+      return c.assigned_member_id == null || Number(c.assigned_member_id) === Number(ch.member_id);
+    });
 
     return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
@@ -544,7 +550,7 @@
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 roster.map(function (ch) {
                   return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
-                    campaignId: selected.id, catalogue: items,
+                    campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
                     onSave: saveCharacter, onRemove: removeCharacter });
                 }),
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginTop: '0.5rem' } },
