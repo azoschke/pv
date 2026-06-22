@@ -415,7 +415,7 @@
     }
 
     function selectCampaign(c) {
-      setSelected(c); setRoster([]); loadRoster(c.id);
+      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
       if (members === null) {
         PVAdminAPI.request('GET', '/members', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
