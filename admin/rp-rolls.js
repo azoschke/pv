@@ -381,6 +381,7 @@
     var pickMemberState = useState(''); var pickMember = pickMemberState[0], setPickMember = pickMemberState[1];
     var pickRoleState = useState('dps'); var pickRole = pickRoleState[0], setPickRole = pickRoleState[1];
     var pickArmorState = useState('medium'); var pickArmor = pickArmorState[0], setPickArmor = pickArmorState[1];
+    var defaultsState = useState({}); var defaults = defaultsState[0], setDefaults = defaultsState[1]; // member_id -> {class_role, armor_type, max_hp}
 
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
@@ -398,7 +399,20 @@
       try { setRoster(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/characters') || []); }
       catch (e) { setErr(e.message); }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); /* eslint-disable-next-line */ }, []);
+    async function loadDefaults() {
+      try {
+        var rows = await PVRollAPI.request('GET', '/rp/member-defaults') || [];
+        var map = {}; rows.forEach(function (r) { map[r.member_id] = r; }); setDefaults(map);
+      } catch (e) { /* non-fatal */ }
+    }
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); /* eslint-disable-next-line */ }, []);
+
+    // When a member is chosen to add, seed class/armor from their saved defaults.
+    function onPickMember(id) {
+      setPickMember(id);
+      var def = defaults[id];
+      if (def) { if (def.class_role) setPickRole(def.class_role); if (def.armor_type) setPickArmor(def.armor_type); }
+    }
 
     function selectCampaign(c) {
       setSelected(c); setRoster([]); loadRoster(c.id);
@@ -437,11 +451,12 @@
       try {
         await PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/characters',
           { member_id: Number(pickMember), member_name: m ? m.name : undefined, class_role: pickRole, armor_type: pickArmor });
-        setPickMember(''); await loadRoster(selected.id);
+        setPickMember(''); await loadRoster(selected.id); await loadDefaults();
       } catch (e) { setErr(e.message); }
     }
     async function saveCharacter(memberId, body) {
       await PVRollAPI.request('PATCH', '/rp/campaigns/' + selected.id + '/characters/' + memberId, body);
+      await loadDefaults();
       await loadRoster(selected.id); flash[1]('Saved.');
     }
     async function removeCharacter(ch) {
@@ -534,7 +549,7 @@
                   members === null ? h('p', null, 'Loading members…') :
                     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
                       h('div', { className: 'portal-field' }, h('label', null, 'Member'),
-                        h('select', { value: pickMember, onChange: function (e) { setPickMember(e.target.value); } },
+                        h('select', { value: pickMember, onChange: function (e) { onPickMember(e.target.value); } },
                           h('option', { value: '' }, '— choose —'),
                           availableMembers.map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))),
                       h('div', { className: 'portal-field' }, h('label', null, 'Class'),
