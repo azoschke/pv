@@ -407,11 +407,14 @@
     }
     useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); /* eslint-disable-next-line */ }, []);
 
-    // When a member is chosen to add, seed class/armor from their saved defaults.
+    // When a member is chosen to add, swap class/armor to their saved defaults
+    // (or back to neutral when they have none) so the controls always reflect
+    // the picked member.
     function onPickMember(id) {
       setPickMember(id);
-      var def = defaults[id];
-      if (def) { if (def.class_role) setPickRole(def.class_role); if (def.armor_type) setPickArmor(def.armor_type); }
+      var def = defaults[id] || defaults[Number(id)];
+      setPickRole(def && def.class_role ? def.class_role : 'dps');
+      setPickArmor(def && def.armor_type ? def.armor_type : 'medium');
     }
 
     function selectCampaign(c) {
