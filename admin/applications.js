@@ -27,16 +27,18 @@
   var useMemo = React.useMemo;
 
   var STAGES = [
-    { value: 'new',       label: 'New' },
-    { value: 'scheduled', label: 'Scheduled' },
-    { value: 'accepted',  label: 'Accepted' },
-    { value: 'declined',  label: 'Declined' }
+    { value: 'new',               label: 'New' },
+    { value: 'scheduled',         label: 'Scheduled' },
+    { value: 'requires_training', label: 'Requires Training' },
+    { value: 'accepted',          label: 'Accepted' },
+    { value: 'declined',          label: 'Declined' }
   ];
 
   // Stages that still need action. The read-only division card only surfaces
   // these; accepted/declined are resolved and drop off (still visible in the
-  // full Job Board management card).
-  var ACTIONABLE_STAGES = ['new', 'scheduled'];
+  // full Job Board management card). "Requires Training" is unresolved — the
+  // member is in onboarding — so it stays surfaced.
+  var ACTIONABLE_STAGES = ['new', 'scheduled', 'requires_training'];
 
   // Mirrors the job board categories (and the worker's JOB_CATEGORIES).
   var DIVISIONS = [
@@ -55,10 +57,11 @@
   var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
 
   function stageBadgeClass(stage) {
-    if (stage === 'new')      return 'portal-pill is-red-fill';
-    if (stage === 'scheduled') return 'portal-pill is-gold';
-    if (stage === 'accepted') return 'portal-pill is-green';
-    if (stage === 'declined') return 'portal-pill is-red';
+    if (stage === 'new')               return 'portal-pill is-red-fill';
+    if (stage === 'scheduled')         return 'portal-pill is-gold';
+    if (stage === 'requires_training') return 'portal-pill is-gold';
+    if (stage === 'accepted')          return 'portal-pill is-green';
+    if (stage === 'declined')          return 'portal-pill is-red';
     return 'portal-pill is-muted';
   }
 
@@ -328,13 +331,21 @@
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
     var onStage = props.onStage;
+    var onArchive = props.onArchive;
     var jobsById = props.jobsById || {};
 
     var job = jobsById[a.job_id];
     var jobType = job && job.job_type ? job.job_type : null;
+    var archived = !!a.archived;
 
-    return h('tr', null,
-      h('td', null, h('span', { style: { fontWeight: 600 } }, a.member_name)),
+    return h('tr', archived ? { style: { opacity: 0.55 } } : null,
+      h('td', null,
+        h('span', { style: { fontWeight: 600 } }, a.member_name),
+        archived ? h('span', {
+          className: 'portal-pill is-muted',
+          style: { marginLeft: '0.5rem' }
+        }, 'Archived') : null
+      ),
       h('td', null, a.job_title),
       h('td', null, labelFor(DIVISIONS, a.division)),
       h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
@@ -353,6 +364,11 @@
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
         }, 'Edit'),
+        ' ',
+        h('button', {
+          type: 'button', className: 'portal-btn is-small is-ghost',
+          onClick: function () { onArchive(a, !archived); }
+        }, archived ? 'Unarchive' : 'Archive'),
         ' ',
         h('button', {
           type: 'button', className: 'portal-btn is-small is-danger',
@@ -388,6 +404,9 @@
     var divisionFilter = divisionState[0], setDivisionFilter = divisionState[1];
     var stageState = useState((props && props.initialStage) || '');
     var stageFilter = stageState[0], setStageFilter = stageState[1];
+    // Archived applications are hidden by default; this toggle reveals them.
+    var showArchivedState = useState(false);
+    var showArchived = showArchivedState[0], setShowArchived = showArchivedState[1];
 
     function flashFor(msg) {
       setFlash(msg);
@@ -436,6 +455,9 @@
         if (tb !== ta) return tb - ta;
         return (b.id || 0) - (a.id || 0);
       });
+      if (!showArchived) {
+        out = out.filter(function (a) { return !a.archived; });
+      }
       if (divisionFilter) {
         out = out.filter(function (a) { return a.division === divisionFilter; });
       }
@@ -452,7 +474,11 @@
         });
       }
       return out;
-    }, [list, query, divisionFilter, stageFilter]);
+    }, [list, query, divisionFilter, stageFilter, showArchived]);
+
+    var archivedCount = useMemo(function () {
+      return list.filter(function (a) { return a.archived; }).length;
+    }, [list]);
 
     async function handleSubmit(payload) {
       var editingId = formOpen && formOpen.app && formOpen.app.id;
@@ -478,6 +504,16 @@
       }
     }
 
+    async function handleArchive(a, archived) {
+      try {
+        await PVAdminAPI.request('PATCH', '/applications/' + a.id, { archived: archived ? 1 : 0 }, true);
+        flashFor(archived ? 'Application archived.' : 'Application restored.');
+        await reload();
+      } catch (e) {
+        setErr(e.message || 'Failed to update application.');
+      }
+    }
+
     async function handleDelete(a) {
       try {
         await PVAdminAPI.request('DELETE', '/applications/' + a.id, undefined, true);
@@ -488,7 +524,7 @@
       }
     }
 
-    var anyFilterActive = !!(query || divisionFilter || stageFilter);
+    var anyFilterActive = !!(query || divisionFilter || stageFilter || showArchived);
 
     return h('div', null,
       h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
@@ -529,10 +565,23 @@
             h('option', { value: '' }, 'All Stages'),
             STAGES.map(function (st) { return h('option', { key: st.value, value: st.value }, st.label); })
           ),
+          h('label', {
+            className: 'portal-checkbox-option',
+            title: archivedCount
+              ? archivedCount + ' archived application' + (archivedCount === 1 ? '' : 's')
+              : 'No archived applications'
+          },
+            h('input', {
+              type: 'checkbox',
+              checked: showArchived,
+              onChange: function (e) { setShowArchived(e.target.checked); }
+            }),
+            'Show archived' + (archivedCount ? ' (' + archivedCount + ')' : '')
+          ),
           anyFilterActive ? h('button', {
             type: 'button',
             className: 'portal-btn is-ghost is-small',
-            onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); }
+            onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
         flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
@@ -572,7 +621,8 @@
                         jobsById: jobsById,
                         onEdit: function (aa) { setFormOpen({ app: aa }); },
                         onDelete: handleDelete,
-                        onStage: handleStage
+                        onStage: handleStage,
+                        onArchive: handleArchive
                       });
                     })
                   )
@@ -638,7 +688,7 @@
     }, [division]);
 
     var actionable = list.filter(function (a) {
-      return ACTIONABLE_STAGES.indexOf(a.stage) !== -1;
+      return !a.archived && ACTIONABLE_STAGES.indexOf(a.stage) !== -1;
     });
     var newCount = actionable.filter(function (a) { return a.stage === 'new'; }).length;
 

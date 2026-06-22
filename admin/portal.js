@@ -46,7 +46,7 @@
     ] },
     { title: 'Tools / More', items: [
       { id: 'campaigns',        label: 'Campaigns',          icon: 'auto_stories' },
-      { id: 'rp-rolls',         label: 'RP Roll Sessions',   icon: 'casino' },
+      { id: 'rp-rolls',         label: 'Combat Toolkit',     icon: 'casino' },
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
       { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
       { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }

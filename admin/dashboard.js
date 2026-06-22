@@ -93,8 +93,8 @@
     }
 
     var members = state.members, apps = state.apps, quests = state.quests;
-    var newApps       = apps.filter(function (a) { return a.stage === 'new'; });
-    var scheduledApps = apps.filter(function (a) { return a.stage === 'scheduled'; });
+    var newApps       = apps.filter(function (a) { return !a.archived && a.stage === 'new'; });
+    var scheduledApps = apps.filter(function (a) { return !a.archived && a.stage === 'scheduled'; });
     // Bounty board items awaiting officer review: member-submitted quests
     // (status 'pending') and member-proposed edits to listed quests.
     var pendingQuests = quests.filter(function (q) { return q.status === 'pending'; });
