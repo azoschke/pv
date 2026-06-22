@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RP Roll Calculator — Phoenix Vanguard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <style>
+    .rp-tool { max-width: 1100px; margin: 0 auto; padding: 0 0.5rem 3rem; }
+    .rp-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0 1.25rem; }
+    .rp-header h1 { margin: 0; font-family: 'Stoke', serif; }
+    .rp-sub { margin: 0.2rem 0 0; color: var(--text-secondary); }
+    .rp-me { text-align: right; display: flex; flex-direction: column; }
+    .rp-me strong { font-size: 1.05rem; }
+    .rp-me span { color: var(--text-secondary); font-size: 0.9rem; }
+
+    .rp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+    @media (max-width: 860px) { .rp-grid { grid-template-columns: 1fr; } }
+    .rp-col { display: flex; flex-direction: column; gap: 1rem; }
+
+    .rp-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.6rem; padding: 1rem 1.1rem; }
+    .rp-card h3 { margin: 0 0 0.75rem; font-family: 'Stoke', serif; letter-spacing: 0.04em; }
+
+    .rp-input-label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.6rem; }
+    .rp-input { display: block; width: 100%; margin-top: 0.25rem; padding: 0.5rem 0.6rem; font-size: 1.1rem; font-family: inherit;
+      background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
+
+    .rp-breakdown { background: var(--bg-darker); border-radius: 0.45rem; padding: 0.6rem 0.75rem; font-size: 0.92rem; }
+    .rp-breakdown-output { margin-top: 0.6rem; }
+    .rp-bd-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.15rem 0; }
+    .rp-bd-base { color: var(--text-secondary); }
+    .rp-bd-rule { height: 1px; background: var(--border-color); margin: 0.4rem 0; }
+    .rp-bd-total { font-weight: 700; font-size: 1.02rem; }
+    .rp-note { margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+
+    .rp-seg { display: inline-flex; border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden; margin-bottom: 0.75rem; }
+    .rp-seg-btn { border: 0; background: var(--bg-card-light); color: var(--text-secondary); padding: 0.35rem 0.8rem; cursor: pointer; font-family: inherit; font-size: 1rem; }
+    .rp-seg-btn.is-active { background: var(--accent-brown); color: #fff; }
+
+    .rp-btn { display: inline-block; border: 1px solid var(--accent-brown); background: var(--accent-brown); color: #fff;
+      padding: 0.5rem 0.9rem; border-radius: 0.4rem; cursor: pointer; text-decoration: none; font: inherit; }
+    .rp-btn.is-small { padding: 0.2rem 0.55rem; font-size: 0.9rem; }
+    .rp-btn.is-active { background: var(--accent-gold); border-color: var(--accent-gold); }
+    .rp-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+    .rp-link { background: none; border: 0; color: var(--accent-red); cursor: pointer; text-decoration: underline; font: inherit; padding: 0; }
+
+    .rp-item { padding: 0.6rem 0; border-top: 1px solid var(--border-color); }
+    .rp-item:first-of-type { border-top: 0; padding-top: 0; }
+    .rp-item-name { font-family: 'Stoke', serif; font-size: 1.02rem; }
+    .rp-item-flavor { margin: 0.15rem 0 0.4rem; font-style: italic; color: var(--text-secondary); font-size: 0.88rem; white-space: pre-wrap; }
+    .rp-ability { border-left: 2px solid var(--border-color); padding: 0.2rem 0 0.2rem 0.6rem; margin: 0.4rem 0; }
+    .rp-ability-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .rp-ability-desc { font-size: 0.84rem; color: var(--text-primary); margin: 0.15rem 0 0.35rem; white-space: pre-wrap; }
+    .rp-mod { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+    .rp-mod-info { display: flex; flex-direction: column; }
+    .rp-mod-mode { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 0.3rem; padding: 0 0.25rem; }
+    .rp-mod-meta { font-size: 0.78rem; color: var(--text-secondary); text-transform: capitalize; }
+    .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; }
+
+    .rp-dm { border: 1px solid var(--accent-gold); margin-bottom: 1.5rem; }
+    .rp-dm-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .rp-dm-head h3 { margin: 0; }
+    .rp-dm-turn { display: flex; gap: 0.4rem; align-items: center; }
+    .rp-turn-badge { font-size: 0.78rem; padding: 0.15rem 0.5rem; border-radius: 0.3rem; background: var(--bg-darker); }
+    .rp-turn-badge.is-locked { background: var(--accent-red); color: #fff; }
+    .rp-dm-sub { margin: 0.75rem 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.95rem; }
+    .rp-effect { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-top: 1px solid var(--border-color); }
+    .rp-effect.is-off { opacity: 0.5; }
+    .rp-effect-info { display: flex; flex-direction: column; }
+    .rp-effect-meta { font-size: 0.78rem; color: var(--text-secondary); text-transform: capitalize; }
+    .rp-effect-ctl { display: flex; gap: 0.35rem; align-items: center; }
+
+    .rp-locked { background: rgba(165,77,68,0.12); border: 1px solid var(--accent-red); color: var(--accent-red); }
+
+    .rp-buff-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.35rem 0; }
+    .rp-buff-label { color: var(--text-secondary); font-size: 0.9rem; }
+    .rp-buff-controls { display: flex; gap: 0.4rem; align-items: center; }
+    .rp-select { padding: 0.35rem 0.5rem; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; font-family: inherit; font-size: 1rem; }
+    .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; font-family: inherit; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
+
+    .rp-stepper { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .rp-step-val { min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; }
+    .rp-step-val.is-compact { min-width: 1.4rem; }
+    .rp-hp-edit { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .rp-hp-edit .material-icons { font-size: 1rem; color: var(--accent-red); }
+    .rp-shield-edit { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-secondary); }
+    .rp-shield-edit.is-on { color: var(--accent-gold); }
+    .rp-shield-edit .material-icons { font-size: 1rem; }
+
+    .rp-party { display: flex; flex-direction: column; gap: 0.35rem; }
+    .rp-party-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.45rem 0.5rem; border-radius: 0.4rem; background: var(--bg-card-light); }
+    .rp-party-row.is-me { outline: 2px solid var(--accent-brown); }
+    .rp-party-row.is-elim { opacity: 0.45; }
+    .rp-party-id { display: flex; flex-direction: column; }
+    .rp-party-role { font-size: 0.78rem; color: var(--text-secondary); }
+    .rp-party-stats { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; justify-content: flex-end; }
+    .rp-shield-tag { display: inline-flex; align-items: center; gap: 0.2rem; color: var(--text-secondary); font-size: 0.85rem; }
+    .rp-shield-tag .material-icons { font-size: 1rem; }
+    .rp-shield-tag.is-on { color: var(--accent-gold); }
+    .rp-elim-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); }
+
+    .rp-group-banner { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .rp-group-chip { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--bg-darker);
+      border: 1px solid var(--accent-gold); border-radius: 2rem; padding: 0.3rem 0.75rem; font-size: 0.88rem; }
+    .rp-group-chip .material-icons { font-size: 1rem; color: var(--accent-gold); }
+    .rp-chip-x { background: none; border: 0; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; }
+    .rp-active-note { background: var(--bg-darker); border-radius: 0.4rem; padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.88rem; }
+
+    .rp-flash { padding: 0.5rem 0.75rem; border-radius: 0.4rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
+    .rp-flash.error { background: rgba(165,77,68,0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .rp-gate { max-width: 480px; margin: 4rem auto; text-align: center; background: var(--bg-card);
+      border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 2.5rem 2rem; }
+    .rp-gate-icon { font-size: 3rem; color: var(--accent-brown); }
+    .rp-gate h2 { font-family: 'Stoke', serif; margin: 0.75rem 0 0.5rem; }
+    .rp-gate p { color: var(--text-secondary); margin: 0 0 1.25rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+    <div id="app"></div>
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script src="/pv/js/rp-api.js"></script>
+  <script src="/pv/tools/roll-calculator.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = ReactDOM.createRoot(document.getElementById('app'));
+      if (typeof RollCalculator !== 'undefined') {
+        root.render(React.createElement(RollCalculator));
+      } else {
+        root.render(React.createElement('div', { className: 'rp-gate' }, 'Failed to load the calculator. Reload the page.'));
+      }
+    });
+  </script>
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>

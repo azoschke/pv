@@ -223,6 +223,36 @@
     );
   }
 
+  // --------- My Items card (read-only RP loadout) ----------
+  function MyItemsCard() {
+    var itemsState = useState(null); var items = itemsState[0], setItems = itemsState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+    useEffect(function () {
+      (async function () {
+        try { setItems(await PVRollAPI.request('GET', '/rp/my-items') || []); }
+        catch (e) { setErr(e.message || 'Failed to load items.'); setItems([]); }
+      })();
+    }, []);
+
+    if (items === null && !err) return h('div', { className: 'portal-card', style: { marginTop: '1rem' } }, 'Loading your items…');
+    return h('div', { className: 'portal-card', style: { marginTop: '1rem' } },
+      h('h2', { className: 'portal-card-title' }, 'My Items'),
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      (!items || !items.length)
+        ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.')
+        : items.map(function (it) {
+            return h('div', { key: it.item_id, style: { padding: '0.6rem 0', borderTop: '1px solid var(--border-color)' } },
+              h('strong', { style: { fontSize: '1.02rem' } }, it.name),
+              it.description ? h('p', { style: { margin: '0.2rem 0 0.4rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
+              (it.abilities || []).map(function (ab, i) {
+                return h('div', { key: i, style: { padding: '0.2rem 0 0.2rem 0.6rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.3rem' } },
+                  h('strong', { style: { fontSize: '0.92rem' } }, ab.name),
+                  ab.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.1rem', whiteSpace: 'pre-wrap' } }, ab.description) : null);
+              }));
+          })
+    );
+  }
+
   // --------- Main component ----------
   function MyProfile() {
     var profileState = useState(null);   // { member, profile } | null
@@ -258,11 +288,10 @@
       ) : null,
 
       member
-        ? h(ProfileCard, {
-            member: member,
-            profile: profileData.profile,
-            onSaved: reload
-          })
+        ? h('div', null,
+            h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload }),
+            h(MyItemsCard, null)
+          )
         : h('div', { className: 'portal-card' },
             h('h2', { className: 'portal-card-title' }, 'Character Profile'),
             h('div', { className: 'portal-flash error' },

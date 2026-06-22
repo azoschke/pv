@@ -489,6 +489,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    }
 .portal-field input[type="text"],
 .portal-field input[type="date"],
+.portal-field input[type="number"],
 .portal-field textarea,
 .portal-field select {
   background: var(--form-input-bg);

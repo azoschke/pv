@@ -198,7 +198,7 @@
         h('div', { className: 'dash-stat-section' },
           h('p', { className: 'dash-stat-heading' }, 'Pending'),
           h('div', { className: 'dash-stats' },
-            statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0),
+            statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }),
             statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
               { view: 'applications', stage: 'new' }),
             statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0)
@@ -207,7 +207,7 @@
         h('div', { className: 'dash-stat-section' },
           h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
           h('div', { className: 'dash-stats' },
-            statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0),
+            statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0, { interview: 'Scheduled' }),
             statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0,
               { view: 'applications', stage: 'scheduled' })
           )

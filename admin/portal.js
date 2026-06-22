@@ -46,6 +46,7 @@
     ] },
     { title: 'Tools / More', items: [
       { id: 'campaigns',        label: 'Campaigns',          icon: 'auto_stories' },
+      { id: 'rp-rolls',         label: 'RP Roll Sessions',   icon: 'casino' },
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
       { id: 'announcements',    label: 'Announcements',      icon: 'campaign' },
       { id: 'admin',            label: 'Admin Settings',     icon: 'settings' }
@@ -76,6 +77,7 @@
     bounties:         ['officer', 'admin'],
     'event-assets':   '*',
     campaigns:        ['officer', 'admin'],
+    'rp-rolls':       ['officer', 'admin'],
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
@@ -234,7 +236,8 @@
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), {
           session: session,
-          initialSearch: (props.navParams && props.navParams.search) || ''
+          initialSearch: (props.navParams && props.navParams.search) || '',
+          initialInterview: (props.navParams && props.navParams.interview) || ''
         });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
@@ -251,6 +254,8 @@
         });
       case 'campaigns':
         return h(window.PVAdminCampaigns || Missing('campaigns.js'), { session: session });
+      case 'rp-rolls':
+        return h(window.PVAdminRpRolls || Missing('rp-rolls.js'), { session: session });
       case 'cosmic':
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
