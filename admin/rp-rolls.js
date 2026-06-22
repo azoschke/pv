@@ -203,6 +203,7 @@
     var usesState = useState(String(m.uses_per_session != null ? m.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
     var durState = useState(String(m.duration_turns != null ? m.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+    var guideState = useState(false); var guide = guideState[0], setGuide = guideState[1];
 
     async function submit(e) {
       e.preventDefault();
@@ -215,6 +216,15 @@
     }
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
+      h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setGuide(!guide); } },
+          (guide ? '▾ ' : '▸ ') + 'Modifier guide')),
+      guide ? h('div', { style: { fontSize: '0.8rem', lineHeight: 1.5, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.6rem 0.75rem', margin: '0.25rem 0 0.5rem' } },
+        h('div', null, h('strong', null, 'Type'), ' — roll/output types (attack, defense, heal_roll, …) feed the player’s roll math. ', h('strong', null, 'shield'), '/', h('strong', null, 'heal'), ' apply straight to shield / HP. ', h('strong', null, 'none'), ' is narrative text only.'),
+        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Target'), ' — self · group · a class · holder of another item · a party member chosen when used.'),
+        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Mode'), ' — always on · toggle (manual on/off) · activated (a press; set Uses, 0 = unlimited).'),
+        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Turns'), ' — ', h('strong', null, '0 = infinite'), ' (shield/heal re-applies every round; a roll buff just stays on). ', h('strong', null, '1'), ' = this round only, used up when the DM hits Next Turn. ', h('strong', null, 'N'), ' = lasts N rounds; the activation round counts as the first.')
+      ) : null,
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'Label'),
           h('input', { type: 'text', value: label, placeholder: 'optional', onChange: function (e) { setLabel(e.target.value); } })),
@@ -238,9 +248,11 @@
             MODES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
         mode === 'activated' ? h('div', { className: 'portal-field' }, h('label', null, 'Uses (0=∞)'),
           h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null,
-        h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=none)'),
+        h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
           h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } }))
       ),
+      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
+        'Turns: 0 = infinite (shield/heal ticks every round) · 1 = this round only · N = N rounds (activation counts as turn 1).'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save modifier' : 'Add modifier'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
