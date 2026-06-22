@@ -243,11 +243,11 @@
         : items.map(function (it) {
             return h('div', { key: it.item_id, style: { padding: '0.6rem 0', borderTop: '1px solid var(--border-color)' } },
               h('strong', { style: { fontSize: '1.02rem' } }, it.name),
-              it.description ? h('p', { style: { margin: '0.2rem 0 0.4rem', fontStyle: 'italic', color: 'var(--text-secondary)' } }, it.description) : null,
+              it.description ? h('p', { style: { margin: '0.2rem 0 0.4rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
               (it.abilities || []).map(function (ab, i) {
                 return h('div', { key: i, style: { padding: '0.2rem 0 0.2rem 0.6rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.3rem' } },
                   h('strong', { style: { fontSize: '0.92rem' } }, ab.name),
-                  ab.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.1rem' } }, ab.description) : null);
+                  ab.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.1rem', whiteSpace: 'pre-wrap' } }, ab.description) : null);
               }));
           })
     );
