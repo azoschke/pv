@@ -29,10 +29,11 @@
   };
 
   var APP_STAGE_PILL = {
-    new:       { label: 'Submitted',           cls: 'portal-pill is-gold' },
-    scheduled: { label: 'Interview scheduled', cls: 'portal-pill is-green' },
-    accepted:  { label: 'Accepted',            cls: 'portal-pill is-green' },
-    declined:  { label: 'Declined',            cls: 'portal-pill is-muted' }
+    new:               { label: 'Submitted',           cls: 'portal-pill is-gold' },
+    scheduled:         { label: 'Interview scheduled', cls: 'portal-pill is-green' },
+    requires_training: { label: 'Requires training',   cls: 'portal-pill is-gold' },
+    accepted:          { label: 'Accepted',            cls: 'portal-pill is-green' },
+    declined:          { label: 'Declined',            cls: 'portal-pill is-muted' }
   };
 
   // Division slugs are stored on the application; map to display labels.
