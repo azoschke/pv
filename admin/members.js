@@ -31,6 +31,7 @@
     'Crewmate',
     'Deckhand',
     'Cinders',
+    'Ally',
     'LOA'
   ];
   var OOC_RANK_INDEX = (function () {
@@ -361,7 +362,7 @@
     var rankFilter     = rankFilterState[0],     setRankFilter     = rankFilterState[1];
     var factionFilterState  = useState('');
     var factionFilter  = factionFilterState[0],  setFactionFilter  = factionFilterState[1];
-    var interviewFilterState = useState('');
+    var interviewFilterState = useState((props && props.initialInterview) || '');
     var interviewFilter = interviewFilterState[0], setInterviewFilter = interviewFilterState[1];
     var activityFilterState = useState('');
     var activityFilter = activityFilterState[0], setActivityFilter = activityFilterState[1];

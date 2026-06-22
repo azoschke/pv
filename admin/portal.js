@@ -236,7 +236,8 @@
       case 'members':
         return h(window.PVAdminMembers || Missing('members.js'), {
           session: session,
-          initialSearch: (props.navParams && props.navParams.search) || ''
+          initialSearch: (props.navParams && props.navParams.search) || '',
+          initialInterview: (props.navParams && props.navParams.interview) || ''
         });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
