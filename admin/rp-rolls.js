@@ -59,6 +59,7 @@
 
     var itemsState = useState(null); var items = itemsState[0], setItems = itemsState[1]; // attached items, null = loading
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
+    var showAddState = useState(false); var showAdd = showAddState[0], setShowAdd = showAddState[1];
     var itemErrState = useState(''); var itemErr = itemErrState[0], setItemErr = itemErrState[1];
 
     var dirty = role !== ch.class_role || armor !== ch.armor_type || String(ch.max_hp) !== maxHp;
@@ -83,7 +84,7 @@
       setItemErr('');
       try {
         await PVRollAPI.request('POST', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items', { item_id: pick, equipped: true });
-        setPick(''); await loadItems();
+        setPick(''); setShowAdd(false); await loadItems();
       } catch (e) { setItemErr(e.message); }
     }
     async function removeItem(it) {
@@ -120,6 +121,14 @@
         )
       ),
 
+      // Save / Remove — ties to the character as a whole, above the items list.
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
+        h('button', { type: 'button', className: 'portal-btn is-small', disabled: !dirty || saving, onClick: save },
+          saving ? 'Saving…' : 'Save'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+          onClick: function () { props.onRemove(ch); } }, 'Remove')
+      ),
+
       // Attached items (inline)
       h('div', { style: { marginTop: '0.6rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' } },
         h('label', { style: { display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: '0.35rem' } }, 'Items'),
@@ -133,19 +142,15 @@
                   onClick: function () { removeItem(it); } }, 'Remove') : null
               );
             })),
-        props.canEquip ? h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-          h('select', { value: pick, style: { flex: '1 1 12rem' }, onChange: function (e) { setPick(e.target.value); } },
-            h('option', { value: '' }, available.length ? '— add an item —' : 'No more items to add'),
-            available.map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); })),
-          h('button', { type: 'button', className: 'portal-btn is-small', disabled: !pick, onClick: addItem }, 'Add item')
-        ) : null
-      ),
-
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' } },
-        h('button', { type: 'button', className: 'portal-btn is-small', disabled: !dirty || saving, onClick: save },
-          saving ? 'Saving…' : 'Save'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger',
-          onClick: function () { props.onRemove(ch); } }, 'Remove')
+        props.canEquip ? (showAdd
+          ? h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
+              h('select', { value: pick, style: { flex: '1 1 12rem' }, onChange: function (e) { setPick(e.target.value); } },
+                h('option', { value: '' }, available.length ? '— choose an item —' : 'No more items to add'),
+                available.map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); })),
+              h('button', { type: 'button', className: 'portal-btn is-small', disabled: !pick, onClick: addItem }, 'Add'),
+              h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setShowAdd(false); setPick(''); } }, 'Cancel'))
+          : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.4rem' }, disabled: !available.length,
+              onClick: function () { setShowAdd(true); } }, '+ Add item')) : null
       )
     );
   }
@@ -538,7 +543,9 @@
                       h('div', { className: 'portal-field' }, h('label', null, 'Armor'),
                         h('select', { value: pickArmor, onChange: function (e) { setPickArmor(e.target.value); } },
                           ARMOR_TYPES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-                      h('button', { type: 'button', className: 'portal-btn', onClick: addCharacter }, 'Add')
+                      h('div', { className: 'portal-field' },
+                        h('label', { style: { visibility: 'hidden' } }, 'Add'),
+                        h('button', { type: 'button', className: 'portal-btn', style: { width: '100%' }, onClick: addCharacter }, 'Add'))
                     )
                 )
               ) : null
