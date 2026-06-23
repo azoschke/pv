@@ -283,10 +283,10 @@
     function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } commitNow(n); }
     return h('div', { className: 'rp-stepper' },
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(-1); } }, '−'),
-      h('input', { className: 'rp-hp-input', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
+      h('input', { className: 'rp-hp-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
         onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
-      h('span', { className: 'rp-hp-max' }, '/ ' + props.max),
+      props.max != null ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(1); } }, '+'));
   }
   function PartyPanel(props) {
@@ -302,7 +302,7 @@
                 h(HpStepper, { value: p.current_hp, max: p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
               h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : '') },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
-                h(Stepper, { value: p.shield_value, label: String(p.shield_value), compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
+                h(HpStepper, { value: p.shield_value, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
               elim ? h('span', { className: 'rp-elim-tag' }, 'Eliminated') : null));
         })));
   }
