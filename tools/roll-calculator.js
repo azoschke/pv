@@ -279,16 +279,17 @@
     // Sync from props only when settled, so a background poll can't yank the field mid-edit.
     useEffect(function () { if (!pendingRef.current) setVal(String(props.value)); }, [props.value]);
     useEffect(function () { return function () { if (timerRef.current) clearTimeout(timerRef.current); }; }, []);
-    function commitNow(n) { pendingRef.current = false; if (n !== props.value) props.onChange(n); }
+    function clamp(n) { if (n < 0) n = 0; if (props.max != null && n > props.max) n = props.max; return n; }
+    function commitNow(n) { pendingRef.current = false; n = clamp(n); if (n !== props.value) props.onChange(n); }
     function schedule(n) { pendingRef.current = true; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(function () { commitNow(n); }, HP_COMMIT_MS); }
-    function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = cur + d; setVal(String(next)); schedule(next); }
-    function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } commitNow(n); }
+    function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = clamp(cur + d); setVal(String(next)); schedule(next); }
+    function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } n = clamp(n); setVal(String(n)); commitNow(n); }
     return h('div', { className: 'rp-stepper' },
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(-1); } }, '−'),
       h('input', { className: 'rp-hp-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
         onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
-      props.max != null ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
+      props.showMax ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(1); } }, '+'));
   }
   function PartyPanel(props) {
@@ -301,10 +302,10 @@
             h('div', { className: 'rp-party-stats' },
               h('div', { className: 'rp-hp-edit' },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
-                h(HpStepper, { value: p.current_hp, max: p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
+                h(HpStepper, { value: p.current_hp, max: p.max_hp, showMax: true, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
               h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : '') },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
-                h(HpStepper, { value: p.shield_value, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
+                h(HpStepper, { value: p.shield_value, max: 3, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
               elim ? h('span', { className: 'rp-elim-tag' }, 'Eliminated') : null));
         })));
   }
