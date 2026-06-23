@@ -235,18 +235,29 @@
   }
 
   // ── Personal buffs ────────────────────────────────────────────────────────
+  var BUFF_COMMIT_MS = 900;
   function BuffSlotRow(props) {
-    var slot = props.slot; var type = slot ? slot.type : '';
+    var slot = props.slot;
+    var typeState = useState(slot ? slot.type : ''); var type = typeState[0], setType = typeState[1];
     var valState = useState(slot ? String(slot.value) : '1'); var val = valState[0], setVal = valState[1];
-    useEffect(function () { setVal(slot ? String(slot.value) : '1'); }, [type, slot ? slot.value : null]);
-    function commit(nextType, raw) { if (!nextType) { props.onChange(null); return; } var n = parseInt(raw, 10); if (isNaN(n)) n = 0; props.onChange({ type: nextType, value: n }); }
+    var timerRef = useRef(null); var pendingRef = useRef(false);
+    // Sync from props only when settled, so a debounced edit isn't clobbered mid-typing.
+    useEffect(function () { if (!pendingRef.current) { setType(slot ? slot.type : ''); setVal(slot ? String(slot.value) : '1'); } }, [slot ? slot.type : '', slot ? slot.value : null]);
+    useEffect(function () { return function () { if (timerRef.current) clearTimeout(timerRef.current); }; }, []);
+    function fire(nextType, raw) { pendingRef.current = false; if (!nextType) { props.onChange(null); return; } var n = parseInt(raw, 10); if (isNaN(n)) n = 0; props.onChange({ type: nextType, value: n }); }
+    // Picking a type / editing the value is debounced — a fresh slot starts at a default
+    // value that's usually corrected immediately, so we hold the write until it settles.
+    function schedule(nextType, raw) { pendingRef.current = true; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(function () { fire(nextType, raw); }, BUFF_COMMIT_MS); }
+    function onType(e) { var t = e.target.value; setType(t); if (timerRef.current) clearTimeout(timerRef.current); if (!t) { fire('', val); } else { schedule(t, val); } }
+    function onVal(e) { var v = e.target.value; setVal(v); if (type) schedule(type, v); }
+    function commitNow() { if (timerRef.current) clearTimeout(timerRef.current); if (type) fire(type, val); }
     return h('div', { className: 'rp-buff-row' },
       h('span', { className: 'rp-buff-label' }, props.label),
       h('div', { className: 'rp-buff-controls' },
-        h('select', { className: 'rp-select', value: type, disabled: props.disabled, onChange: function (e) { commit(e.target.value, val); } },
+        h('select', { className: 'rp-select', value: type, disabled: props.disabled, onChange: onType },
           h('option', { value: '' }, '— empty —'), h('option', { value: 'attack_roll' }, 'Attack'), h('option', { value: 'defense_roll' }, 'Defense'), h('option', { value: 'heal_roll' }, 'Heal')),
         type ? h('input', { className: 'rp-buff-val', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
-          onChange: function (e) { setVal(e.target.value); }, onBlur: function () { commit(type, val); }, onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }) : null));
+          onChange: onVal, onBlur: commitNow, onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }) : null));
   }
   function BuffPanel(props) {
     var c = props.character; var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
