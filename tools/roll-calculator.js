@@ -21,6 +21,8 @@
   var BUFF_LABEL    = { attack_roll: 'Attack', defense_roll: 'Defense', heal_roll: 'Heal' };
 
   function damageFor(r) { if (r >= 20) return 5; if (r >= 16) return 4; if (r >= 11) return 3; if (r >= 6) return 2; return 1; }
+  // Clamp a raw number-input string to [0, max]; keeps '' so the field can be cleared.
+  function clampNum(raw, max) { if (raw === '' || raw == null) return ''; var n = parseInt(raw, 10); if (isNaN(n)) return ''; if (n < 0) n = 0; if (n > max) n = max; return String(n); }
   function fmt(n) { return (n >= 0 ? '+' : '') + n; }
   function modLabel(m) { return m.label ? m.label : (m.item_name + (m.ability_name ? ' · ' + m.ability_name : '')); }
   function targetText(m) {
@@ -81,7 +83,7 @@
     var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
     var calc = computeRoll('attack', roll, props.ctx); var dmg = damageFor(calc.total); var finalDmg = dmg + calc.outputTotal;
     return h('div', { className: 'rp-card' }, h('h3', null, 'Attack Roll'),
-      h('label', { className: 'rp-input-label' }, 'Raw D20 roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', value: roll, placeholder: 'e.g. 14', onChange: function (e) { setRoll(e.target.value); } })),
+      h('label', { className: 'rp-input-label' }, 'Raw D20 roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 20, value: roll, placeholder: 'e.g. 14', onChange: function (e) { setRoll(clampNum(e.target.value, 20)); } })),
       h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, calc.total + ' → ' + dmg + ' Damage'))),
       calc.outputRows.length ? h('div', { className: 'rp-breakdown rp-breakdown-output' },
         h('div', { className: 'rp-bd-row rp-bd-base' }, h('span', null, 'Base Damage'), h('span', null, String(dmg))),
@@ -92,9 +94,9 @@
     var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
     var calc = computeRoll('defense', roll, props.ctx);
     return h('div', { className: 'rp-card' }, h('h3', null, 'Defensive Roll'),
-      h('label', { className: 'rp-input-label' }, 'Raw D20 roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', value: roll, placeholder: 'e.g. 10', onChange: function (e) { setRoll(e.target.value); } })),
+      h('label', { className: 'rp-input-label' }, 'Raw D20 roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 20, value: roll, placeholder: 'e.g. 10', onChange: function (e) { setRoll(clampNum(e.target.value, 20)); } })),
       h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, String(calc.total)))),
-      h('p', { className: 'rp-note' }, 'Report this number to the GM. No damage tier is shown on defense.'));
+      h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
   }
   function HealPanel(props) {
     var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
@@ -105,8 +107,8 @@
       h('div', { className: 'rp-seg' },
         h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'single' ? ' is-active' : ''), onClick: function () { setMode('single'); } }, 'Single Target'),
         h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'aoe' ? ' is-active' : ''), onClick: function () { setMode('aoe'); } }, 'AOE')),
-      h('label', { className: 'rp-input-label' }, 'Raw D5 heal roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', value: roll, placeholder: 'e.g. 3', onChange: function (e) { setRoll(e.target.value); } })),
-      mode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D5 target count', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', value: targets, placeholder: 'e.g. 3', onChange: function (e) { setTargets(e.target.value); } })) : null,
+      h('label', { className: 'rp-input-label' }, 'Raw D5 heal roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 5, value: roll, placeholder: 'e.g. 3', onChange: function (e) { setRoll(clampNum(e.target.value, 5)); } })),
+      mode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D5 target count', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 5, value: targets, placeholder: 'e.g. 3', onChange: function (e) { setTargets(clampNum(e.target.value, 5)); } })) : null,
       h(Breakdown, { calc: calc }, calc.outputRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: 'o' + i }, h('span', null, r.label), h('span', null, fmt(r.value))); })
         .concat([h('div', { className: 'rp-bd-row rp-bd-total', key: 'tot' }, h('span', null, 'Modified Heal'), h('span', null, String(finalHeal)))])),
       mode === 'aoe' ? h('p', { className: 'rp-note' }, 'Distribute ' + finalHeal + ' across ' + (parseInt(targets, 10) || 0) + ' target(s) manually.') : null);
@@ -311,7 +313,7 @@
     async function act(fn) { setErr(''); try { await fn(); await refresh(); } catch (e) { setErr(e.message || 'Action failed.'); } }
 
     function onHp(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { current_hp: Math.max(0, Math.min(v, p.max_hp)) }); }); }
-    function onShield(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { shield_value: Math.max(0, v) }); }); }
+    function onShield(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { shield_value: Math.max(0, Math.min(v, 3)) }); }); }
     function onSaveBuffs(body) { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + dataRef.current.character.member_id, body).then(refresh); }
     function onToggle(m, enabled) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled }); }); }
     function onActivate(m, targetId) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: targetId }); }); }

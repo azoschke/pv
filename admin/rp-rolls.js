@@ -553,6 +553,9 @@
                   c.active
                     ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End session')
                     : h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { startSession(c); } }, 'Start session'),
+                  c.active
+                    ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html', target: '_blank', rel: 'noopener' }, 'Public rolls page ↗')
+                    : null,
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, isSel ? 'Close' : 'Manage'),
                   isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
                 )
