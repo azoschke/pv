@@ -120,7 +120,7 @@
     var calc = computeRoll('heal', roll, ctx); var pool = calc.total + calc.outputTotal;
     // Eliminated (0 HP) allies can't be healed back up during a session — exclude them.
     var living = party.filter(function (p) { return !p.eliminated; });
-    var maxPeople = Math.max(1, parseInt(count, 10) || living.length);
+    var maxPeople = Math.max(1, parseInt(count, 10) || 1);
     var selectedIds = Object.keys(alloc).map(Number);
     var allocated = selectedIds.reduce(function (s, id) { return s + (Number(alloc[id]) || 0); }, 0);
 
@@ -341,41 +341,57 @@
                   h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
             })),
         h('aside', { className: 'rp-dm-log' },
-          h('h4', { className: 'rp-dm-sub' }, 'HP / Shield log'),
+          h('h4', { className: 'rp-dm-sub' }, 'Change log'),
           !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
             h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
+              var sameTarget = l.actor_member_id === l.target_member_id;
+              var main = (l.note && sameTarget) ? (l.actor_name || 'Someone')
+                : (l.actor_name || 'Someone') + ' → ' + (l.target_name || ('Member ' + l.target_member_id));
+              var right = l.note ? l.note : (fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : 'HP') + ' (now ' + l.new_value + ')');
+              var rightClass = l.note ? 'rp-log-delta rp-log-note' : ('rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down'));
               return h('div', { className: 'rp-log', key: l.id },
-                h('span', { className: 'rp-log-main' }, (l.actor_name || 'Someone') + ' → ' + (l.target_name || ('Member ' + l.target_member_id))),
-                h('span', { className: 'rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down') }, fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : 'HP') + ' (now ' + l.new_value + ')'));
+                h('span', { className: 'rp-log-main' }, main),
+                h('span', { className: rightClass }, right));
             })))));
   }
 
-  // ── Active skills banner (read-only, everyone) ────────────────────────────
-  function ActiveSkillsBanner(props) {
+  // ── Active skills (player view): floating button + popup ──────────────────
+  function FloatingSkills(props) {
     var effects = props.effects || [];
-    var openState = useState({}); var open = openState[0], setOpen = openState[1];
-    if (!effects.length) return null;
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
+    var expState = useState({}); var exp = expState[0], setExp = expState[1];
     var passives = effects.filter(function (e) { return e.mode === 'always'; });
     var actives = effects.filter(function (e) { return e.mode !== 'always'; });
-    function toggle(id) { var n = Object.assign({}, open); n[id] = !n[id]; setOpen(n); }
+    // "Unseen" = skills used (non-passive) the player hasn't opened the panel to view yet.
+    var unseen = actives.filter(function (e) { return !seen[e.id]; }).length;
+    function openPop() { var s = Object.assign({}, seen); effects.forEach(function (e) { s[e.id] = true; }); setSeen(s); setOpen(true); }
+    function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
     function row(e) {
       var detail = (e.type === 'none' ? 'Narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
         (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : '');
-      return h('div', { className: 'rp-skill' + (open[e.id] ? ' is-open' : ''), key: e.id },
+      return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
         h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
           h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
           h('span', { className: 'rp-skill-sum' }, detail),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, open[e.id] ? 'expand_less' : 'expand_more')),
-        open[e.id] ? h('div', { className: 'rp-skill-body' },
+          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
+        exp[e.id] ? h('div', { className: 'rp-skill-body' },
           e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
           e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
     }
     function section(title, list) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(row)) : null; }
-    return h('div', { className: 'rp-card rp-skills' },
-      h('h3', null, 'Active Skills'),
-      section('Passives (always on)', passives),
-      section('Active & ongoing', actives),
-      h('p', { className: 'rp-note' }, 'Tap a skill to see its modifiers and description.'));
+    return h('div', null,
+      open ? h('div', { className: 'rp-fab-backdrop', onClick: function () { setOpen(false); } }) : null,
+      open ? h('div', { className: 'rp-fab-pop', role: 'dialog', 'aria-label': 'Active skills' },
+        h('div', { className: 'rp-fab-pop-head' }, h('h3', null, 'Active Skills'),
+          h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: function () { setOpen(false); } }, '✕')),
+        !effects.length ? h('p', { className: 'rp-note' }, 'No active skills right now.')
+          : h('div', null, section('Passives (always on)', passives), section('Active & ongoing', actives)),
+        h('p', { className: 'rp-note' }, 'Tap a skill to see its modifiers and description.')) : null,
+      h('button', { type: 'button', className: 'rp-fab', title: 'Active skills', 'aria-label': 'Active skills',
+        onClick: function () { open ? setOpen(false) : openPop(); } },
+        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'auto_awesome'),
+        (!open && unseen > 0) ? h('span', { className: 'rp-fab-badge' }, String(unseen)) : null));
   }
 
   // ── App ───────────────────────────────────────────────────────────────────
@@ -481,7 +497,7 @@
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       locked ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
 
-      isDM ? null : h(ActiveSkillsBanner, { effects: data.active_effects || [] }),
+      isDM ? null : h(FloatingSkills, { effects: data.active_effects || [] }),
 
       isDM ? h(DMPanel, { campaign: camp, effects: data.active_effects || [], hpLog: data.hp_log || [], onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect, onPauseSession: onPauseSession, onEndSession: onEndSession }) : null,
 

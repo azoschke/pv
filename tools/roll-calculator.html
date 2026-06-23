@@ -125,8 +125,20 @@
     .rp-gate h2 { font-family: 'Stoke', serif; margin: 0.75rem 0 0.5rem; }
     .rp-gate p { color: var(--text-secondary); margin: 0 0 1.25rem; }
 
-    /* Active skills banner */
-    .rp-skills { margin-bottom: 1.25rem; }
+    /* Active skills — floating button + popup (player view) */
+    .rp-fab { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 60; width: 3.4rem; height: 3.4rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-gold);
+      background: var(--accent-brown); color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+    .rp-fab .material-icons { font-size: 1.6rem; }
+    .rp-fab-badge { position: absolute; top: -3px; right: -3px; min-width: 1.35rem; height: 1.35rem; padding: 0 0.3rem; box-sizing: border-box;
+      display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; background: var(--accent-red); color: #fff;
+      font-size: 0.78rem; font-weight: 700; border: 2px solid var(--bg-darker); }
+    .rp-fab-backdrop { position: fixed; inset: 0; z-index: 59; background: rgba(0,0,0,0.25); }
+    .rp-fab-pop { position: fixed; bottom: 5.4rem; right: 1.5rem; z-index: 60; width: min(360px, 92vw); max-height: 65vh; overflow-y: auto;
+      background: var(--bg-card); border: 1px solid var(--accent-gold); border-radius: 0.6rem; padding: 0.9rem 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .rp-fab-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .rp-fab-pop-head h3 { margin: 0; font-family: 'Stoke', serif; }
+    @media (max-width: 520px) { .rp-fab-pop { left: 1rem; right: 1rem; width: auto; } }
     .rp-skill-group { margin-top: 0.6rem; }
     .rp-skill-group-title { margin: 0 0 0.3rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
     .rp-skill { border-top: 1px solid var(--border-color); }
@@ -155,6 +167,7 @@
     .rp-log-delta { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .rp-log-delta.is-up { color: var(--accent-gold); }
     .rp-log-delta.is-down { color: var(--accent-red); }
+    .rp-log-delta.rp-log-note { color: var(--text-secondary); white-space: normal; text-align: right; }
 
     /* Free-typed HP entry */
     .rp-hp-input { width: 3.1rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
