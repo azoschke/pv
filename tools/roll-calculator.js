@@ -266,18 +266,28 @@
       h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
   }
-  // HP control: free-typed absolute value (commit on blur/Enter = one log entry) plus ± nudges.
+  // HP control: free-typed absolute value plus ± nudges. Nudges update the display
+  // instantly but the write is debounced, so a burst of clicks lands as one PATCH —
+  // i.e. one net-delta entry in the DM log instead of one per click.
+  var HP_COMMIT_MS = 700;
   function HpStepper(props) {
     var valState = useState(String(props.value)); var val = valState[0], setVal = valState[1];
-    useEffect(function () { setVal(String(props.value)); }, [props.value]);
-    function commit() { var n = parseInt(val, 10); if (isNaN(n)) { setVal(String(props.value)); return; } if (n !== props.value) props.onChange(n); }
+    var timerRef = useRef(null);
+    var pendingRef = useRef(false);  // an uncommitted local edit is in flight
+    // Sync from props only when settled, so a background poll can't yank the field mid-edit.
+    useEffect(function () { if (!pendingRef.current) setVal(String(props.value)); }, [props.value]);
+    useEffect(function () { return function () { if (timerRef.current) clearTimeout(timerRef.current); }; }, []);
+    function commitNow(n) { pendingRef.current = false; if (n !== props.value) props.onChange(n); }
+    function schedule(n) { pendingRef.current = true; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(function () { commitNow(n); }, HP_COMMIT_MS); }
+    function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = cur + d; setVal(String(next)); schedule(next); }
+    function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } commitNow(n); }
     return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value - 1); } }, '−'),
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(-1); } }, '−'),
       h('input', { className: 'rp-hp-input', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
-        onChange: function (e) { setVal(e.target.value); }, onBlur: commit,
+        onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
       h('span', { className: 'rp-hp-max' }, '/ ' + props.max),
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(1); } }, '+'));
   }
   function PartyPanel(props) {
     return h('div', { className: 'rp-card' }, h('h3', null, 'Party'),
