@@ -373,8 +373,9 @@
         (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : '');
       return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
         h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
-          h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
-          h('span', { className: 'rp-skill-sum' }, detail),
+          h('span', { className: 'rp-skill-text' },
+            h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
+            h('span', { className: 'rp-skill-sum' }, detail)),
           h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
         exp[e.id] ? h('div', { className: 'rp-skill-body' },
           e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
