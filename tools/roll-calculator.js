@@ -266,6 +266,19 @@
       h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
       h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
   }
+  // HP control: free-typed absolute value (commit on blur/Enter = one log entry) plus ± nudges.
+  function HpStepper(props) {
+    var valState = useState(String(props.value)); var val = valState[0], setVal = valState[1];
+    useEffect(function () { setVal(String(props.value)); }, [props.value]);
+    function commit() { var n = parseInt(val, 10); if (isNaN(n)) { setVal(String(props.value)); return; } if (n !== props.value) props.onChange(n); }
+    return h('div', { className: 'rp-stepper' },
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value - 1); } }, '−'),
+      h('input', { className: 'rp-hp-input', type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
+        onChange: function (e) { setVal(e.target.value); }, onBlur: commit,
+        onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
+      h('span', { className: 'rp-hp-max' }, '/ ' + props.max),
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
+  }
   function PartyPanel(props) {
     return h('div', { className: 'rp-card' }, h('h3', null, 'Party'),
       h('div', { className: 'rp-party' },
@@ -276,7 +289,7 @@
             h('div', { className: 'rp-party-stats' },
               h('div', { className: 'rp-hp-edit' },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
-                h(Stepper, { value: p.current_hp, label: p.current_hp + ' / ' + p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
+                h(HpStepper, { value: p.current_hp, max: p.max_hp, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
               h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : '') },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
                 h(Stepper, { value: p.shield_value, label: String(p.shield_value), compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
@@ -298,28 +311,31 @@
         h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
         h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session')),
       h('p', { className: 'rp-note' }, 'End Turn locks the board to you. Next Turn ticks all timers down and reopens play. Pause keeps everyone’s values but sends the party back to the standby screen (resume it from the Combat Toolkit).'),
-      h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
-      !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
-        effects.map(function (e) {
-          return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
-            h('div', { className: 'rp-effect-info' },
-              h('strong', null, e.holder_name + ' — ' + e.item_name),
-              h('span', { className: 'rp-effect-meta' },
-                (e.ability_name ? e.ability_name + ' · ' : '') + (e.label ? e.label + ' · ' : '') +
-                (e.type === 'none' ? 'narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
-                (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : ''))),
-            h('div', { className: 'rp-effect-ctl' },
-              e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
-              h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
-              h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
-        }),
-      h('h4', { className: 'rp-dm-sub' }, 'HP / Shield log'),
-      !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
-        h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
-          return h('div', { className: 'rp-log', key: l.id },
-            h('span', { className: 'rp-log-main' }, (l.actor_name || 'Someone') + ' → ' + (l.target_name || ('Member ' + l.target_member_id))),
-            h('span', { className: 'rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down') }, fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : 'HP') + ' (now ' + l.new_value + ')'));
-        })));
+      h('div', { className: 'rp-dm-cols' },
+        h('div', { className: 'rp-dm-effects' },
+          h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
+          !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
+            effects.map(function (e) {
+              return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
+                h('div', { className: 'rp-effect-info' },
+                  h('strong', null, e.holder_name + ' — ' + e.item_name),
+                  h('span', { className: 'rp-effect-meta' },
+                    (e.ability_name ? e.ability_name + ' · ' : '') + (e.label ? e.label + ' · ' : '') +
+                    (e.type === 'none' ? 'narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
+                    (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : ''))),
+                h('div', { className: 'rp-effect-ctl' },
+                  e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
+                  h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
+                  h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
+            })),
+        h('aside', { className: 'rp-dm-log' },
+          h('h4', { className: 'rp-dm-sub' }, 'HP / Shield log'),
+          !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
+            h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
+              return h('div', { className: 'rp-log', key: l.id },
+                h('span', { className: 'rp-log-main' }, (l.actor_name || 'Someone') + ' → ' + (l.target_name || ('Member ' + l.target_member_id))),
+                h('span', { className: 'rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down') }, fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : 'HP') + ' (now ' + l.new_value + ')'));
+            })))));
   }
 
   // ── Active skills banner (read-only, everyone) ────────────────────────────
@@ -347,7 +363,7 @@
       h('h3', null, 'Active Skills'),
       section('Passives (always on)', passives),
       section('Active & ongoing', actives),
-      h('p', { className: 'rp-note' }, 'Visible to everyone, read-only — tap a skill to see its modifiers and description.'));
+      h('p', { className: 'rp-note' }, 'Tap a skill to see its modifiers and description.'));
   }
 
   // ── App ───────────────────────────────────────────────────────────────────
@@ -453,7 +469,7 @@
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       locked ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
 
-      h(ActiveSkillsBanner, { effects: data.active_effects || [] }),
+      isDM ? null : h(ActiveSkillsBanner, { effects: data.active_effects || [] }),
 
       isDM ? h(DMPanel, { campaign: camp, effects: data.active_effects || [], hpLog: data.hp_log || [], onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect, onPauseSession: onPauseSession, onEndSession: onEndSession }) : null,
 

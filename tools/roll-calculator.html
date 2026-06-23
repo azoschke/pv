@@ -140,16 +140,26 @@
     .rp-skill-desc { margin: 0; font-size: 0.85rem; color: var(--text-primary); white-space: pre-wrap; }
     .rp-skill-desc.rp-muted { color: var(--text-secondary); font-style: italic; }
 
-    /* DM session controls + HP/shield log */
+    /* DM session controls + two-column effects / log layout */
     .rp-dm-session { display: flex; gap: 0.4rem; margin: 0.5rem 0 0; flex-wrap: wrap; }
     .rp-btn.is-danger { background: var(--accent-red); border-color: var(--accent-red); }
     .rp-btn.is-ghost { background: none; color: var(--text-primary); }
-    .rp-log-list { display: flex; flex-direction: column; }
-    .rp-log { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.3rem 0; border-top: 1px solid var(--border-color); font-size: 0.85rem; }
+    .rp-dm-cols { display: grid; grid-template-columns: 1fr minmax(13rem, 19rem); gap: 1.25rem; align-items: start; margin-top: 0.5rem; }
+    @media (max-width: 720px) { .rp-dm-cols { grid-template-columns: 1fr; } }
+    .rp-dm-log { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem 0.7rem; }
+    .rp-dm-log .rp-dm-sub { margin-top: 0.1rem; }
+    .rp-log-list { display: flex; flex-direction: column; max-height: 18rem; overflow-y: auto; }
+    .rp-log { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.3rem 0; border-top: 1px solid var(--border-color); font-size: 0.82rem; }
+    .rp-log:first-child { border-top: 0; }
     .rp-log-main { color: var(--text-primary); }
     .rp-log-delta { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .rp-log-delta.is-up { color: var(--accent-gold); }
     .rp-log-delta.is-down { color: var(--accent-red); }
+
+    /* Free-typed HP entry */
+    .rp-hp-input { width: 3.1rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
+      background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.35rem; }
+    .rp-hp-max { color: var(--text-secondary); font-size: 0.85rem; }
 
     /* Healing apply / distribute */
     .rp-heal-apply { margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid var(--border-color); }
