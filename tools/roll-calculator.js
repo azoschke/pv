@@ -98,20 +98,82 @@
       h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, String(calc.total)))),
       h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
   }
+  // Even split of a pool across N member ids; earliest ids take the remainder.
+  function evenSplit(ids, total) {
+    var out = {}; var n = ids.length; if (!n) return out;
+    var base = Math.floor(total / n); var rem = total - base * n;
+    ids.forEach(function (id, i) { out[id] = base + (i < rem ? 1 : 0); });
+    return out;
+  }
   function HealPanel(props) {
+    var ctx = props.ctx; var me = ctx.character; var party = props.party || [];
+    var isHealer = me.class_role === 'healer';
     var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
     var modeState = useState('single'); var mode = modeState[0], setMode = modeState[1];
-    var targetsState = useState(''); var targets = targetsState[0], setTargets = targetsState[1];
-    var calc = computeRoll('heal', roll, props.ctx); var finalHeal = calc.total + calc.outputTotal;
+    var countState = useState(''); var count = countState[0], setCount = countState[1];
+    var singleState = useState(String(me.member_id)); var single = singleState[0], setSingle = singleState[1];
+    var allocState = useState({}); var alloc = allocState[0], setAlloc = allocState[1]; // member_id -> amount
+    var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
+    var msgState = useState(''); var msg = msgState[0], setMsg = msgState[1];
+
+    var effMode = isHealer ? mode : 'single';
+    var calc = computeRoll('heal', roll, ctx); var pool = calc.total + calc.outputTotal;
+    // Target the whole party — healing a downed (0 HP) ally above 0 revives them server-side.
+    var living = party;
+    var maxPeople = Math.max(1, parseInt(count, 10) || living.length);
+    var selectedIds = Object.keys(alloc).map(Number);
+    var allocated = selectedIds.reduce(function (s, id) { return s + (Number(alloc[id]) || 0); }, 0);
+
+    function reset() { setRoll(''); setCount(''); setAlloc({}); }
+    function flash(m) { setMsg(m); setTimeout(function () { setMsg(''); }, 2500); }
+    function apply(entries) {
+      var clean = entries.filter(function (e) { return e.amount > 0; });
+      if (!clean.length) return;
+      setBusy(true); setMsg('');
+      Promise.resolve(props.onApplyHeal(clean)).then(function () { setBusy(false); reset(); flash('Healing applied.'); })
+        .catch(function (e) { setBusy(false); setMsg(e.message || 'Failed to apply.'); });
+    }
+    function applySingle() { var id = isHealer ? Number(single) : me.member_id; apply([{ member_id: id, amount: pool }]); }
+    function applyAoe() { apply(selectedIds.map(function (id) { return { member_id: id, amount: Number(alloc[id]) || 0 }; })); }
+    function toggleTarget(id) {
+      var ids = selectedIds.slice();
+      if (alloc.hasOwnProperty(id)) ids = ids.filter(function (x) { return x !== id; });
+      else { if (ids.length >= maxPeople) return; ids = ids.concat(id); }
+      setAlloc(evenSplit(ids, pool));
+    }
+    function setAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, alloc); next[id] = n; setAlloc(next); }
+
+    var canApply = !props.locked && !busy && pool > 0;
     return h('div', { className: 'rp-card' }, h('h3', null, 'Healing Roll'),
-      h('div', { className: 'rp-seg' },
+      isHealer ? h('div', { className: 'rp-seg' },
         h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'single' ? ' is-active' : ''), onClick: function () { setMode('single'); } }, 'Single Target'),
-        h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'aoe' ? ' is-active' : ''), onClick: function () { setMode('aoe'); } }, 'AOE')),
-      h('label', { className: 'rp-input-label' }, 'Raw D5 heal roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 5, value: roll, placeholder: 'e.g. 3', onChange: function (e) { setRoll(clampNum(e.target.value, 5)); } })),
-      mode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D5 target count', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 5, value: targets, placeholder: 'e.g. 3', onChange: function (e) { setTargets(clampNum(e.target.value, 5)); } })) : null,
+        h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'aoe' ? ' is-active' : ''), onClick: function () { setMode('aoe'); } }, 'AOE')) : null,
+      h('label', { className: 'rp-input-label' }, 'Raw D5 heal roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: 5, value: roll, placeholder: 'e.g. 3', onChange: function (e) { var v = clampNum(e.target.value, 5); setRoll(v); var nc = computeRoll('heal', v, ctx); setAlloc(evenSplit(selectedIds, nc.total + nc.outputTotal)); } })),
+      effMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D5 target count (max people)', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 1, max: 5, value: count, placeholder: 'e.g. 3', onChange: function (e) { setCount(clampNum(e.target.value, 5)); } })) : null,
       h(Breakdown, { calc: calc }, calc.outputRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: 'o' + i }, h('span', null, r.label), h('span', null, fmt(r.value))); })
-        .concat([h('div', { className: 'rp-bd-row rp-bd-total', key: 'tot' }, h('span', null, 'Modified Heal'), h('span', null, String(finalHeal)))])),
-      mode === 'aoe' ? h('p', { className: 'rp-note' }, 'Distribute ' + finalHeal + ' across ' + (parseInt(targets, 10) || 0) + ' target(s) manually.') : null);
+        .concat([h('div', { className: 'rp-bd-row rp-bd-total', key: 'tot' }, h('span', null, 'Modified Heal'), h('span', null, String(pool)))])),
+
+      // Single-target apply
+      effMode === 'single' ? h('div', { className: 'rp-heal-apply' },
+        isHealer ? h('label', { className: 'rp-input-label' }, 'Target',
+          h('select', { className: 'rp-select', value: single, disabled: props.locked, onChange: function (e) { setSingle(e.target.value); } },
+            living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name + (p.member_id === me.member_id ? ' (you)' : '')); })))
+          : h('p', { className: 'rp-note' }, 'Self-heal only — applies to you.'),
+        h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: applySingle }, busy ? 'Applying…' : 'Apply +' + pool + ' to target')) : null,
+
+      // AOE distribute
+      effMode === 'aoe' ? h('div', { className: 'rp-heal-apply' },
+        h('p', { className: 'rp-note' }, 'Select up to ' + maxPeople + ' to split ' + pool + ' across (even by default — adjust as needed). Allocated ' + allocated + ' / ' + pool + '.'),
+        h('div', { className: 'rp-heal-targets' }, living.map(function (p) {
+          var on = alloc.hasOwnProperty(p.member_id);
+          return h('div', { className: 'rp-heal-target' + (on ? ' is-on' : ''), key: p.member_id },
+            h('label', { className: 'rp-heal-pick' },
+              h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && selectedIds.length >= maxPeople), onChange: function () { toggleTarget(p.member_id); } }),
+              h('span', null, p.member_name + (p.member_id === me.member_id ? ' (you)' : ''))),
+            on ? h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(alloc[p.member_id]), disabled: props.locked, onChange: function (e) { setAmount(p.member_id, e.target.value); } }) : null);
+        })),
+        h('button', { type: 'button', className: 'rp-btn', disabled: !canApply || allocated <= 0, onClick: applyAoe }, busy ? 'Applying…' : 'Apply heal to ' + selectedIds.length + ' target(s)')) : null,
+      msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null);
   }
 
   // ── Modifier row (in My Items) ────────────────────────────────────────────
@@ -224,7 +286,7 @@
 
   // ── DM panel ──────────────────────────────────────────────────────────────
   function DMPanel(props) {
-    var c = props.campaign; var effects = props.effects;
+    var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || [];
     return h('div', { className: 'rp-card rp-dm' },
       h('div', { className: 'rp-dm-head' },
         h('h3', null, 'DM Tools'),
@@ -232,7 +294,10 @@
           h('span', { className: 'rp-turn-badge' + (c.turn_locked ? ' is-locked' : '') }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : '')),
           h('button', { type: 'button', className: 'rp-btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
           h('button', { type: 'button', className: 'rp-btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'))),
-      h('p', { className: 'rp-note' }, 'End Turn locks the board to you. Next Turn ticks all timers down and reopens play.'),
+      h('div', { className: 'rp-dm-session' },
+        h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
+        h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session')),
+      h('p', { className: 'rp-note' }, 'End Turn locks the board to you. Next Turn ticks all timers down and reopens play. Pause keeps everyone’s values but sends the party back to the standby screen (resume it from the Combat Toolkit).'),
       h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
       !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
         effects.map(function (e) {
@@ -247,7 +312,42 @@
               e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
               h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
-        }));
+        }),
+      h('h4', { className: 'rp-dm-sub' }, 'HP / Shield log'),
+      !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
+        h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
+          return h('div', { className: 'rp-log', key: l.id },
+            h('span', { className: 'rp-log-main' }, (l.actor_name || 'Someone') + ' → ' + (l.target_name || ('Member ' + l.target_member_id))),
+            h('span', { className: 'rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down') }, fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : 'HP') + ' (now ' + l.new_value + ')'));
+        })));
+  }
+
+  // ── Active skills banner (read-only, everyone) ────────────────────────────
+  function ActiveSkillsBanner(props) {
+    var effects = props.effects || [];
+    var openState = useState({}); var open = openState[0], setOpen = openState[1];
+    if (!effects.length) return null;
+    var passives = effects.filter(function (e) { return e.mode === 'always'; });
+    var actives = effects.filter(function (e) { return e.mode !== 'always'; });
+    function toggle(id) { var n = Object.assign({}, open); n[id] = !n[id]; setOpen(n); }
+    function row(e) {
+      var detail = (e.type === 'none' ? 'Narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
+        (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : '');
+      return h('div', { className: 'rp-skill' + (open[e.id] ? ' is-open' : ''), key: e.id },
+        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
+          h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
+          h('span', { className: 'rp-skill-sum' }, detail),
+          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, open[e.id] ? 'expand_less' : 'expand_more')),
+        open[e.id] ? h('div', { className: 'rp-skill-body' },
+          e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
+          e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    }
+    function section(title, list) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(row)) : null; }
+    return h('div', { className: 'rp-card rp-skills' },
+      h('h3', null, 'Active Skills'),
+      section('Passives (always on)', passives),
+      section('Active & ongoing', actives),
+      h('p', { className: 'rp-note' }, 'Visible to everyone, read-only — tap a skill to see its modifiers and description.'));
   }
 
   // ── App ───────────────────────────────────────────────────────────────────
@@ -288,7 +388,7 @@
           var me = (s.party || []).filter(function (p) { return cur.character && p.member_id === cur.character.member_id; })[0];
           setData(Object.assign({}, cur, {
             campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm }),
-            party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects,
+            party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log,
             character: me || cur.character, items: mergeItemState(cur.items, s.my_item_state)
           }));
         } catch (_e) {}
@@ -303,7 +403,7 @@
         var me = (s.party || []).filter(function (p) { return cur.character && p.member_id === cur.character.member_id; })[0];
         setData(Object.assign({}, dataRef.current, {
           campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm }),
-          party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects,
+          party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log,
           character: me || cur.character, items: mergeItemState(dataRef.current.items, s.my_item_state)
         }));
       } catch (_e) {}
@@ -323,12 +423,27 @@
     function onToggleEffect(e, enabled) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { enabled: enabled }); }); }
     function onSetTurns(e, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { remaining_turns: Math.max(0, v) }); }); }
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
+    function onPauseSession() { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/pause', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to pause.'); }); }
+    function onEndSession() { if (!confirm('End the session? Buffs and shields clear.')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
+    // Heal apply: additively write HP to each target via the character PATCH, then refresh.
+    function onApplyHeal(entries) {
+      return (async function () {
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i]; var p = (dataRef.current.party || []).filter(function (x) { return x.member_id === e.member_id; })[0];
+          if (!p || !(e.amount > 0)) continue;
+          var next = Math.min(p.current_hp + e.amount, p.max_hp);
+          await PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + e.member_id, { current_hp: next });
+        }
+        await refresh();
+      })();
+    }
 
     if (!session) return h(LockedCard);
     if (loading) return h('div', { className: 'rp-gate' }, h('p', null, 'Loading…'));
     if (err && !data) return h('div', { className: 'rp-gate' }, h('p', { className: 'rp-flash error' }, err));
     if (!data || !data.active) {
       if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your login isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
+      if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session. Everyone’s HP, shields, and buffs are saved — the board returns the moment it’s resumed.' });
       return h(PausedCard, {});
     }
 
@@ -345,12 +460,14 @@
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       locked ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
 
-      isDM ? h(DMPanel, { campaign: camp, effects: data.active_effects || [], onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect }) : null,
+      h(ActiveSkillsBanner, { effects: data.active_effects || [] }),
+
+      isDM ? h(DMPanel, { campaign: camp, effects: data.active_effects || [], hpLog: data.hp_log || [], onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect, onPauseSession: onPauseSession, onEndSession: onEndSession }) : null,
 
       c ? h('div', { className: 'rp-grid' },
         h('div', { className: 'rp-col' },
           h(AttackPanel, { ctx: ctx }), h(DefensePanel, { ctx: ctx }),
-          c.class_role === 'healer' ? h(HealPanel, { ctx: ctx }) : null,
+          h(HealPanel, { ctx: ctx, party: data.party || [], locked: locked, onApplyHeal: onApplyHeal }),
           h(BuffPanel, { character: c, locked: locked, onSave: onSaveBuffs })),
         h('div', { className: 'rp-col' },
           h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: locked, onHp: onHp, onShield: onShield }),

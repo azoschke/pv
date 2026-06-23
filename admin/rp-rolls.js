@@ -467,6 +467,14 @@
       try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/end'); flash[1]('Session ended.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
+    async function pauseSession(c) {
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/pause'); flash[1]('Session paused — values kept.'); await loadCampaigns(); }
+      catch (e) { setErr(e.message); }
+    }
+    async function resumeSession(c) {
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/resume'); flash[1]('Session resumed.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
+      catch (e) { setErr(e.message); }
+    }
     async function deleteCampaign(c) {
       if (!confirm('Delete campaign “' + c.name + '” and all its characters? This cannot be undone.')) return;
       try { await PVRollAPI.request('DELETE', '/rp/campaigns/' + c.id); if (selected && selected.id === c.id) setSelected(null); await loadCampaigns(); }
@@ -547,12 +555,15 @@
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
                 h('div', null,
                   h('strong', null, c.name),
-                  c.active ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', background: 'var(--accent-red)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Live') : null
+                  c.active ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', background: 'var(--accent-red)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Live') : null,
+                  c.paused ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-primary)', border: '1px solid var(--accent-gold)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Paused') : null
                 ),
                 h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap' } },
-                  c.active
-                    ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End session')
-                    : h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { startSession(c); } }, 'Start session'),
+                  // Lifecycle: fresh → Start; live → Pause + End; paused → Resume + End.
+                  c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause session') : null,
+                  c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume session') : null,
+                  (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End session') : null,
+                  (!c.active && !c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { startSession(c); } }, 'Start session') : null,
                   c.active
                     ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html', target: '_blank', rel: 'noopener' }, 'Public rolls page ↗')
                     : null,
