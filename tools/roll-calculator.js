@@ -143,8 +143,10 @@
     }
     function setAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, alloc); next[id] = n; setAlloc(next); }
 
-    var canApply = !props.locked && !busy && pool > 0;
+    var healed = props.healedThisTurn;
+    var canApply = !props.locked && !busy && pool > 0 && !healed;
     return h('div', { className: 'rp-card' }, h('h3', null, 'Healing Roll'),
+      healed ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, 'You’ve already healed this turn — wait for the next turn.') : null,
       isHealer ? h('div', { className: 'rp-seg' },
         h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'single' ? ' is-active' : ''), onClick: function () { setMode('single'); } }, 'Single Target'),
         h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'aoe' ? ' is-active' : ''), onClick: function () { setMode('aoe'); } }, 'AOE')) : null,
@@ -414,7 +416,7 @@
           var me = (s.party || []).filter(function (p) { return cur.character && p.member_id === cur.character.member_id; })[0];
           setData(Object.assign({}, cur, {
             campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm }),
-            party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log,
+            party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
             character: me || cur.character, items: mergeItemState(cur.items, s.my_item_state)
           }));
         } catch (_e) {}
@@ -429,7 +431,7 @@
         var me = (s.party || []).filter(function (p) { return cur.character && p.member_id === cur.character.member_id; })[0];
         setData(Object.assign({}, dataRef.current, {
           campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm }),
-          party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log,
+          party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
           character: me || cur.character, items: mergeItemState(dataRef.current.items, s.my_item_state)
         }));
       } catch (_e) {}
@@ -486,7 +488,7 @@
       c ? h('div', { className: 'rp-grid' },
         h('div', { className: 'rp-col' },
           h(AttackPanel, { ctx: ctx }), h(DefensePanel, { ctx: ctx }),
-          h(HealPanel, { ctx: ctx, party: data.party || [], locked: locked, onApplyHeal: onApplyHeal }),
+          h(HealPanel, { ctx: ctx, party: data.party || [], locked: locked, healedThisTurn: !!data.healed_this_turn, onApplyHeal: onApplyHeal }),
           h(BuffPanel, { character: c, locked: locked, onSave: onSaveBuffs })),
         h('div', { className: 'rp-col' },
           h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: locked, onHp: onHp, onShield: onShield }),
