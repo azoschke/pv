@@ -118,8 +118,8 @@
 
     var effMode = isHealer ? mode : 'single';
     var calc = computeRoll('heal', roll, ctx); var pool = calc.total + calc.outputTotal;
-    // Target the whole party — healing a downed (0 HP) ally above 0 revives them server-side.
-    var living = party;
+    // Eliminated (0 HP) allies can't be healed back up during a session — exclude them.
+    var living = party.filter(function (p) { return !p.eliminated; });
     var maxPeople = Math.max(1, parseInt(count, 10) || living.length);
     var selectedIds = Object.keys(alloc).map(Number);
     var allocated = selectedIds.reduce(function (s, id) { return s + (Number(alloc[id]) || 0); }, 0);
@@ -425,17 +425,10 @@
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
     function onPauseSession() { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/pause', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to pause.'); }); }
     function onEndSession() { if (!confirm('End the session? Buffs and shields clear.')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
-    // Heal apply: additively write HP to each target via the character PATCH, then refresh.
+    // Heal apply: one atomic request — additive server-side (no lost heals when two
+    // land together) and unable to revive eliminated targets. Then refresh.
     function onApplyHeal(entries) {
-      return (async function () {
-        for (var i = 0; i < entries.length; i++) {
-          var e = entries[i]; var p = (dataRef.current.party || []).filter(function (x) { return x.member_id === e.member_id; })[0];
-          if (!p || !(e.amount > 0)) continue;
-          var next = Math.min(p.current_hp + e.amount, p.max_hp);
-          await PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + e.member_id, { current_hp: next });
-        }
-        await refresh();
-      })();
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/heal', { entries: entries }).then(refresh);
     }
 
     if (!session) return h(LockedCard);
