@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal — Reset Password</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    .admin-login-wrap { max-width: 420px; margin: 3rem auto; }
+    .admin-login-wrap .parchment { padding: 32px; }
+    .portal-brand { text-align: center; margin-bottom: 1.5rem; }
+    .login-home-link { display: inline-block; margin-bottom: 0.75rem; }
+    .login-home-logo {
+      width: 64px; height: 64px; object-fit: contain;
+      display: block; margin: 0 auto; transition: transform 0.15s ease;
+    }
+    .login-home-link:hover .login-home-logo { transform: scale(1.06); }
+    .portal-brand-title {
+      font-family: 'Stoke', serif; font-size: 1.1rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-primary); margin: 0 0 0.25rem;
+    }
+    .portal-brand-subtitle {
+      font-family: 'La Belle Aurore', cursive; font-size: 0.95rem;
+      color: var(--text-secondary); margin: 0;
+    }
+    .reset-target {
+      text-align: center; font-family: 'Crimson Pro', serif;
+      font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 1rem;
+    }
+    .reset-target strong { color: var(--text-primary); }
+    .flash {
+      padding: 0.6rem 0.8rem; border-radius: 4px; margin-top: 0.75rem;
+      font-family: 'Crimson Pro', serif; font-size: 0.9rem;
+    }
+    .flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+    .flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+    .reset-hint { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="admin-login-wrap">
+      <div class="parchment">
+        <div class="portal-brand">
+          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          </a>
+          <p class="portal-brand-title">Phoenix Vanguard</p>
+          <p class="portal-brand-subtitle">Management Portal</p>
+        </div>
+
+        <h3 class="section-heading" style="text-align:center;">Reset Password</h3>
+
+        <!-- States are toggled by the script below. -->
+        <div id="reset-checking" style="text-align:center;color:var(--text-secondary);font-family:'Crimson Pro',serif;">
+          Checking your reset link…
+        </div>
+
+        <div id="reset-invalid" style="display:none;">
+          <div class="flash error" id="reset-invalid-msg">This reset link is invalid or has expired.</div>
+          <a href="/pv/admin/login.html"
+             style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
+            Back to sign in →
+          </a>
+        </div>
+
+        <form id="resetForm" style="display:none;" autocomplete="off">
+          <p class="reset-target" id="reset-target"></p>
+          <div class="form-group">
+            <label for="reset-password">New password</label>
+            <input id="reset-password" name="password" type="password" required autocomplete="new-password" minlength="10">
+            <div class="reset-hint">At least 10 characters.</div>
+          </div>
+          <div class="form-group">
+            <label for="reset-confirm">Confirm new password</label>
+            <input id="reset-confirm" name="confirm" type="password" required autocomplete="new-password">
+          </div>
+          <div id="reset-flash"></div>
+          <button type="submit" id="reset-submit" class="submit-btn" style="width:100%;">Set new password</button>
+        </form>
+
+        <div id="reset-done" style="display:none;">
+          <div class="flash success">Your password has been updated. You can now sign in with it.</div>
+          <a href="/pv/admin/login.html"
+             style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
+            Go to sign in →
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script>
+  (function () {
+    var checking = document.getElementById('reset-checking');
+    var invalid  = document.getElementById('reset-invalid');
+    var invalidMsg = document.getElementById('reset-invalid-msg');
+    var form     = document.getElementById('resetForm');
+    var target   = document.getElementById('reset-target');
+    var done     = document.getElementById('reset-done');
+    var flash    = document.getElementById('reset-flash');
+    var btn      = document.getElementById('reset-submit');
+
+    var token = (function () {
+      try { return new URLSearchParams(window.location.search).get('token') || ''; }
+      catch (_e) { return ''; }
+    })();
+
+    function show(el) { el.style.display = ''; }
+    function hide(el) { el.style.display = 'none'; }
+
+    function showInvalid(msg) {
+      hide(checking); hide(form); hide(done);
+      if (msg) invalidMsg.textContent = msg;
+      show(invalid);
+    }
+
+    function showFlash(type, msg) {
+      flash.innerHTML = '';
+      if (!msg) return;
+      var div = document.createElement('div');
+      div.className = 'flash ' + type;
+      div.textContent = msg;
+      flash.appendChild(div);
+    }
+
+    if (!token) {
+      showInvalid('No reset link was provided. Ask an admin to send you a new one.');
+      return;
+    }
+
+    // Validate the token up front so the member sees whose account this is
+    // before typing a new password (and gets a clear message if it's stale).
+    (async function () {
+      try {
+        var res = await PVAdminAPI.request(
+          'GET', '/auth/reset/check?token=' + encodeURIComponent(token), undefined, false
+        );
+        if (!res || !res.valid) {
+          showInvalid('This reset link is invalid or has expired. Ask an admin for a new one.');
+          return;
+        }
+        target.innerHTML = '';
+        target.appendChild(document.createTextNode('Setting a new password for '));
+        var strong = document.createElement('strong');
+        strong.textContent = res.display_name || 'your account';
+        target.appendChild(strong);
+        target.appendChild(document.createTextNode('.'));
+        hide(checking);
+        show(form);
+      } catch (err) {
+        showInvalid('Could not verify your reset link. Please try again later.');
+      }
+    })();
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var password = document.getElementById('reset-password').value;
+      var confirm  = document.getElementById('reset-confirm').value;
+      if (!password || !confirm) return;
+      if (password.length < 10) {
+        showFlash('error', 'Password must be at least 10 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showFlash('error', 'The two passwords do not match.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      showFlash('', '');
+
+      try {
+        await PVAdminAPI.request('POST', '/auth/reset/redeem', {
+          token: token, password: password
+        }, false);
+        hide(form);
+        show(done);
+      } catch (err) {
+        // An expired/used token mid-flow returns 400 — send them back to the
+        // invalid state rather than leaving a dead form.
+        if (err && err.status === 400) {
+          showInvalid(err.message || 'This reset link is no longer valid. Ask an admin for a new one.');
+          return;
+        }
+        showFlash('error', err.message || 'Could not reset your password.');
+        btn.disabled = false;
+        btn.textContent = 'Set new password';
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
