@@ -3434,6 +3434,9 @@ body.nav-sidebar-open {
 }
 .codex-row:first-child { border-top: none; }
 .codex-row:hover { background: var(--bg-card-light); }
+/* Cancel the global `button:active { transform: scale(.98) }` — on a
+   full-width row that shrink exposes the card behind the hover fill. */
+.codex-row:active { transform: none; }
 /* Keyboard focus: a left accent bar + fill — never an inset outline box. */
 .codex-row:focus-visible {
   outline: none;

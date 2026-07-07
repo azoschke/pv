@@ -141,19 +141,12 @@
     }
     function isMobile() { return window.innerWidth <= 768; }
 
-    // "Written by X, Y Campaign" — the author/campaign portion of the subtitle.
-    function authorCampaignText(e) {
-      var parts = [];
-      if (e.author_name) parts.push('Written by ' + e.author_name);
-      if (e.campaign_name) parts.push(e.campaign_name + ' Campaign');
-      return parts.join(', ');
-    }
-    // Plain subtitle (rows + modal): "Region · Written by X, Y Campaign".
+    // Subtitle (rows + modal): "Written by [Name] · [Region] · [Campaign]".
     function subtitleText(e) {
       var pieces = [];
+      if (e.author_name) pieces.push('Written by ' + e.author_name);
       if (e.region_name) pieces.push(e.region_name);
-      var ac = authorCampaignText(e);
-      if (ac) pieces.push(ac);
+      if (e.campaign_name) pieces.push(e.campaign_name);
       return pieces.join(' · ');
     }
 
