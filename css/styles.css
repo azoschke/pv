@@ -3409,9 +3409,14 @@ body.nav-sidebar-open {
 }
 .codex-type-heading:first-child { margin-top: 0.25rem; }
 
-/* Flat, full-width rows under each type heading — no nested card, so the
-   hover/active highlight fills edge-to-edge instead of an inset box. */
-.codex-group { display: flex; flex-direction: column; }
+/* Each type group is one rounded card; rows fill it edge-to-edge so the
+   hover/focus highlight spans the full width with no inset box. */
+.codex-group {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
 
 .codex-row {
   display: flex;
@@ -3420,15 +3425,21 @@ body.nav-sidebar-open {
   width: 100%;
   box-sizing: border-box;
   text-align: left;
-  padding: 0.8rem 0.9rem;
+  padding: 0.85rem 1.1rem;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
+.codex-row:first-child { border-top: none; }
 .codex-row:hover { background: var(--bg-card-light); }
-.codex-row:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: -2px; }
+/* Keyboard focus: a left accent bar + fill — never an inset outline box. */
+.codex-row:focus-visible {
+  outline: none;
+  background: var(--bg-card-light);
+  box-shadow: inset 3px 0 0 var(--accent-brown);
+}
 
 .codex-row-main { flex: 1 1 auto; min-width: 0; }
 .codex-row-name {

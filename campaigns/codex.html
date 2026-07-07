@@ -424,9 +424,20 @@
           '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
         '</div>';
 
+      // Move focus off the clicked row and into the modal, so the row never
+      // keeps a lingering focus ring once the modal closes.
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+      // Lock scroll without the layout shift that removing the scrollbar causes
+      // (which read as the row "shrinking" on click).
+      var sw = window.innerWidth - document.documentElement.clientWidth;
+      if (sw > 0) document.body.style.paddingRight = sw + 'px';
+      document.body.style.overflow = 'hidden';
+
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      if (modalClose && modalClose.focus) { try { modalClose.focus(); } catch (_) {} }
       try { history.replaceState(null, '', '?e=' + encodeURIComponent(e.slug)); } catch (_) {}
     }
 
@@ -437,6 +448,7 @@
       modalOverlay.classList.remove('is-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
       modalBody.innerHTML = '';
       try { history.replaceState(null, '', window.location.pathname); } catch (_) {}
     }
