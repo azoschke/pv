@@ -3409,28 +3409,24 @@ body.nav-sidebar-open {
 }
 .codex-type-heading:first-child { margin-top: 0.25rem; }
 
-/* Grouped rows sit on a single quiet card so the type reads as one block. */
-.codex-group {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--bg-card);
-}
+/* Flat, full-width rows under each type heading — no nested card, so the
+   hover/active highlight fills edge-to-edge instead of an inset box. */
+.codex-group { display: flex; flex-direction: column; }
 
 .codex-row {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
+  box-sizing: border-box;
   text-align: left;
-  padding: 0.85rem 1.1rem;
+  padding: 0.8rem 0.9rem;
   background: transparent;
   border: none;
-  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
-.codex-row:first-child { border-top: none; }
 .codex-row:hover { background: var(--bg-card-light); }
 .codex-row:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: -2px; }
 
@@ -3443,11 +3439,11 @@ body.nav-sidebar-open {
 }
 .codex-row-sub {
   display: block;
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
   font-family: 'Stoke', serif;
-  font-size: 0.76rem;
+  font-size: 0.65rem;
   letter-spacing: 0.02em;
-  color: var(--text-secondary);
+  color: var(--accent-brown);
   opacity: 0.85;
 }
 .codex-row-preview {
@@ -3471,14 +3467,15 @@ body.nav-sidebar-open {
   border: 1px solid var(--border-color);
 }
 
-/* Modal subtitle (Written by X, Y Campaign) */
+/* Modal subtitle (Region · Written by X, Y Campaign) */
 .codex-modal-sub {
   font-family: 'Stoke', serif;
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--accent-brown);
   margin: 0.15rem 0 1.1rem;
 }
+.codex-modal-sub a { color: inherit; text-decoration: underline; }
 
 @media (max-width: 768px) {
   .codex-row { padding: 0.8rem 0.9rem; }

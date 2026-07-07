@@ -134,12 +134,32 @@
     }
     function isMobile() { return window.innerWidth <= 768; }
 
-    // The small subtitle line: "Written by X, Y Campaign".
-    function subtitleText(e) {
+    // "Written by X, Y Campaign" — the author/campaign portion of the subtitle.
+    function authorCampaignText(e) {
       var parts = [];
       if (e.author_name) parts.push('Written by ' + e.author_name);
       if (e.campaign_name) parts.push(e.campaign_name + ' Campaign');
       return parts.join(', ');
+    }
+    // Plain subtitle for rows: "Region · Written by X, Y Campaign".
+    function subtitleText(e) {
+      var pieces = [];
+      if (e.region_name) pieces.push(e.region_name);
+      var ac = authorCampaignText(e);
+      if (ac) pieces.push(ac);
+      return pieces.join(' · ');
+    }
+    // Modal subtitle, with the region linked to its own entry.
+    function subtitleHtml(e) {
+      var pieces = [];
+      if (e.region_name) {
+        pieces.push(e.region_slug
+          ? '<a href="?e=' + encodeURIComponent(e.region_slug) + '" data-region="' + escapeHtml(e.region_slug) + '">' + escapeHtml(e.region_name) + '</a>'
+          : escapeHtml(e.region_name));
+      }
+      var ac = authorCampaignText(e);
+      if (ac) pieces.push(escapeHtml(ac));
+      return pieces.join(' · ');
     }
 
     // Strip a little markdown for the one-line row preview.
@@ -274,7 +294,7 @@
       var q = (filters.search || '').trim().toLowerCase();
       if (!q) return true;
       var hay = [e.name || '', e.description_md || '', e.author_name || '',
-                 e.campaign_name || '', TYPE_LABEL[e.type] || ''].join(' ').toLowerCase();
+                 e.campaign_name || '', e.region_name || '', TYPE_LABEL[e.type] || ''].join(' ').toLowerCase();
       return hay.indexOf(q) !== -1;
     }
     function matchesType(e) {
@@ -361,7 +381,7 @@
     function openModal(slug) {
       var e = bySlug[slug];
       if (!e) return;
-      var sub = subtitleText(e);
+      var sub = subtitleHtml(e);
       var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)
         ? CampaignUtils.parseMarkdown(e.description_md || '')
         : '<p>' + escapeHtml(e.description_md || '') + '</p>';
@@ -370,9 +390,15 @@
         (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
         '<div class="venue-modal-content">' +
           '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
-          (sub ? '<p class="codex-modal-sub">' + escapeHtml(sub) + '</p>' : '') +
+          (sub ? '<p class="codex-modal-sub">' + sub + '</p>' : '') +
           '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
         '</div>';
+
+      // The region link re-opens the modal on that region's entry.
+      var rlink = modalBody.querySelector('a[data-region]');
+      if (rlink) rlink.addEventListener('click', function (ev) {
+        ev.preventDefault(); openModal(rlink.getAttribute('data-region'));
+      });
 
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');

@@ -315,6 +315,7 @@
     var initial = props.initial;          // null for new
     var campaigns = props.campaigns || [];
     var members = props.members || [];
+    var regions = props.regions || [];    // codex entries of type 'region'
     var onSubmit = props.onSubmit;
     var onCancel = props.onCancel;
     var isEdit = !!(initial && initial.id);
@@ -323,6 +324,7 @@
       name: initial ? (initial.name || '') : '',
       type: initial ? (initial.type || 'character') : 'character',
       campaign_id: initial && initial.campaign_id != null ? String(initial.campaign_id) : '',
+      region_id: initial && initial.region_id != null ? String(initial.region_id) : '',
       author_member_id: initial && initial.author_member_id != null ? String(initial.author_member_id) : '',
       author_name: initial ? (initial.author_name || '') : '',
       description_md: initial ? (initial.description_md || '') : '',
@@ -353,6 +355,7 @@
           name: draft.name.trim(),
           type: draft.type,
           campaign_id: draft.campaign_id === '' ? null : Number(draft.campaign_id),
+          region_id: (draft.type === 'region' || draft.region_id === '') ? null : Number(draft.region_id),
           author_member_id: draft.author_member_id === '' ? null : Number(draft.author_member_id),
           author_name: draft.author_member_id === '' ? null : (draft.author_name || null),
           description_md: draft.description_md,
@@ -386,6 +389,15 @@
             h('option', { value: '' }, '— Shared (no campaign) —'),
             campaigns.map(function (c) { return h('option', { key: c.id, value: String(c.id) }, c.name); }))
         ),
+        draft.type !== 'region' ? h('div', { className: 'portal-field' },
+          h('label', null, 'Region'),
+          h('select', { value: draft.region_id, onChange: function (e) { setField('region_id', e.target.value); } },
+            h('option', { value: '' }, '— None —'),
+            regions.filter(function (r) { return !isEdit || r.id !== initial.id; })
+              .map(function (r) { return h('option', { key: r.id, value: String(r.id) }, r.name); })),
+          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+            'Optional. Tie this entry to a Region-type entry.')
+        ) : null,
         h('div', { className: 'portal-field' },
           h('label', null, 'Author'),
           h('select', { value: draft.author_member_id, onChange: function (e) { onAuthorChange(e.target.value); } },
@@ -499,6 +511,7 @@
         initial: form.entry || null,
         campaigns: campaigns,
         members: members,
+        regions: entries.filter(function (e) { return e.type === 'region'; }),
         onSubmit: submitEntry,
         onCancel: function () { setForm(null); }
       });
