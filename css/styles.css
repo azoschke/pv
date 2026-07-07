@@ -3472,15 +3472,6 @@ body.nav-sidebar-open {
   text-overflow: ellipsis;
   max-width: 100%;
 }
-.codex-row-thumb {
-  flex: 0 0 auto;
-  width: 72px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-}
-
 /* Modal byline under the title (Written by X) */
 .codex-modal-sub {
   font-family: 'Stoke', serif;
@@ -3514,7 +3505,6 @@ body.nav-sidebar-open {
 
 @media (max-width: 768px) {
   .codex-row { padding: 0.8rem 0.9rem; }
-  .codex-row-thumb { width: 60px; height: 40px; }
 }
 
 

@@ -364,8 +364,7 @@
           '<span class="codex-row-name">' + escapeHtml(e.name) + '</span>' +
           (sub ? '<span class="codex-row-sub">' + escapeHtml(sub) + '</span>' : '') +
           (preview ? '<span class="codex-row-preview">' + escapeHtml(preview) + '</span>' : '') +
-        '</span>' +
-        (e.image_url ? '<img class="codex-row-thumb" src="' + escapeHtml(e.image_url) + '" alt="" loading="lazy" onerror="this.remove()">' : '');
+        '</span>';
       btn.addEventListener('click', function () { openModal(e.slug); });
       return btn;
     }
