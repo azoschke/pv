@@ -358,6 +358,15 @@ pre {
   border-top: 1px solid var(--border-color);
 }
 
+/* Empty separator <li> injected between the campaign list and the Codex link. */
+.nav-submenu-divider {
+  height: 0;
+  margin: 0.35rem 0;
+  border-top: 1px solid var(--border-color);
+  list-style: none;
+  pointer-events: none;
+}
+
 /* --- Admin login pill (user icon + "Login") --- */
 .nav-login-btn {
   display: inline-flex;
@@ -3379,6 +3388,123 @@ body.nav-sidebar-open {
   .venues-toolbar .venues-filter-select { width: 100%; }
   .venue-modal-overlay { padding: 1rem; }
   .venue-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
+}
+
+
+/* =============================================================================
+   14b. CODEX — directory page (public)
+   Quiet list grouped by type; name + small subtitle + preview, click-to-open.
+   ========================================================================== */
+.codex-list { display: flex; flex-direction: column; }
+
+.codex-type-heading {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.85;
+  margin: 2rem 0 0.5rem;
+}
+.codex-type-heading:first-child { margin-top: 0.25rem; }
+
+/* Each type group is one rounded card; rows fill it edge-to-edge so the
+   hover/focus highlight spans the full width with no inset box. */
+.codex-group {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.codex-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 0.85rem 1.1rem;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.codex-row:first-child { border-top: none; }
+.codex-row:hover { background: var(--bg-card-light); }
+/* Cancel the global `button:active { transform: scale(.98) }` — on a
+   full-width row that shrink exposes the card behind the hover fill. */
+.codex-row:active { transform: none; }
+/* Keyboard focus: a left accent bar + fill — never an inset outline box. */
+.codex-row:focus-visible {
+  outline: none;
+  background: var(--bg-card-light);
+  box-shadow: inset 3px 0 0 var(--accent-brown);
+}
+
+.codex-row-main { flex: 1 1 auto; min-width: 0; }
+.codex-row-name {
+  display: block;
+  font-family: 'Stoke', serif;
+  font-size: 1.12rem;
+  color: var(--text-primary);
+}
+.codex-row-sub {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--accent-brown);
+  opacity: 0.85;
+}
+.codex-row-preview {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+/* Modal byline under the title (Written by X) */
+.codex-modal-sub {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--accent-brown);
+  margin: 0.15rem 0 1.1rem;
+}
+
+/* Region / campaign tags pinned at the bottom of the modal */
+.codex-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.codex-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .codex-row { padding: 0.8rem 0.9rem; }
 }
 
 

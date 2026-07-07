@@ -140,6 +140,13 @@
   function renderCampaignMenus(placeholder, campaigns) {
     const activeSlug = currentCampaignSlug();
 
+    // Are we currently on the Codex page? (highlights the Codex link.)
+    let codexActive = false;
+    try {
+      const cloc = getCurrentLocation();
+      codexActive = (cloc.section === 'campaigns' && cloc.page === 'codex');
+    } catch (_e) { codexActive = false; }
+
     // Are we on the landing filtered to one-shots (the One-Shots menu target)?
     let oneshotActive = false;
     try {
@@ -207,6 +214,14 @@
         const all = menu.querySelector('.nav-sublink[data-subpage="campaigns"]');
         if (all) all.classList.remove('active');
       }
+
+      // Divider, then the Codex — reference material, separated from the story
+      // campaign list above. Appended last so it always sits at the bottom.
+      const divider = document.createElement('li');
+      divider.className = 'nav-campaign-dynamic nav-submenu-divider';
+      divider.setAttribute(isDesktop ? 'role' : 'aria-hidden', isDesktop ? 'separator' : 'true');
+      menu.appendChild(divider);
+      makeItem(BASE_PATH + '/campaigns/codex.html', 'Codex', 'campaigns-codex', codexActive);
     });
   }
 

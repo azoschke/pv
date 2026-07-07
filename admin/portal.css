@@ -554,6 +554,29 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
 .portal-flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
 
+/* Keep multi-word member column headers (e.g. "IC Interview") on one line. */
+.members-table thead th { white-space: nowrap; }
+/* Vertically center row content against the tallest cell (e.g. the Activity
+   status + inline talked-to line). */
+.members-table tbody td { vertical-align: middle; }
+
+/* --------------- Activity cell (status + inline talked-to) --------------- */
+.activity-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+.activity-cell .talked-to-cell {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.activity-cell .talked-to-cell input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+}
+
 /* --------------- Talked-to checkbox cell --------------- */
 .talked-to-cell {
   display: inline-flex;
@@ -566,6 +589,19 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+
+/* --------------- My Profile two-column layout --------------- */
+.my-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1rem;
+  align-items: start;
+}
+.my-profile-main { min-width: 0; }
+.my-profile-side { min-width: 0; }
+@media (max-width: 900px) {
+  .my-profile-layout { grid-template-columns: 1fr; }
 }
 
 /* --------------- Faction tag chips (read-only display) --------------- */
@@ -762,12 +798,19 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* Pending / Scheduled groups side by side on wide views, stacking when the
-   row can no longer fit two groups. */
+   row can no longer fit two groups. Each group grows in proportion to how many
+   tiles it holds (Pending: 3, Scheduled: 2 — set inline in dashboard.js), so a
+   tile is the same width regardless of which group it lives in. */
 .dash-stat-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1.5rem 2rem;
   margin-bottom: 1.25rem;
+}
+.dash-stat-section {
+  flex: 1 1 auto;
+  min-width: min(100%, 16rem);
 }
 .dash-stat-heading {
   margin: 0 0 0.5rem;
@@ -783,8 +826,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 1rem;
 }
 .dash-stat {
-  flex: 1 1 160px;
-  max-width: 280px;
+  flex: 1 1 0;
+  min-width: 8.5rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -997,6 +1040,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+
+/* --------------- Venues directory --------------- */
+/* Center every cell vertically so the row text lines up with the thumbnail. */
+.venues-table tbody td { vertical-align: middle; }
+/* First-column thumbnail runs flush to the card edge (like Event Assets),
+   overriding the generic first-child inset padding. */
+.venues-table .venues-thumb-cell {
+  width: 132px;
+  padding: 0 !important;
+  overflow: hidden;
 }
 
 /* --------------- Event Assets --------------- */

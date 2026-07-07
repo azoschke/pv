@@ -37,6 +37,23 @@
     return found ? found.label : t;
   }
 
+  // Codex type enum — keep in sync with the worker's CODEX_TYPES and the public
+  // codex.html TYPE_ORDER.
+  var CODEX_TYPES = [
+    { value: 'character', label: 'Character' },
+    { value: 'creature',  label: 'Creature' },
+    { value: 'location',  label: 'Location' },
+    { value: 'region',    label: 'Region' },
+    { value: 'faction',   label: 'Faction' },
+    { value: 'item',      label: 'Item' },
+    { value: 'event',     label: 'Event' },
+    { value: 'lore',      label: 'Lore & Other' }
+  ];
+  function codexTypeLabel(t) {
+    var found = CODEX_TYPES.find(function (o) { return o.value === t; });
+    return found ? found.label : t;
+  }
+
   // ── Worker request helper ───────────────────────────────────────────────────
   async function campaignsRequest(method, path, body, authed) {
     var headers = { 'Accept': 'application/json' };
@@ -293,11 +310,272 @@
     );
   }
 
+  // ── Codex entry form ────────────────────────────────────────────────────────
+  function CodexForm(props) {
+    var initial = props.initial;          // null for new
+    var campaigns = props.campaigns || [];
+    var members = props.members || [];
+    var regions = props.regions || [];    // codex entries of type 'region'
+    var onSubmit = props.onSubmit;
+    var onCancel = props.onCancel;
+    var isEdit = !!(initial && initial.id);
+
+    var draftState = useState({
+      name: initial ? (initial.name || '') : '',
+      type: initial ? (initial.type || 'character') : 'character',
+      campaign_id: initial && initial.campaign_id != null ? String(initial.campaign_id) : '',
+      region_id: initial && initial.region_id != null ? String(initial.region_id) : '',
+      author_member_id: initial && initial.author_member_id != null ? String(initial.author_member_id) : '',
+      author_name: initial ? (initial.author_name || '') : '',
+      description_md: initial ? (initial.description_md || '') : '',
+      image_url: initial ? (initial.image_url || '') : ''
+    });
+    var draft = draftState[0], setDraft = draftState[1];
+    var savingState = useState(false);
+    var saving = savingState[0], setSaving = savingState[1];
+    var errState = useState('');
+    var err = errState[0], setErr = errState[1];
+
+    function setField(k, v) {
+      setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
+    }
+    function onAuthorChange(v) {
+      var m = members.find(function (x) { return String(x.id) === String(v); });
+      setDraft(function (d) {
+        return Object.assign({}, d, { author_member_id: v, author_name: m ? (m.name || '') : '' });
+      });
+    }
+
+    async function submit(e) {
+      e.preventDefault();
+      if (!draft.name.trim()) { setErr('Name is required.'); return; }
+      setSaving(true); setErr('');
+      try {
+        await onSubmit({
+          name: draft.name.trim(),
+          type: draft.type,
+          campaign_id: draft.campaign_id === '' ? null : Number(draft.campaign_id),
+          region_id: (draft.type === 'region' || draft.region_id === '') ? null : Number(draft.region_id),
+          author_member_id: draft.author_member_id === '' ? null : Number(draft.author_member_id),
+          author_name: draft.author_member_id === '' ? null : (draft.author_name || null),
+          description_md: draft.description_md,
+          image_url: draft.image_url.trim() || null
+        });
+      } catch (e2) {
+        setErr(e2.message || 'Failed to save entry.');
+        setSaving(false);
+      }
+    }
+
+    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
+      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit codex entry' : 'New codex entry'),
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Name *'),
+        h('input', { type: 'text', maxLength: 120, value: draft.name, required: true,
+          onChange: function (e) { setField('name', e.target.value); } })
+      ),
+
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Type *'),
+          h('select', { value: draft.type, onChange: function (e) { setField('type', e.target.value); } },
+            CODEX_TYPES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))
+        ),
+        draft.type !== 'region' ? h('div', { className: 'portal-field' },
+          h('label', null, 'Region'),
+          h('select', { value: draft.region_id, onChange: function (e) { setField('region_id', e.target.value); } },
+            h('option', { value: '' }, '— None —'),
+            regions.filter(function (r) { return !isEdit || r.id !== initial.id; })
+              .map(function (r) { return h('option', { key: r.id, value: String(r.id) }, r.name); })),
+          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+            'Optional. Tie this entry to a Region-type entry.')
+        ) : null,
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Campaign'),
+          h('select', { value: draft.campaign_id, onChange: function (e) { setField('campaign_id', e.target.value); } },
+            h('option', { value: '' }, '— Shared (no campaign) —'),
+            campaigns.map(function (c) { return h('option', { key: c.id, value: String(c.id) }, c.name); }))
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Author'),
+          h('select', { value: draft.author_member_id, onChange: function (e) { onAuthorChange(e.target.value); } },
+            h('option', { value: '' }, '— None —'),
+            members.map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
+          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+            'Optional attribution.')
+        )
+      ),
+
+      h('div', { className: 'portal-field' },
+        h('label', null, 'Description (Markdown)'),
+        h('textarea', { rows: 8, value: draft.description_md,
+          style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+          placeholder: 'Describe this entry. Markdown allowed.',
+          onChange: function (e) { setField('description_md', e.target.value); } })
+      ),
+
+      (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
+        ? h(PVAdminQuestUtils.ImageField, {
+            value: draft.image_url,
+            onChange: function (v) { setField('image_url', v); },
+            disabled: saving,
+            uploadPath: '/venues/images',
+            extraFields: { venue_name: draft.name.trim() || 'codex' },
+            help: 'Optional. Paste a URL or upload an image.'
+          })
+        : h('div', { className: 'portal-field' },
+            h('label', null, 'Image URL'),
+            h('input', { type: 'text', value: draft.image_url, placeholder: 'https://…',
+              onChange: function (e) { setField('image_url', e.target.value); } })
+          ),
+
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+        h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
+          saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create entry')),
+        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
+      )
+    );
+  }
+
+  // ── Codex manager (list grouped by type + form) ──────────────────────────────
+  function CodexManager(props) {
+    var isAdmin = props.isAdmin;
+    var campaigns = props.campaigns || [];
+
+    var entriesState = useState([]);
+    var entries = entriesState[0], setEntries = entriesState[1];
+    var membersState = useState([]);
+    var members = membersState[0], setMembers = membersState[1];
+    var loadingState = useState(true);
+    var loading = loadingState[0], setLoading = loadingState[1];
+    var errState = useState('');
+    var err = errState[0], setErr = errState[1];
+    var flashState = useState('');
+    var flash = flashState[0], setFlash = flashState[1];
+    var formState = useState(null); // null | { entry }
+    var form = formState[0], setForm = formState[1];
+
+    function flashFor(msg) { setFlash(msg); setTimeout(function () { setFlash(''); }, 3500); }
+
+    async function reload() {
+      setErr('');
+      try {
+        var data = await campaignsRequest('GET', '/codex', undefined, false);
+        setEntries(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setErr(e.message || 'Failed to load codex entries.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    useEffect(function () { reload(); }, []);
+    // Members power the optional author dropdown; a failure here is non-fatal.
+    useEffect(function () {
+      (async function () {
+        try {
+          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
+          var list = (Array.isArray(data) ? data : []).slice().sort(function (a, b) {
+            return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+          });
+          setMembers(list);
+        } catch (_e) { /* author dropdown simply stays empty */ }
+      })();
+    }, []);
+
+    async function submitEntry(payload) {
+      var editing = form && form.entry;
+      if (editing) {
+        await campaignsRequest('PATCH', '/codex/' + editing.id, payload, true);
+        flashFor('Entry updated.');
+      } else {
+        await campaignsRequest('POST', '/codex', payload, true);
+        flashFor('Entry created.');
+      }
+      setForm(null);
+      await reload();
+    }
+
+    async function deleteEntry(entry) {
+      if (!confirm('Delete codex entry “' + entry.name + '”? This cannot be undone.')) return;
+      try {
+        await campaignsRequest('DELETE', '/codex/' + entry.id, undefined, true);
+        flashFor('Entry deleted.');
+        await reload();
+      } catch (e) { setErr(e.message || 'Failed to delete entry.'); }
+    }
+
+    if (form) {
+      return h(CodexForm, {
+        initial: form.entry || null,
+        campaigns: campaigns,
+        members: members,
+        regions: entries.filter(function (e) { return e.type === 'region'; }),
+        onSubmit: submitEntry,
+        onCancel: function () { setForm(null); }
+      });
+    }
+
+    if (loading) return h('div', { className: 'portal-card' }, 'Loading codex…');
+
+    // Group entries by type in canonical order (worker already sorts by name).
+    var groups = CODEX_TYPES.map(function (t) {
+      return { type: t.value, label: t.label, items: entries.filter(function (e) { return e.type === t.value; }) };
+    }).filter(function (g) { return g.items.length; });
+
+    return h('div', null,
+      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
+        h('p', { style: { margin: 0, color: 'var(--text-secondary)' } },
+          entries.length + (entries.length === 1 ? ' entry' : ' entries')),
+        h('button', { type: 'button', className: 'portal-btn',
+          onClick: function () { setForm({ entry: null }); } }, '+ New entry')
+      ),
+
+      !entries.length
+        ? h('div', { className: 'portal-card' }, 'No codex entries yet. Create one to get started.')
+        : groups.map(function (g) {
+            return h('div', { key: g.type, className: 'portal-card', style: { marginBottom: '0.75rem' } },
+              h('p', { style: { margin: '0 0 0.5rem', fontSize: '0.78rem', letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: 'var(--text-secondary)' } }, g.label + ' · ' + g.items.length),
+              g.items.map(function (e, idx) {
+                return h('div', { key: e.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  gap: '0.75rem', padding: '0.45rem 0', borderTop: idx === 0 ? 'none' : '1px solid var(--border-color)' } },
+                  h('div', { style: { minWidth: 0 } },
+                    h('div', { style: { fontWeight: 600 } }, e.name,
+                      (function () {
+                        var meta = [e.region_name, e.campaign_name].filter(Boolean).join(' · ');
+                        return meta ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + meta) : null;
+                      })()),
+                    h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '38rem' } },
+                      (e.author_name ? 'by ' + e.author_name + ' — ' : '') +
+                      (e.description_md ? String(e.description_md).replace(/[#>*_`~\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '—'))
+                  ),
+                  h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+                      onClick: function () { setForm({ entry: e }); } }, 'Edit'),
+                    isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+                      onClick: function () { deleteEntry(e); } }, 'Delete') : null
+                  )
+                );
+              })
+            );
+          })
+    );
+  }
+
   // ── Main component ────────────────────────────────────────────────────────────
   function PVAdminCampaigns(props) {
     // Only admins may delete campaigns/chapters; officers get add/edit/reorder.
     var roles = (props.session && props.session.roles) || [];
     var isAdmin = roles.indexOf('admin') !== -1;
+
+    // 'story' = campaign/chapter editor; 'codex' = the codex entry manager.
+    var tabState = useState('story');
+    var tab = tabState[0], setTab = tabState[1];
 
     var campaignsState = useState([]);
     var campaigns = campaignsState[0], setCampaigns = campaignsState[1];
@@ -453,11 +731,26 @@
     }
 
     // ── Render ────────────────────────────────────────────────────────────────────
-    if (loading) return h('div', { className: 'portal-card' }, 'Loading campaigns…');
+    // Story / Codex tab switch — both live under the Campaigns admin section.
+    function tabBar() {
+      return h('div', { className: 'portal-chip-group', style: { marginBottom: '1rem' } },
+        h('button', { type: 'button', className: 'portal-chip' + (tab === 'story' ? ' is-active' : ''),
+          onClick: function () { setTab('story'); } }, 'Story'),
+        h('button', { type: 'button', className: 'portal-chip' + (tab === 'codex' ? ' is-active' : ''),
+          onClick: function () { setTab('codex'); } }, 'Codex')
+      );
+    }
+
+    if (tab === 'codex') {
+      return h('div', null, tabBar(),
+        h(CodexManager, { isAdmin: isAdmin, campaigns: campaigns }));
+    }
+
+    if (loading) return h('div', null, tabBar(), h('div', { className: 'portal-card' }, 'Loading campaigns…'));
 
     // Form views take over the panel when open.
     if (campaignForm) {
-      return h('div', null,
+      return h('div', null, tabBar(),
         h(CampaignForm, {
           initial: campaignForm.campaign || null,
           onSubmit: submitCampaign,
@@ -466,7 +759,7 @@
       );
     }
     if (chapterForm) {
-      return h('div', null,
+      return h('div', null, tabBar(),
         h(ChapterForm, {
           initial: chapterForm.chapter || null,
           fullChapter: fullChapter,
@@ -479,6 +772,7 @@
     }
 
     return h('div', null,
+      tabBar(),
       flash ? h('div', { className: 'portal-flash success' }, flash) : null,
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 

@@ -313,18 +313,20 @@
           : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
       h('td', null, m.interview),
-      h('td', null, m.activity),
       h('td', null,
-        showTalkedTo
-          ? h('label', { className: 'talked-to-cell' },
-              h('input', {
-                type: 'checkbox',
-                checked: !!m.talked_to,
-                onChange: function (e) { onToggleTalkedTo(m, e.target.checked); }
-              }),
-              h('span', null, m.talked_to ? 'Yes' : 'No')
-            )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+        h('div', { className: 'activity-cell' },
+          h('span', null, m.activity),
+          showTalkedTo
+            ? h('label', { className: 'talked-to-cell' },
+                h('input', {
+                  type: 'checkbox',
+                  checked: !!m.talked_to,
+                  onChange: function (e) { onToggleTalkedTo(m, e.target.checked); }
+                }),
+                h('span', null, 'Talked to · ' + (m.talked_to ? 'Yes' : 'No'))
+              )
+            : null
+        )
       ),
       h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || '') })),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
@@ -543,7 +545,6 @@
                     h('th', null, 'Faction'),
                     h('th', null, 'IC Interview'),
                     h('th', null, 'Activity'),
-                    h('th', null, 'Talked To'),
                     h('th', null, 'Notes'),
                     h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
                   )
@@ -553,7 +554,7 @@
                     ? groups.map(function (g) {
                         return [
                           h('tr', { key: 'grp-' + g.rank, className: 'portal-group-row' },
-                            h('td', { colSpan: 8, className: 'portal-group-cell' },
+                            h('td', { colSpan: 7, className: 'portal-group-cell' },
                               g.rank + ' · ' + g.members.length)
                           )
                         ].concat(g.members.map(function (m) {
@@ -567,7 +568,7 @@
                       })
                     : h('tr', null,
                         h('td', {
-                          colSpan: 8,
+                          colSpan: 7,
                           style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
                         }, anyFilterActive ? 'No members match your filter.' : 'No members yet. Click “Add member” to create the first.')
                       )

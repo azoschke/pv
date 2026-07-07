@@ -136,6 +136,29 @@
     return val || '';
   }
 
+  // Gradient palette by size — mirrors the public venues page so the admin
+  // thumbnail placeholder matches the card shown on the site.
+  var SIZE_PALETTE = {
+    room:      { from: '#3a2a3d', to: '#1f1424' },
+    apartment: { from: '#3b3727', to: '#211e15' },
+    cottage:   { from: '#3a2a25', to: '#1f1612' },
+    house:     { from: '#1f3340', to: '#101c25' },
+    mansion:   { from: '#3a2c1e', to: '#1f1810' }
+  };
+
+  // First uploaded image for a venue: the primary image, falling back to the
+  // first non-empty gallery slot.
+  function firstVenueImage(v) {
+    if (v.image_url) return v.image_url;
+    var gal = Array.isArray(v.gallery_images)
+      ? v.gallery_images
+      : [v.gallery_image_1, v.gallery_image_2, v.gallery_image_3];
+    for (var i = 0; i < gal.length; i++) {
+      if (gal[i] && String(gal[i]).trim()) return String(gal[i]).trim();
+    }
+    return '';
+  }
+
   function emptyDraft() {
     return {
       name: '',
@@ -611,7 +634,47 @@
     if (v.plot != null) locParts.push('P' + v.plot);
     if (v.room_number != null) locParts.push('R' + v.room_number);
 
+    var thumb = firstVenueImage(v);
+    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
+    // Image fills the cell edge-to-edge (no padding/border/radius), matching
+    // the Event Assets grid. Fixed height keeps rows uniform.
+    var mediaBase = { display: 'block', width: '100%', height: '78px', objectFit: 'cover' };
+
     return h('tr', null,
+      h('td', { className: 'venues-thumb-cell', style: { padding: 0 } },
+        thumb
+          ? h('img', {
+              src: thumb, alt: '',
+              style: mediaBase,
+              onError: function (e) {
+                // Fall back to the gradient placeholder if the image fails.
+                e.target.style.display = 'none';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+              }
+            })
+          : null,
+        h('div', {
+          style: Object.assign({}, mediaBase, {
+            display: thumb ? 'none' : 'flex',
+            alignItems: 'flex-end',
+            padding: '0.3rem 0.4rem',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            background: 'linear-gradient(135deg, ' + palette.from + ' 0%, ' + palette.to + ' 100%)'
+          }),
+          'aria-hidden': 'true'
+        },
+          h('span', {
+            style: {
+              fontFamily: '"La Belle Aurore", cursive',
+              fontSize: '0.75rem', lineHeight: 1.1,
+              color: 'rgba(255,255,255,0.85)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              maxWidth: '100%'
+            }
+          }, (v.name || '').toLowerCase())
+        )
+      ),
       h('td', null,
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
           v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
@@ -671,7 +734,10 @@
 
     var filtered = useMemo(function () {
       var q = query.trim().toLowerCase();
+      // Featured venues float to the top; within each group sort by name.
       var sorted = list.slice().sort(function (a, b) {
+        var af = a.featured ? 0 : 1, bf = b.featured ? 0 : 1;
+        if (af !== bf) return af - bf;
         return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
       });
       if (!q) return sorted;
@@ -752,9 +818,10 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table venues-table' },
                   h('thead', null,
                     h('tr', null,
+                      h('th', null, ''),
                       h('th', null, 'Name'),
                       h('th', null, 'Size'),
                       h('th', null, 'Location'),

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex — Phoenix Vanguard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+</head>
+<body>
+
+  <div class="container">
+    <div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">Phoenix Vanguard</p>
+      <h1 class="app-title">Codex</h1>
+    </header>
+
+    <p class="landing-intro">
+      A reference of the people, places, and things of Phoenix Vanguard's campaigns.
+      Search or filter, then select an entry to read more.
+    </p>
+
+    <div class="campaign-layout" id="codex-layout">
+
+      <!-- Filter sidebar (mirrors the Campaigns / Venues directory pattern) -->
+      <aside class="campaign-sidebar venues-sidebar" id="codex-sidebar" aria-label="Codex filters">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Filters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
+        </div>
+
+        <div class="venues-filter-body">
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="codex-search">Search</label>
+            <input id="codex-search" class="venues-filter-input" type="search" placeholder="Name or keyword..." autocomplete="off" />
+          </div>
+
+          <div class="venues-filter-group" id="filter-type-group">
+            <span class="venues-filter-label">Type</span>
+            <ul class="venues-filter-list" id="filter-type-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group" id="filter-region-group">
+            <span class="venues-filter-label">Region</span>
+            <ul class="venues-filter-list" id="filter-region-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group" id="filter-campaign-group">
+            <span class="venues-filter-label">Campaign</span>
+            <ul class="venues-filter-list" id="filter-campaign-list" role="list"></ul>
+          </div>
+
+          <button type="button" class="venues-filter-reset" id="filter-reset">Reset filters</button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="campaign-main" id="codex-main">
+        <div class="campaign-toolbar venues-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+            &#9776; Filters
+          </button>
+          <span class="venues-result-count" id="codex-count" aria-live="polite"></span>
+        </div>
+
+        <div class="codex-list" id="codex-list">
+          <div class="chapter-loading">Loading codex&hellip;</div>
+        </div>
+      </main>
+
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div class="campaign-overlay" id="codex-overlay" aria-hidden="true"></div>
+
+    <!-- Detail modal (reuses the venue modal shell) -->
+    <div class="venue-modal-overlay" id="codex-modal-overlay" aria-hidden="true">
+      <div class="venue-modal" role="dialog" aria-modal="true" aria-labelledby="codex-modal-title">
+        <button type="button" class="venue-modal-close" id="codex-modal-close" aria-label="Close">&#10005;</button>
+        <div class="venue-modal-body" id="codex-modal-body">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <!-- Shared markdown utilities, then page logic -->
+  <script src="./campaigns.js"></script>
+  <script>
+  (function () {
+    var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
+    var SIDEBAR_KEY = 'pv-codex-sidebar-hidden';
+    var FILTER_KEY  = 'pv-codex-filters';
+
+    // The codex types, in display order. Keys match the worker's `type`.
+    var TYPE_ORDER = ['character', 'creature', 'location', 'region', 'faction', 'item', 'event', 'lore'];
+    var TYPE_LABEL = {
+      character: 'Characters', creature: 'Creatures', location: 'Locations', region: 'Regions',
+      faction: 'Factions', item: 'Items', event: 'Events', lore: 'Lore & Other'
+    };
+
+    // Sentinel filter key for entries with no campaign.
+    var SHARED_KEY = '__shared__';
+
+    // ── DOM refs ─────────────────────────────────────────────────────────────
+    var sidebarEl   = document.getElementById('codex-sidebar');
+    var toggleBtn   = document.getElementById('sidebar-toggle-btn');
+    var closeBtn    = document.getElementById('sidebar-close-btn');
+    var overlay     = document.getElementById('codex-overlay');
+    var searchInput = document.getElementById('codex-search');
+    var typeListEl  = document.getElementById('filter-type-list');
+    var regionListEl = document.getElementById('filter-region-list');
+    var campListEl  = document.getElementById('filter-campaign-list');
+    var resetBtn    = document.getElementById('filter-reset');
+    var listEl      = document.getElementById('codex-list');
+    var countEl     = document.getElementById('codex-count');
+    var modalOverlay = document.getElementById('codex-modal-overlay');
+    var modalBody   = document.getElementById('codex-modal-body');
+    var modalClose  = document.getElementById('codex-modal-close');
+
+    // ── State ────────────────────────────────────────────────────────────────
+    var allEntries = [];
+    var bySlug = {};
+    var campaignOptions = [];   // [{ key, label }] built from loaded entries
+    var regionOptions = [];     // [{ key, label }] region slug/name built from data
+    var filters = { search: '', types: {}, campaigns: {}, regions: {} };
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function isMobile() { return window.innerWidth <= 768; }
+
+    // Subtitle (rows + modal): "Written by [Name] · [Region] · [Campaign]".
+    function subtitleText(e) {
+      var pieces = [];
+      if (e.author_name) pieces.push('Written by ' + e.author_name);
+      if (e.region_name) pieces.push(e.region_name);
+      if (e.campaign_name) pieces.push(e.campaign_name);
+      return pieces.join(' · ');
+    }
+
+    // Strip a little markdown for the one-line row preview.
+    function previewText(md, n) {
+      var s = String(md || '')
+        .replace(/<!--[\s\S]*?-->/g, ' ')
+        .replace(/[#>*_`~\\]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (s.length <= n) return s;
+      return s.slice(0, n - 1).trim() + '…';
+    }
+
+    function campaignKey(e) { return e.campaign_slug || SHARED_KEY; }
+
+    // ── Filter persistence + URL deep-link (?type=…) ──────────────────────────
+    function loadFilters() {
+      var urlType = '';
+      try { urlType = (new URLSearchParams(window.location.search).get('type') || '').toLowerCase(); }
+      catch (_e) { urlType = ''; }
+      if (TYPE_ORDER.indexOf(urlType) !== -1) {
+        filters.search = ''; filters.types = {}; filters.campaigns = {}; filters.regions = {};
+        filters.types[urlType] = true;
+        return;
+      }
+      try {
+        var raw = localStorage.getItem(FILTER_KEY);
+        if (raw) {
+          var saved = JSON.parse(raw);
+          if (saved && typeof saved === 'object') {
+            filters.search = String(saved.search || '');
+            filters.types = (saved.types && typeof saved.types === 'object') ? saved.types : {};
+            filters.campaigns = (saved.campaigns && typeof saved.campaigns === 'object') ? saved.campaigns : {};
+            filters.regions = (saved.regions && typeof saved.regions === 'object') ? saved.regions : {};
+          }
+        }
+      } catch (_e) { /* ignore */ }
+    }
+    function saveFilters() {
+      try { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); } catch (_e) { /* ignore */ }
+    }
+
+    // ── Sidebar (campaigns/venues pattern) ────────────────────────────────────
+    function openSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.add('sidebar-open');
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden', 'false');
+      } else {
+        sidebarEl.classList.remove('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_KEY, '0'); } catch (_) {}
+      }
+    }
+    function closeSidebar() {
+      if (isMobile()) {
+        sidebarEl.classList.remove('sidebar-open');
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+      } else {
+        sidebarEl.classList.add('sidebar-hidden');
+        try { localStorage.setItem(SIDEBAR_KEY, '1'); } catch (_) {}
+      }
+    }
+    function toggleSidebar() {
+      if (isMobile()) { openSidebar(); return; }
+      sidebarEl.classList.contains('sidebar-hidden') ? openSidebar() : closeSidebar();
+    }
+    function restoreSidebarState() {
+      if (isMobile()) return;
+      try { if (localStorage.getItem(SIDEBAR_KEY) === '1') sidebarEl.classList.add('sidebar-hidden'); } catch (_) {}
+    }
+
+    // ── Filter checkbox lists (with live counts) ──────────────────────────────
+    function makeCheckItem(listEl, value, label, checkedMap, onToggle) {
+      var li = document.createElement('li');
+      li.className = 'venues-filter-item';
+      var lab = document.createElement('label');
+      lab.className = 'venues-filter-check';
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = value;
+      input.checked = !!checkedMap[value];
+      input.addEventListener('change', function () { onToggle(value, input.checked); });
+      var text = document.createElement('span');
+      text.className = 'venues-filter-check-text';
+      text.textContent = label;
+      var count = document.createElement('span');
+      count.className = 'venues-filter-count';
+      count.dataset.value = value;
+      count.textContent = '0';
+      lab.appendChild(input); lab.appendChild(text); lab.appendChild(count);
+      li.appendChild(lab);
+      listEl.appendChild(li);
+    }
+
+    function buildTypeList() {
+      typeListEl.innerHTML = '';
+      TYPE_ORDER.forEach(function (t) {
+        makeCheckItem(typeListEl, t, TYPE_LABEL[t], filters.types, function (val, on) {
+          if (on) filters.types[val] = true; else delete filters.types[val];
+          saveFilters(); renderList();
+        });
+      });
+    }
+
+    function buildCampaignList() {
+      // Collect the distinct campaigns present in the data, plus "Shared".
+      var seen = {}; var opts = [];
+      allEntries.forEach(function (e) {
+        var key = campaignKey(e);
+        if (seen[key]) return;
+        seen[key] = true;
+        opts.push({ key: key, label: e.campaign_name ? e.campaign_name : 'Shared (no campaign)' });
+      });
+      opts.sort(function (a, b) {
+        if (a.key === SHARED_KEY) return 1;      // Shared sinks to the bottom
+        if (b.key === SHARED_KEY) return -1;
+        return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+      });
+      campaignOptions = opts;
+      campListEl.innerHTML = '';
+      if (!opts.length) { document.getElementById('filter-campaign-group').style.display = 'none'; return; }
+      opts.forEach(function (o) {
+        makeCheckItem(campListEl, o.key, o.label, filters.campaigns, function (val, on) {
+          if (on) filters.campaigns[val] = true; else delete filters.campaigns[val];
+          saveFilters(); renderList();
+        });
+      });
+    }
+
+    function buildRegionList() {
+      // Distinct regions actually referenced by entries (by slug).
+      var seen = {}; var opts = [];
+      allEntries.forEach(function (e) {
+        if (!e.region_slug || seen[e.region_slug]) return;
+        seen[e.region_slug] = true;
+        opts.push({ key: e.region_slug, label: e.region_name || e.region_slug });
+      });
+      opts.sort(function (a, b) { return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }); });
+      regionOptions = opts;
+      var group = document.getElementById('filter-region-group');
+      regionListEl.innerHTML = '';
+      if (!opts.length) { group.style.display = 'none'; return; }
+      group.style.display = '';
+      opts.forEach(function (o) {
+        makeCheckItem(regionListEl, o.key, o.label, filters.regions, function (val, on) {
+          if (on) filters.regions[val] = true; else delete filters.regions[val];
+          saveFilters(); renderList();
+        });
+      });
+    }
+
+    // ── Filtering ─────────────────────────────────────────────────────────────
+    function matchesSearch(e) {
+      var q = (filters.search || '').trim().toLowerCase();
+      if (!q) return true;
+      var hay = [e.name || '', e.description_md || '', e.author_name || '',
+                 e.campaign_name || '', e.region_name || '', TYPE_LABEL[e.type] || ''].join(' ').toLowerCase();
+      return hay.indexOf(q) !== -1;
+    }
+    function matchesType(e) {
+      var keys = Object.keys(filters.types);
+      return !keys.length || !!filters.types[e.type];
+    }
+    function matchesCampaign(e) {
+      var keys = Object.keys(filters.campaigns);
+      return !keys.length || !!filters.campaigns[campaignKey(e)];
+    }
+    function matchesRegion(e) {
+      var keys = Object.keys(filters.regions);
+      return !keys.length || !!(e.region_slug && filters.regions[e.region_slug]);
+    }
+    function matchesFilters(e) {
+      return matchesSearch(e) && matchesType(e) && matchesCampaign(e) && matchesRegion(e);
+    }
+
+    function escapeAttr(v) { return (window.CSS && CSS.escape) ? CSS.escape(v) : v; }
+    function updateCounts() {
+      // Each facet's count reflects the search + every *other* facet, so the
+      // numbers show what selecting it would yield.
+      TYPE_ORDER.forEach(function (t) {
+        var n = allEntries.reduce(function (acc, e) {
+          return acc + ((e.type === t && matchesSearch(e) && matchesCampaign(e) && matchesRegion(e)) ? 1 : 0);
+        }, 0);
+        var el = typeListEl.querySelector('.venues-filter-count[data-value="' + t + '"]');
+        if (el) el.textContent = String(n);
+      });
+      regionOptions.forEach(function (o) {
+        var n = allEntries.reduce(function (acc, e) {
+          return acc + ((e.region_slug === o.key && matchesSearch(e) && matchesType(e) && matchesCampaign(e)) ? 1 : 0);
+        }, 0);
+        var el = regionListEl.querySelector('.venues-filter-count[data-value="' + escapeAttr(o.key) + '"]');
+        if (el) el.textContent = String(n);
+      });
+      campaignOptions.forEach(function (o) {
+        var n = allEntries.reduce(function (acc, e) {
+          return acc + ((campaignKey(e) === o.key && matchesSearch(e) && matchesType(e) && matchesRegion(e)) ? 1 : 0);
+        }, 0);
+        var el = campListEl.querySelector('.venues-filter-count[data-value="' + escapeAttr(o.key) + '"]');
+        if (el) el.textContent = String(n);
+      });
+    }
+
+    // ── Row + grouped list rendering ──────────────────────────────────────────
+    function buildRow(e) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'codex-row';
+      btn.setAttribute('data-slug', e.slug);
+      var sub = subtitleText(e);
+      var preview = previewText(e.description_md, 170);
+      btn.innerHTML =
+        '<span class="codex-row-main">' +
+          '<span class="codex-row-name">' + escapeHtml(e.name) + '</span>' +
+          (sub ? '<span class="codex-row-sub">' + escapeHtml(sub) + '</span>' : '') +
+          (preview ? '<span class="codex-row-preview">' + escapeHtml(preview) + '</span>' : '') +
+        '</span>';
+      btn.addEventListener('click', function () { openModal(e.slug); });
+      return btn;
+    }
+
+    function renderList() {
+      updateCounts();
+      var filtered = allEntries.filter(matchesFilters);
+      countEl.textContent = filtered.length === 1 ? '1 entry' : filtered.length + ' entries';
+      listEl.innerHTML = '';
+
+      if (!filtered.length) {
+        var empty = document.createElement('div');
+        empty.className = 'venues-empty';
+        empty.innerHTML = '<p>No codex entries match these filters.</p>' +
+          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      // Group by type in canonical order; entries already sorted by name.
+      TYPE_ORDER.forEach(function (t) {
+        var group = filtered.filter(function (e) { return e.type === t; });
+        if (!group.length) return;
+        var heading = document.createElement('h2');
+        heading.className = 'codex-type-heading';
+        heading.textContent = TYPE_LABEL[t];
+        listEl.appendChild(heading);
+        var wrap = document.createElement('div');
+        wrap.className = 'codex-group';
+        group.forEach(function (e) { wrap.appendChild(buildRow(e)); });
+        listEl.appendChild(wrap);
+      });
+    }
+
+    // ── Detail modal ──────────────────────────────────────────────────────────
+    function openModal(slug) {
+      var e = bySlug[slug];
+      if (!e) return;
+      var authorLine = e.author_name ? 'Written by ' + e.author_name : '';
+      var tagItems = [];
+      if (e.region_name) tagItems.push(e.region_name);
+      if (e.campaign_name) tagItems.push(e.campaign_name);
+      var tagsHtml = tagItems.length
+        ? '<div class="codex-modal-tags">' + tagItems.map(function (t) {
+            return '<span class="codex-tag">' + escapeHtml(t) + '</span>';
+          }).join('') + '</div>'
+        : '';
+      var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)
+        ? CampaignUtils.parseMarkdown(e.description_md || '')
+        : '<p>' + escapeHtml(e.description_md || '') + '</p>';
+
+      modalBody.innerHTML =
+        (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
+        '<div class="venue-modal-content">' +
+          '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
+          (authorLine ? '<p class="codex-modal-sub">' + escapeHtml(authorLine) + '</p>' : '') +
+          '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
+          tagsHtml +
+        '</div>';
+
+      // Move focus off the clicked row and into the modal, so the row never
+      // keeps a lingering focus ring once the modal closes.
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
+      // Lock scroll without the layout shift that removing the scrollbar causes
+      // (which read as the row "shrinking" on click).
+      var sw = window.innerWidth - document.documentElement.clientWidth;
+      if (sw > 0) document.body.style.paddingRight = sw + 'px';
+      document.body.style.overflow = 'hidden';
+
+      modalOverlay.classList.add('is-open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+      if (modalClose && modalClose.focus) { try { modalClose.focus(); } catch (_) {} }
+      try { history.replaceState(null, '', '?e=' + encodeURIComponent(e.slug)); } catch (_) {}
+    }
+
+    function closeModal() {
+      if (document.activeElement && modalOverlay.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
+      modalOverlay.classList.remove('is-open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      modalBody.innerHTML = '';
+      try { history.replaceState(null, '', window.location.pathname); } catch (_) {}
+    }
+
+    // ── Wiring ────────────────────────────────────────────────────────────────
+    toggleBtn.addEventListener('click', toggleSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    searchInput.addEventListener('input', function () {
+      filters.search = searchInput.value;
+      saveFilters();
+      renderList();
+    });
+    resetBtn.addEventListener('click', function () {
+      filters = { search: '', types: {}, campaigns: {}, regions: {} };
+      saveFilters();
+      searchInput.value = '';
+      sidebarEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      renderList();
+    });
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('mousedown', function (e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal();
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    loadFilters();
+    restoreSidebarState();
+    buildTypeList();
+    searchInput.value = filters.search;
+
+    fetch(API_BASE + '/codex')
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) {
+        allEntries = Array.isArray(data) ? data : [];
+        bySlug = {};
+        allEntries.forEach(function (e) { if (e && e.slug) bySlug[e.slug] = e; });
+        buildRegionList();
+        buildCampaignList();
+        renderList();
+
+        // Deep link: ?e=<slug> opens that entry.
+        var wanted = '';
+        try { wanted = (new URLSearchParams(window.location.search).get('e') || '').trim(); }
+        catch (_e) { wanted = ''; }
+        if (wanted && bySlug[wanted]) openModal(wanted);
+      })
+      .catch(function (err) {
+        listEl.innerHTML = '<p class="chapter-error">Could not load the codex. Please try again later.</p>';
+        countEl.textContent = '';
+        console.error('[codex] load error:', err);
+      });
+  })();
+  </script>
+
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
