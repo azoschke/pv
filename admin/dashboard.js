@@ -195,7 +195,9 @@
       // Stat tiles grouped by stage, with FC Members / Open Positions as
       // smaller reference tiles on their own row at the end.
       h('div', { className: 'dash-stat-groups' },
-        h('div', { className: 'dash-stat-section' },
+        // flexGrow matches each group's tile count so every tile renders at the
+        // same width whether it sits under Pending (3) or Scheduled (2).
+        h('div', { className: 'dash-stat-section', style: { flexGrow: 3 } },
           h('p', { className: 'dash-stat-heading' }, 'Pending'),
           h('div', { className: 'dash-stats' },
             statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }),
@@ -204,7 +206,7 @@
             statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0)
           )
         ),
-        h('div', { className: 'dash-stat-section' },
+        h('div', { className: 'dash-stat-section', style: { flexGrow: 2 } },
           h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
           h('div', { className: 'dash-stats' },
             statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0, { interview: 'Scheduled' }),

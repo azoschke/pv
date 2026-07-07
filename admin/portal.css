@@ -556,6 +556,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 /* Keep multi-word member column headers (e.g. "IC Interview") on one line. */
 .members-table thead th { white-space: nowrap; }
+/* Vertically center row content against the tallest cell (e.g. the Activity
+   status + inline talked-to line). */
+.members-table tbody td { vertical-align: middle; }
 
 /* --------------- Activity cell (status + inline talked-to) --------------- */
 .activity-cell {
@@ -795,12 +798,19 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* Pending / Scheduled groups side by side on wide views, stacking when the
-   row can no longer fit two groups. */
+   row can no longer fit two groups. Each group grows in proportion to how many
+   tiles it holds (Pending: 3, Scheduled: 2 — set inline in dashboard.js), so a
+   tile is the same width regardless of which group it lives in. */
 .dash-stat-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1.5rem 2rem;
   margin-bottom: 1.25rem;
+}
+.dash-stat-section {
+  flex: 1 1 auto;
+  min-width: min(100%, 16rem);
 }
 .dash-stat-heading {
   margin: 0 0 0.5rem;
@@ -816,8 +826,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 1rem;
 }
 .dash-stat {
-  flex: 1 1 160px;
-  max-width: 280px;
+  flex: 1 1 0;
+  min-width: 8.5rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
