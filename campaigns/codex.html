@@ -21,7 +21,7 @@
 
     <p class="landing-intro">
       A reference of the people, places, and things of Phoenix Vanguard's campaigns.
-      Search or filter by type, then select an entry to read more.
+      Search or filter, then select an entry to read more.
     </p>
 
     <div class="campaign-layout" id="codex-layout">
@@ -42,6 +42,11 @@
           <div class="venues-filter-group" id="filter-type-group">
             <span class="venues-filter-label">Type</span>
             <ul class="venues-filter-list" id="filter-type-list" role="list"></ul>
+          </div>
+
+          <div class="venues-filter-group" id="filter-campaign-group">
+            <span class="venues-filter-label">Campaign</span>
+            <ul class="venues-filter-list" id="filter-campaign-list" role="list"></ul>
           </div>
 
           <button type="button" class="venues-filter-reset" id="filter-reset">Reset filters</button>
@@ -91,16 +96,15 @@
     var SIDEBAR_KEY = 'pv-codex-sidebar-hidden';
     var FILTER_KEY  = 'pv-codex-filters';
 
-    // The six codex types, in display order. Keys match the worker's `type`.
-    var TYPE_ORDER = ['character', 'location', 'faction', 'item', 'event', 'lore'];
+    // The codex types, in display order. Keys match the worker's `type`.
+    var TYPE_ORDER = ['character', 'creature', 'location', 'region', 'faction', 'item', 'event', 'lore'];
     var TYPE_LABEL = {
-      character: 'Characters', location: 'Locations', faction: 'Factions',
-      item: 'Items', event: 'Events', lore: 'Lore & Other'
+      character: 'Characters', creature: 'Creatures', location: 'Locations', region: 'Regions',
+      faction: 'Factions', item: 'Items', event: 'Events', lore: 'Lore & Other'
     };
-    var TYPE_LABEL_ONE = {
-      character: 'Character', location: 'Location', faction: 'Faction',
-      item: 'Item', event: 'Event', lore: 'Lore'
-    };
+
+    // Sentinel filter key for entries with no campaign.
+    var SHARED_KEY = '__shared__';
 
     // ── DOM refs ─────────────────────────────────────────────────────────────
     var sidebarEl   = document.getElementById('codex-sidebar');
@@ -109,6 +113,7 @@
     var overlay     = document.getElementById('codex-overlay');
     var searchInput = document.getElementById('codex-search');
     var typeListEl  = document.getElementById('filter-type-list');
+    var campListEl  = document.getElementById('filter-campaign-list');
     var resetBtn    = document.getElementById('filter-reset');
     var listEl      = document.getElementById('codex-list');
     var countEl     = document.getElementById('codex-count');
@@ -119,7 +124,8 @@
     // ── State ────────────────────────────────────────────────────────────────
     var allEntries = [];
     var bySlug = {};
-    var filters = { search: '', types: {} };
+    var campaignOptions = [];   // [{ key, label }] built from loaded entries
+    var filters = { search: '', types: {}, campaigns: {} };
 
     function escapeHtml(str) {
       return String(str == null ? '' : str)
@@ -127,6 +133,14 @@
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
     function isMobile() { return window.innerWidth <= 768; }
+
+    // The small subtitle line: "Written by X, Y Campaign".
+    function subtitleText(e) {
+      var parts = [];
+      if (e.author_name) parts.push('Written by ' + e.author_name);
+      if (e.campaign_name) parts.push(e.campaign_name + ' Campaign');
+      return parts.join(', ');
+    }
 
     // Strip a little markdown for the one-line row preview.
     function previewText(md, n) {
@@ -139,14 +153,16 @@
       return s.slice(0, n - 1).trim() + '…';
     }
 
-    // ── Filter persistence + URL deep-link (?type=character|…) ────────────────
+    function campaignKey(e) { return e.campaign_slug || SHARED_KEY; }
+
+    // ── Filter persistence + URL deep-link (?type=…) ──────────────────────────
     function loadFilters() {
       var urlType = '';
       try { urlType = (new URLSearchParams(window.location.search).get('type') || '').toLowerCase(); }
       catch (_e) { urlType = ''; }
       if (TYPE_ORDER.indexOf(urlType) !== -1) {
-        filters.search = '';
-        filters.types = {}; filters.types[urlType] = true;
+        filters.search = ''; filters.types = {}; filters.campaigns = {};
+        filters.types[urlType] = true;
         return;
       }
       try {
@@ -156,6 +172,7 @@
           if (saved && typeof saved === 'object') {
             filters.search = String(saved.search || '');
             filters.types = (saved.types && typeof saved.types === 'object') ? saved.types : {};
+            filters.campaigns = (saved.campaigns && typeof saved.campaigns === 'object') ? saved.campaigns : {};
           }
         }
       } catch (_e) { /* ignore */ }
@@ -194,41 +211,61 @@
       try { if (localStorage.getItem(SIDEBAR_KEY) === '1') sidebarEl.classList.add('sidebar-hidden'); } catch (_) {}
     }
 
-    // ── Type filter checkboxes (with live counts) ─────────────────────────────
+    // ── Filter checkbox lists (with live counts) ──────────────────────────────
+    function makeCheckItem(listEl, value, label, checkedMap, onToggle) {
+      var li = document.createElement('li');
+      li.className = 'venues-filter-item';
+      var lab = document.createElement('label');
+      lab.className = 'venues-filter-check';
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = value;
+      input.checked = !!checkedMap[value];
+      input.addEventListener('change', function () { onToggle(value, input.checked); });
+      var text = document.createElement('span');
+      text.className = 'venues-filter-check-text';
+      text.textContent = label;
+      var count = document.createElement('span');
+      count.className = 'venues-filter-count';
+      count.dataset.value = value;
+      count.textContent = '0';
+      lab.appendChild(input); lab.appendChild(text); lab.appendChild(count);
+      li.appendChild(lab);
+      listEl.appendChild(li);
+    }
+
     function buildTypeList() {
       typeListEl.innerHTML = '';
       TYPE_ORDER.forEach(function (t) {
-        var li = document.createElement('li');
-        li.className = 'venues-filter-item';
-
-        var label = document.createElement('label');
-        label.className = 'venues-filter-check';
-
-        var input = document.createElement('input');
-        input.type = 'checkbox';
-        input.value = t;
-        input.checked = !!filters.types[t];
-        input.addEventListener('change', function () {
-          if (input.checked) filters.types[t] = true;
-          else delete filters.types[t];
-          saveFilters();
-          renderList();
+        makeCheckItem(typeListEl, t, TYPE_LABEL[t], filters.types, function (val, on) {
+          if (on) filters.types[val] = true; else delete filters.types[val];
+          saveFilters(); renderList();
         });
+      });
+    }
 
-        var text = document.createElement('span');
-        text.className = 'venues-filter-check-text';
-        text.textContent = TYPE_LABEL[t];
-
-        var count = document.createElement('span');
-        count.className = 'venues-filter-count';
-        count.dataset.value = t;
-        count.textContent = '0';
-
-        label.appendChild(input);
-        label.appendChild(text);
-        label.appendChild(count);
-        li.appendChild(label);
-        typeListEl.appendChild(li);
+    function buildCampaignList() {
+      // Collect the distinct campaigns present in the data, plus "Shared".
+      var seen = {}; var opts = [];
+      allEntries.forEach(function (e) {
+        var key = campaignKey(e);
+        if (seen[key]) return;
+        seen[key] = true;
+        opts.push({ key: key, label: e.campaign_name ? e.campaign_name : 'Shared (no campaign)' });
+      });
+      opts.sort(function (a, b) {
+        if (a.key === SHARED_KEY) return 1;      // Shared sinks to the bottom
+        if (b.key === SHARED_KEY) return -1;
+        return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+      });
+      campaignOptions = opts;
+      campListEl.innerHTML = '';
+      if (!opts.length) { document.getElementById('filter-campaign-group').style.display = 'none'; return; }
+      opts.forEach(function (o) {
+        makeCheckItem(campListEl, o.key, o.label, filters.campaigns, function (val, on) {
+          if (on) filters.campaigns[val] = true; else delete filters.campaigns[val];
+          saveFilters(); renderList();
+        });
       });
     }
 
@@ -240,19 +277,33 @@
                  e.campaign_name || '', TYPE_LABEL[e.type] || ''].join(' ').toLowerCase();
       return hay.indexOf(q) !== -1;
     }
+    function matchesType(e) {
+      var keys = Object.keys(filters.types);
+      return !keys.length || !!filters.types[e.type];
+    }
+    function matchesCampaign(e) {
+      var keys = Object.keys(filters.campaigns);
+      return !keys.length || !!filters.campaigns[campaignKey(e)];
+    }
     function matchesFilters(e) {
-      if (!matchesSearch(e)) return false;
-      var typeKeys = Object.keys(filters.types);
-      if (typeKeys.length && !filters.types[e.type]) return false;
-      return true;
+      return matchesSearch(e) && matchesType(e) && matchesCampaign(e);
     }
 
     function updateCounts() {
+      // Each facet's count reflects the search + the *other* facet, so the
+      // numbers show what selecting it would yield.
       TYPE_ORDER.forEach(function (t) {
         var n = allEntries.reduce(function (acc, e) {
-          return acc + ((matchesSearch(e) && e.type === t) ? 1 : 0);
+          return acc + ((e.type === t && matchesSearch(e) && matchesCampaign(e)) ? 1 : 0);
         }, 0);
         var el = typeListEl.querySelector('.venues-filter-count[data-value="' + t + '"]');
+        if (el) el.textContent = String(n);
+      });
+      campaignOptions.forEach(function (o) {
+        var n = allEntries.reduce(function (acc, e) {
+          return acc + ((campaignKey(e) === o.key && matchesSearch(e) && matchesType(e)) ? 1 : 0);
+        }, 0);
+        var el = campListEl.querySelector('.venues-filter-count[data-value="' + (window.CSS && CSS.escape ? CSS.escape(o.key) : o.key) + '"]');
         if (el) el.textContent = String(n);
       });
     }
@@ -263,17 +314,13 @@
       btn.type = 'button';
       btn.className = 'codex-row';
       btn.setAttribute('data-slug', e.slug);
-      var chips =
-        '<span class="codex-chip codex-chip-type codex-type-' + escapeHtml(e.type) + '">' +
-          escapeHtml(TYPE_LABEL_ONE[e.type] || e.type) + '</span>' +
-        (e.campaign_name ? '<span class="codex-chip codex-chip-campaign">' + escapeHtml(e.campaign_name) + '</span>' : '');
+      var sub = subtitleText(e);
+      var preview = previewText(e.description_md, 170);
       btn.innerHTML =
         '<span class="codex-row-main">' +
-          '<span class="codex-row-head">' +
-            '<span class="codex-row-name">' + escapeHtml(e.name) + '</span>' +
-            chips +
-          '</span>' +
-          '<span class="codex-row-preview">' + escapeHtml(previewText(e.description_md, 160)) + '</span>' +
+          '<span class="codex-row-name">' + escapeHtml(e.name) + '</span>' +
+          (sub ? '<span class="codex-row-sub">' + escapeHtml(sub) + '</span>' : '') +
+          (preview ? '<span class="codex-row-preview">' + escapeHtml(preview) + '</span>' : '') +
         '</span>' +
         (e.image_url ? '<img class="codex-row-thumb" src="' + escapeHtml(e.image_url) + '" alt="" loading="lazy" onerror="this.remove()">' : '');
       btn.addEventListener('click', function () { openModal(e.slug); });
@@ -301,9 +348,12 @@
         if (!group.length) return;
         var heading = document.createElement('h2');
         heading.className = 'codex-type-heading';
-        heading.textContent = TYPE_LABEL[t] + ' · ' + group.length;
+        heading.textContent = TYPE_LABEL[t];
         listEl.appendChild(heading);
-        group.forEach(function (e) { listEl.appendChild(buildRow(e)); });
+        var wrap = document.createElement('div');
+        wrap.className = 'codex-group';
+        group.forEach(function (e) { wrap.appendChild(buildRow(e)); });
+        listEl.appendChild(wrap);
       });
     }
 
@@ -311,17 +361,7 @@
     function openModal(slug) {
       var e = bySlug[slug];
       if (!e) return;
-
-      var meta = [];
-      meta.push('<span class="codex-chip codex-chip-type codex-type-' + escapeHtml(e.type) + '">' +
-        escapeHtml(TYPE_LABEL_ONE[e.type] || e.type) + '</span>');
-      if (e.campaign_name) {
-        var chip = '<span class="codex-chip codex-chip-campaign">' + escapeHtml(e.campaign_name) + '</span>';
-        meta.push(e.campaign_slug
-          ? '<a class="codex-chip-link" href="/pv/campaigns/view.html?c=' + encodeURIComponent(e.campaign_slug) + '">' + chip + '</a>'
-          : chip);
-      }
-
+      var sub = subtitleText(e);
       var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)
         ? CampaignUtils.parseMarkdown(e.description_md || '')
         : '<p>' + escapeHtml(e.description_md || '') + '</p>';
@@ -329,9 +369,8 @@
       modalBody.innerHTML =
         (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
         '<div class="venue-modal-content">' +
-          '<div class="codex-modal-badges">' + meta.join('') + '</div>' +
           '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
-          (e.author_name ? '<p class="codex-modal-author">Written by ' + escapeHtml(e.author_name) + '</p>' : '') +
+          (sub ? '<p class="codex-modal-sub">' + escapeHtml(sub) + '</p>' : '') +
           '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
         '</div>';
 
@@ -362,10 +401,10 @@
       renderList();
     });
     resetBtn.addEventListener('click', function () {
-      filters = { search: '', types: {} };
+      filters = { search: '', types: {}, campaigns: {} };
       saveFilters();
       searchInput.value = '';
-      typeListEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
+      sidebarEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
       renderList();
     });
     modalClose.addEventListener('click', closeModal);
@@ -388,6 +427,7 @@
         allEntries = Array.isArray(data) ? data : [];
         bySlug = {};
         allEntries.forEach(function (e) { if (e && e.slug) bySlug[e.slug] = e; });
+        buildCampaignList();
         renderList();
 
         // Deep link: ?e=<slug> opens that entry.

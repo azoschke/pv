@@ -41,7 +41,9 @@
   // codex.html TYPE_ORDER.
   var CODEX_TYPES = [
     { value: 'character', label: 'Character' },
+    { value: 'creature',  label: 'Creature' },
     { value: 'location',  label: 'Location' },
+    { value: 'region',    label: 'Region' },
     { value: 'faction',   label: 'Faction' },
     { value: 'item',      label: 'Item' },
     { value: 'event',     label: 'Event' },
@@ -390,7 +392,7 @@
             h('option', { value: '' }, '— None —'),
             members.map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
           h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
-            'Optional attribution, shown publicly as a name only.')
+            'Optional attribution.')
         )
       ),
 

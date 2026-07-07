@@ -3393,56 +3393,69 @@ body.nav-sidebar-open {
 
 /* =============================================================================
    14b. CODEX — directory page (public)
-   Compact rows grouped by type, click-to-open detail (reuses the venue modal).
+   Quiet list grouped by type; name + small subtitle + preview, click-to-open.
    ========================================================================== */
 .codex-list { display: flex; flex-direction: column; }
 
 .codex-type-heading {
   font-family: 'Stoke', serif;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 400;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin: 1.4rem 0 0.35rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--border-color);
+  opacity: 0.85;
+  margin: 2rem 0 0.5rem;
 }
-.codex-type-heading:first-child { margin-top: 0; }
+.codex-type-heading:first-child { margin-top: 0.25rem; }
+
+/* Grouped rows sit on a single quiet card so the type reads as one block. */
+.codex-group {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
 
 .codex-row {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
   width: 100%;
   text-align: left;
-  padding: 0.7rem 0.6rem;
+  padding: 0.85rem 1.1rem;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
-.codex-row:hover { background: var(--bg-card-light, rgba(0,0,0,0.04)); }
+.codex-row:first-child { border-top: none; }
+.codex-row:hover { background: var(--bg-card-light); }
 .codex-row:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: -2px; }
 
 .codex-row-main { flex: 1 1 auto; min-width: 0; }
-.codex-row-head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
 .codex-row-name {
+  display: block;
   font-family: 'Stoke', serif;
-  font-size: 1.08rem;
+  font-size: 1.12rem;
   color: var(--text-primary);
+}
+.codex-row-sub {
+  display: block;
+  margin-top: 0.1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  opacity: 0.85;
 }
 .codex-row-preview {
   display: block;
-  margin-top: 0.15rem;
+  margin-top: 0.3rem;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.98rem;
+  font-size: 1rem;
+  line-height: 1.4;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -3451,52 +3464,25 @@ body.nav-sidebar-open {
 }
 .codex-row-thumb {
   flex: 0 0 auto;
-  width: 66px;
-  height: 44px;
+  width: 72px;
+  height: 48px;
   object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--border-color);
 }
 
-/* Type / campaign chips (shared by rows and the modal) */
-.codex-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
+/* Modal subtitle (Written by X, Y Campaign) */
+.codex-modal-sub {
   font-family: 'Stoke', serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
-  white-space: nowrap;
-  line-height: 1.5;
+  margin: 0.15rem 0 1.1rem;
 }
-.codex-chip-campaign { font-style: normal; }
-.codex-chip-link { text-decoration: none; }
-.codex-chip-link:hover .codex-chip { border-color: var(--accent-brown); color: var(--text-primary); }
 
-/* Per-type accent (muted, works in both themes) */
-.codex-type-character { color: #5f8bb0; border-color: rgba(95,139,176,0.55); }
-.codex-type-location  { color: #5f9a6a; border-color: rgba(95,154,106,0.55); }
-.codex-type-faction   { color: #b26a63; border-color: rgba(178,106,99,0.55); }
-.codex-type-item      { color: #b08a4a; border-color: rgba(176,138,74,0.55); }
-.codex-type-event     { color: #8f78b5; border-color: rgba(143,120,181,0.55); }
-.codex-type-lore      { color: var(--text-secondary); border-color: var(--border-color); }
-
-.codex-modal-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.65rem;
-}
-.codex-modal-author {
-  font-family: 'Crimson Pro', serif;
-  font-style: italic;
-  font-size: 0.98rem;
-  color: var(--text-secondary);
-  margin: 0 0 1rem;
+@media (max-width: 768px) {
+  .codex-row { padding: 0.8rem 0.9rem; }
+  .codex-row-thumb { width: 60px; height: 40px; }
 }
 
 
