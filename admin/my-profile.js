@@ -234,8 +234,8 @@
       })();
     }, []);
 
-    if (items === null && !err) return h('div', { className: 'portal-card', style: { marginTop: '1rem' } }, 'Loading your items…');
-    return h('div', { className: 'portal-card', style: { marginTop: '1rem' } },
+    if (items === null && !err) return h('div', { className: 'portal-card' }, 'Loading your items…');
+    return h('div', { className: 'portal-card' },
       h('h2', { className: 'portal-card-title' }, 'My Items'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       (!items || !items.length)
@@ -288,9 +288,13 @@
       ) : null,
 
       member
-        ? h('div', null,
-            h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload }),
-            h(MyItemsCard, null)
+        ? h('div', { className: 'my-profile-layout' },
+            h('div', { className: 'my-profile-main' },
+              h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload })
+            ),
+            h('aside', { className: 'my-profile-side' },
+              h(MyItemsCard, null)
+            )
           )
         : h('div', { className: 'portal-card' },
             h('h2', { className: 'portal-card-title' }, 'Character Profile'),
