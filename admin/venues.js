@@ -636,18 +636,16 @@
 
     var thumb = firstVenueImage(v);
     var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
-    var thumbBase = {
-      display: 'block', width: '84px', height: '52px',
-      objectFit: 'cover', borderRadius: '0.3rem',
-      border: '1px solid var(--border-color)'
-    };
+    // Image fills the cell edge-to-edge (no padding/border/radius), matching
+    // the Event Assets grid. Fixed height keeps rows uniform.
+    var mediaBase = { display: 'block', width: '100%', height: '78px', objectFit: 'cover' };
 
     return h('tr', null,
-      h('td', { style: { width: '84px', padding: '0.4rem 0.5rem' } },
+      h('td', { className: 'venues-thumb-cell', style: { padding: 0 } },
         thumb
           ? h('img', {
               src: thumb, alt: '',
-              style: thumbBase,
+              style: mediaBase,
               onError: function (e) {
                 // Fall back to the gradient placeholder if the image fails.
                 e.target.style.display = 'none';
@@ -656,10 +654,11 @@
             })
           : null,
         h('div', {
-          style: Object.assign({}, thumbBase, {
+          style: Object.assign({}, mediaBase, {
             display: thumb ? 'none' : 'flex',
             alignItems: 'flex-end',
-            padding: '0.25rem 0.35rem',
+            padding: '0.3rem 0.4rem',
+            boxSizing: 'border-box',
             overflow: 'hidden',
             background: 'linear-gradient(135deg, ' + palette.from + ' 0%, ' + palette.to + ' 100%)'
           }),
@@ -668,7 +667,7 @@
           h('span', {
             style: {
               fontFamily: '"La Belle Aurore", cursive',
-              fontSize: '0.7rem', lineHeight: 1.1,
+              fontSize: '0.75rem', lineHeight: 1.1,
               color: 'rgba(255,255,255,0.85)',
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               maxWidth: '100%'
@@ -819,7 +818,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table venues-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, ''),
