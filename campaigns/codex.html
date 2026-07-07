@@ -404,7 +404,15 @@
     function openModal(slug) {
       var e = bySlug[slug];
       if (!e) return;
-      var sub = subtitleText(e);
+      var authorLine = e.author_name ? 'Written by ' + e.author_name : '';
+      var tagItems = [];
+      if (e.region_name) tagItems.push(e.region_name);
+      if (e.campaign_name) tagItems.push(e.campaign_name);
+      var tagsHtml = tagItems.length
+        ? '<div class="codex-modal-tags">' + tagItems.map(function (t) {
+            return '<span class="codex-tag">' + escapeHtml(t) + '</span>';
+          }).join('') + '</div>'
+        : '';
       var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)
         ? CampaignUtils.parseMarkdown(e.description_md || '')
         : '<p>' + escapeHtml(e.description_md || '') + '</p>';
@@ -413,8 +421,9 @@
         (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
         '<div class="venue-modal-content">' +
           '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
-          (sub ? '<p class="codex-modal-sub">' + escapeHtml(sub) + '</p>' : '') +
+          (authorLine ? '<p class="codex-modal-sub">' + escapeHtml(authorLine) + '</p>' : '') +
           '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
+          tagsHtml +
         '</div>';
 
       // Move focus off the clicked row and into the modal, so the row never

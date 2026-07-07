@@ -3481,7 +3481,7 @@ body.nav-sidebar-open {
   border: 1px solid var(--border-color);
 }
 
-/* Modal subtitle (Region · Written by X, Y Campaign) */
+/* Modal byline under the title (Written by X) */
 .codex-modal-sub {
   font-family: 'Stoke', serif;
   font-size: 0.8rem;
@@ -3489,7 +3489,28 @@ body.nav-sidebar-open {
   color: var(--accent-brown);
   margin: 0.15rem 0 1.1rem;
 }
-.codex-modal-sub a { color: inherit; text-decoration: underline; }
+
+/* Region / campaign tags pinned at the bottom of the modal */
+.codex-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.codex-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 
 @media (max-width: 768px) {
   .codex-row { padding: 0.8rem 0.9rem; }
