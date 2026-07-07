@@ -44,6 +44,11 @@
             <ul class="venues-filter-list" id="filter-type-list" role="list"></ul>
           </div>
 
+          <div class="venues-filter-group" id="filter-region-group">
+            <span class="venues-filter-label">Region</span>
+            <ul class="venues-filter-list" id="filter-region-list" role="list"></ul>
+          </div>
+
           <div class="venues-filter-group" id="filter-campaign-group">
             <span class="venues-filter-label">Campaign</span>
             <ul class="venues-filter-list" id="filter-campaign-list" role="list"></ul>
@@ -113,6 +118,7 @@
     var overlay     = document.getElementById('codex-overlay');
     var searchInput = document.getElementById('codex-search');
     var typeListEl  = document.getElementById('filter-type-list');
+    var regionListEl = document.getElementById('filter-region-list');
     var campListEl  = document.getElementById('filter-campaign-list');
     var resetBtn    = document.getElementById('filter-reset');
     var listEl      = document.getElementById('codex-list');
@@ -125,7 +131,8 @@
     var allEntries = [];
     var bySlug = {};
     var campaignOptions = [];   // [{ key, label }] built from loaded entries
-    var filters = { search: '', types: {}, campaigns: {} };
+    var regionOptions = [];     // [{ key, label }] region slug/name built from data
+    var filters = { search: '', types: {}, campaigns: {}, regions: {} };
 
     function escapeHtml(str) {
       return String(str == null ? '' : str)
@@ -141,24 +148,12 @@
       if (e.campaign_name) parts.push(e.campaign_name + ' Campaign');
       return parts.join(', ');
     }
-    // Plain subtitle for rows: "Region · Written by X, Y Campaign".
+    // Plain subtitle (rows + modal): "Region · Written by X, Y Campaign".
     function subtitleText(e) {
       var pieces = [];
       if (e.region_name) pieces.push(e.region_name);
       var ac = authorCampaignText(e);
       if (ac) pieces.push(ac);
-      return pieces.join(' · ');
-    }
-    // Modal subtitle, with the region linked to its own entry.
-    function subtitleHtml(e) {
-      var pieces = [];
-      if (e.region_name) {
-        pieces.push(e.region_slug
-          ? '<a href="?e=' + encodeURIComponent(e.region_slug) + '" data-region="' + escapeHtml(e.region_slug) + '">' + escapeHtml(e.region_name) + '</a>'
-          : escapeHtml(e.region_name));
-      }
-      var ac = authorCampaignText(e);
-      if (ac) pieces.push(escapeHtml(ac));
       return pieces.join(' · ');
     }
 
@@ -181,7 +176,7 @@
       try { urlType = (new URLSearchParams(window.location.search).get('type') || '').toLowerCase(); }
       catch (_e) { urlType = ''; }
       if (TYPE_ORDER.indexOf(urlType) !== -1) {
-        filters.search = ''; filters.types = {}; filters.campaigns = {};
+        filters.search = ''; filters.types = {}; filters.campaigns = {}; filters.regions = {};
         filters.types[urlType] = true;
         return;
       }
@@ -193,6 +188,7 @@
             filters.search = String(saved.search || '');
             filters.types = (saved.types && typeof saved.types === 'object') ? saved.types : {};
             filters.campaigns = (saved.campaigns && typeof saved.campaigns === 'object') ? saved.campaigns : {};
+            filters.regions = (saved.regions && typeof saved.regions === 'object') ? saved.regions : {};
           }
         }
       } catch (_e) { /* ignore */ }
@@ -289,6 +285,28 @@
       });
     }
 
+    function buildRegionList() {
+      // Distinct regions actually referenced by entries (by slug).
+      var seen = {}; var opts = [];
+      allEntries.forEach(function (e) {
+        if (!e.region_slug || seen[e.region_slug]) return;
+        seen[e.region_slug] = true;
+        opts.push({ key: e.region_slug, label: e.region_name || e.region_slug });
+      });
+      opts.sort(function (a, b) { return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }); });
+      regionOptions = opts;
+      var group = document.getElementById('filter-region-group');
+      regionListEl.innerHTML = '';
+      if (!opts.length) { group.style.display = 'none'; return; }
+      group.style.display = '';
+      opts.forEach(function (o) {
+        makeCheckItem(regionListEl, o.key, o.label, filters.regions, function (val, on) {
+          if (on) filters.regions[val] = true; else delete filters.regions[val];
+          saveFilters(); renderList();
+        });
+      });
+    }
+
     // ── Filtering ─────────────────────────────────────────────────────────────
     function matchesSearch(e) {
       var q = (filters.search || '').trim().toLowerCase();
@@ -305,25 +323,37 @@
       var keys = Object.keys(filters.campaigns);
       return !keys.length || !!filters.campaigns[campaignKey(e)];
     }
+    function matchesRegion(e) {
+      var keys = Object.keys(filters.regions);
+      return !keys.length || !!(e.region_slug && filters.regions[e.region_slug]);
+    }
     function matchesFilters(e) {
-      return matchesSearch(e) && matchesType(e) && matchesCampaign(e);
+      return matchesSearch(e) && matchesType(e) && matchesCampaign(e) && matchesRegion(e);
     }
 
+    function escapeAttr(v) { return (window.CSS && CSS.escape) ? CSS.escape(v) : v; }
     function updateCounts() {
-      // Each facet's count reflects the search + the *other* facet, so the
+      // Each facet's count reflects the search + every *other* facet, so the
       // numbers show what selecting it would yield.
       TYPE_ORDER.forEach(function (t) {
         var n = allEntries.reduce(function (acc, e) {
-          return acc + ((e.type === t && matchesSearch(e) && matchesCampaign(e)) ? 1 : 0);
+          return acc + ((e.type === t && matchesSearch(e) && matchesCampaign(e) && matchesRegion(e)) ? 1 : 0);
         }, 0);
         var el = typeListEl.querySelector('.venues-filter-count[data-value="' + t + '"]');
         if (el) el.textContent = String(n);
       });
+      regionOptions.forEach(function (o) {
+        var n = allEntries.reduce(function (acc, e) {
+          return acc + ((e.region_slug === o.key && matchesSearch(e) && matchesType(e) && matchesCampaign(e)) ? 1 : 0);
+        }, 0);
+        var el = regionListEl.querySelector('.venues-filter-count[data-value="' + escapeAttr(o.key) + '"]');
+        if (el) el.textContent = String(n);
+      });
       campaignOptions.forEach(function (o) {
         var n = allEntries.reduce(function (acc, e) {
-          return acc + ((campaignKey(e) === o.key && matchesSearch(e) && matchesType(e)) ? 1 : 0);
+          return acc + ((campaignKey(e) === o.key && matchesSearch(e) && matchesType(e) && matchesRegion(e)) ? 1 : 0);
         }, 0);
-        var el = campListEl.querySelector('.venues-filter-count[data-value="' + (window.CSS && CSS.escape ? CSS.escape(o.key) : o.key) + '"]');
+        var el = campListEl.querySelector('.venues-filter-count[data-value="' + escapeAttr(o.key) + '"]');
         if (el) el.textContent = String(n);
       });
     }
@@ -381,7 +411,7 @@
     function openModal(slug) {
       var e = bySlug[slug];
       if (!e) return;
-      var sub = subtitleHtml(e);
+      var sub = subtitleText(e);
       var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)
         ? CampaignUtils.parseMarkdown(e.description_md || '')
         : '<p>' + escapeHtml(e.description_md || '') + '</p>';
@@ -390,15 +420,9 @@
         (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
         '<div class="venue-modal-content">' +
           '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
-          (sub ? '<p class="codex-modal-sub">' + sub + '</p>' : '') +
+          (sub ? '<p class="codex-modal-sub">' + escapeHtml(sub) + '</p>' : '') +
           '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
         '</div>';
-
-      // The region link re-opens the modal on that region's entry.
-      var rlink = modalBody.querySelector('a[data-region]');
-      if (rlink) rlink.addEventListener('click', function (ev) {
-        ev.preventDefault(); openModal(rlink.getAttribute('data-region'));
-      });
 
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
@@ -427,7 +451,7 @@
       renderList();
     });
     resetBtn.addEventListener('click', function () {
-      filters = { search: '', types: {}, campaigns: {} };
+      filters = { search: '', types: {}, campaigns: {}, regions: {} };
       saveFilters();
       searchInput.value = '';
       sidebarEl.querySelectorAll('input[type="checkbox"]').forEach(function (i) { i.checked = false; });
@@ -453,6 +477,7 @@
         allEntries = Array.isArray(data) ? data : [];
         bySlug = {};
         allEntries.forEach(function (e) { if (e && e.slug) bySlug[e.slug] = e; });
+        buildRegionList();
         buildCampaignList();
         renderList();
 

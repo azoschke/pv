@@ -383,12 +383,6 @@
           h('select', { value: draft.type, onChange: function (e) { setField('type', e.target.value); } },
             CODEX_TYPES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))
         ),
-        h('div', { className: 'portal-field' },
-          h('label', null, 'Campaign'),
-          h('select', { value: draft.campaign_id, onChange: function (e) { setField('campaign_id', e.target.value); } },
-            h('option', { value: '' }, '— Shared (no campaign) —'),
-            campaigns.map(function (c) { return h('option', { key: c.id, value: String(c.id) }, c.name); }))
-        ),
         draft.type !== 'region' ? h('div', { className: 'portal-field' },
           h('label', null, 'Region'),
           h('select', { value: draft.region_id, onChange: function (e) { setField('region_id', e.target.value); } },
@@ -398,6 +392,12 @@
           h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
             'Optional. Tie this entry to a Region-type entry.')
         ) : null,
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Campaign'),
+          h('select', { value: draft.campaign_id, onChange: function (e) { setField('campaign_id', e.target.value); } },
+            h('option', { value: '' }, '— Shared (no campaign) —'),
+            campaigns.map(function (c) { return h('option', { key: c.id, value: String(c.id) }, c.name); }))
+        ),
         h('div', { className: 'portal-field' },
           h('label', null, 'Author'),
           h('select', { value: draft.author_member_id, onChange: function (e) { onAuthorChange(e.target.value); } },
@@ -546,7 +546,10 @@
                   gap: '0.75rem', padding: '0.45rem 0', borderTop: idx === 0 ? 'none' : '1px solid var(--border-color)' } },
                   h('div', { style: { minWidth: 0 } },
                     h('div', { style: { fontWeight: 600 } }, e.name,
-                      e.campaign_name ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + e.campaign_name) : null),
+                      (function () {
+                        var meta = [e.region_name, e.campaign_name].filter(Boolean).join(' · ');
+                        return meta ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + meta) : null;
+                      })()),
                     h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '38rem' } },
                       (e.author_name ? 'by ' + e.author_name + ' — ' : '') +
                       (e.description_md ? String(e.description_md).replace(/[#>*_`~\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '—'))
