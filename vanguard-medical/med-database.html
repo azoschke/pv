@@ -430,7 +430,7 @@
 
       html += '<div class="record-card">';
       html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(displayName) + '</h1>' +
-        (otherName ? '<p class="record-card-label" style="margin-top:0.4rem;">Other name — ' + escapeHTML(otherName) + '</p>' : '') +
+        (otherName ? '<p class="record-card-label" style="margin-top:0.4rem;">' + escapeHTML(otherName) + '</p>' : '') +
         '</div></div>';
       if (generalInline.length) {
         html += '<div class="record-fields-inline">';

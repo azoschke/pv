@@ -196,8 +196,7 @@
             value: draft.nickname,
             onChange: function (e) { setField('nickname', e.target.value); }
           }),
-          h('span', { className: 'portal-field-help' },
-            'Optional. Shown as an “other name” on a linked medical record. Not displayed in this list.')
+          h('span', { className: 'portal-field-help' }, 'Optional.')
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'OOC Rank *'),
