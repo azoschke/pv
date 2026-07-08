@@ -142,6 +142,7 @@
 
     var draftState = useState({
       name: member.name || '',
+      nickname: member.nickname || '',
       ooc_rank: member.ooc_rank || '',
       ic_rank: member.ic_rank || '',
       faction: member.faction || '',
@@ -187,6 +188,16 @@
             value: draft.name,
             onChange: function (e) { setField('name', e.target.value); }
           })
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Nickname'),
+          h('input', {
+            type: 'text',
+            value: draft.nickname,
+            onChange: function (e) { setField('nickname', e.target.value); }
+          }),
+          h('span', { className: 'portal-field-help' },
+            'Shown as the primary name here and on any linked patient record. Leave blank to use the full name.')
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'OOC Rank *'),
@@ -300,8 +311,16 @@
     var showTalkedTo = shouldShowTalkedTo(m.activity);
 
     var factions = parseFactions(m.faction);
+    var nickname = m.nickname && String(m.nickname).trim();
     return h('tr', null,
-      h('td', null, m.name),
+      h('td', null,
+        nickname
+          ? h('div', { className: 'member-name-stack' },
+              h('span', { style: { fontWeight: 600 } }, m.nickname),
+              h('span', { style: { fontSize: '0.85em', color: 'var(--text-secondary)' } }, m.name)
+            )
+          : m.name
+      ),
       h('td', null, m.ic_rank || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', null,
         factions.length
@@ -425,6 +444,7 @@
     var filteredBase = members.filter(function (m) {
       if (q) {
         var hit = (m.name && m.name.toLowerCase().indexOf(q) !== -1)
+               || (m.nickname && m.nickname.toLowerCase().indexOf(q) !== -1)
                || (m.faction && m.faction.toLowerCase().indexOf(q) !== -1)
                || (m.ooc_rank && m.ooc_rank.toLowerCase().indexOf(q) !== -1)
                || (m.notes && m.notes.toLowerCase().indexOf(q) !== -1);

@@ -381,6 +381,13 @@
       var patient = data && data.patient ? data.patient : data || {};
       var visits  = Array.isArray(data && data.visits) ? data.visits : (Array.isArray(patient.visits) ? patient.visits : []);
 
+      // When the patient is linked to an FC member, that member's nickname
+      // (or full name) is the authoritative display name.
+      var member = data && data.member ? data.member : null;
+      var displayName = member
+        ? ((member.nickname && String(member.nickname).trim()) ? member.nickname : member.name)
+        : (patient.patient_name || "Unknown Patient");
+
       // Sort visits newest first.
       // Primary key: sort_date (real-life ISO date, hidden from public view).
       // Fallback for older records without sort_date: Eorzean date parsing.
@@ -422,7 +429,7 @@
       ].filter(function(f) { return hasValue(f.v); });
 
       html += '<div class="record-card">';
-      html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(patient.patient_name || "Unknown Patient") + '</h1></div></div>';
+      html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(displayName) + '</h1></div></div>';
       if (generalInline.length) {
         html += '<div class="record-fields-inline">';
         generalInline.forEach(function(f) { html += field(f.l, f.v); });
