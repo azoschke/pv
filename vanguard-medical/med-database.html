@@ -384,9 +384,9 @@
       // When the patient is linked to an FC member, that member's nickname
       // (or full name) is the authoritative display name.
       var member = data && data.member ? data.member : null;
-      var displayName = member
-        ? ((member.nickname && String(member.nickname).trim()) ? member.nickname : member.name)
-        : (patient.patient_name || "Unknown Patient");
+      var displayName = member ? member.name : (patient.patient_name || "Unknown Patient");
+      var otherName = member && member.nickname && String(member.nickname).trim()
+        ? String(member.nickname).trim() : "";
 
       // Sort visits newest first.
       // Primary key: sort_date (real-life ISO date, hidden from public view).
@@ -429,7 +429,9 @@
       ].filter(function(f) { return hasValue(f.v); });
 
       html += '<div class="record-card">';
-      html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(displayName) + '</h1></div></div>';
+      html += '<div class="record-card-header"><div><p class="record-card-label">Patient</p><h1 class="patient-name-header">' + escapeHTML(displayName) + '</h1>' +
+        (otherName ? '<p class="record-card-label" style="margin-top:0.4rem;">Other name — ' + escapeHTML(otherName) + '</p>' : '') +
+        '</div></div>';
       if (generalInline.length) {
         html += '<div class="record-fields-inline">';
         generalInline.forEach(function(f) { html += field(f.l, f.v); });

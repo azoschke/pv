@@ -24,18 +24,11 @@
 
   var DISCHARGE_SUGGESTIONS = ['Under Observation', 'Discharged'];
 
-  // Display name for a linked FC member: nickname takes precedence when set,
-  // otherwise the member's full name.
-  function memberDisplayName(m) {
-    if (!m) return '';
-    var nn = m.nickname && String(m.nickname).trim();
-    return nn ? nn : (m.name || '');
-  }
-  // Option label in the member picker: "Nickname — Full Name" when a nickname
+  // Option label in the member picker: "Full Name — Nickname" when a nickname
   // exists, so admins can still identify who it is.
   function memberPickerLabel(m) {
     var nn = m.nickname && String(m.nickname).trim();
-    return nn ? (nn + ' — ' + (m.name || '')) : (m.name || '');
+    return nn ? ((m.name || '') + ' — ' + nn) : (m.name || '');
   }
 
   // Patient record form laid out to mirror the patient intake form
@@ -160,13 +153,19 @@
       // Linked patient: the name is owned by the FC member record, so show it
       // read-only here and point the admin at the member to change it.
       if (f.key === 'patient_name' && draft.member_id) {
+        var linkList = props.members || [];
+        var linkedMem = linkList.find(function (mm) { return String(mm.id) === String(draft.member_id); });
+        var linkedName = (linkedMem && linkedMem.name) || draft.patient_name || '';
+        var otherName = linkedMem && linkedMem.nickname && String(linkedMem.nickname).trim()
+          ? String(linkedMem.nickname).trim() : '';
         return h('div', {
           className: 'portal-field', key: f.key, style: { gridColumn: '1 / -1' }
         },
           h('label', null, f.label),
-          h('input', { type: 'text', value: draft.patient_name || '', readOnly: true, disabled: true }),
+          h('input', { type: 'text', value: linkedName, readOnly: true, disabled: true }),
+          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null,
           h('span', { className: 'portal-field-help' },
-            'Name comes from the linked FC member’s nickname (or full name). Edit the member to change it.')
+            'Name comes from the linked FC member. Edit the member to change it.')
         );
       }
 
@@ -186,7 +185,7 @@
               if (!val) { setField('member_id', ''); return; }
               var mem = members.find(function (mm) { return String(mm.id) === val; });
               setField('member_id', val);
-              if (mem) setField('patient_name', memberDisplayName(mem));
+              if (mem) setField('patient_name', mem.name || '');
             }
           },
             h('option', { value: '' }, '— Manual entry (not on FC roster) —'),
