@@ -169,6 +169,21 @@
         );
       }
 
+      // Linked patient: Vanguard Position floods in from the member's IC Rank.
+      if (f.key === 'vanguard_position' && draft.member_id) {
+        var vpList = props.members || [];
+        var vpMem = vpList.find(function (mm) { return String(mm.id) === String(draft.member_id); });
+        var vpVal = (vpMem && vpMem.ic_rank) ? vpMem.ic_rank : (draft.vanguard_position || '');
+        return h('div', {
+          className: 'portal-field', key: f.key,
+          style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
+        },
+          h('label', null, f.label),
+          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true }),
+          h('span', { className: 'portal-field-help' }, 'From the linked FC member’s IC Rank.')
+        );
+      }
+
       // Hybrid FC-member link. Choosing a member fills the patient name from
       // that member (nickname first); "Manual entry" leaves the name free-text.
       if (f.type === 'member-link') {
@@ -185,7 +200,10 @@
               if (!val) { setField('member_id', ''); return; }
               var mem = members.find(function (mm) { return String(mm.id) === val; });
               setField('member_id', val);
-              if (mem) setField('patient_name', mem.name || '');
+              if (mem) {
+                setField('patient_name', mem.name || '');
+                setField('vanguard_position', mem.ic_rank || '');
+              }
             }
           },
             h('option', { value: '' }, '— Manual entry (not on FC roster) —'),

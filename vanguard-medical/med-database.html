@@ -186,11 +186,15 @@
     .v2-state-msg.error { color: var(--accent-red); }
 
     /* ── Patient sidebar: search + A–Z jump bar + letter groups ─────── */
-    .patient-controls {
+    /* Header + search + jump bar stay pinned so the ✕ and search remain
+       reachable no matter how far the list is scrolled. */
+    .patient-sidebar-top {
       position: sticky;
       top: 0;
-      z-index: 2;
+      z-index: 3;
       background: var(--bg-card);
+    }
+    .patient-controls {
       padding: 0.6rem 0.75rem;
       border-bottom: 1px solid var(--border-color);
     }
@@ -206,15 +210,15 @@
       border-radius: 0.3rem;
     }
     .patient-search::placeholder { color: var(--text-secondary); }
+    /* Fixed 9-column grid: 26 letters + "#" = exactly 3 even rows, so the
+       last row lines up instead of stretching a few letters across. */
     .patient-az-bar {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
       gap: 1px;
       margin-top: 0.5rem;
     }
     .patient-az-letter {
-      flex: 1 1 auto;
-      min-width: 1.05rem;
       padding: 0.12rem 0;
       text-align: center;
       font-family: 'Stoke', serif;
@@ -267,13 +271,15 @@
 
       <!-- Patient sidebar (campaign-sidebar pattern) -->
       <aside class="campaign-sidebar" id="patient-sidebar" aria-label="Patient navigation">
-        <div class="campaign-sidebar-header">
-          <span class="campaign-sidebar-title">Patients</span>
-          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close patient list">&#10005;</button>
-        </div>
-        <div class="patient-controls">
-          <input type="search" id="patient-search" class="patient-search" placeholder="Search patients…" aria-label="Search patients" autocomplete="off">
-          <div class="patient-az-bar" id="patient-az-bar" role="group" aria-label="Jump to letter"></div>
+        <div class="patient-sidebar-top">
+          <div class="campaign-sidebar-header">
+            <span class="campaign-sidebar-title">Patients</span>
+            <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close patient list">&#10005;</button>
+          </div>
+          <div class="patient-controls">
+            <input type="search" id="patient-search" class="patient-search" placeholder="Search patients…" aria-label="Search patients" autocomplete="off">
+            <div class="patient-az-bar" id="patient-az-bar" role="group" aria-label="Jump to letter"></div>
+          </div>
         </div>
         <ul class="chapter-list" id="patient-list" role="list">
           <!-- populated by JS -->
@@ -498,8 +504,8 @@
     function jumpToLetter(letter) {
       var header = patientList.querySelector('.patient-group-header[data-group="' + letter + '"]');
       if (!header) return;
-      var controls = sidebarEl.querySelector(".patient-controls");
-      var offset = controls ? controls.offsetHeight : 0;
+      var top = sidebarEl.querySelector(".patient-sidebar-top");
+      var offset = top ? top.offsetHeight : 0;
       sidebarEl.scrollTop = Math.max(0, header.offsetTop - offset - 4);
     }
 
@@ -579,7 +585,8 @@
         { l: "Race", v: patient.race },
         { l: "Gender", v: patient.gender },
         { l: "Age", v: patient.age },
-        { l: "Vanguard Position", v: patient.vanguard_position }
+        // For linked members this floods in from their FC IC Rank.
+        { l: "Vanguard Position", v: (member && member.ic_rank) ? member.ic_rank : patient.vanguard_position }
       ].filter(function(f) { return hasValue(f.v); });
 
       html += '<div class="record-card">';
