@@ -24,6 +24,13 @@
 
   var DISCHARGE_SUGGESTIONS = ['Under Observation', 'Discharged'];
 
+  // Option label in the member picker: "Full Name — Nickname" when a nickname
+  // exists, so admins can still identify who it is.
+  function memberPickerLabel(m) {
+    var nn = m.nickname && String(m.nickname).trim();
+    return nn ? ((m.name || '') + ' — ' + nn) : (m.name || '');
+  }
+
   // Patient record form laid out to mirror the patient intake form
   // (vanguard-medical/patient-intake-form.html), grouped into the same
   // sections so editing an existing record follows the same flow an
@@ -39,6 +46,7 @@
       id: 'patient-info',
       title: 'Patient Information',
       fields: [
+        { key: 'member_id',          label: 'FC Member',         type: 'member-link', fullWidth: true },
         { key: 'patient_name',       label: 'Patient Name',      type: 'text', required: true, fullWidth: true },
         { key: 'race',               label: 'Race',              type: 'text' },
         { key: 'gender',             label: 'Gender',            type: 'text' },
@@ -141,6 +149,75 @@
 
     function renderField(f) {
       if (f.newOnly && !isNew) return null;
+
+      // Linked patient: the name is owned by the FC member record, so show it
+      // read-only here and point the admin at the member to change it.
+      if (f.key === 'patient_name' && draft.member_id) {
+        var linkList = props.members || [];
+        var linkedMem = linkList.find(function (mm) { return String(mm.id) === String(draft.member_id); });
+        var linkedName = (linkedMem && linkedMem.name) || draft.patient_name || '';
+        var otherName = linkedMem && linkedMem.nickname && String(linkedMem.nickname).trim()
+          ? String(linkedMem.nickname).trim() : '';
+        return h('div', {
+          className: 'portal-field', key: f.key, style: { gridColumn: '1 / -1' }
+        },
+          h('label', null, f.label),
+          h('input', { type: 'text', value: linkedName, readOnly: true, disabled: true }),
+          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null,
+          h('span', { className: 'portal-field-help' },
+            'Name comes from the linked FC member. Edit the member to change it.')
+        );
+      }
+
+      // Linked patient: Vanguard Position floods in from the member's IC Rank.
+      if (f.key === 'vanguard_position' && draft.member_id) {
+        var vpList = props.members || [];
+        var vpMem = vpList.find(function (mm) { return String(mm.id) === String(draft.member_id); });
+        var vpVal = (vpMem && vpMem.ic_rank) ? vpMem.ic_rank : (draft.vanguard_position || '');
+        return h('div', {
+          className: 'portal-field', key: f.key,
+          style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
+        },
+          h('label', null, f.label),
+          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true }),
+          h('span', { className: 'portal-field-help' }, 'From the linked FC member’s IC Rank.')
+        );
+      }
+
+      // Hybrid FC-member link. Choosing a member fills the patient name from
+      // that member (nickname first); "Manual entry" leaves the name free-text.
+      if (f.type === 'member-link') {
+        var members = props.members || [];
+        return h('div', {
+          className: 'portal-field', key: f.key, style: { gridColumn: '1 / -1' }
+        },
+          h('label', null, f.label),
+          h('select', {
+            className: 'portal-filter-select',
+            value: draft.member_id ? String(draft.member_id) : '',
+            onChange: function (e) {
+              var val = e.target.value;
+              if (!val) { setField('member_id', ''); return; }
+              var mem = members.find(function (mm) { return String(mm.id) === val; });
+              setField('member_id', val);
+              if (mem) {
+                setField('patient_name', mem.name || '');
+                setField('vanguard_position', mem.ic_rank || '');
+              }
+            }
+          },
+            h('option', { value: '' }, '— Manual entry (not on FC roster) —'),
+            members.map(function (mm) {
+              return h('option', { key: mm.id, value: String(mm.id) }, memberPickerLabel(mm));
+            })
+          ),
+          h('span', { className: 'portal-field-help' },
+            draft.member_id
+              ? 'Linked to an FC member. Removing that member from FC Members also removes this patient record.'
+              : 'Link this patient to an FC member, or leave as “Manual entry” and type a name below.')
+        );
+      }
+
       var input;
       var common = {
         value: draft[f.key] || '',
@@ -210,6 +287,8 @@
     var onEditPatient = props.onEditPatient;
     var onVisits = props.onVisits;
     var onNew = props.onNew;
+    var onDelete = props.onDelete;
+    var allowDelete = props.allowDelete;
 
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
@@ -254,7 +333,19 @@
             filtered.length
               ? filtered.map(function (p) {
                   return h('tr', { key: p.patient_id },
-                    h('td', null, p.patient_name),
+                    h('td', null,
+                      p.patient_name,
+                      p.member_id
+                        ? h('span', {
+                            style: {
+                              marginLeft: '0.5rem', fontSize: '0.72rem',
+                              letterSpacing: '0.06em', textTransform: 'uppercase',
+                              color: 'var(--text-secondary)'
+                            },
+                            title: 'Linked to an FC member'
+                          }, '· FC')
+                        : null
+                    ),
                     h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
                       h('button', {
                         type: 'button',
@@ -266,7 +357,19 @@
                         type: 'button',
                         className: 'portal-btn is-small',
                         onClick: function () { onVisits(p.patient_id); }
-                      }, 'Add or edit visits')
+                      }, 'Add or edit visits'),
+                      allowDelete ? h('span', null, ' ',
+                        h('button', {
+                          type: 'button',
+                          className: 'portal-btn is-small is-danger',
+                          onClick: function () {
+                            if (confirm('Delete patient “' + (p.patient_name || 'this patient') +
+                                '” and all of their visits? This cannot be undone.')) {
+                              onDelete(p.patient_id);
+                            }
+                          }
+                        }, 'Delete')
+                      ) : null
                     )
                   );
                 })
@@ -338,6 +441,7 @@
         sections: PATIENT_SECTIONS,
         initial: p,
         isNew: false,
+        members: props.members,
         submitLabel: 'Save patient',
         onSubmit: handleSave
       })
@@ -587,6 +691,7 @@
         sections: PATIENT_SECTIONS,
         initial: {},
         isNew: true,
+        members: props.members,
         submitLabel: 'Create patient',
         onSubmit: handleCreate,
         onCancel: onCancel
@@ -602,10 +707,14 @@
     var selected = selectedState[0], setSelected = selectedState[1];
     var patientsState = useState([]);
     var patients = patientsState[0], setPatients = patientsState[1];
+    var membersState = useState([]);
+    var members = membersState[0], setMembers = membersState[1];
     var loadingState = useState(true);
     var loading = loadingState[0], setLoading = loadingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
+
+    var allowDelete = PVAdminAPI.hasRole('admin');
 
     async function reload() {
       setErr('');
@@ -619,7 +728,29 @@
       }
     }
 
-    useEffect(function () { reload(); }, []);
+    // FC roster names/nicknames for the linking picker. Best-effort: if the
+    // current role can't read it, linking is simply unavailable and manual
+    // entry still works.
+    async function loadMembers() {
+      try {
+        var list = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
+        setMembers(Array.isArray(list) ? list : []);
+      } catch (_e) {
+        setMembers([]);
+      }
+    }
+
+    async function handleDeletePatient(id) {
+      setErr('');
+      try {
+        await PVAdminAPI.request('DELETE', '/patients/' + id, undefined, true);
+        await reload();
+      } catch (e) {
+        setErr(e.message || 'Failed to delete patient.');
+      }
+    }
+
+    useEffect(function () { reload(); loadMembers(); }, []);
 
     function goList() { setView('list'); setSelected(null); reload(); }
 
@@ -633,12 +764,13 @@
 
     if (view === 'new') {
       return h(PatientNew, {
+        members: members,
         onCreated: function (id) { setSelected(id); setView('edit-patient'); reload(); },
         onCancel: goList
       });
     }
     if (view === 'edit-patient' && selected) {
-      return h(PatientEdit, { patientId: selected, onBack: goList });
+      return h(PatientEdit, { patientId: selected, members: members, onBack: goList });
     }
     if (view === 'visits' && selected) {
       return h(PatientVisits, { patientId: selected, onBack: goList });
@@ -646,8 +778,10 @@
 
     return h(PatientList, {
       patients: patients,
+      allowDelete: allowDelete,
       onEditPatient: function (id) { setSelected(id); setView('edit-patient'); },
       onVisits: function (id) { setSelected(id); setView('visits'); },
+      onDelete: handleDeletePatient,
       onNew: function () { setView('new'); }
     });
   }

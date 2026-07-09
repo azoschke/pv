@@ -142,6 +142,7 @@
 
     var draftState = useState({
       name: member.name || '',
+      nickname: member.nickname || '',
       ooc_rank: member.ooc_rank || '',
       ic_rank: member.ic_rank || '',
       faction: member.faction || '',
@@ -187,6 +188,15 @@
             value: draft.name,
             onChange: function (e) { setField('name', e.target.value); }
           })
+        ),
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Nickname'),
+          h('input', {
+            type: 'text',
+            value: draft.nickname,
+            onChange: function (e) { setField('nickname', e.target.value); }
+          }),
+          h('span', { className: 'portal-field-help' }, 'Optional.')
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'OOC Rank *'),

@@ -11,6 +11,7 @@
  *   Multi-line setext   multiple lines before === or ---
  *   Bold                **text**
  *   Italic              _text_
+ *   Blockquote          > quoted text (contiguous lines)
  *   Hard line break     trailing backslash \
  *   HTML comments       <!-- … --> (stripped/skipped)
  */
@@ -55,6 +56,17 @@
         var lvl = atx[1].length;
         out.push('<h' + lvl + '>' + inlineMarkdown(atx[2]) + '</h' + lvl + '>');
         i++;
+        continue;
+      }
+
+      // Blockquote: one or more contiguous lines starting with ">"
+      if (/^>\s?/.test(trimmed)) {
+        var quote = [];
+        while (i < lines.length && /^\s*>\s?/.test(lines[i])) {
+          quote.push(lines[i].replace(/^\s*>\s?/, ''));
+          i++;
+        }
+        out.push('<blockquote><p>' + renderLines(quote) + '</p></blockquote>');
         continue;
       }
 
