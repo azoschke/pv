@@ -3067,24 +3067,23 @@ body.nav-sidebar-open {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 0.5rem;
   overflow: hidden;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   font-family: inherit;
   color: inherit;
 }
 
 .venue-card:hover {
   transform: translateY(-2px);
-  border-color: var(--accent-brown);
 }
 
 .venue-card.is-featured {
-  border-color: var(--accent-brown);
+  box-shadow: 0 6px 18px rgba(62, 56, 50, 0.28);
 }
 
 .venue-card-media {
@@ -3214,7 +3213,6 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -3251,6 +3249,47 @@ body.nav-sidebar-open {
   position: relative;
 }
 
+/* Contrast-vector border overlay. An SVG is used as a mask (same technique as
+   the site logo) and filled with --bg-card so its torn edge reads as a seamless
+   extension of the card body below the media. Full height sits on detail-modal
+   images (.contrast-border); half height sits on unopened grid-card images
+   (.contrast-border-half). Wrap a lone <img> in .contrast-media so the overlay
+   has a positioned box to anchor to; containers that are already positioned
+   (galleries, card media) can hold the overlay directly. */
+.contrast-media {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.contrast-border,
+.contrast-border-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  width: 100%;
+  background-color: var(--bg-card);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.contrast-border {
+  aspect-ratio: 591.84 / 42.48;
+  -webkit-mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+          mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+}
+
+/* The half vector is a narrower (not shorter) torn edge, so its taller aspect
+   ratio keeps the band from stretching thin on the smaller grid-card widths.
+   (The SVGs carry preserveAspectRatio="none" so the 100% mask stretches flush
+   to every edge instead of letterboxing a sliver at the corners.) */
+.contrast-border-half {
+  aspect-ratio: 319.4136 / 42.48;
+  -webkit-mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+          mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+}
+
 .venue-gallery {
   position: relative;
   width: 100%;
@@ -3278,7 +3317,8 @@ body.nav-sidebar-open {
 
 .venue-gallery-nav {
   position: absolute;
-  top: 50%;
+  /* Nudged below center so the arrows sit lower in the frame. */
+  top: 58%;
   transform: translateY(-50%);
   width: 2.25rem;
   height: 2.25rem;
@@ -3301,7 +3341,9 @@ body.nav-sidebar-open {
 
 .venue-gallery-dots {
   position: absolute;
-  bottom: 0.6rem;
+  /* Lifted clear of the contrast-border torn edge that overlays the gallery
+     bottom (full border is ~46px tall at the 640px modal width). */
+  bottom: 3rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -3519,20 +3561,19 @@ body.nav-sidebar-open {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 0.5rem;
   overflow: hidden;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   font-family: inherit;
   color: inherit;
 }
 
 .job-card:hover {
   transform: translateY(-2px);
-  border-color: var(--accent-brown);
 }
 
 .job-card.is-inactive {
@@ -3661,7 +3702,6 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);

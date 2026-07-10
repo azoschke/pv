@@ -392,6 +392,11 @@
       media.appendChild(sig);
     }
 
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
+
     var catBadge = document.createElement("span");
     catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
     catBadge.textContent = jobBadgeLabel(j).toUpperCase();
@@ -456,11 +461,15 @@
   function buildImageHtml(j) {
     var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
     if (j.image_url) {
-      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">';
+      return '<div class="contrast-media">' +
+        '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>';
     }
     return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
       palette.from + ' 0%, ' + palette.to + ' 100%);">' +
       '<span class="job-card-sig">' + escapeHTML((j.title || "").toLowerCase()) + '</span>' +
+      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 

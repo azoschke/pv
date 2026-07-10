@@ -441,6 +441,11 @@
       media.appendChild(sig);
     }
 
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
+
     if (q.mission_type) {
       var typeBadge = document.createElement("span");
       typeBadge.className = "job-badge job-badge-category quest-type-" + typeSlug(q.mission_type);
@@ -527,11 +532,15 @@
   function buildImageHtml(q) {
     var palette = paletteFor(q);
     if (q.image_url) {
-      return '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img">';
+      return '<div class="contrast-media">' +
+        '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img">' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>';
     }
     return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
       palette.from + ' 0%, ' + palette.to + ' 100%);">' +
       '<span class="job-card-sig">' + escapeHTML((q.title || "").toLowerCase()) + '</span>' +
+      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 

@@ -433,7 +433,12 @@
         : '<p>' + escapeHtml(e.description_md || '') + '</p>';
 
       modalBody.innerHTML =
-        (e.image_url ? '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.remove()">' : '') +
+        (e.image_url
+          ? '<div class="contrast-media">' +
+              '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.parentElement.remove()">' +
+              '<span class="contrast-border" aria-hidden="true"></span>' +
+            '</div>'
+          : '') +
         '<div class="venue-modal-content">' +
           '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
           (authorLine ? '<p class="codex-modal-sub">' + escapeHtml(authorLine) + '</p>' : '') +

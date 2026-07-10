@@ -367,6 +367,11 @@
       media.appendChild(sig);
     }
 
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
+
     if (primary) {
       var posBadge = document.createElement("span");
       posBadge.className = "venue-badge venue-badge-size";
@@ -446,10 +451,14 @@
     var palette = POSITION_PALETTE[primary] || FALLBACK_PALETTE;
 
     var imgHtml = s.image_url
-      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img">'
+      ? '<div class="contrast-media">' +
+          '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img">' +
+          '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>'
       : '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
         palette.from + ' 0%, ' + palette.to + ' 100%);">' +
         '<span class="venue-card-sig">' + escapeHTML((s.name || "").toLowerCase()) + '</span>' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
         '</div>';
 
     var descHtml = s.description

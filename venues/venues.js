@@ -403,6 +403,11 @@
       media.appendChild(sig);
     }
 
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
+
     if (v.featured) {
       var fb = document.createElement("span");
       fb.className = "venue-badge venue-badge-featured";
@@ -489,11 +494,15 @@
       return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
         palette.from + ' 0%, ' + palette.to + ' 100%);">' +
         '<span class="venue-card-sig">' + escapeHTML((v.name || "").toLowerCase()) + '</span>' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
         '</div>';
     }
 
     if (imgs.length === 1) {
-      return '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img">';
+      return '<div class="contrast-media">' +
+        '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img">' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>';
     }
 
     var slides = imgs.map(function (src, i) {
@@ -512,6 +521,7 @@
       '<button type="button" class="venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
       '<button type="button" class="venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
       '<div class="venue-gallery-dots">' + dots + '</div>' +
+      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 

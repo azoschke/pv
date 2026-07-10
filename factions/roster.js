@@ -353,6 +353,11 @@
       media.appendChild(sig);
     }
 
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
+
     // Badge pulls in the member's actual faction(s).
     if ((m.factions || []).length) {
       var badge = document.createElement("span");
@@ -436,11 +441,15 @@
   function buildImageHtml(m) {
     var palette = paletteFor(m);
     if (m.image_url) {
-      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img">';
+      return '<div class="contrast-media">' +
+        '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img">' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>';
     }
     return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
       palette.from + ' 0%, ' + palette.to + ' 100%);">' +
       '<span class="venue-card-sig">' + escapeHTML((m.name || "").toLowerCase()) + '</span>' +
+      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 
