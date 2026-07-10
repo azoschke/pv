@@ -3317,7 +3317,8 @@ body.nav-sidebar-open {
 
 .venue-gallery-nav {
   position: absolute;
-  top: 50%;
+  /* Nudged below center so the arrows sit lower in the frame. */
+  top: 58%;
   transform: translateY(-50%);
   width: 2.25rem;
   height: 2.25rem;
