@@ -89,7 +89,8 @@
   }
 
   // ── Image upload (same resize-to-WebP pattern as the other modules) ──────
-  async function resizeImageToWebp(file) {
+  async function resizeImageToWebp(file, opts) {
+    opts = opts || {};
     var bitmap = null;
     if (typeof createImageBitmap === 'function') {
       try { bitmap = await createImageBitmap(file); }
@@ -107,13 +108,27 @@
     var srcW = bitmap.width || bitmap.naturalWidth;
     var srcH = bitmap.height || bitmap.naturalHeight;
     if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
-    var hgt = Math.max(1, Math.round((w / srcW) * srcH));
     var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = hgt;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, 0, 0, w, hgt);
+    var ctx;
+    if (opts.square) {
+      // Centre-crop to a square, then cap the side length at opts.maxSize.
+      var side = Math.min(srcW, srcH);
+      var sx = Math.floor((srcW - side) / 2);
+      var sy = Math.floor((srcH - side) / 2);
+      var out = Math.min(side, opts.maxSize || UPLOAD_TARGET_WIDTH);
+      canvas.width = out; canvas.height = out;
+      ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get a 2D canvas context.');
+      ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, out, out);
+    } else {
+      var maxW = opts.maxWidth || UPLOAD_TARGET_WIDTH;
+      var w = srcW > maxW ? maxW : srcW;
+      var hgt = Math.max(1, Math.round((w / srcW) * srcH));
+      canvas.width = w; canvas.height = hgt;
+      ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get a 2D canvas context.');
+      ctx.drawImage(bitmap, 0, 0, w, hgt);
+    }
     if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
     var blob = await new Promise(function (resolve, reject) {
       canvas.toBlob(function (b) {
@@ -136,13 +151,13 @@
   }
 
   // Generic multipart upload to one of the worker's */images endpoints.
-  async function uploadImage(path, file, extraFields) {
+  async function uploadImage(path, file, extraFields, resizeOpts) {
     var session = PVAdminAPI.getSession();
     if (!session) {
       PVAdminAPI.redirectToLogin();
       throw new Error('Session expired. Please sign in again.');
     }
-    var blob = await resizeImageToWebp(file);
+    var blob = await resizeImageToWebp(file, resizeOpts);
     var form = new FormData();
     form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
     Object.keys(extraFields || {}).forEach(function (k) { form.append(k, extraFields[k]); });
@@ -179,6 +194,7 @@
     var disabled = props.disabled;
     var uploadPath = props.uploadPath;
     var extraFields = props.extraFields;
+    var resize = props.resize;
     var help = props.help;
 
     var uploadingState = useState(false);
@@ -195,7 +211,7 @@
       setUploadErr('');
       setUploading(true);
       try {
-        var url = await uploadImage(uploadPath, file, extraFields);
+        var url = await uploadImage(uploadPath, file, extraFields, resize);
         onChange(url);
       } catch (e) {
         setUploadErr(e.message || 'Upload failed.');

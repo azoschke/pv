@@ -388,7 +388,8 @@
             onChange: function (v) { setImage(v); },
             uploadPath: '/venues/images',
             extraFields: { venue_name: name.trim() || 'item' },
-            help: 'Paste a URL or upload an image. Shown on the roll calculator and My Items.'
+            resize: { square: true, maxSize: 600 },
+            help: 'Paste a URL or upload an image. Uploads are square-cropped to 600×600. Shown on the roll calculator and My Items.'
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
             h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),

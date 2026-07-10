@@ -244,7 +244,7 @@
             return h('div', { key: it.item_id, style: { padding: '0.6rem 0', borderTop: '1px solid var(--border-color)' } },
               it.image_url ? h('img', {
                 src: it.image_url, alt: '',
-                style: { display: 'block', width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '0.5rem' },
+                style: { display: 'block', width: '100%', maxWidth: '220px', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '0.5rem' },
                 onError: function (e) { e.target.style.display = 'none'; }
               }) : null,
               h('strong', { style: { fontSize: '1.02rem' } }, it.name),
