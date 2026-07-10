@@ -3251,26 +3251,43 @@ body.nav-sidebar-open {
   position: relative;
 }
 
-/* Codex modal image with a bottom contrast border that blends into the card.
-   The SVG is used as a mask (like the site logo) and filled with --bg-card so
-   its shape reads as a seamless extension of the card body below the image. */
-.codex-modal-img-wrap {
+/* Contrast-vector border overlay. An SVG is used as a mask (same technique as
+   the site logo) and filled with --bg-card so its torn edge reads as a seamless
+   extension of the card body below the media. Full height sits on detail-modal
+   images (.contrast-border); half height sits on unopened grid-card images
+   (.contrast-border-half). Wrap a lone <img> in .contrast-media so the overlay
+   has a positioned box to anchor to; containers that are already positioned
+   (galleries, card media) can hold the overlay directly. */
+.contrast-media {
   position: relative;
   display: block;
   line-height: 0;
 }
 
-.codex-modal-img-border {
+.contrast-border,
+.contrast-border-half {
   position: absolute;
   left: 0;
   right: 0;
   bottom: -1px;
   width: 100%;
-  aspect-ratio: 591.84 / 42.48;
   background-color: var(--bg-card);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.contrast-border {
+  aspect-ratio: 591.84 / 42.48;
   -webkit-mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
           mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-  pointer-events: none;
+}
+
+/* The half vector is a narrower (not shorter) torn edge, so its taller aspect
+   ratio keeps the band from stretching thin on the smaller grid-card widths. */
+.contrast-border-half {
+  aspect-ratio: 319.4136 / 42.48;
+  -webkit-mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+          mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
 }
 
 .venue-gallery {
@@ -3323,7 +3340,9 @@ body.nav-sidebar-open {
 
 .venue-gallery-dots {
   position: absolute;
-  bottom: 0.6rem;
+  /* Lifted clear of the contrast-border torn edge that overlays the gallery
+     bottom (full border is ~46px tall at the 640px modal width). */
+  bottom: 3rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;

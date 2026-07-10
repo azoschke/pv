@@ -377,12 +377,17 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "job-card-img";
+      var cardBorder = document.createElement("span");
+      cardBorder.className = "contrast-border-half";
+      cardBorder.setAttribute("aria-hidden", "true");
       img.addEventListener("error", function () {
         img.remove();
+        cardBorder.remove();
         media.style.background =
           "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
       });
       media.appendChild(img);
+      media.appendChild(cardBorder);
     } else {
       media.style.background =
         "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
@@ -456,7 +461,10 @@
   function buildImageHtml(j) {
     var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
     if (j.image_url) {
-      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">';
+      return '<div class="contrast-media">' +
+        '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">' +
+        '<span class="contrast-border" aria-hidden="true"></span>' +
+        '</div>';
     }
     return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
       palette.from + ' 0%, ' + palette.to + ' 100%);">' +
