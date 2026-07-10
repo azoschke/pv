@@ -3283,11 +3283,14 @@ body.nav-sidebar-open {
 }
 
 /* The half vector is a narrower (not shorter) torn edge, so its taller aspect
-   ratio keeps the band from stretching thin on the smaller grid-card widths. */
+   ratio keeps the band from stretching thin on the smaller grid-card widths.
+   Its solid band stops just shy of the bottom-right corner, so the mask is
+   overshot horizontally a touch — the ragged end is clipped by the media's
+   overflow, leaving full edge-to-edge coverage. */
 .contrast-border-half {
   aspect-ratio: 319.4136 / 42.48;
-  -webkit-mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-          mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+  -webkit-mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat center bottom / 108% 100%;
+          mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat center bottom / 108% 100%;
 }
 
 .venue-gallery {
