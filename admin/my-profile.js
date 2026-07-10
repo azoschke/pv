@@ -242,6 +242,11 @@
         ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.')
         : items.map(function (it) {
             return h('div', { key: it.item_id, style: { padding: '0.6rem 0', borderTop: '1px solid var(--border-color)' } },
+              it.image_url ? h('img', {
+                src: it.image_url, alt: '',
+                style: { display: 'block', width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '0.5rem' },
+                onError: function (e) { e.target.style.display = 'none'; }
+              }) : null,
               h('strong', { style: { fontSize: '1.02rem' } }, it.name),
               it.description ? h('p', { style: { margin: '0.2rem 0 0.4rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
               (it.abilities || []).map(function (ab, i) {

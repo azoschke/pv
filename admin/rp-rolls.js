@@ -316,9 +316,15 @@
       editing
         ? h(ItemForm, { initial: it, onSubmit: saveItem, onCancel: function () { setEditing(false); } })
         : h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' } },
-            h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
-              h('strong', null, it.name),
-              it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic', whiteSpace: 'pre-wrap' } }, it.description) : null),
+            h('div', { style: { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', flex: '1 1 auto', minWidth: 0 } },
+              it.image_url ? h('img', {
+                src: it.image_url, alt: '',
+                style: { width: '48px', height: '48px', objectFit: 'cover', borderRadius: '0.3rem', flexShrink: 0 },
+                onError: function (e) { e.target.style.display = 'none'; }
+              }) : null,
+              h('div', { style: { minWidth: 0 } },
+                h('strong', null, it.name),
+                it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic', whiteSpace: 'pre-wrap' } }, it.description) : null)),
             h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
               h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setEditing(true); } }, 'Edit'),
               h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete'))),
@@ -358,13 +364,14 @@
     var it = props.initial || {};
     var nameState = useState(it.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(it.description || ''); var desc = descState[0], setDesc = descState[1];
+    var imageState = useState(it.image_url || ''); var image = imageState[0], setImage = imageState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
       try {
-        await props.onSubmit({ name: name.trim(), description: desc.trim() || null });
+        await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null });
       } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
 
@@ -375,6 +382,16 @@
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (shown to the player)'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
+        ? h(PVAdminQuestUtils.ImageField, {
+            value: image,
+            onChange: function (v) { setImage(v); },
+            uploadPath: '/venues/images',
+            extraFields: { venue_name: name.trim() || 'item' },
+            help: 'Paste a URL or upload an image. Shown on the roll calculator and My Items.'
+          })
+        : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
+            h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
       h('p', { className: 'portal-field-help', style: { margin: '0 0 0.5rem' } },
         'All modifiers live on the item’s abilities (passive or activated). Add them after creating the item.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },

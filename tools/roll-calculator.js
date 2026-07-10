@@ -218,6 +218,7 @@
     return h('div', { className: 'rp-card' }, h('h3', null, 'My Items'),
       items.map(function (it) {
         return h('div', { className: 'rp-item', key: it.item_id },
+          it.image_url ? h('img', { className: 'rp-item-img', src: it.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
           h('div', { className: 'rp-item-name' }, it.name),
           it.description ? h('p', { className: 'rp-item-flavor' }, it.description) : null,
           (it.abilities || []).map(function (ab) {
