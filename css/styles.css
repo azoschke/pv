@@ -3251,6 +3251,28 @@ body.nav-sidebar-open {
   position: relative;
 }
 
+/* Codex modal image with a bottom contrast border that blends into the card.
+   The SVG is used as a mask (like the site logo) and filled with --bg-card so
+   its shape reads as a seamless extension of the card body below the image. */
+.codex-modal-img-wrap {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+.codex-modal-img-border {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  width: 100%;
+  aspect-ratio: 591.84 / 42.48;
+  background-color: var(--bg-card);
+  -webkit-mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+          mask: url("/pv/assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+  pointer-events: none;
+}
+
 .venue-gallery {
   position: relative;
   width: 100%;
