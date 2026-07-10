@@ -3067,6 +3067,7 @@ body.nav-sidebar-open {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
+  border: none;
   border-radius: 0.5rem;
   overflow: hidden;
   text-align: left;
@@ -3560,6 +3561,7 @@ body.nav-sidebar-open {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
+  border: none;
   border-radius: 0.5rem;
   overflow: hidden;
   text-align: left;
