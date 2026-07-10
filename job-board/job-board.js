@@ -377,17 +377,12 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "job-card-img";
-      var cardBorder = document.createElement("span");
-      cardBorder.className = "contrast-border-half";
-      cardBorder.setAttribute("aria-hidden", "true");
       img.addEventListener("error", function () {
         img.remove();
-        cardBorder.remove();
         media.style.background =
           "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
       });
       media.appendChild(img);
-      media.appendChild(cardBorder);
     } else {
       media.style.background =
         "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
@@ -396,6 +391,11 @@
       sig.textContent = (j.title || "").toLowerCase();
       media.appendChild(sig);
     }
+
+    var cardBorder = document.createElement("span");
+    cardBorder.className = "contrast-border-half";
+    cardBorder.setAttribute("aria-hidden", "true");
+    media.appendChild(cardBorder);
 
     var catBadge = document.createElement("span");
     catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
@@ -469,6 +469,7 @@
     return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
       palette.from + ' 0%, ' + palette.to + ' 100%);">' +
       '<span class="job-card-sig">' + escapeHTML((j.title || "").toLowerCase()) + '</span>' +
+      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 
