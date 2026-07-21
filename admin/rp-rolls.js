@@ -456,6 +456,7 @@
     // opened for management; drives the "Campaign items" toggle panel.
     var disabledItemsState = useState(null); var disabledItems = disabledItemsState[0], setDisabledItems = disabledItemsState[1];
     var disabledSupportedState = useState(true); var disabledSupported = disabledSupportedState[0], setDisabledSupported = disabledSupportedState[1];
+    var itemsAdvancedState = useState(false); var itemsAdvanced = itemsAdvancedState[0], setItemsAdvanced = itemsAdvancedState[1]; // per-item list expanded
 
     async function loadCampaigns() {
       try { setCampaigns(await PVRollAPI.request('GET', '/rp/campaigns') || []); }
@@ -515,6 +516,27 @@
       setDisabledItems(next); // optimistic
       try { await PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/disabled-items', { item_id: itemId, disabled: disabled }); }
       catch (e) { setErr(e.message); loadDisabledItems(selected.id); }
+    }
+    // Items actually pulled into this campaign = catalogue items owned by a member
+    // on the roster (adding a member auto-equips their owned items). We only expose
+    // these in the toggle panel — unassigned catalogue items aren't in play here.
+    function campaignItemList() {
+      var ids = {}; roster.forEach(function (r) { ids[Number(r.member_id)] = true; });
+      return (items || []).filter(function (it) { return it.assigned_member_id != null && ids[Number(it.assigned_member_id)]; });
+    }
+    async function setAllItemsDisabled(disabled) {
+      var camp = campaignItemList();
+      var next = Object.assign({}, disabledItems || {});
+      var reqs = [];
+      camp.forEach(function (it) {
+        var off = !!next[it.id];
+        if (off === disabled) return; // already in the desired state
+        if (disabled) next[it.id] = true; else delete next[it.id];
+        reqs.push(PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/disabled-items', { item_id: it.id, disabled: disabled }));
+      });
+      if (!reqs.length) return;
+      setDisabledItems(next); // optimistic
+      try { await Promise.all(reqs); } catch (e) { setErr(e.message); loadDisabledItems(selected.id); }
     }
 
     function selectCampaign(c) {
@@ -679,21 +701,40 @@
                 ),
 
                 // Campaign items — turn items off for this campaign (options + passives).
-                (disabledSupported && items.length) ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
-                  h('p', { style: { margin: '0 0 0.35rem', fontWeight: 600 } }, 'Campaign items'),
-                  h('p', { className: 'portal-field-help', style: { margin: '0 0 0.6rem' } },
-                    'Turn an item Off to drop its roll options and passives from this campaign’s calculator. It stays assigned to whoever holds it.'),
-                  disabledItems === null
-                    ? h('p', { style: { margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Loading…')
-                    : h('div', { className: 'rp-item-toggle-grid' },
-                        items.map(function (it) {
-                          var off = !!disabledItems[it.id];
-                          return h('div', { key: it.id, className: 'rp-item-toggle' + (off ? ' is-off' : '') },
-                            h('span', { className: 'rp-item-toggle-name', title: it.name }, it.name),
-                            h('button', { type: 'button', className: 'portal-btn is-small' + (off ? ' is-ghost' : ''),
-                              onClick: function () { toggleItemDisabled(it.id, !off); } }, off ? 'Off' : 'On'));
-                        }))
-                ) : null,
+                // Only items pulled into the campaign appear; collapsed to a master
+                // on/off by default, with an Advanced view for per-item control.
+                (function () {
+                  if (!disabledSupported) return null;
+                  var camp = campaignItemList();
+                  if (!camp.length) return null;
+                  var loading = disabledItems === null;
+                  var offCount = loading ? 0 : camp.filter(function (it) { return !!disabledItems[it.id]; }).length;
+                  var onCount = camp.length - offCount;
+                  return h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
+                      h('p', { style: { margin: 0, fontWeight: 600, flex: '1 1 auto' } }, 'Campaign items'),
+                      h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem' } },
+                        loading ? 'Loading…' : (onCount + ' on · ' + offCount + ' off')),
+                      h('button', { type: 'button', className: 'portal-btn is-small', disabled: loading || offCount === 0,
+                        onClick: function () { setAllItemsDisabled(false); } }, 'All on'),
+                      h('button', { type: 'button', className: 'portal-btn is-small is-ghost', disabled: loading || onCount === 0,
+                        onClick: function () { setAllItemsDisabled(true); } }, 'All off'),
+                      h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+                        onClick: function () { setItemsAdvanced(!itemsAdvanced); } }, (itemsAdvanced ? '▾ ' : '▸ ') + 'Advanced')),
+                    itemsAdvanced ? h('div', { style: { marginTop: '0.6rem', paddingTop: '0.6rem', borderTop: '1px solid var(--border-color)' } },
+                      h('p', { className: 'portal-field-help', style: { margin: '0 0 0.6rem' } },
+                        'Turn an item Off to drop its roll options and passives from this campaign’s calculator. It stays assigned to whoever holds it.'),
+                      loading
+                        ? h('p', { style: { margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Loading…')
+                        : h('div', { className: 'rp-item-toggle-grid' },
+                            camp.map(function (it) {
+                              var off = !!disabledItems[it.id];
+                              return h('div', { key: it.id, className: 'rp-item-toggle' + (off ? ' is-off' : '') },
+                                h('span', { className: 'rp-item-toggle-name', title: it.name }, it.name),
+                                h('button', { type: 'button', className: 'portal-btn is-small' + (off ? ' is-ghost' : ''),
+                                  onClick: function () { toggleItemDisabled(it.id, !off); } }, off ? 'Off' : 'On'));
+                            }))) : null);
+                })(),
 
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
