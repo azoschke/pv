@@ -39,7 +39,7 @@
   // Division slugs are stored on the application; map to display labels.
   var DIVISION_LABEL = {
     medical: 'Medical', pirate: 'Pirate', mercenary: 'Mercenary',
-    house_staff: 'House Staff', contractor: 'Contractor'
+    house_staff: 'House Staff', recon: 'Recon', contractor: 'Contractor'
   };
   var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
   function divisionLabel(v) { return DIVISION_LABEL[v] || v || '—'; }

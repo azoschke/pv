@@ -110,6 +110,7 @@
     { value: 'medical',     label: 'Medical' },
     { value: 'pirate',      label: 'Pirate' },
     { value: 'house_staff', label: 'House Staff' },
+    { value: 'recon',       label: 'Recon' },
     { value: 'contractor',  label: 'Contractor' }
   ];
 

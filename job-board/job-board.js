@@ -22,10 +22,10 @@
   var FILTER_KEY  = "pv-jobs-filters";
   var SORT_KEY    = "pv-jobs-sort";
 
-  var CATEGORY_ORDER = ["mercenary", "medical", "pirate", "house_staff", "contractor"];
+  var CATEGORY_ORDER = ["mercenary", "medical", "pirate", "house_staff", "recon", "contractor"];
   var CATEGORY_LABEL = {
     mercenary: "Mercenary", medical: "Medical", pirate: "Pirate",
-    house_staff: "House Staff", contractor: "Contractor"
+    house_staff: "House Staff", recon: "Recon", contractor: "Contractor"
   };
 
   var STATUS_LABEL = { open: "Open", closed: "Closed", filled: "Filled" };
@@ -48,6 +48,7 @@
     pirate:      { from: "#1f3340", to: "#101c25" },
     mercenary:   { from: "#3a2225", to: "#1f1214" },
     house_staff: { from: "#2e1f3a", to: "#170f20" },
+    recon:       { from: "#2c3327", to: "#161c12" },
     contractor:  { from: "#3a2c1e", to: "#1f1810" }
   };
 
