@@ -3,9 +3,9 @@
 //
 //  - Lists every admin_users row (username, display_name, created_at,
 //    last_login) along with their current role slugs.
-//  - Each row has a set of role checkboxes (medical, mercenary, pirate,
-//    officer, admin). Clicking a checkbox PATCHes the server with the
-//    full intended role set for that user.
+//  - Each row shows its roles as a read-only list; an "Edit roles" action
+//    opens a popup whose checkboxes commit the full intended role set for
+//    that user in one request.
 //  - Admins can delete user accounts (confirm prompt). Cannot delete self.
 //
 //  Worker routes (all gated by admin role on the server):
@@ -84,23 +84,23 @@
       h('td', null, fmtDate(u.created_at)),
       h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { style: { color: 'var(--text-secondary)' } }, 'never')),
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' } },
-          (u.roles && u.roles.length)
-            ? h('span', null, roleLabels(u.roles).join(', '))
-            : h('span', { style: { color: 'var(--text-secondary)' } }, '—'),
-          isRoot
-            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(protected)')
-            : h('button', {
-                type: 'button',
-                className: 'portal-btn is-small is-ghost',
-                onClick: function () { onEditRoles(u); }
-              }, 'Edit roles')
-        )
+        (u.roles && u.roles.length)
+          ? roleLabels(u.roles).join(', ')
+          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
       h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
         h('div', {
           style: { display: 'inline-flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }
         },
+          // Root admin is protected: its empty action set is the cue, so no
+          // "Edit roles"/"Delete" controls and no explicit "(protected)" label.
+          !isRoot
+            ? h('button', {
+                type: 'button',
+                className: 'portal-btn is-small is-ghost',
+                onClick: function () { onEditRoles(u); }
+              }, 'Edit roles')
+            : null,
           resetAllowed
             ? h('button', {
                 type: 'button',
@@ -111,7 +111,7 @@
               }, resetting ? 'Generating…' : 'Reset password')
             : null,
           isRoot
-            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(protected)')
+            ? null
             : isSelf
               ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(you)')
               : h('button', {
