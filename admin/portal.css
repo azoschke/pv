@@ -1262,7 +1262,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .rp-catalogue-grid {
   display: grid;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch; /* cards in a row share the tallest card's height */
 }
 .rp-roster-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 0.75rem; }
 .rp-catalogue-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
