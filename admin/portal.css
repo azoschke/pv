@@ -622,8 +622,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.65rem;
 }
 .pv-item-ability {
-  border-left: 2px solid var(--border-color);
-  padding-left: 0.75rem;
+   padding: 0.75rem;
+   background-color: var(--bg-card-light);
+   border-radius: 5px;
 }
 .pv-item-ability strong {
   font-family: 'Stoke', serif;
