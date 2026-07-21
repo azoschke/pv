@@ -1255,29 +1255,34 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    Combat Toolkit — roster & catalogue card grids
    ========================================================================== */
 
-/* Roster: 3-up card grid so a full party no longer scrolls forever. Each card
-   keeps every editing control (class/armor/max-HP, save/remove, item add/remove);
-   the portrait reuses the public venue-card fallback look (gradient tile + the
-   member's name in the signature script) when no profile image is available. */
-.rp-roster-grid {
+/* Both grids share the same card-media treatment as the public venue / My Items
+   cards: the image bleeds to the card's top edge (no padding around it), the
+   torn contrast border sits under it, and only the text below is padded. */
+.rp-roster-grid,
+.rp-catalogue-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  align-items: start;
 }
-.rp-roster-card { margin-bottom: 0 !important; display: flex; flex-direction: column; }
+.rp-roster-grid { margin-bottom: 0.75rem; }
+.rp-roster-card,
+.rp-catalogue-card { margin-bottom: 0 !important; display: flex; flex-direction: column; }
 
-.rp-roster-portrait {
+/* Full-bleed media: negative margins cancel the .portal-card 1.25rem padding so
+   the image reaches the card's edges; radius matches the card's 6px top corners. */
+.rp-card-media {
   position: relative;
+  margin: -1.25rem -1.25rem 0.85rem;
   aspect-ratio: 16 / 10;
-  width: 100%;
-  border-radius: 0.4rem;
-  overflow: hidden;
   background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
-  margin-bottom: 0.6rem;
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
 }
-.rp-roster-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.rp-roster-sig {
+.rp-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Item art is square (600×600 uploads); roster portraits keep the venue 16:10. */
+.rp-catalogue-card .rp-card-media { aspect-ratio: 1 / 1; }
+.rp-card-sig {
   position: absolute;
   bottom: 0.5rem;
   left: 0.75rem;
@@ -1290,7 +1295,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.rp-roster-name {
+
+.rp-roster-name,
+.rp-catalogue-name {
   font-family: 'Stoke', serif;
   font-size: 1.3rem;
   font-weight: 400;
@@ -1303,10 +1310,25 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 0.82rem;
   margin-top: 0.2rem;
 }
+.rp-catalogue-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rp-catalogue-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
 
-/* Item catalogue: same responsive card grid + a search field. A card pops to
-   full width while it is being edited or has its abilities expanded, so the
-   inline ability/modifier editors keep the room they need. */
+/* Item catalogue toolbar: search + new-item button. */
 .rp-catalogue-toolbar {
   display: flex;
   align-items: center;
@@ -1315,14 +1337,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin-bottom: 1rem;
 }
 .rp-catalogue-toolbar .portal-search { flex: 1 1 14rem; }
-.rp-catalogue-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-.rp-catalogue-grid .portal-card { margin-bottom: 0 !important; }
-.rp-catalogue-card.is-wide { grid-column: 1 / -1; }
+
+/* Editor modal: item fields + abilities/modifiers all in one place so editing
+   no longer expands cards inline and shifts the grid around. */
+.rp-editor-section { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+.rp-editor-section > h4 { margin: 0 0 0.6rem; font-family: 'Stoke', serif; font-weight: 400; }
 
 /* Per-campaign item enable/disable toggles (in the campaign Manage panel).
    Disabling hides an item's options and passives from that campaign's Roll
