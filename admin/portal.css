@@ -130,6 +130,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-sidebar .sidebar-nav-group + .sidebar-nav-group {
   margin-top: 0.9rem;
 }
+/* The headerless pinned group (Dashboard + My Profile) is set off from the
+   titled groups below it with a divider instead of a small-caps label. */
+.portal-sidebar .sidebar-nav-group.is-pinned {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
 .portal-sidebar .sidebar-nav-group-title {
   margin: 0;
   padding: 0.3rem 0.85rem 0.35rem;
@@ -592,16 +598,45 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- My Profile two-column layout --------------- */
-.my-profile-layout {
+/* My Items — reuses the public venue card + modal look (.venue-card,
+   .venue-modal, .contrast-border from styles.css) for a consistent grid and
+   detail view. Item art is square (600x600 uploads), so the card media and the
+   modal image are overridden to a 1:1 ratio here. */
+.my-items-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
 }
-.my-profile-main { min-width: 0; }
-.my-profile-side { min-width: 0; }
-@media (max-width: 900px) {
-  .my-profile-layout { grid-template-columns: 1fr; }
+.pv-item-card .venue-card-media {
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+}
+.pv-item-card .venue-card-location { text-transform: uppercase; letter-spacing: 0.1em; }
+
+.venue-modal.pv-item-modal { max-width: 460px; }
+.pv-item-modal .venue-modal-img { aspect-ratio: 1 / 1; }
+.pv-item-abilities {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.pv-item-ability {
+   padding: 0.75rem;
+   background-color: var(--bg-card-light);
+   border-radius: 5px;
+}
+.pv-item-ability strong {
+  font-family: 'Stoke', serif;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.pv-item-ability p {
+  margin: 0.15rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
 }
 
 /* --------------- Faction tag chips (read-only display) --------------- */
@@ -1013,6 +1048,43 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-chip:last-child { border-right: none; }
 .portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
 .portal-chip.is-active { background: var(--accent-brown); color: #fff; }
+
+/* --------------- Section subnav (unified underline tabs) ---------------
+   Rendered as the first element of a section body, so it tucks up under the
+   section header (which carries margin-bottom) and the two read as one block.
+   The full-width hairline anchors it as chrome, distinct from card content. */
+.portal-subnav {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin: -0.25rem 0 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  /* Scroll horizontally when tabs overflow on narrow screens, but never
+     vertically — without this the -1px tab overlap spawns a stray vertical
+     scrollbar on the bar itself. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.portal-subnav .subnav-tab {
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.portal-subnav .subnav-tab:hover { color: var(--text-primary); }
+.portal-subnav .subnav-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-red);
+}
 
 /* Notes inline link (replaces a bordered button in the Notes column) */
 .notes-link {

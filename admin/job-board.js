@@ -110,6 +110,7 @@
     { value: 'medical',     label: 'Medical' },
     { value: 'pirate',      label: 'Pirate' },
     { value: 'house_staff', label: 'House Staff' },
+    { value: 'recon',       label: 'Recon' },
     { value: 'contractor',  label: 'Contractor' }
   ];
 
@@ -591,20 +592,11 @@
     var view = viewState[0], setView = viewState[1];
 
     return h('div', null,
-      h('div', { className: 'portal-filter-row', style: { marginBottom: '1rem' } },
-        h('div', { className: 'portal-chip-group' },
-          h('button', {
-            type: 'button',
-            className: 'portal-chip' + (view === 'postings' ? ' is-active' : ''),
-            onClick: function () { setView('postings'); }
-          }, 'Job Postings'),
-          h('button', {
-            type: 'button',
-            className: 'portal-chip' + (view === 'applications' ? ' is-active' : ''),
-            onClick: function () { setView('applications'); }
-          }, 'Applications')
-        )
-      ),
+      h(window.PVAdminSubnav, {
+        tabs: [{ id: 'postings', label: 'Job Postings' }, { id: 'applications', label: 'Applications' }],
+        active: view,
+        onChange: setView
+      }),
       view === 'postings'
         ? h(JobBoard)
         : (window.PVAdminApplications

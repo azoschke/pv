@@ -94,9 +94,9 @@
     }
   }
 
-  // Quest submissions live in the portal's My Applications section; the
+  // Quest submissions live in the portal's My Profile → Applications tab; the
   // logged-out path goes through login first, then straight there.
-  var PORTAL_SUBMIT_URL = "/pv/admin/portal.html?section=my-applications";
+  var PORTAL_SUBMIT_URL = "/pv/admin/portal.html?section=my-profile&tab=applications";
   var LOGIN_URL = "/pv/admin/login.html?redirect=";
   (function () {
     if (!submitBtn) return;

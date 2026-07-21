@@ -19,24 +19,21 @@
   // NAV_GROUPS is the source of truth for sidebar layout: ordered groups, each
   // with a small-caps header and its nav items. Headers are role-gated — a
   // group whose items are all hidden for the current role renders nothing.
+  // The pinned group (no header) holds the two personal "landing" destinations;
+  // everything else lives under a titled group. Sub-views that used to be their
+  // own nav rows are now tabs inside a single section (see FactionsSection and
+  // MyProfileSection): the four factions collapse into "Factions", and My
+  // Applications + My Items fold into "My Profile".
   var NAV_GROUPS = [
-    { title: 'Overview', items: [
-      { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' }
-    ] },
-    { title: 'Personal', items: [
-      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' },
-      { id: 'my-applications',  label: 'My Applications',    icon: 'assignment' }
+    { pinned: true, items: [
+      { id: 'dashboard',        label: 'Dashboard',          icon: 'space_dashboard' },
+      { id: 'my-profile',       label: 'My Profile',         icon: 'badge' }
     ] },
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
       { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
-      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' }
-    ] },
-    { title: 'Factions', items: [
-      { id: 'medical-division', label: 'Medical',            icon: 'medical_services' },
-      { id: 'mercenary',        label: 'Mercenary',          icon: 'security' },
-      { id: 'pirate',           label: 'Pirate',             icon: 'sailing' },
-      { id: 'house-staff',      label: 'House Staff',        icon: 'home_work' }
+      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
+      { id: 'factions',         label: 'Factions',           icon: 'shield' }
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
@@ -44,7 +41,7 @@
       { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' },
       { id: 'event-assets',     label: 'Event Assets',       icon: 'photo_library' }
     ] },
-    { title: 'Tools / More', items: [
+    { title: 'Tools & Admin', items: [
       { id: 'campaigns',        label: 'Campaigns',          icon: 'auto_stories' },
       { id: 'rp-rolls',         label: 'Combat Toolkit',     icon: 'casino' },
       { id: 'cosmic',           label: 'Cosmic Exploration', icon: 'rocket_launch' },
@@ -61,6 +58,11 @@
   // '*' means any logged-in account that has at least one role. Freshly
   // registered accounts have no roles and see nothing until an admin assigns
   // one (the App renders an "awaiting approval" notice instead).
+  // Sub-view keys (my-applications, medical-division, mercenary, pirate,
+  // house-staff) are no longer their own nav rows, but their access rules are
+  // still consulted by MyProfileSection / FactionsSection to gate the tabs.
+  // 'factions' is the union of the four division rules — enough to open the
+  // section; the individual tabs are gated separately inside it.
   var ROLE_ACCESS = {
     dashboard:        ['officer', 'admin'],
     'my-profile':     '*',
@@ -68,10 +70,12 @@
     members:          ['officer', 'admin'],
     'member-profiles': ['officer', 'admin'],
     medical:          ['medical', 'admin'],
+    factions:         ['officer', 'mercenary', 'pirate', 'recon', 'house_staff', 'admin'],
     'medical-division': ['officer', 'admin'],
     mercenary:        ['officer', 'mercenary', 'admin'],
     pirate:           ['officer', 'pirate', 'admin'],
-    'house-staff':    ['officer', 'admin'],
+    'house-staff':    ['officer', 'house_staff', 'admin'],
+    recon:            ['officer', 'recon', 'admin'],
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
     bounties:         ['officer', 'admin'],
@@ -127,6 +131,7 @@
     var visibleGroups = NAV_GROUPS.map(function (g) {
       return {
         title: g.title,
+        pinned: !!g.pinned,
         items: g.items.filter(function (s) { return canAccess(s.id, roles); })
       };
     }).filter(function (g) { return g.items.length > 0; });
@@ -148,9 +153,12 @@
         )
       ),
       h('nav', { className: 'sidebar-nav' },
-        visibleGroups.map(function (g) {
-          return h('div', { className: 'sidebar-nav-group', key: g.title },
-            h('p', { className: 'sidebar-nav-group-title' }, g.title),
+        visibleGroups.map(function (g, gi) {
+          return h('div', {
+            className: 'sidebar-nav-group' + (g.pinned ? ' is-pinned' : ''),
+            key: g.title || ('pinned-' + gi)
+          },
+            g.title ? h('p', { className: 'sidebar-nav-group-title' }, g.title) : null,
             g.items.map(function (s) {
               var cls = 'sidebar-nav-item' + (s.id === activeSection ? ' is-active' : '');
               return h('button', {
@@ -211,6 +219,99 @@
     );
   }
 
+  // --------- Consolidated sections (tabbed wrappers) ----------
+  // My Profile now hosts three sub-views that used to be separate places:
+  // the roster profile editor, the old My Applications section, and the RP
+  // item loadout (My Items). All three are visible to any account with a role.
+  function MyProfileSection(props) {
+    var session = props.session;
+    var TABS = [
+      { id: 'profile',      label: 'Profile' },
+      { id: 'applications', label: 'Applications' },
+      { id: 'items',        label: 'Items' }
+    ];
+    var wanted = props.initialTab;
+    var initial = TABS.some(function (t) { return t.id === wanted; }) ? wanted : 'profile';
+    var tabState = useState(initial);
+    var tab = tabState[0], setTab = tabState[1];
+
+    var body;
+    if (tab === 'applications') {
+      body = h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
+    } else if (tab === 'items') {
+      body = h(window.PVAdminMyItems || Missing('my-profile.js'), { session: session });
+    } else {
+      body = h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
+    }
+
+    return h('div', null,
+      h(window.PVAdminSubnav, { tabs: TABS, active: tab, onChange: setTab }),
+      body
+    );
+  }
+
+  // Factions folds the four division sections into one entry. Each division is
+  // gated on its own access rule, so a member with a single division sees just
+  // that tab — and PVAdminSubnav renders no bar for a lone tab. Medical uses a
+  // different component (the medical-staff roster) than the other three.
+  function FactionsSection(props) {
+    var session = props.session;
+    var roles = (session && session.roles) || [];
+    var ALL = [
+      { id: 'medical',     label: 'Medical',     access: 'medical-division' },
+      { id: 'mercenary',   label: 'Mercenary',   access: 'mercenary' },
+      { id: 'pirate',      label: 'Pirate',      access: 'pirate' },
+      { id: 'house-staff', label: 'House Staff', access: 'house-staff' },
+      { id: 'recon',       label: 'Recon',       access: 'recon' }
+    ];
+    var tabs = ALL.filter(function (d) { return canAccess(d.access, roles); });
+
+    var wanted = props.initialTab;
+    var initial = tabs.some(function (t) { return t.id === wanted; })
+      ? wanted
+      : (tabs[0] ? tabs[0].id : null);
+    var tabState = useState(initial);
+    var tab = tabState[0], setTab = tabState[1];
+    var active = tabs.some(function (t) { return t.id === tab; })
+      ? tab
+      : (tabs[0] ? tabs[0].id : null);
+
+    var body;
+    switch (active) {
+      case 'mercenary':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Mercenary', channel: 'mercenary', division: 'mercenary', label: 'Mercenary'
+        });
+        break;
+      case 'pirate':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Pirate', channel: 'pirate', division: 'pirate', label: 'Pirate'
+        });
+        break;
+      case 'medical':
+        body = h(window.PVAdminMedicalStaff || Missing('medical-staff.js'), { session: session });
+        break;
+      case 'recon':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Recon', channel: 'recon', division: 'recon', label: 'Recon'
+        });
+        break;
+      case 'house-staff':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'House Staff', channel: 'house_staff', division: 'house_staff', label: 'House Staff'
+        });
+        break;
+      default:
+        body = h('div', { className: 'portal-card' },
+          h('p', { className: 'portal-flash error' }, 'You do not have access to any faction division.'));
+    }
+
+    return h('div', null,
+      h(window.PVAdminSubnav, { tabs: tabs, active: active, onChange: setTab }),
+      body
+    );
+  }
+
   // --------- Section renderer ----------
   function SectionOutlet(props) {
     var section = props.section;
@@ -224,9 +325,10 @@
           onNavigate: onNavigate
         });
       case 'my-profile':
-        return h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
-      case 'my-applications':
-        return h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
+        return h(MyProfileSection, {
+          session: session,
+          initialTab: (props.navParams && props.navParams.tab) || null
+        });
       case 'member-profiles':
         return h(window.PVAdminMemberProfiles || Missing('member-profiles.js'), { session: session });
       case 'bounties':
@@ -241,8 +343,11 @@
         });
       case 'medical':
         return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
-      case 'medical-division':
-        return h(window.PVAdminMedicalStaff || Missing('medical-staff.js'), { session: session });
+      case 'factions':
+        return h(FactionsSection, {
+          session: session,
+          initialTab: (props.navParams && props.navParams.tab) || null
+        });
       case 'venues':
         return h(window.PVAdminVenues || Missing('venues.js'), { session: session });
       case 'jobs':
@@ -260,27 +365,6 @@
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
         return h(window.PVAdminAnnouncements || Missing('announcements.js'), { session: session });
-      case 'mercenary':
-        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
-          faction: 'Mercenary',
-          channel: 'mercenary',
-          division: 'mercenary',
-          label: 'Mercenary'
-        });
-      case 'pirate':
-        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
-          faction: 'Pirate',
-          channel: 'pirate',
-          division: 'pirate',
-          label: 'Pirate'
-        });
-      case 'house-staff':
-        return h(window.PVAdminFactionSection || Missing('faction-section.js'), {
-          faction: 'House Staff',
-          channel: 'house_staff',
-          division: 'house_staff',
-          label: 'House Staff'
-        });
       case 'admin':
         return h(window.PVAdminSettings || Missing('admin-settings.js'), { session: session });
       default:
@@ -309,9 +393,21 @@
     var session = sessionState[0], setSession = sessionState[1];
 
     // ?section=<id> deep-links straight to a section (e.g. the public bounty
-    // board's "Submit a quest" button opens My Profile), if the role allows.
+    // board's "Submit a quest" button opens My Profile's Applications tab), if
+    // the role allows. ?tab=<id> selects a sub-view within a tabbed section.
+    // Legacy section ids that are now tabs are remapped so old links still land
+    // in the right place.
     var initialRoles = (initialSession && initialSession.roles) || [];
-    var requestedSection = new URLSearchParams(window.location.search).get('section');
+    var _params = new URLSearchParams(window.location.search);
+    var requestedSection = _params.get('section');
+    var requestedTab = _params.get('tab');
+    if (requestedSection === 'my-applications') {
+      requestedSection = 'my-profile';
+      requestedTab = requestedTab || 'applications';
+    } else if (['mercenary', 'pirate', 'house-staff', 'recon', 'medical-division'].indexOf(requestedSection) !== -1) {
+      requestedTab = requestedTab || (requestedSection === 'medical-division' ? 'medical' : requestedSection);
+      requestedSection = 'factions';
+    }
     var sectionState = useState(
       (requestedSection && canAccess(requestedSection, initialRoles))
         ? requestedSection
@@ -327,7 +423,9 @@
 
     // Optional params carried into a section on navigation (e.g. a search term
     // to seed when opening FC Members from a dashboard Needs Attention row).
-    var navParamsState = useState(null);
+    // Seeded from ?tab= so a deep link opens the right sub-view on first mount;
+    // cleared on manual navigation via onSelect.
+    var navParamsState = useState(requestedTab ? { tab: requestedTab } : null);
     var navParams = navParamsState[0], setNavParams = navParamsState[1];
 
     // Refresh /me on mount so stale role lists get corrected.

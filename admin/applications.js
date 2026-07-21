@@ -46,6 +46,7 @@
     { value: 'pirate',      label: 'Pirate' },
     { value: 'mercenary',   label: 'Mercenary' },
     { value: 'house_staff', label: 'House Staff' },
+    { value: 'recon',       label: 'Recon' },
     { value: 'contractor',  label: 'Contractor' }
   ];
 

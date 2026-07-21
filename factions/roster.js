@@ -26,7 +26,7 @@
   // Display order for faction tags/filters — mirrors the admin members.js /
   // faction-section.js FACTION_ORDER so the public roster reads the same way.
   var FACTION_ORDER = [
-    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Pirate', 'Mercenary', 'Medical', 'House Staff', 'Recon',
     'Contractor', 'NA - No RP', 'No Data'
   ];
 
@@ -37,6 +37,7 @@
     'Mercenary':   { from: "#3a2225", to: "#1f1214" },
     'Medical':     { from: "#1f3a2f", to: "#101f18" },
     'House Staff': { from: "#33291f", to: "#1c1610" },
+    'Recon':       { from: "#2c3327", to: "#161c12" },
     'Contractor':  { from: "#2d2a3a", to: "#16141f" }
   };
   var DEFAULT_PALETTE = { from: "#2a1f1c", to: "#14100e" };
