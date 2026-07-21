@@ -123,6 +123,8 @@
     'Therapist',
     'Physical Therapist',
     'Nutritionist',
+    'Veterinarian',
+    'Laboratory Technician',
     'Supply Coordinator',
     'Student Medic'
   ];
