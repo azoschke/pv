@@ -61,6 +61,7 @@
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var showAddState = useState(false); var showAdd = showAddState[0], setShowAdd = showAddState[1];
     var itemErrState = useState(''); var itemErr = itemErrState[0], setItemErr = itemErrState[1];
+    var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
 
     var dirty = role !== ch.class_role || armor !== ch.armor_type || String(ch.max_hp) !== maxHp;
 
@@ -104,12 +105,16 @@
       return c.assigned_member_id == null || Number(c.assigned_member_id) === Number(ch.member_id);
     });
 
-    return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-        h('strong', null, ch.member_name),
-        h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
-          'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · eliminated' : ''))
-      ),
+    return h('div', { className: 'portal-card rp-roster-card', style: { marginBottom: '0.6rem' } },
+      // Portrait pulled from the member's roster profile when they have one;
+      // otherwise the venue-style fallback tile (gradient + name in script).
+      h('div', { className: 'rp-roster-portrait' },
+        (props.imageUrl && !imgErr)
+          ? h('img', { src: props.imageUrl, alt: '', onError: function () { setImgErr(true); } })
+          : h('span', { className: 'rp-roster-sig' }, (ch.member_name || '').toLowerCase())),
+      h('h3', { className: 'rp-roster-name' }, ch.member_name),
+      h('div', { className: 'rp-roster-substat' },
+        'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · eliminated' : '')),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', marginTop: '0.5rem' } },
         h('div', { className: 'portal-field' },
           h('label', null, 'Class'),
@@ -312,7 +317,7 @@
       try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
     }
 
-    return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+    return h('div', { className: 'portal-card rp-catalogue-card' + ((open || editing) ? ' is-wide' : ''), style: { marginBottom: '0.6rem' } },
       editing
         ? h(ItemForm, { initial: it, onSubmit: saveItem, onCancel: function () { setEditing(false); } })
         : h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' } },
@@ -429,6 +434,11 @@
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
     var itemFormState = useState(null); var itemForm = itemFormState[0], setItemForm = itemFormState[1];
+    var itemQueryState = useState(''); var itemQuery = itemQueryState[0], setItemQuery = itemQueryState[1];
+
+    // member_id -> profile portrait, so roster cards can show a face when the
+    // member has published/drafted a roster profile with an image.
+    var profileImgState = useState({}); var profileImages = profileImgState[0], setProfileImages = profileImgState[1];
 
     async function loadCampaigns() {
       try { setCampaigns(await PVRollAPI.request('GET', '/rp/campaigns') || []); }
@@ -448,7 +458,16 @@
         var map = {}; rows.forEach(function (r) { map[r.member_id] = r; }); setDefaults(map);
       } catch (e) { /* non-fatal */ }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); /* eslint-disable-next-line */ }, []);
+    // Officer/admin-only endpoint; non-fatal if it 401s — roster just shows the
+    // fallback tiles instead of portraits.
+    async function loadProfileImages() {
+      try {
+        var rows = await PVAdminAPI.request('GET', '/member-profiles/admin', undefined, true) || [];
+        var map = {}; rows.forEach(function (r) { if (r && r.image_url) map[r.member_id] = r.image_url; });
+        setProfileImages(map);
+      } catch (e) { /* no portraits */ }
+    }
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); /* eslint-disable-next-line */ }, []);
 
     // When a member is chosen to add, swap class/armor to their saved defaults
     // (or back to neutral when they have none) so the controls always reflect
@@ -600,11 +619,13 @@
                         (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))),
                   h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Controls turns and the active-effects panel. May also be a rostered character.')),
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
-                roster.map(function (ch) {
-                  return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
-                    campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
-                    onSave: saveCharacter, onRemove: removeCharacter });
-                }),
+                h('div', { className: 'rp-roster-grid' },
+                  roster.map(function (ch) {
+                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
+                      campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
+                      onSave: saveCharacter, onRemove: removeCharacter,
+                      imageUrl: profileImages[ch.member_id] || profileImages[Number(ch.member_id)] || profileImages[String(ch.member_id)] });
+                  })),
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginTop: '0.5rem' } },
                   h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Add a member'),
                   members === null ? h('p', null, 'Loading members…') :
@@ -630,12 +651,25 @@
       ) : null,
 
       tab === 'items' && isAdmin ? h('div', null,
-        itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' }, onClick: function () { setItemForm({}); } }, '+ New item'),
-        !items.length ? h('div', { className: 'portal-card' }, 'No items yet.') :
-          items.map(function (it) {
-            return h(ItemCard, { key: it.id, item: it, catalogue: items, onChanged: loadItems, onDelete: deleteItem });
-          })
+        itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
+        h('div', { className: 'rp-catalogue-toolbar' },
+          h('input', { type: 'search', className: 'portal-search', value: itemQuery,
+            placeholder: 'Search items by name or description…',
+            onChange: function (e) { setItemQuery(e.target.value); } }),
+          itemForm ? null : h('button', { type: 'button', className: 'portal-btn',
+            onClick: function () { setItemForm({}); } }, '+ New item')),
+        (function () {
+          if (!items.length) return h('div', { className: 'portal-card' }, 'No items yet.');
+          var q = itemQuery.trim().toLowerCase();
+          var shown = q ? items.filter(function (it) {
+            return ((it.name || '') + ' ' + (it.description || '')).toLowerCase().indexOf(q) !== -1;
+          }) : items;
+          if (!shown.length) return h('div', { className: 'portal-card' }, 'No items match that search.');
+          return h('div', { className: 'rp-catalogue-grid' },
+            shown.map(function (it) {
+              return h(ItemCard, { key: it.id, item: it, catalogue: items, onChanged: loadItems, onDelete: deleteItem });
+            }));
+        })()
       ) : null
     );
   }

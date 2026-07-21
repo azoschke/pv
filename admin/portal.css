@@ -1250,3 +1250,106 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
     flex-wrap: wrap;
   }
 }
+
+/* ============================================================================
+   Combat Toolkit — roster & catalogue card grids
+   ========================================================================== */
+
+/* Roster: 3-up card grid so a full party no longer scrolls forever. Each card
+   keeps every editing control (class/armor/max-HP, save/remove, item add/remove);
+   the portrait reuses the public venue-card fallback look (gradient tile + the
+   member's name in the signature script) when no profile image is available. */
+.rp-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.rp-roster-card { margin-bottom: 0 !important; display: flex; flex-direction: column; }
+
+.rp-roster-portrait {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+  margin-bottom: 0.6rem;
+}
+.rp-roster-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rp-roster-sig {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.62);
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-roster-name {
+  font-family: 'Stoke', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--text-primary);
+}
+.rp-roster-substat {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+/* Item catalogue: same responsive card grid + a search field. A card pops to
+   full width while it is being edited or has its abilities expanded, so the
+   inline ability/modifier editors keep the room they need. */
+.rp-catalogue-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.rp-catalogue-toolbar .portal-search { flex: 1 1 14rem; }
+.rp-catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.rp-catalogue-grid .portal-card { margin-bottom: 0 !important; }
+.rp-catalogue-card.is-wide { grid-column: 1 / -1; }
+
+/* Per-campaign item enable/disable toggles (in the campaign Manage panel).
+   Disabling hides an item's options and passives from that campaign's Roll
+   Calculator; it does not un-assign the item from anyone. */
+.rp-item-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.5rem;
+}
+.rp-item-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-card-light);
+  border: 1px solid var(--border-color);
+  border-radius: 0.35rem;
+}
+.rp-item-toggle.is-off { opacity: 0.62; }
+.rp-item-toggle-name { font-size: 0.88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 1100px) {
+  .rp-roster-grid,
+  .rp-catalogue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .rp-roster-grid,
+  .rp-catalogue-grid { grid-template-columns: 1fr; }
+}
