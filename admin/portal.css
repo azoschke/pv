@@ -1014,6 +1014,38 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
 .portal-chip.is-active { background: var(--accent-brown); color: #fff; }
 
+/* --------------- Section subnav (unified underline tabs) ---------------
+   Rendered as the first element of a section body, so it tucks up under the
+   section header (which carries margin-bottom) and the two read as one block.
+   The full-width hairline anchors it as chrome, distinct from card content. */
+.portal-subnav {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin: -0.5rem 0 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+.portal-subnav .subnav-tab {
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.portal-subnav .subnav-tab:hover { color: var(--text-primary); }
+.portal-subnav .subnav-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-red);
+}
+
 /* Notes inline link (replaces a bordered button in the Notes column) */
 .notes-link {
   display: inline-flex;

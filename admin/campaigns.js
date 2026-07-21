@@ -733,12 +733,11 @@
     // ── Render ────────────────────────────────────────────────────────────────────
     // Story / Codex tab switch — both live under the Campaigns admin section.
     function tabBar() {
-      return h('div', { className: 'portal-chip-group', style: { marginBottom: '1rem' } },
-        h('button', { type: 'button', className: 'portal-chip' + (tab === 'story' ? ' is-active' : ''),
-          onClick: function () { setTab('story'); } }, 'Story'),
-        h('button', { type: 'button', className: 'portal-chip' + (tab === 'codex' ? ' is-active' : ''),
-          onClick: function () { setTab('codex'); } }, 'Codex')
-      );
+      return h(window.PVAdminSubnav, {
+        tabs: [{ id: 'story', label: 'Story' }, { id: 'codex', label: 'Codex' }],
+        active: tab,
+        onChange: setTab
+      });
     }
 
     if (tab === 'codex') {

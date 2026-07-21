@@ -539,12 +539,13 @@
     var availableMembers = (members || []).filter(function (m) { return !inCampaign[m.id]; });
 
     return h('div', null,
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginBottom: '1rem' } },
-        h('button', { type: 'button', className: 'portal-btn is-small' + (tab === 'campaigns' ? '' : ' is-ghost'),
-          onClick: function () { setTab('campaigns'); } }, 'Campaigns & Sessions'),
-        isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small' + (tab === 'items' ? '' : ' is-ghost'),
-          onClick: function () { setTab('items'); } }, 'Item Catalogue') : null
-      ),
+      h(window.PVAdminSubnav, {
+        tabs: isAdmin
+          ? [{ id: 'campaigns', label: 'Campaigns & Sessions' }, { id: 'items', label: 'Item Catalogue' }]
+          : [{ id: 'campaigns', label: 'Campaigns & Sessions' }],
+        active: tab,
+        onChange: setTab
+      }),
       flash[0] ? h('div', { className: 'portal-flash success' }, flash[0]) : null,
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
