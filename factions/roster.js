@@ -380,7 +380,7 @@
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
-    // IC rank under the name, mirroring the medical roster's position line.
+    // IC rank under the name.
     // Blank when the member has no IC rank assigned.
     if (m.ic_rank) {
       var rank = document.createElement("p");
