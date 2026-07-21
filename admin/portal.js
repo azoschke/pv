@@ -70,11 +70,12 @@
     members:          ['officer', 'admin'],
     'member-profiles': ['officer', 'admin'],
     medical:          ['medical', 'admin'],
-    factions:         ['officer', 'mercenary', 'pirate', 'admin'],
+    factions:         ['officer', 'mercenary', 'pirate', 'recon', 'house_staff', 'admin'],
     'medical-division': ['officer', 'admin'],
     mercenary:        ['officer', 'mercenary', 'admin'],
     pirate:           ['officer', 'pirate', 'admin'],
-    'house-staff':    ['officer', 'admin'],
+    'house-staff':    ['officer', 'house_staff', 'admin'],
+    recon:            ['officer', 'recon', 'admin'],
     venues:           ['officer', 'admin'],
     jobs:             ['officer', 'admin'],
     bounties:         ['officer', 'admin'],
@@ -260,7 +261,8 @@
       { id: 'medical',     label: 'Medical',     access: 'medical-division' },
       { id: 'mercenary',   label: 'Mercenary',   access: 'mercenary' },
       { id: 'pirate',      label: 'Pirate',      access: 'pirate' },
-      { id: 'house-staff', label: 'House Staff', access: 'house-staff' }
+      { id: 'house-staff', label: 'House Staff', access: 'house-staff' },
+      { id: 'recon',       label: 'Recon',       access: 'recon' }
     ];
     var tabs = ALL.filter(function (d) { return canAccess(d.access, roles); });
 
@@ -292,6 +294,11 @@
       case 'house-staff':
         body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'House Staff', channel: 'house_staff', division: 'house_staff', label: 'House Staff'
+        });
+        break;
+      case 'recon':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'Recon', channel: 'recon', division: 'recon', label: 'Recon'
         });
         break;
       default:
@@ -397,7 +404,7 @@
     if (requestedSection === 'my-applications') {
       requestedSection = 'my-profile';
       requestedTab = requestedTab || 'applications';
-    } else if (['mercenary', 'pirate', 'house-staff', 'medical-division'].indexOf(requestedSection) !== -1) {
+    } else if (['mercenary', 'pirate', 'house-staff', 'recon', 'medical-division'].indexOf(requestedSection) !== -1) {
       requestedTab = requestedTab || (requestedSection === 'medical-division' ? 'medical' : requestedSection);
       requestedSection = 'factions';
     }

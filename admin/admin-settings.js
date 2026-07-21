@@ -27,12 +27,14 @@
   var useEffect = React.useEffect;
 
   var ROLE_CATALOG = [
-    { slug: 'member',    label: 'Member' },
-    { slug: 'medical',   label: 'Medical' },
-    { slug: 'mercenary', label: 'Mercenary' },
-    { slug: 'pirate',    label: 'Pirate' },
-    { slug: 'officer',   label: 'Officer' },
-    { slug: 'admin',     label: 'Admin' }
+    { slug: 'member',      label: 'Member' },
+    { slug: 'medical',     label: 'Medical' },
+    { slug: 'mercenary',   label: 'Mercenary' },
+    { slug: 'pirate',      label: 'Pirate' },
+    { slug: 'house_staff', label: 'House Staff' },
+    { slug: 'recon',       label: 'Recon' },
+    { slug: 'officer',     label: 'Officer' },
+    { slug: 'admin',       label: 'Admin' }
   ];
   var LABEL_BY_SLUG = {};
   ROLE_CATALOG.forEach(function (r) { LABEL_BY_SLUG[r.slug] = r.label; });
