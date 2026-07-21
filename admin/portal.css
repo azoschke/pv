@@ -130,6 +130,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-sidebar .sidebar-nav-group + .sidebar-nav-group {
   margin-top: 0.9rem;
 }
+/* The headerless pinned group (Dashboard + My Profile) is set off from the
+   titled groups below it with a divider instead of a small-caps label. */
+.portal-sidebar .sidebar-nav-group.is-pinned {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
 .portal-sidebar .sidebar-nav-group-title {
   margin: 0;
   padding: 0.3rem 0.85rem 0.35rem;
@@ -592,16 +598,51 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- My Profile two-column layout --------------- */
-.my-profile-layout {
+/* My Items — responsive card grid; each card opens a detail modal. */
+.my-items-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 1rem;
-  align-items: start;
 }
-.my-profile-main { min-width: 0; }
-.my-profile-side { min-width: 0; }
-@media (max-width: 900px) {
-  .my-profile-layout { grid-template-columns: 1fr; }
+.my-item-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+.my-item-card:hover { border-color: var(--accent-brown); }
+.my-item-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--bg-darker);
+}
+.my-item-thumb.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+.my-item-thumb.is-empty .material-icons { font-size: 42px; }
+.my-item-name {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  padding: 0.6rem 0.7rem 0.1rem;
+}
+.my-item-meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 0.1rem 0.7rem 0.7rem;
 }
 
 /* --------------- Faction tag chips (read-only display) --------------- */

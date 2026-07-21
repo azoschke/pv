@@ -223,10 +223,33 @@
     );
   }
 
-  // --------- My Items card (read-only RP loadout) ----------
-  function MyItemsCard() {
+  // --------- My Items (read-only RP loadout, card grid + detail modal) ------
+  // A responsive grid of compact item cards; clicking one opens a modal with
+  // the full description and ability list, so the previews stay short no
+  // matter how long an item's ability text runs.
+  function itemDetail(it) {
+    return h('div', null,
+      it.image_url ? h('img', {
+        src: it.image_url, alt: '',
+        style: { display: 'block', width: '100%', maxWidth: '260px', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '0.4rem', margin: '0 auto 0.9rem' },
+        onError: function (e) { e.target.style.display = 'none'; }
+      }) : null,
+      it.description ? h('p', { style: { margin: '0 0 0.8rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
+      (it.abilities || []).length
+        ? (it.abilities).map(function (ab, i) {
+            return h('div', { key: i, style: { padding: '0.4rem 0 0.4rem 0.7rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.4rem' } },
+              h('strong', { style: { fontSize: '0.95rem' } }, ab.name),
+              ab.description ? h('div', { style: { fontSize: '0.9rem', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, ab.description) : null);
+          })
+        : h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No abilities listed for this item.')
+    );
+  }
+
+  function MyItems() {
     var itemsState = useState(null); var items = itemsState[0], setItems = itemsState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+    var openState = useState(null); var openItem = openState[0], setOpenItem = openState[1];
+
     useEffect(function () {
       (async function () {
         try { setItems(await PVRollAPI.request('GET', '/rp/my-items') || []); }
@@ -235,26 +258,35 @@
     }, []);
 
     if (items === null && !err) return h('div', { className: 'portal-card' }, 'Loading your items…');
-    return h('div', { className: 'portal-card' },
-      h('h2', { className: 'portal-card-title' }, 'My Items'),
+
+    return h('div', null,
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       (!items || !items.length)
-        ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.')
-        : items.map(function (it) {
-            return h('div', { key: it.item_id, style: { padding: '0.6rem 0', borderTop: '1px solid var(--border-color)' } },
-              it.image_url ? h('img', {
-                src: it.image_url, alt: '',
-                style: { display: 'block', width: '100%', maxWidth: '220px', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '0.4rem', marginBottom: '0.5rem' },
-                onError: function (e) { e.target.style.display = 'none'; }
-              }) : null,
-              h('strong', { style: { fontSize: '1.02rem' } }, it.name),
-              it.description ? h('p', { style: { margin: '0.2rem 0 0.4rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
-              (it.abilities || []).map(function (ab, i) {
-                return h('div', { key: i, style: { padding: '0.2rem 0 0.2rem 0.6rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.3rem' } },
-                  h('strong', { style: { fontSize: '0.92rem' } }, ab.name),
-                  ab.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.1rem', whiteSpace: 'pre-wrap' } }, ab.description) : null);
-              }));
-          })
+        ? h('div', { className: 'portal-card' },
+            h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.'))
+        : h('div', { className: 'my-items-grid' },
+            items.map(function (it) {
+              var n = (it.abilities || []).length;
+              return h('button', {
+                key: it.item_id, type: 'button', className: 'my-item-card',
+                onClick: function () { setOpenItem(it); }
+              },
+                it.image_url
+                  ? h('img', {
+                      className: 'my-item-thumb', src: it.image_url, alt: '',
+                      onError: function (e) { e.target.style.visibility = 'hidden'; }
+                    })
+                  : h('div', { className: 'my-item-thumb is-empty', 'aria-hidden': 'true' },
+                      h('span', { className: 'material-icons' }, 'inventory_2')),
+                h('span', { className: 'my-item-name' }, it.name),
+                n ? h('span', { className: 'my-item-meta' }, n + (n === 1 ? ' ability' : ' abilities')) : null
+              );
+            })
+          ),
+      openItem
+        ? h(window.PVAdminModal, { title: openItem.name, size: 'md', onClose: function () { setOpenItem(null); } },
+            itemDetail(openItem))
+        : null
     );
   }
 
@@ -293,14 +325,7 @@
       ) : null,
 
       member
-        ? h('div', { className: 'my-profile-layout' },
-            h('div', { className: 'my-profile-main' },
-              h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload })
-            ),
-            h('aside', { className: 'my-profile-side' },
-              h(MyItemsCard, null)
-            )
-          )
+        ? h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload })
         : h('div', { className: 'portal-card' },
             h('h2', { className: 'portal-card-title' }, 'Character Profile'),
             h('div', { className: 'portal-flash error' },
@@ -313,4 +338,5 @@
   }
 
   window.PVAdminMyProfile = MyProfile;
+  window.PVAdminMyItems = MyItems;
 })();
