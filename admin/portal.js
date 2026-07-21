@@ -278,9 +278,6 @@
 
     var body;
     switch (active) {
-      case 'medical':
-        body = h(window.PVAdminMedicalStaff || Missing('medical-staff.js'), { session: session });
-        break;
       case 'mercenary':
         body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'Mercenary', channel: 'mercenary', division: 'mercenary', label: 'Mercenary'
@@ -291,14 +288,17 @@
           faction: 'Pirate', channel: 'pirate', division: 'pirate', label: 'Pirate'
         });
         break;
-      case 'house-staff':
-        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
-          faction: 'House Staff', channel: 'house_staff', division: 'house_staff', label: 'House Staff'
-        });
+      case 'medical':
+        body = h(window.PVAdminMedicalStaff || Missing('medical-staff.js'), { session: session });
         break;
       case 'recon':
         body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
           faction: 'Recon', channel: 'recon', division: 'recon', label: 'Recon'
+        });
+        break;
+      case 'house-staff':
+        body = h(window.PVAdminFactionSection || Missing('faction-section.js'), {
+          faction: 'House Staff', channel: 'house_staff', division: 'house_staff', label: 'House Staff'
         });
         break;
       default:
