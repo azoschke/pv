@@ -22,7 +22,7 @@
   // Faction display order — mirrors the public Company Roster (roster.js) and
   // admin members.js so faction tags read the same everywhere.
   var FACTION_ORDER = [
-    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Pirate', 'Mercenary', 'Medical', 'House Staff', 'Recon',
     'Contractor', 'NA - No RP', 'No Data'
   ];
 

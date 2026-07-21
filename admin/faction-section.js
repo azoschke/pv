@@ -55,7 +55,7 @@
 
   // Display order for the Faction tag list — mirrors members.js FACTIONS.
   var FACTION_ORDER = [
-    'Pirate', 'Mercenary', 'Medical', 'House Staff',
+    'Pirate', 'Mercenary', 'Medical', 'House Staff', 'Recon',
     'Contractor', 'NA - No RP', 'No Data'
   ];
   function orderedFactions(arr) {

@@ -45,6 +45,7 @@
     'Mercenary',
     'Medical',
     'House Staff',
+    'Recon',
     'Contractor',
     'NA - No RP',
     'No Data'
