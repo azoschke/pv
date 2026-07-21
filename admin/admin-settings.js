@@ -34,6 +34,11 @@
     { slug: 'officer',   label: 'Officer' },
     { slug: 'admin',     label: 'Admin' }
   ];
+  var LABEL_BY_SLUG = {};
+  ROLE_CATALOG.forEach(function (r) { LABEL_BY_SLUG[r.slug] = r.label; });
+  function roleLabels(roles) {
+    return (roles || []).map(function (r) { return LABEL_BY_SLUG[r] || r; });
+  }
 
   // Root admin: frozen account. No admin can change its roles or delete it.
   // Mirrors the server-side guard in pv-med-database-worker.
@@ -51,17 +56,14 @@
 
   function UserRow(props) {
     var u = props.user;
-    var onToggleRole = props.onToggleRole;
+    var onEditRoles = props.onEditRoles;
     var onDelete = props.onDelete;
     var onReset = props.onReset;
     var selfId = props.selfId;
     var callerIsRoot = props.callerIsRoot;
-    var busyRoles = props.busyRoles || {};
     var deleting = props.deleting;
     var resetting = props.resetting;
 
-    var currentSet = {};
-    (u.roles || []).forEach(function (r) { currentSet[r] = true; });
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
     var needsRole = !(u.roles && u.roles.length);
@@ -82,19 +84,17 @@
       h('td', null, fmtDate(u.created_at)),
       h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { style: { color: 'var(--text-secondary)' } }, 'never')),
       h('td', null,
-        h('div', { className: 'admin-role-checkboxes' },
-          ROLE_CATALOG.map(function (r) {
-            var busyKey = u.id + ':' + r.slug;
-            return h('label', { key: r.slug, className: 'admin-role-checkbox' },
-              h('input', {
-                type: 'checkbox',
-                checked: !!currentSet[r.slug],
-                disabled: isRoot || !!busyRoles[busyKey],
-                onChange: function (e) { onToggleRole(u, r.slug, e.target.checked); }
-              }),
-              h('span', null, r.label)
-            );
-          })
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' } },
+          (u.roles && u.roles.length)
+            ? h('span', null, roleLabels(u.roles).join(', '))
+            : h('span', { style: { color: 'var(--text-secondary)' } }, '—'),
+          isRoot
+            ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(protected)')
+            : h('button', {
+                type: 'button',
+                className: 'portal-btn is-small is-ghost',
+                onClick: function () { onEditRoles(u); }
+              }, 'Edit roles')
         )
       ),
       h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
@@ -220,6 +220,72 @@
     );
   }
 
+  // Role editor popup. Holds a local draft of the checked roles and commits the
+  // full set in one PUT via onSave (which resolves on success and rejects with
+  // an error the modal surfaces inline). The parent closes the modal on success.
+  function RoleEditModal(props) {
+    var user = props.user;
+    var onClose = props.onClose;
+    var onSave = props.onSave;
+
+    var draftState = useState(function () {
+      var set = {};
+      (user.roles || []).forEach(function (r) { set[r] = true; });
+      return set;
+    });
+    var draft = draftState[0], setDraft = draftState[1];
+    var savingState = useState(false);
+    var saving = savingState[0], setSaving = savingState[1];
+    var errState = useState('');
+    var merr = errState[0], setMerr = errState[1];
+
+    function toggle(slug, on) {
+      setDraft(function (d) {
+        var n = Object.assign({}, d);
+        if (on) n[slug] = true; else delete n[slug];
+        return n;
+      });
+    }
+
+    function save() {
+      var selected = ROLE_CATALOG
+        .filter(function (r) { return draft[r.slug]; })
+        .map(function (r) { return r.slug; });
+      setSaving(true); setMerr('');
+      Promise.resolve(onSave(user, selected)).then(null, function (e) {
+        setMerr((e && e.message) || 'Failed to update roles.');
+        setSaving(false);
+      });
+    }
+
+    return h(window.PVAdminModal, {
+      title: 'Edit roles — ' + (user.display_name || user.username),
+      onClose: onClose
+    },
+      h('p', { style: { fontFamily: 'Crimson Pro, serif', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
+        'Select the roles for ', h('strong', null, user.username), '.'),
+      merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
+      h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
+        ROLE_CATALOG.map(function (r) {
+          return h('label', { key: r.slug, className: 'admin-role-checkbox' },
+            h('input', {
+              type: 'checkbox',
+              checked: !!draft[r.slug],
+              disabled: saving,
+              onChange: function (e) { toggle(r.slug, e.target.checked); }
+            }),
+            h('span', null, r.label)
+          );
+        })
+      ),
+      h('div', { style: { display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' } },
+        h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: onClose }, 'Cancel'),
+        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save },
+          saving ? 'Saving…' : 'Save roles')
+      )
+    );
+  }
+
   function AdminSettings(props) {
     var usersState = useState([]);
     var users = usersState[0], setUsers = usersState[1];
@@ -227,8 +293,9 @@
     var loading = loadingState[0], setLoading = loadingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var busyRolesState = useState({});
-    var busyRoles = busyRolesState[0], setBusyRoles = busyRolesState[1];
+    // editingUser: null = closed; otherwise the user whose role popup is open.
+    var editingUserState = useState(null);
+    var editingUser = editingUserState[0], setEditingUser = editingUserState[1];
     var deletingIdState = useState(null);
     var deletingId = deletingIdState[0], setDeletingId = deletingIdState[1];
     var resettingIdState = useState(null);
@@ -257,28 +324,21 @@
 
     useEffect(function () { reload(); }, []);
 
-    async function handleToggleRole(user, roleSlug, next) {
+    // Commit the full intended role set for a user in one request. Resolves on
+    // success (and closes the popup); rejects so the popup can show the error.
+    async function handleSaveRoles(user, roles) {
       if (isRootAdmin(user)) return; // UI no-op; server would reject anyway.
-      var busyKey = user.id + ':' + roleSlug;
-      setBusyRoles(function (b) { var n = Object.assign({}, b); n[busyKey] = true; return n; });
-
-      var current = user.roles || [];
-      var intended = next
-        ? (current.indexOf(roleSlug) === -1 ? current.concat([roleSlug]) : current)
-        : current.filter(function (r) { return r !== roleSlug; });
-
+      setErr('');
       var prev = users;
       setUsers(users.map(function (u) {
-        return u.id === user.id ? Object.assign({}, u, { roles: intended }) : u;
+        return u.id === user.id ? Object.assign({}, u, { roles: roles }) : u;
       }));
-
       try {
-        await PVAdminAPI.request('PUT', '/admin/users/' + user.id + '/roles', { roles: intended }, true);
+        await PVAdminAPI.request('PUT', '/admin/users/' + user.id + '/roles', { roles: roles }, true);
+        setEditingUser(null);
       } catch (e) {
-        setErr(e.message || 'Failed to update roles.');
         setUsers(prev);
-      } finally {
-        setBusyRoles(function (b) { var n = Object.assign({}, b); delete n[busyKey]; return n; });
+        throw e;
       }
     }
 
@@ -377,10 +437,9 @@
                           user: u,
                           selfId: selfId,
                           callerIsRoot: callerIsRoot,
-                          onToggleRole: handleToggleRole,
+                          onEditRoles: setEditingUser,
                           onDelete: handleDelete,
                           onReset: handleReset,
-                          busyRoles: busyRoles,
                           deleting: deletingId === u.id,
                           resetting: resettingId === u.id
                         });
@@ -395,6 +454,11 @@
               )
             )
       ),
+      editingUser ? h(RoleEditModal, {
+        user: editingUser,
+        onSave: handleSaveRoles,
+        onClose: function () { setEditingUser(null); }
+      }) : null,
       resetResult ? h(ResetLinkModal, {
         result: resetResult,
         onClose: function () { setResetResult(null); }

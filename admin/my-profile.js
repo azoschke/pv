@@ -223,25 +223,83 @@
     );
   }
 
-  // --------- My Items (read-only RP loadout, card grid + detail modal) ------
-  // A responsive grid of compact item cards; clicking one opens a modal with
-  // the full description and ability list, so the previews stay short no
-  // matter how long an item's ability text runs.
-  function itemDetail(it) {
-    return h('div', null,
-      it.image_url ? h('img', {
-        src: it.image_url, alt: '',
-        style: { display: 'block', width: '100%', maxWidth: '260px', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '0.4rem', margin: '0 auto 0.9rem' },
-        onError: function (e) { e.target.style.display = 'none'; }
-      }) : null,
-      it.description ? h('p', { style: { margin: '0 0 0.8rem', fontStyle: 'italic', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' } }, it.description) : null,
-      (it.abilities || []).length
-        ? (it.abilities).map(function (ab, i) {
-            return h('div', { key: i, style: { padding: '0.4rem 0 0.4rem 0.7rem', borderLeft: '2px solid var(--border-color)', marginTop: '0.4rem' } },
-              h('strong', { style: { fontSize: '0.95rem' } }, ab.name),
-              ab.description ? h('div', { style: { fontSize: '0.9rem', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, ab.description) : null);
-          })
-        : h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No abilities listed for this item.')
+  // --------- My Items (read-only RP loadout) ---------------------------------
+  // Reuses the public venue card + modal styling (styles.css) so the loadout
+  // reads the same as the public-facing grids: a card carrying the torn
+  // contrast border, and a detail modal whose title sits in the content rather
+  // than a header bar. Item art is square, so the media/modal image are square.
+  var ITEM_FALLBACK_BG = 'linear-gradient(135deg, #2a1f1c 0%, #14100e 100%)';
+
+  function ItemModal(props) {
+    var it = props.item;
+    var onClose = props.onClose;
+
+    useEffect(function () {
+      function onKey(e) { if (e.key === 'Escape' && onClose) onClose(); }
+      document.addEventListener('keydown', onKey);
+      var prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return function () {
+        document.removeEventListener('keydown', onKey);
+        document.body.style.overflow = prev;
+      };
+    }, [onClose]);
+
+    var media = it.image_url
+      ? h('div', { className: 'contrast-media' },
+          h('img', { className: 'venue-modal-img', src: it.image_url, alt: '' }),
+          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }))
+      : h('div', { className: 'venue-modal-img venue-modal-img-fallback', style: { background: ITEM_FALLBACK_BG } },
+          h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
+          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }));
+
+    var abilities = it.abilities || [];
+    return h('div', {
+      className: 'venue-modal-overlay is-open',
+      onMouseDown: function (e) { if (e.target === e.currentTarget && onClose) onClose(); }
+    },
+      h('div', { className: 'venue-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
+        h('button', { type: 'button', className: 'venue-modal-close', 'aria-label': 'Close', onClick: onClose }, '✕'),
+        media,
+        h('div', { className: 'venue-modal-content' },
+          h('h2', { className: 'venue-modal-title' }, it.name),
+          it.description
+            ? h('p', { className: 'venue-modal-desc', style: { whiteSpace: 'pre-wrap' } }, it.description)
+            : null,
+          abilities.length
+            ? h('div', { className: 'pv-item-abilities' },
+                abilities.map(function (ab, i) {
+                  return h('div', { key: i, className: 'pv-item-ability' },
+                    h('strong', null, ab.name),
+                    ab.description ? h('p', null, ab.description) : null);
+                }))
+            : null
+        )
+      )
+    );
+  }
+
+  function ItemCard(props) {
+    var it = props.item;
+    var n = (it.abilities || []).length;
+    return h('button', {
+      type: 'button', className: 'venue-card pv-item-card', 'aria-label': it.name, onClick: props.onOpen
+    },
+      h('div', { className: 'venue-card-media' },
+        it.image_url
+          ? h('img', {
+              className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy',
+              onError: function (e) { e.target.style.display = 'none'; }
+            })
+          : h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })
+      ),
+      h('div', { className: 'venue-card-body' },
+        h('div', { className: 'venue-card-title-row' },
+          h('h3', { className: 'venue-card-title' }, it.name)
+        ),
+        n ? h('p', { className: 'venue-card-location' }, n + (n === 1 ? ' ABILITY' : ' ABILITIES')) : null
+      )
     );
   }
 
@@ -266,27 +324,10 @@
             h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.'))
         : h('div', { className: 'my-items-grid' },
             items.map(function (it) {
-              var n = (it.abilities || []).length;
-              return h('button', {
-                key: it.item_id, type: 'button', className: 'my-item-card',
-                onClick: function () { setOpenItem(it); }
-              },
-                it.image_url
-                  ? h('img', {
-                      className: 'my-item-thumb', src: it.image_url, alt: '',
-                      onError: function (e) { e.target.style.visibility = 'hidden'; }
-                    })
-                  : h('div', { className: 'my-item-thumb is-empty', 'aria-hidden': 'true' },
-                      h('span', { className: 'material-icons' }, 'inventory_2')),
-                h('span', { className: 'my-item-name' }, it.name),
-                n ? h('span', { className: 'my-item-meta' }, n + (n === 1 ? ' ability' : ' abilities')) : null
-              );
+              return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenItem(it); } });
             })
           ),
-      openItem
-        ? h(window.PVAdminModal, { title: openItem.name, size: 'md', onClose: function () { setOpenItem(null); } },
-            itemDetail(openItem))
-        : null
+      openItem ? h(ItemModal, { item: openItem, onClose: function () { setOpenItem(null); } }) : null
     );
   }
 

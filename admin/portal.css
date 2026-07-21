@@ -598,51 +598,44 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- My Profile two-column layout --------------- */
-/* My Items — responsive card grid; each card opens a detail modal. */
+/* My Items — reuses the public venue card + modal look (.venue-card,
+   .venue-modal, .contrast-border from styles.css) for a consistent grid and
+   detail view. Item art is square (600x600 uploads), so the card media and the
+   modal image are overridden to a 1:1 ratio here. */
 .my-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
 }
-.my-item-card {
+.pv-item-card .venue-card-media {
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+}
+.pv-item-card .venue-card-location { text-transform: uppercase; letter-spacing: 0.1em; }
+
+.venue-modal.pv-item-modal { max-width: 460px; }
+.pv-item-modal .venue-modal-img { aspect-ratio: 1 / 1; }
+.pv-item-abilities {
+  margin-top: 1.1rem;
   display: flex;
   flex-direction: column;
-  text-align: left;
-  padding: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-family: inherit;
-  transition: border-color 0.15s ease;
+  gap: 0.65rem;
 }
-.my-item-card:hover { border-color: var(--accent-brown); }
-.my-item-thumb {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  background: var(--bg-darker);
+.pv-item-ability {
+  border-left: 2px solid var(--border-color);
+  padding-left: 0.75rem;
 }
-.my-item-thumb.is-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
-.my-item-thumb.is-empty .material-icons { font-size: 42px; }
-.my-item-name {
+.pv-item-ability strong {
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
-  padding: 0.6rem 0.7rem 0.1rem;
+  color: var(--text-primary);
 }
-.my-item-meta {
-  font-size: 0.82rem;
+.pv-item-ability p {
+  margin: 0.15rem 0 0;
+  font-family: 'Crimson Pro', serif;
   color: var(--text-secondary);
-  padding: 0.1rem 0.7rem 0.7rem;
+  white-space: pre-wrap;
 }
 
 /* --------------- Faction tag chips (read-only display) --------------- */
@@ -1063,9 +1056,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   align-items: flex-end;
   gap: 0.25rem;
-  margin: -0.5rem 0 1.5rem;
+  margin: -0.25rem 0 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  /* Scroll horizontally when tabs overflow on narrow screens, but never
+     vertically — without this the -1px tab overlap spawns a stray vertical
+     scrollbar on the bar itself. */
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 .portal-subnav .subnav-tab {
   padding: 0.5rem 0.9rem;
