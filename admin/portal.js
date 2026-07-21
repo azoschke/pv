@@ -258,11 +258,11 @@
     var session = props.session;
     var roles = (session && session.roles) || [];
     var ALL = [
-      { id: 'medical',     label: 'Medical',     access: 'medical-division' },
       { id: 'mercenary',   label: 'Mercenary',   access: 'mercenary' },
       { id: 'pirate',      label: 'Pirate',      access: 'pirate' },
-      { id: 'house-staff', label: 'House Staff', access: 'house-staff' },
-      { id: 'recon',       label: 'Recon',       access: 'recon' }
+      { id: 'medical',     label: 'Medical',     access: 'medical-division' },
+      { id: 'recon',       label: 'Recon',       access: 'recon' },
+      { id: 'house-staff', label: 'House Staff', access: 'house-staff' }
     ];
     var tabs = ALL.filter(function (d) { return canAccess(d.access, roles); });
 
