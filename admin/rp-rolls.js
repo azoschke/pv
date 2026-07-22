@@ -61,6 +61,7 @@
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var showAddState = useState(false); var showAdd = showAddState[0], setShowAdd = showAddState[1];
     var itemErrState = useState(''); var itemErr = itemErrState[0], setItemErr = itemErrState[1];
+    var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
 
     var dirty = role !== ch.class_role || armor !== ch.armor_type || String(ch.max_hp) !== maxHp;
 
@@ -104,12 +105,18 @@
       return c.assigned_member_id == null || Number(c.assigned_member_id) === Number(ch.member_id);
     });
 
-    return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-        h('strong', null, ch.member_name),
-        h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
-          'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · eliminated' : ''))
-      ),
+    return h('div', { className: 'portal-card rp-roster-card', style: { marginBottom: '0.6rem' } },
+      // Portrait pulled from the member's roster profile when they have one;
+      // otherwise the venue-style fallback tile (gradient + name in script).
+      // Full-bleed image + torn contrast border, matching the item cards.
+      h('div', { className: 'rp-card-media' },
+        (props.imageUrl && !imgErr)
+          ? h('img', { src: props.imageUrl, alt: '', onError: function () { setImgErr(true); } })
+          : h('span', { className: 'rp-card-sig' }, (ch.member_name || '').toLowerCase()),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+      h('h3', { className: 'rp-roster-name' }, ch.member_name),
+      h('div', { className: 'rp-roster-substat' },
+        'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · eliminated' : '')),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', marginTop: '0.5rem' } },
         h('div', { className: 'portal-field' },
           h('label', null, 'Class'),
@@ -273,25 +280,45 @@
       (m.mode === 'activated' && m.uses_per_session > 0 ? ' · ' + m.uses_per_session + '×' : '');
   }
 
-  // ── Item card (item → abilities → modifiers) ──────────────────────────────
+  // ── Item card (compact; opens the editor modal) ───────────────────────────
+  // Image sits full-bleed on top (or the fallback signature tile), text is
+  // padded below with the torn contrast border between — matching the roster
+  // and public item cards. Editing happens in a modal so the grid never shifts.
   function ItemCard(props) {
     var it = props.item;
-    var openState = useState(false); var open = openState[0], setOpen = openState[1];
-    var editState = useState(false); var editing = editState[0], setEditing = editState[1];
+    var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
+    return h('div', { className: 'portal-card rp-catalogue-card' },
+      h('div', { className: 'rp-card-media' },
+        (it.image_url && !imgErr)
+          ? h('img', { src: it.image_url, alt: '', onError: function () { setImgErr(true); } })
+          : h('span', { className: 'rp-card-sig' }, (it.name || '').toLowerCase()),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+      h('h3', { className: 'rp-catalogue-name' }, it.name),
+      it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
+      h('div', { className: 'rp-catalogue-actions' },
+        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(it); } }, 'Edit'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')));
+  }
+
+  // ── Item editor modal (item fields + abilities → modifiers) ───────────────
+  function ItemEditorModal(props) {
+    var it = props.item;
     var abilitiesState = useState(null); var abilities = abilitiesState[0], setAbilities = abilitiesState[1];
     var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
     var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+    var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
 
     async function loadAbilities() {
       try { setAbilities(await PVRollAPI.request('GET', '/rp/items/' + it.id + '/abilities') || []); }
       catch (e) { setErr(e.message); }
     }
-    function toggleOpen() { var n = !open; setOpen(n); if (n && abilities === null) loadAbilities(); }
+    useEffect(function () { loadAbilities(); /* eslint-disable-next-line */ }, [it.id]);
 
     async function saveItem(payload) {
       await PVRollAPI.request('PATCH', '/rp/items/' + it.id, payload);
-      setEditing(false); if (props.onChanged) props.onChanged();
+      setSaved('Item details saved.'); setTimeout(function () { setSaved(''); }, 2500);
+      if (props.onChanged) props.onChanged();
     }
     async function submitAbility(payload) {
       if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + abForm.ability.id, payload);
@@ -312,29 +339,18 @@
       try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
     }
 
-    return h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-      editing
-        ? h(ItemForm, { initial: it, onSubmit: saveItem, onCancel: function () { setEditing(false); } })
-        : h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' } },
-            h('div', { style: { display: 'flex', gap: '0.6rem', alignItems: 'flex-start', flex: '1 1 auto', minWidth: 0 } },
-              it.image_url ? h('img', {
-                src: it.image_url, alt: '',
-                style: { width: '48px', height: '48px', objectFit: 'cover', borderRadius: '0.3rem', flexShrink: 0 },
-                onError: function (e) { e.target.style.display = 'none'; }
-              }) : null,
-              h('div', { style: { minWidth: 0 } },
-                h('strong', null, it.name),
-                it.description ? h('div', { style: { fontSize: '0.85rem', marginTop: '0.2rem', color: 'var(--text-secondary)', fontStyle: 'italic', whiteSpace: 'pre-wrap' } }, it.description) : null)),
-            h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
-              h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setEditing(true); } }, 'Edit'),
-              h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete'))),
-      h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.5rem' }, onClick: toggleOpen },
-        open ? '▾ Hide abilities' : '▸ Abilities'),
-      open ? h('div', { style: { marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem' } },
+    return h(window.PVAdminModal, { title: 'Edit item — ' + it.name, size: 'lg', onClose: props.onClose },
+      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      // Item details — Cancel closes the modal.
+      h(ItemForm, { initial: it, inModal: true, onSubmit: saveItem, onCancel: props.onClose }),
+
+      h('div', { className: 'rp-editor-section' },
+        h('h4', null, 'Abilities'),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability'),
         abilities === null ? h('p', null, 'Loading…') :
+          (!abilities.length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No abilities yet. All item effects live on abilities — add one to get started.') :
           abilities.map(function (ab) {
             return h('div', { key: ab.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
@@ -355,8 +371,8 @@
               (modForm && modForm.abilityId === ab.id)
                 ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
                 : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add modifier'));
-          })
-      ) : null);
+          }))
+      ));
   }
 
   // ── Item form ─────────────────────────────────────────────────────────────
@@ -375,8 +391,8 @@
       } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, props.initial ? 'Edit item' : 'New item'),
+    return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
+      props.inModal ? null : h('h3', { style: { marginTop: 0 } }, props.initial ? 'Edit item' : 'New item'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
@@ -428,7 +444,19 @@
 
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
-    var itemFormState = useState(null); var itemForm = itemFormState[0], setItemForm = itemFormState[1];
+    var itemFormState = useState(null); var itemForm = itemFormState[0], setItemForm = itemFormState[1]; // new-item form only
+    var editItemState = useState(null); var editItem = editItemState[0], setEditItem = editItemState[1]; // item open in the editor modal
+    var itemQueryState = useState(''); var itemQuery = itemQueryState[0], setItemQuery = itemQueryState[1];
+
+    // member_id -> profile portrait, so roster cards can show a face when the
+    // member has published/drafted a roster profile with an image.
+    var profileImgState = useState({}); var profileImages = profileImgState[0], setProfileImages = profileImgState[1];
+
+    // Per-campaign disabled item ids (Set-like map). Loaded when a campaign is
+    // opened for management; drives the "Campaign items" toggle panel.
+    var disabledItemsState = useState(null); var disabledItems = disabledItemsState[0], setDisabledItems = disabledItemsState[1];
+    var disabledSupportedState = useState(true); var disabledSupported = disabledSupportedState[0], setDisabledSupported = disabledSupportedState[1];
+    var itemsAdvancedState = useState(false); var itemsAdvanced = itemsAdvancedState[0], setItemsAdvanced = itemsAdvancedState[1]; // per-item list expanded
 
     async function loadCampaigns() {
       try { setCampaigns(await PVRollAPI.request('GET', '/rp/campaigns') || []); }
@@ -448,7 +476,16 @@
         var map = {}; rows.forEach(function (r) { map[r.member_id] = r; }); setDefaults(map);
       } catch (e) { /* non-fatal */ }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); /* eslint-disable-next-line */ }, []);
+    // Officer/admin-only endpoint; non-fatal if it 401s — roster just shows the
+    // fallback tiles instead of portraits.
+    async function loadProfileImages() {
+      try {
+        var rows = await PVAdminAPI.request('GET', '/member-profiles/admin', undefined, true) || [];
+        var map = {}; rows.forEach(function (r) { if (r && r.image_url) map[r.member_id] = r.image_url; });
+        setProfileImages(map);
+      } catch (e) { /* no portraits */ }
+    }
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); /* eslint-disable-next-line */ }, []);
 
     // When a member is chosen to add, swap class/armor to their saved defaults
     // (or back to neutral when they have none) so the controls always reflect
@@ -460,8 +497,50 @@
       setPickArmor(def && def.armor_type ? def.armor_type : 'medium');
     }
 
+    // Per-campaign disabled items. GET returns an array of item ids. If the
+    // worker doesn't have the endpoint yet we hide the panel instead of erroring.
+    async function loadDisabledItems(cid) {
+      setDisabledItems(null);
+      try {
+        var rows = await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/disabled-items') || [];
+        var map = {}; rows.forEach(function (id) { map[id] = true; });
+        setDisabledItems(map); setDisabledSupported(true);
+      } catch (e) {
+        if (e.status === 404) { setDisabledSupported(false); setDisabledItems({}); }
+        else { setDisabledItems({}); }
+      }
+    }
+    async function toggleItemDisabled(itemId, disabled) {
+      var next = Object.assign({}, disabledItems || {});
+      if (disabled) next[itemId] = true; else delete next[itemId];
+      setDisabledItems(next); // optimistic
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/disabled-items', { item_id: itemId, disabled: disabled }); }
+      catch (e) { setErr(e.message); loadDisabledItems(selected.id); }
+    }
+    // Items actually pulled into this campaign = catalogue items owned by a member
+    // on the roster (adding a member auto-equips their owned items). We only expose
+    // these in the toggle panel — unassigned catalogue items aren't in play here.
+    function campaignItemList() {
+      var ids = {}; roster.forEach(function (r) { ids[Number(r.member_id)] = true; });
+      return (items || []).filter(function (it) { return it.assigned_member_id != null && ids[Number(it.assigned_member_id)]; });
+    }
+    async function setAllItemsDisabled(disabled) {
+      var camp = campaignItemList();
+      var next = Object.assign({}, disabledItems || {});
+      var reqs = [];
+      camp.forEach(function (it) {
+        var off = !!next[it.id];
+        if (off === disabled) return; // already in the desired state
+        if (disabled) next[it.id] = true; else delete next[it.id];
+        reqs.push(PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/disabled-items', { item_id: it.id, disabled: disabled }));
+      });
+      if (!reqs.length) return;
+      setDisabledItems(next); // optimistic
+      try { await Promise.all(reqs); } catch (e) { setErr(e.message); loadDisabledItems(selected.id); }
+    }
+
     function selectCampaign(c) {
-      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
+      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults(); loadDisabledItems(c.id);
       if (members === null) {
         PVAdminAPI.request('GET', '/members', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
@@ -599,13 +678,9 @@
                         h('option', { value: '' }, '— none —'),
                         (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))),
                   h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Controls turns and the active-effects panel. May also be a rostered character.')),
-                h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
-                roster.map(function (ch) {
-                  return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
-                    campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
-                    onSave: saveCharacter, onRemove: removeCharacter });
-                }),
-                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginTop: '0.5rem' } },
+
+                // Add a member — kept at the top of the panel, right under the DM.
+                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
                   h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Add a member'),
                   members === null ? h('p', null, 'Loading members…') :
                     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
@@ -623,19 +698,79 @@
                         h('label', { style: { visibility: 'hidden' } }, 'Add'),
                         h('button', { type: 'button', className: 'portal-btn', style: { width: '100%' }, onClick: addCharacter }, 'Add'))
                     )
-                )
+                ),
+
+                // Campaign items — turn items off for this campaign (options + passives).
+                // Only items pulled into the campaign appear; collapsed to a master
+                // on/off by default, with an Advanced view for per-item control.
+                (function () {
+                  if (!disabledSupported) return null;
+                  var camp = campaignItemList();
+                  if (!camp.length) return null;
+                  var loading = disabledItems === null;
+                  var offCount = loading ? 0 : camp.filter(function (it) { return !!disabledItems[it.id]; }).length;
+                  var onCount = camp.length - offCount;
+                  return h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
+                      h('p', { style: { margin: 0, fontWeight: 600, flex: '1 1 auto' } }, 'Campaign items'),
+                      h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem' } },
+                        loading ? 'Loading…' : (onCount + ' on · ' + offCount + ' off')),
+                      h('button', { type: 'button', className: 'portal-btn is-small', disabled: loading || offCount === 0,
+                        onClick: function () { setAllItemsDisabled(false); } }, 'All on'),
+                      h('button', { type: 'button', className: 'portal-btn is-small is-ghost', disabled: loading || onCount === 0,
+                        onClick: function () { setAllItemsDisabled(true); } }, 'All off'),
+                      h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+                        onClick: function () { setItemsAdvanced(!itemsAdvanced); } }, (itemsAdvanced ? '▾ ' : '▸ ') + 'Advanced')),
+                    itemsAdvanced ? h('div', { style: { marginTop: '0.6rem', paddingTop: '0.6rem', borderTop: '1px solid var(--border-color)' } },
+                      h('p', { className: 'portal-field-help', style: { margin: '0 0 0.6rem' } },
+                        'Turn an item Off to drop its roll options and passives from this campaign’s calculator. It stays assigned to whoever holds it.'),
+                      loading
+                        ? h('p', { style: { margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Loading…')
+                        : h('div', { className: 'rp-item-toggle-grid' },
+                            camp.map(function (it) {
+                              var off = !!disabledItems[it.id];
+                              return h('div', { key: it.id, className: 'rp-item-toggle' + (off ? ' is-off' : '') },
+                                h('span', { className: 'rp-item-toggle-name', title: it.name }, it.name),
+                                h('button', { type: 'button', className: 'portal-btn is-small' + (off ? ' is-ghost' : ''),
+                                  onClick: function () { toggleItemDisabled(it.id, !off); } }, off ? 'Off' : 'On'));
+                            }))) : null);
+                })(),
+
+                h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
+                h('div', { className: 'rp-roster-grid' },
+                  roster.map(function (ch) {
+                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
+                      campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
+                      onSave: saveCharacter, onRemove: removeCharacter,
+                      imageUrl: profileImages[ch.member_id] || profileImages[Number(ch.member_id)] || profileImages[String(ch.member_id)] });
+                  }))
               ) : null
             );
           })
       ) : null,
 
       tab === 'items' && isAdmin ? h('div', null,
-        itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' }, onClick: function () { setItemForm({}); } }, '+ New item'),
-        !items.length ? h('div', { className: 'portal-card' }, 'No items yet.') :
-          items.map(function (it) {
-            return h(ItemCard, { key: it.id, item: it, catalogue: items, onChanged: loadItems, onDelete: deleteItem });
-          })
+        itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
+        h('div', { className: 'rp-catalogue-toolbar' },
+          h('input', { type: 'search', className: 'portal-search', value: itemQuery,
+            placeholder: 'Search items by name…',
+            onChange: function (e) { setItemQuery(e.target.value); } }),
+          itemForm ? null : h('button', { type: 'button', className: 'portal-btn',
+            onClick: function () { setItemForm({}); } }, '+ New item')),
+        (function () {
+          if (!items.length) return h('div', { className: 'portal-card' }, 'No items yet.');
+          var q = itemQuery.trim().toLowerCase();
+          var shown = q ? items.filter(function (it) {
+            return (it.name || '').toLowerCase().indexOf(q) !== -1;
+          }) : items;
+          if (!shown.length) return h('div', { className: 'portal-card' }, 'No items match that search.');
+          return h('div', { className: 'rp-catalogue-grid' },
+            shown.map(function (it) {
+              return h(ItemCard, { key: it.id, item: it, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
+            }));
+        })(),
+        editItem ? h(ItemEditorModal, { item: editItem, catalogue: items,
+          onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null
       ) : null
     );
   }
