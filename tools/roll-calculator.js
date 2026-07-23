@@ -156,13 +156,12 @@
   function BossBar(props) {
     var bosses = props.bosses || [];
     if (!bosses.length) return null;
-    var effects = props.bossEffects || [];
     return h('div', { className: 'rp-bossbar' },
       bosses.map(function (b) {
         var vuln = vulnText(b);
-        // Revealed skill telegraphs / narratives with description text, shown to
-        // players under the boss name before damage lands.
-        var tele = effects.filter(function (e) { return e.campaign_boss_id === b.id && e.visible && e.description; });
+        // Skills the DM has toggled visible show their name + description under
+        // the boss, persistently, for everyone.
+        var revealed = b.revealed_skills || [];
         return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : ''), key: b.id },
           b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
           h('div', { className: 'rp-boss-info' },
@@ -170,9 +169,9 @@
               b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
               props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
               vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
-            tele.map(function (e) {
-              return h('div', { className: 'rp-boss-tele', key: e.id },
-                h('strong', null, e.name), ' — ', e.description);
+            revealed.map(function (s) {
+              return h('div', { className: 'rp-boss-tele', key: s.id },
+                h('strong', null, s.name), s.description ? ' — ' + s.description : null);
             }),
             h(BossHpBar, { boss: b })),
           props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
@@ -563,8 +562,9 @@
               h('span', null, p.member_name));
           })) : null),
       h('div', { className: 'rp-mod-control' },
-        a.description ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: 'Reveal this skill’s description to players under the boss (no damage)',
-          disabled: boss.defeated, onClick: function () { props.onAnnounceSkill(boss, a); } }, 'Announce') : null,
+        h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
+          title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
+          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } }, a.revealed ? 'Shown' : 'Show'),
         needSingle ? h('select', { className: 'rp-select', value: pickTarget, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
@@ -620,7 +620,7 @@
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
           h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
           (b.abilities || []).map(function (a) {
-            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseSkill: props.onUseSkill, onAnnounceSkill: props.onAnnounceSkill });
+            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill });
           }),
           !(b.abilities || []).length ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null);
       }),
@@ -696,7 +696,7 @@
 
       tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
         onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
-        onUseSkill: props.onUseSkill, onAnnounceSkill: props.onAnnounceSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
+        onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
 
       tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, onResetAction: props.onResetAction }) : null,
 
@@ -888,7 +888,7 @@
     function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
     function onUseSkill(b, a, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
-    function onAnnounceSkill(b, a) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/announce', { ability_id: a.id }); }); }
+    function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
@@ -925,7 +925,7 @@
       (camp.turn_locked && !isDM) ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
       ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
 
-      h(BossBar, { bosses: data.bosses || [], bossEffects: data.boss_effects || [], isDM: isDM, onBossVisible: onBossVisible }),
+      h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible }),
 
       isDM ? null : h(FloatingSkills, { effects: data.active_effects || [], bossEffects: data.boss_effects || [] }),
 
@@ -933,7 +933,7 @@
         bosses: data.bosses || [], bossEffects: data.boss_effects || [], library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
         onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
-        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseSkill: onUseSkill, onAnnounceSkill: onAnnounceSkill,
+        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseSkill: onUseSkill, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction }) : null,
 
       c ? h('div', { className: 'rp-grid' },
