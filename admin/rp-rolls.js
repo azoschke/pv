@@ -116,7 +116,7 @@
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-roster-name' }, ch.member_name),
       h('div', { className: 'rp-roster-substat' },
-        'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · eliminated' : '')),
+        'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · KO' : '')),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', marginTop: '0.5rem' } },
         h('div', { className: 'portal-field' },
           h('label', null, 'Class'),
@@ -278,6 +278,331 @@
     return (m.type === 'none' ? 'narrative' : fmtNum(m.value) + ' ' + m.type.replace('_', ' ')) + ' · → ' + t + ' · ' + m.mode +
       (m.duration_turns > 0 ? ' · ' + m.duration_turns + 't' : '') +
       (m.mode === 'activated' && m.uses_per_session > 0 ? ' · ' + m.uses_per_session + '×' : '');
+  }
+
+  // ── Boss library (officer/admin) ──────────────────────────────────────────
+  // Bosses are reusable library entries; DMs spawn instances into a campaign
+  // from the calculator (or staff pre-stage them in the campaign panel below).
+  // Skills are single-level effects: damage (instant), dot (per turn), none.
+  var BOSS_TYPES = [
+    { value: 'damage', label: 'Damage (instant)' },
+    { value: 'dot', label: 'DoT (damage per turn)' },
+    { value: 'none', label: 'Narrative (no numbers)' }
+  ];
+  var BOSS_TARGETS = [
+    { value: 'party_member', label: 'Chosen player (picked on use)' },
+    { value: 'class', label: 'Class' },
+    { value: 'group', label: 'Whole party' }
+  ];
+
+  function bossAbilitySummary(a) {
+    var t = a.target_kind === 'party_member' ? 'chosen player' : a.target_kind === 'class' ? String(a.target_ref || '').toUpperCase() : 'party';
+    var core = a.type === 'damage' ? a.value + ' dmg' : a.type === 'dot' ? a.value + ' dmg/turn' + (a.duration_turns > 0 ? ' · ' + a.duration_turns + 't' : ' · until removed') : 'narrative';
+    return core + ' · → ' + t + (a.uses_per_session > 0 ? ' · ' + a.uses_per_session + '×/session' : '');
+  }
+
+  function BossAbilityForm(props) {
+    var a = props.initial || {};
+    var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
+    var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
+    var typeState = useState(a.type || 'damage'); var type = typeState[0], setType = typeState[1];
+    var valState = useState(String(a.value != null ? a.value : 2)); var val = valState[0], setVal = valState[1];
+    var tkState = useState(a.target_kind || 'party_member'); var tk = tkState[0], setTk = tkState[1];
+    var refState = useState(a.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
+    var durState = useState(String(a.duration_turns != null ? a.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
+    var usesState = useState(String(a.uses_per_session != null ? a.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    async function submit(e) {
+      e.preventDefault();
+      if (!name.trim()) { setErr('Name is required.'); return; }
+      var payload = { name: name.trim(), description: desc.trim() || null, type: type, value: parseInt(val, 10) || 0,
+        target_kind: tk, target_ref: tk === 'class' ? ref : null,
+        duration_turns: parseInt(dur, 10) || 0, uses_per_session: parseInt(uses, 10) || 0 };
+      try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
+        h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the effect)'),
+        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' } },
+        h('div', { className: 'portal-field' }, h('label', null, 'Type'),
+          h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
+            BOSS_TYPES.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
+        type !== 'none' ? h('div', { className: 'portal-field' }, h('label', null, type === 'dot' ? 'Damage / turn' : 'Damage'),
+          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null,
+        type !== 'none' ? h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+          h('select', { value: tk, onChange: function (e) { setTk(e.target.value); } },
+            BOSS_TARGETS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))) : null,
+        type !== 'none' && tk === 'class' ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
+          h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
+            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
+        type === 'dot' ? h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
+          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
+        h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
+          h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
+      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
+        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. Skills can only be fired while the turn is locked, and stay hidden from players until the DM reveals them.'),
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
+        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
+  }
+
+  function BossForm(props) {
+    var b = props.initial || {};
+    var nameState = useState(b.name || ''); var name = nameState[0], setName = nameState[1];
+    var descState = useState(b.description || ''); var desc = descState[0], setDesc = descState[1];
+    var imageState = useState(b.image_url || ''); var image = imageState[0], setImage = imageState[1];
+    var hpState = useState(String(b.max_hp != null ? b.max_hp : 30)); var maxHp = hpState[0], setMaxHp = hpState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    async function submit(e) {
+      e.preventDefault();
+      if (!name.trim()) { setErr('Name is required.'); return; }
+      var hp = parseInt(maxHp, 10);
+      if (!hp || hp < 1) { setErr('Max HP must be a positive number.'); return; }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp }); }
+      catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+    return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
+      props.inModal ? null : h('h3', { style: { marginTop: 0 } }, props.initial ? 'Edit boss' : 'New boss'),
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
+        h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (staff-only notes)'),
+        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
+        h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
+      (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
+        ? h(PVAdminQuestUtils.ImageField, {
+            value: image,
+            onChange: function (v) { setImage(v); },
+            uploadPath: '/venues/images',
+            extraFields: { venue_name: name.trim() || 'boss' },
+            resize: { square: true, maxSize: 600 },
+            help: 'Shown on the battlefield bar in the roll calculator.'
+          })
+        : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
+            h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+        h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save boss' : 'Create boss'),
+        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')));
+  }
+
+  function BossCard(props) {
+    var b = props.boss;
+    var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
+    return h('div', { className: 'portal-card rp-catalogue-card' },
+      h('div', { className: 'rp-card-media' },
+        (b.image_url && !imgErr)
+          ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
+          : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+      h('h3', { className: 'rp-catalogue-name' }, b.name),
+      h('p', { className: 'rp-catalogue-desc' }, b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's')),
+      b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
+      h('div', { className: 'rp-catalogue-actions' },
+        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(b); } }, 'Edit'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(b); } }, 'Delete')));
+  }
+
+  function BossEditorModal(props) {
+    var b = props.boss;
+    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+    var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
+
+    async function saveBoss(payload) {
+      await PVRollAPI.request('PATCH', '/rp/boss-library/' + b.id, payload);
+      setSaved('Boss details saved.'); setTimeout(function () { setSaved(''); }, 2500);
+      if (props.onChanged) await props.onChanged();
+    }
+    async function submitAbility(payload) {
+      if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/boss-abilities/' + abForm.ability.id, payload);
+      else await PVRollAPI.request('POST', '/rp/boss-library/' + b.id + '/abilities', payload);
+      setAbForm(null); if (props.onChanged) await props.onChanged();
+    }
+    async function deleteAbility(a) {
+      if (!confirm('Delete skill “' + a.name + '”?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/boss-abilities/' + a.id); if (props.onChanged) await props.onChanged(); }
+      catch (e) { setErr(e.message); }
+    }
+
+    return h(window.PVAdminModal, { title: 'Edit boss — ' + b.name, size: 'lg', onClose: props.onClose },
+      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      h(BossForm, { initial: b, inModal: true, onSubmit: saveBoss, onCancel: props.onClose }),
+      h('div', { className: 'rp-editor-section' },
+        h('h4', null, 'Skills'),
+        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
+          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
+        !(b.abilities || []).length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No skills yet. Skills are what the DM fires during the locked (boss) turn.') :
+          (b.abilities || []).map(function (a) {
+            return h('div', { key: a.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
+              h('div', null,
+                h('strong', null, a.name),
+                h('div', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.1rem' } }, bossAbilitySummary(a)),
+                a.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, a.description) : null),
+              h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
+                h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
+                h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕')));
+          })));
+  }
+
+  // ── System rules editor (admin only) ──────────────────────────────────────
+  // One global JSON doc on the worker (rp_rules), strictly validated server-side.
+  // Missing keys always fall back to code defaults, so this form can never brick
+  // the calculator. History keeps the last 5 saves for one-click restore.
+  var PASSIVE_TYPES = [
+    { value: 'attack_roll', label: 'Attack roll' },
+    { value: 'defense_roll', label: 'Defense roll' },
+    { value: 'heal_roll', label: 'Heal roll' }
+  ];
+  function RulesEditor(props) {
+    var docState = useState(null); var doc = docState[0], setDoc = docState[1];
+    var defaultsState = useState(null); var defaults = defaultsState[0], setDefaults = defaultsState[1];
+    var metaState = useState(null); var meta = metaState[0], setMeta = metaState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+    var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
+    var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
+    var histState = useState(null); var history = histState[0], setHistory = histState[1];
+    var showHistState = useState(false); var showHist = showHistState[0], setShowHist = showHistState[1];
+
+    function clone(x) { return JSON.parse(JSON.stringify(x)); }
+    async function load() {
+      try {
+        var r = await PVRollAPI.request('GET', '/rp/rules');
+        setDoc(clone(r.rules)); setDefaults(r.defaults || null); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
+      } catch (e) { setErr(e.status === 404 ? 'The worker doesn’t support editable rules yet — deploy v9.5 first.' : (e.message || 'Failed to load rules.')); }
+    }
+    useEffect(function () { load(); /* eslint-disable-next-line */ }, []);
+
+    function upd(fn) { var next = clone(doc); fn(next); setDoc(next); }
+    function num(v) { var n = parseInt(v, 10); return isNaN(n) ? 0 : n; }
+
+    async function save() {
+      setSaving(true); setErr(''); setSaved('');
+      try {
+        var r = await PVRollAPI.request('PUT', '/rp/rules', doc);
+        setDoc(clone(r.rules)); setSaved('Rules saved — live sessions pick them up within a few seconds.');
+        setTimeout(function () { setSaved(''); }, 4000);
+        setHistory(null);
+      } catch (e) { setErr(e.message || 'Failed to save.'); }
+      finally { setSaving(false); }
+    }
+    async function loadHistory() {
+      try { setHistory(await PVRollAPI.request('GET', '/rp/rules/history') || []); }
+      catch (e) { setErr(e.message); setHistory([]); }
+    }
+    async function restore(entry) {
+      if (!confirm('Restore the rules saved by ' + (entry.updated_by || 'unknown') + '? Current rules go into history.')) return;
+      try { var r = await PVRollAPI.request('POST', '/rp/rules/restore', { history_id: entry.id }); setDoc(clone(r.rules)); setHistory(null); setSaved('Rules restored.'); setTimeout(function () { setSaved(''); }, 3000); }
+      catch (e) { setErr(e.message); }
+    }
+
+    if (!doc) return h('div', { className: 'portal-card' }, err ? h('div', { className: 'portal-flash error' }, err) : 'Loading rules…');
+
+    var fieldGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' };
+    return h('div', null,
+      props.anyLive ? h('div', { className: 'portal-flash error' }, 'A session is live right now — saved changes apply to it immediately.') : null,
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      meta && meta.updated_at ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem', margin: '0 0 0.75rem' } },
+        'Last saved by ' + (meta.updated_by || 'unknown') + ' · ' + new Date(meta.updated_at * 1000).toLocaleString()) : null,
+
+      // Base HP + shield + action economy
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Classes & core caps'),
+        h('div', { style: fieldGrid },
+          CLASS_ROLES.map(function (o) {
+            return h('div', { className: 'portal-field', key: o.value }, h('label', null, o.label + ' base HP'),
+              h('input', { type: 'number', min: 1, value: String(doc.role_base_hp[o.value]), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.role_base_hp[o.value] = v; }); } }));
+          }),
+          h('div', { className: 'portal-field' }, h('label', null, 'Shield max'),
+            h('input', { type: 'number', min: 0, value: String(doc.shield_max), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.shield_max = v; }); } })),
+          h('div', { className: 'portal-field' }, h('label', null, 'Max damage / attack'),
+            h('input', { type: 'number', min: 1, value: String(doc.max_damage_per_attack), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.max_damage_per_attack = v; }); } })),
+          h('div', { className: 'portal-field' }, h('label', null, 'Actions / turn (0=∞)'),
+            h('input', { type: 'number', min: 0, value: String(doc.actions_per_turn), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.actions_per_turn = v; }); } }))),
+        h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0.5rem' } }, 'Which actions consume the per-turn budget:'),
+        h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap' } },
+          ['attack', 'heal', 'buff'].map(function (k) {
+            return h('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+              h('input', { type: 'checkbox', checked: doc.action_types[k] !== false, onChange: function (e) { var v = e.target.checked; upd(function (d) { d.action_types[k] = v; }); } }), k);
+          })),
+        h('p', { className: 'portal-field-help', style: { margin: '0.5rem 0 0' } }, 'Cap changes never sweep existing values mid-session — they apply from the next change onward. Buff slots are fixed at 3 (an active shield occupies one).')),
+
+      // Dice
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Dice'),
+        h('div', { style: fieldGrid },
+          h('div', { className: 'portal-field' }, h('label', null, 'Attack/defense die (D)'),
+            h('input', { type: 'number', min: 1, value: String(doc.attack_die), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.attack_die = v; }); } })),
+          h('div', { className: 'portal-field' }, h('label', null, 'Heal die (D)'),
+            h('input', { type: 'number', min: 1, value: String(doc.heal_die), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.heal_die = v; }); } })),
+          h('div', { className: 'portal-field' }, h('label', null, 'AOE heal max targets'),
+            h('input', { type: 'number', min: 1, value: String(doc.aoe_max_targets), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.aoe_max_targets = v; }); } })))),
+
+      // Armor modifiers
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Armor modifiers'),
+        ARMOR_TYPES.map(function (o) {
+          return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr 1fr', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
+            h('strong', { style: { paddingBottom: '0.55rem' } }, o.label),
+            h('div', { className: 'portal-field' }, h('label', null, 'Attack'),
+              h('input', { type: 'number', value: String(doc.armor[o.value].attack), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.armor[o.value].attack = v; }); } })),
+            h('div', { className: 'portal-field' }, h('label', null, 'Defense'),
+              h('input', { type: 'number', value: String(doc.armor[o.value].defense), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.armor[o.value].defense = v; }); } })));
+        })),
+
+      // Class passives
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Class passives'),
+        (doc.class_passives || []).map(function (p, i) {
+          return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr)) 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
+            h('div', { className: 'portal-field' }, h('label', null, 'Class'),
+              h('select', { value: p.class, onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].class = v; }); } },
+                CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+            h('div', { className: 'portal-field' }, h('label', null, 'Applies to'),
+              h('select', { value: p.type, onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].type = v; }); } },
+                PASSIVE_TYPES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+            h('div', { className: 'portal-field' }, h('label', null, 'Value'),
+              h('input', { type: 'number', value: String(p.value), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.class_passives[i].value = v; }); } })),
+            h('div', { className: 'portal-field' }, h('label', null, 'Label'),
+              h('input', { type: 'text', value: p.label || '', onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].label = v; }); } })),
+            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { marginBottom: '0.15rem' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕'));
+        }),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.class_passives.push({ class: 'dps', type: 'attack_roll', value: 1, label: '' }); }); } }, '+ Add passive')),
+
+      // Damage tiers
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Attack damage tiers'),
+        h('p', { className: 'portal-field-help', style: { margin: '0 0 0.5rem' } }, 'A modified roll of at least “min roll” deals that damage. Exactly one tier must have min roll 0 (the catch-all).'),
+        (doc.damage_tiers || []).map(function (t, i) {
+          return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 1fr 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
+            h('div', { className: 'portal-field' }, h('label', null, 'Min roll'),
+              h('input', { type: 'number', min: 0, value: String(t.min), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].min = v; }); } })),
+            h('div', { className: 'portal-field' }, h('label', null, 'Damage'),
+              h('input', { type: 'number', min: 0, value: String(t.damage), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].damage = v; }); } })),
+            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { marginBottom: '0.15rem' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕'));
+        }),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
+
+      // Save / defaults / history
+      h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' } },
+        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save rules'),
+        defaults ? h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { if (confirm('Load the built-in defaults into the form? Nothing is saved until you press Save.')) setDoc(clone(defaults)); } }, 'Load defaults') : null,
+        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { var next = !showHist; setShowHist(next); if (next && history === null) loadHistory(); } }, (showHist ? '▾ ' : '▸ ') + 'History')),
+      showHist ? h('div', { className: 'portal-card', style: { marginTop: '0.6rem' } },
+        history === null ? h('p', { style: { margin: 0 } }, 'Loading…') :
+          (!history.length ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No previous saves yet.') :
+            history.map(function (e2) {
+              return h('div', { key: e2.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', borderTop: '1px solid var(--border-color)' } },
+                h('span', { style: { fontSize: '0.85rem' } }, (e2.updated_by || 'unknown') + ' · ' + new Date(e2.updated_at * 1000).toLocaleString()),
+                h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { restore(e2); } }, 'Restore'));
+            }))) : null);
   }
 
   // ── Item card (compact; opens the editor modal) ───────────────────────────
@@ -448,6 +773,15 @@
     var editItemState = useState(null); var editItem = editItemState[0], setEditItem = editItemState[1]; // item open in the editor modal
     var itemQueryState = useState(''); var itemQuery = itemQueryState[0], setItemQuery = itemQueryState[1];
 
+    // boss library + per-campaign staged bosses
+    var bossLibState = useState([]); var bossLib = bossLibState[0], setBossLib = bossLibState[1];
+    var bossFormState = useState(false); var bossForm = bossFormState[0], setBossForm = bossFormState[1]; // new-boss form open
+    var editBossState = useState(null); var editBoss = editBossState[0], setEditBoss = editBossState[1]; // boss open in the editor modal
+    var bossQueryState = useState(''); var bossQuery = bossQueryState[0], setBossQuery = bossQueryState[1];
+    var campBossesState = useState(null); var campBosses = campBossesState[0], setCampBosses = campBossesState[1]; // instances in the selected campaign
+    var campBossPickState = useState(''); var campBossPick = campBossPickState[0], setCampBossPick = campBossPickState[1];
+    var bossesSupportedState = useState(true); var bossesSupported = bossesSupportedState[0], setBossesSupported = bossesSupportedState[1];
+
     // member_id -> profile portrait, so roster cards can show a face when the
     // member has published/drafted a roster profile with an image.
     var profileImgState = useState({}); var profileImages = profileImgState[0], setProfileImages = profileImgState[1];
@@ -485,7 +819,17 @@
         setProfileImages(map);
       } catch (e) { /* no portraits */ }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); /* eslint-disable-next-line */ }, []);
+    // Boss library — 404 means the worker predates v9.5; hide boss UI quietly.
+    async function loadBossLib() {
+      try { var rows = await PVRollAPI.request('GET', '/rp/boss-library') || []; setBossLib(rows); setBossesSupported(true); return rows; }
+      catch (e) { if (e.status === 404) setBossesSupported(false); setBossLib([]); return []; }
+    }
+    async function loadCampBosses(cid) {
+      setCampBosses(null);
+      try { setCampBosses(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/bosses') || []); }
+      catch (e) { setCampBosses([]); }
+    }
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); /* eslint-disable-next-line */ }, []);
 
     // When a member is chosen to add, swap class/armor to their saved defaults
     // (or back to neutral when they have none) so the controls always reflect
@@ -541,6 +885,7 @@
 
     function selectCampaign(c) {
       setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults(); loadDisabledItems(c.id);
+      if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
         PVAdminAPI.request('GET', '/members', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
@@ -608,6 +953,30 @@
       try { await PVRollAPI.request('DELETE', '/rp/items/' + it.id); await loadItems(); }
       catch (e) { setErr(e.message); }
     }
+    async function createBoss(payload) {
+      await PVRollAPI.request('POST', '/rp/boss-library', payload);
+      setBossForm(false); await loadBossLib();
+    }
+    async function deleteBoss(b) {
+      if (!confirm('Delete boss “' + b.name + '” and its skills? Bosses already on a battlefield keep their snapshot.')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/boss-library/' + b.id); await loadBossLib(); }
+      catch (e) { setErr(e.message); }
+    }
+    // Keep the open editor modal in sync after ability edits reload the library.
+    async function refreshBossLib() {
+      var rows = await loadBossLib();
+      setEditBoss(function (cur) { if (!cur) return cur; var nb = rows.filter(function (x) { return x.id === cur.id; })[0]; return nb || cur; });
+    }
+    async function addCampBoss() {
+      if (!campBossPick || !selected) return;
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + selected.id + '/bosses', { boss_id: campBossPick }); setCampBossPick(''); await loadCampBosses(selected.id); }
+      catch (e) { setErr(e.message); }
+    }
+    async function removeCampBoss(b) {
+      if (!confirm('Remove ' + b.name + ' from this campaign?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/campaigns/' + selected.id + '/bosses/' + b.id); await loadCampBosses(selected.id); }
+      catch (e) { setErr(e.message); }
+    }
     async function setDmFor(c, memberId) {
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
@@ -619,9 +988,10 @@
 
     return h('div', null,
       h(window.PVAdminSubnav, {
-        tabs: isAdmin
-          ? [{ id: 'campaigns', label: 'Campaigns & Sessions' }, { id: 'items', label: 'Item Catalogue' }]
-          : [{ id: 'campaigns', label: 'Campaigns & Sessions' }],
+        tabs: [{ id: 'campaigns', label: 'Campaigns & Sessions' }]
+          .concat(isAdmin ? [{ id: 'items', label: 'Item Catalogue' }] : [])
+          .concat(bossesSupported ? [{ id: 'bosses', label: 'Boss Library' }] : [])
+          .concat(isAdmin && bossesSupported ? [{ id: 'rules', label: 'System Rules' }] : []),
         active: tab,
         onChange: setTab
       }),
@@ -736,6 +1106,24 @@
                             }))) : null);
                 })(),
 
+                // Bosses staged for this campaign. The DM manages HP/visibility and
+                // fires skills live from the calculator; this is pre-session setup.
+                bossesSupported ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                  h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Bosses'),
+                  campBosses === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading…') :
+                    (!campBosses.length ? h('p', { style: { margin: '0 0 0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'No bosses staged for this campaign.') :
+                      campBosses.map(function (b) {
+                        return h('div', { key: b.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' } },
+                          h('span', null, b.name + ' · ' + b.current_hp + '/' + b.max_hp + ' HP' + (b.defeated ? ' · defeated' : '') + (b.hp_visible ? '' : ' · HP hidden')),
+                          h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove'));
+                      })),
+                  h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
+                    h('select', { value: campBossPick, style: { flex: '1 1 12rem' }, onChange: function (e) { setCampBossPick(e.target.value); } },
+                      h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
+                      bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
+                    h('button', { type: 'button', className: 'portal-btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
+                  h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'HP resets to max on session start. The same library boss can be added more than once for multi-enemy fights.')) : null,
+
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
                   roster.map(function (ch) {
@@ -771,7 +1159,31 @@
         })(),
         editItem ? h(ItemEditorModal, { item: editItem, catalogue: items,
           onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null
-      ) : null
+      ) : null,
+
+      tab === 'bosses' && bossesSupported ? h('div', null,
+        bossForm ? h(BossForm, { onSubmit: createBoss, onCancel: function () { setBossForm(false); } }) : null,
+        h('div', { className: 'rp-catalogue-toolbar' },
+          h('input', { type: 'search', className: 'portal-search', value: bossQuery,
+            placeholder: 'Search bosses by name…',
+            onChange: function (e) { setBossQuery(e.target.value); } }),
+          bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
+            onClick: function () { setBossForm(true); } }, '+ New boss')),
+        (function () {
+          if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one, give it skills, and the DM can field it in any campaign.');
+          var q = bossQuery.trim().toLowerCase();
+          var shown = q ? bossLib.filter(function (b) { return (b.name || '').toLowerCase().indexOf(q) !== -1; }) : bossLib;
+          if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
+          return h('div', { className: 'rp-catalogue-grid' },
+            shown.map(function (b) {
+              return h(BossCard, { key: b.id, boss: b, onEdit: function (x) { setEditBoss(x); }, onDelete: deleteBoss });
+            }));
+        })(),
+        editBoss ? h(BossEditorModal, { boss: editBoss,
+          onChanged: refreshBossLib, onClose: function () { setEditBoss(null); } }) : null
+      ) : null,
+
+      tab === 'rules' && isAdmin ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
     );
   }
 
