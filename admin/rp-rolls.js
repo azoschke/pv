@@ -1018,6 +1018,10 @@
       try { await PVRollAPI.request('DELETE', '/rp/campaigns/' + selected.id + '/bosses/' + b.id); await loadCampBosses(selected.id); }
       catch (e) { setErr(e.message); }
     }
+    async function toggleBossHp(b) {
+      try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + selected.id + '/bosses/' + b.id, { hp_visible: !b.hp_visible }); await loadCampBosses(selected.id); }
+      catch (e) { setErr(e.message); }
+    }
     async function setDmFor(c, memberId) {
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
@@ -1156,7 +1160,9 @@
                       campBosses.map(function (b) {
                         return h('div', { key: b.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' } },
                           h('span', null, b.name + ' · ' + b.current_hp + '/' + b.max_hp + ' HP' + (b.defeated ? ' · defeated' : '') + (b.hp_visible ? '' : ' · HP hidden')),
-                          h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove'));
+                          h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
+                            h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { toggleBossHp(b); } }, b.hp_visible ? 'Hide HP' : 'Show HP'),
+                            h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove')));
                       })),
                   h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
                     h('select', { value: campBossPick, style: { flex: '1 1 12rem' }, onChange: function (e) { setCampBossPick(e.target.value); } },

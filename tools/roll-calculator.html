@@ -190,6 +190,9 @@
     .rp-boss-hp.is-hidden { color: var(--text-secondary); font-size: 0.85rem; gap: 0.35rem; }
     .rp-boss-hp.is-hidden .material-icons { font-size: 1rem; }
     .rp-boss-hp-num { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; }
+    /* Skill telegraph text revealed under the boss name (before damage). */
+    .rp-boss-tele { font-size: 0.85rem; color: var(--text-primary); margin: 0.25rem 0; line-height: 1.35; }
+    .rp-boss-tele strong { font-family: 'Stoke', serif; color: var(--accent-gold); }
     .rp-hpbar { flex: 1 1 auto; height: 0.55rem; background: var(--bg-darker); border-radius: 0.4rem; overflow: hidden; border: 1px solid var(--border-color); }
     .rp-hpbar-fill { height: 100%; background: var(--accent-red); border-radius: 0.4rem; transition: width 0.4s ease; }
 
@@ -217,12 +220,18 @@
     .rp-party .rp-hp-edit .material-icons, .rp-party .rp-shield-edit .material-icons { font-size: 0.9rem; }
     .rp-party .rp-stepper { gap: 0.2rem; }
     .rp-party .rp-hp-max { font-size: 0.72rem; }
+    /* HP value can be 2–3 digits and the number spinner eats width — give it room.
+       Shield is single-digit (0–3) so its compact width is left alone. */
+    .rp-party .rp-hp-edit .rp-hp-input { width: 3.6rem; }
 
     /* My Items — mirrors My Profile > My Items: card thumbnails that open a
        detail popup. Reuses .venue-card / .venue-modal / .contrast-border from
        styles.css (which set position:relative + overflow:hidden on the media,
        so the torn border is clipped to the card instead of the whole page).
        Item art is square, unlike the 16:10 venue default. */
+    /* My Items sits without the card chrome (per request) but keeps breathing room. */
+    .rp-items-panel { padding: 0.25rem 0.25rem 0.5rem; }
+    .rp-items-panel > h3 { margin: 0 0 0.75rem; font-family: 'Stoke', serif; letter-spacing: 0.04em; }
     .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.9rem; }
     .rp-item-card { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; padding: 0; }
     .rp-item-card .venue-card-media { aspect-ratio: 1 / 1; }
