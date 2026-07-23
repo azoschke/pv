@@ -529,7 +529,7 @@
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
       slots.map(function (slot, idx) { return h(BuffSlotRow, { key: idx, label: 'Slot ' + (idx + 1), slot: slot, disabled: disabled, onChange: function (v) { setSlot(idx, v); } }); }),
-      h('p', { className: 'rp-note' }, 'Your own stat buffs only. Max 3 slots; if you have an active shield it uses one slot. Setting a buff uses your action for the turn (further buff edits that turn are free). Shields are edited in the Party panel.'));
+      h('p', { className: 'rp-note' }, 'Your own stat buffs only. Max 3 slots; if you have an active shield it uses one slot. Setting a buff uses your action for the turn. Shields are edited in the Party panel.'));
   }
 
   // ── Party (HP + shield, universal) ────────────────────────────────────────
@@ -591,11 +591,28 @@
   }
 
   // ── DM panel ──────────────────────────────────────────────────────────────
+  function bossTargetPhrase(tk, ref) {
+    switch (tk) {
+      case 'party_member': return 'a chosen player';
+      case 'party_members': return 'chosen players';
+      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
+      case 'group': return 'the whole party';
+    }
+    return 'a target';
+  }
+  // Plain-language boss-effect wording, mirroring the item describer.
   function bossEffectText(e) {
-    if (e.type === 'none') return 'narrative';  // no target for narrative effects
-    var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
-    var core = e.type === 'damage' ? e.value + ' dmg' : e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' (' + e.duration_turns + 't)' : ' (until removed)');
-    return core + ' → ' + t;
+    if (e.type === 'none') return 'Narrative effect.';
+    var to = bossTargetPhrase(e.target_kind, e.target_ref);
+    if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.';
+    return e.value + ' damage per turn to ' + to + (e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed') + '.';
+  }
+  // Active (in-play) boss effect — target already resolved to names.
+  function describeBossActiveEffect(e) {
+    if (e.type === 'none') return 'Narrative effect';
+    var to = e.target_label || bossTargetPhrase(e.target_kind, e.target_ref);
+    var core = e.type === 'dot' ? e.value + ' damage per turn' : 'Effect';
+    return core + ' to ' + to + (e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '');
   }
   function bossSkillSummary(a) {
     var fx = (a.effects || []).map(bossEffectText);
@@ -716,8 +733,7 @@
       props.bossEffects && props.bossEffects.length ? h('div', { style: { marginTop: '0.75rem' } },
         h('h4', { className: 'rp-dm-sub' }, 'Active boss effects'),
         props.bossEffects.map(function (e) {
-          var detail = (e.type === 'dot' ? e.value + ' dmg/turn' + (e.target_label ? ' · → ' + e.target_label : '') : 'narrative') +
-            (e.remaining_turns != null ? ' · ' + e.remaining_turns + ' turns left' : '');
+          var detail = describeBossActiveEffect(e);
           return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
             h('div', { className: 'rp-effect-info' },
               h('strong', null, e.boss_name + ' — ' + e.name),
@@ -833,8 +849,7 @@
     }
     function bossRow(e) {
       var key = 'b' + e.id;
-      var detail = (e.type === 'dot' ? e.value + ' dmg/turn' + (e.target_label ? ' · → ' + e.target_label : '') : 'Narrative') +
-        (e.remaining_turns != null ? ' · ' + e.remaining_turns + ' turns left' : '');
+      var detail = describeBossActiveEffect(e);
       return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
         h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
           h('span', { className: 'rp-skill-text' },

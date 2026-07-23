@@ -334,10 +334,22 @@
     { value: 'group', label: 'Whole party' }
   ];
 
+  function bossTargetPhrase(tk, ref) {
+    switch (tk) {
+      case 'party_member': return 'a chosen player';
+      case 'party_members': return 'chosen players';
+      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
+      case 'group': return 'the whole party';
+    }
+    return 'a target';
+  }
+  // Plain-language boss-effect wording, mirroring the item modifier summary.
   function bossEffectSummary(e) {
-    var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
-    var core = e.type === 'damage' ? e.value + ' dmg' : e.type === 'dot' ? e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' · ' + e.duration_turns + 't' : ' · until removed') : 'narrative';
-    return core + (e.type === 'none' ? '' : ' · → ' + t) + (e.uses_per_session > 0 ? ' · ' + e.uses_per_session + '×/session' : '');
+    var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
+    if (e.type === 'none') return 'Narrative effect.' + uses;
+    var to = bossTargetPhrase(e.target_kind, e.target_ref);
+    if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.' + uses;
+    return e.value + ' damage per turn to ' + to + (e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed') + '.' + uses;
   }
 
   // Skill container: name + description. Numbers and uses live on its effects,
@@ -439,8 +451,7 @@
             onChange: function (v) { setImage(v); },
             uploadPath: '/venues/images',
             extraFields: { venue_name: name.trim() || 'boss' },
-            resize: { square: true, maxSize: 600 },
-            help: 'Shown on the battlefield bar in the roll calculator.'
+            resize: { square: true, maxSize: 600 }
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
             h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
@@ -610,8 +621,7 @@
           ['attack', 'heal', 'buff'].map(function (k) {
             return h('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
               h('input', { type: 'checkbox', checked: doc.action_types[k] !== false, onChange: function (e) { var v = e.target.checked; upd(function (d) { d.action_types[k] = v; }); } }), k);
-          })),
-        h('p', { className: 'portal-field-help', style: { margin: '0.5rem 0 0' } }, 'Cap changes never sweep existing values mid-session — they apply from the next change onward. Buff slots are fixed at 3 (an active shield occupies one).')),
+          }))),
 
       // Dice
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
@@ -658,7 +668,6 @@
       // Damage tiers
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
         h('h3', { style: { marginTop: 0 } }, 'Attack damage tiers'),
-        h('p', { className: 'portal-field-help', style: { margin: '0 0 0.5rem' } }, 'A modified roll of at least “min roll” deals that damage. Exactly one tier must have min roll 0 (the catch-all).'),
         (doc.damage_tiers || []).map(function (t, i) {
           return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 1fr 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
             h('div', { className: 'portal-field' }, h('label', null, 'Min roll'),
@@ -809,12 +818,10 @@
             uploadPath: '/venues/images',
             extraFields: { venue_name: name.trim() || 'item' },
             resize: { square: true, maxSize: 600 },
-            help: 'Paste a URL or upload an image. Uploads are square-cropped to 600×600. Shown on the roll calculator and My Items.'
+            help: 'Paste a URL or upload an image.'
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
             h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
-      h('p', { className: 'portal-field-help', style: { margin: '0 0 0.5rem' } },
-        'All modifiers live on the item’s abilities (passive or activated). Add them after creating the item.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
         h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save item' : 'Create item'),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')
@@ -1207,7 +1214,7 @@
                       h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
                       bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
                     h('button', { type: 'button', className: 'portal-btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
-                  h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'HP resets to max on session start. The same library boss can be added more than once for multi-enemy fights.')) : null,
+                  h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'The same library boss can be added more than once for multi-enemy fights.')) : null,
 
                 h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
