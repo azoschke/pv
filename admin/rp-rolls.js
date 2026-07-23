@@ -291,42 +291,63 @@
   ];
   var BOSS_TARGETS = [
     { value: 'party_member', label: 'Chosen player (picked on use)' },
+    { value: 'party_members', label: 'Chosen players (AOE, picked on use)' },
     { value: 'class', label: 'Class' },
     { value: 'group', label: 'Whole party' }
   ];
 
-  function bossAbilitySummary(a) {
-    var t = a.target_kind === 'party_member' ? 'chosen player' : a.target_kind === 'class' ? String(a.target_ref || '').toUpperCase() : 'party';
-    var core = a.type === 'damage' ? a.value + ' dmg' : a.type === 'dot' ? a.value + ' dmg/turn' + (a.duration_turns > 0 ? ' · ' + a.duration_turns + 't' : ' · until removed') : 'narrative';
-    return core + ' · → ' + t + (a.uses_per_session > 0 ? ' · ' + a.uses_per_session + '×/session' : '');
+  function bossEffectSummary(e) {
+    var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
+    var core = e.type === 'damage' ? e.value + ' dmg' : e.type === 'dot' ? e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' · ' + e.duration_turns + 't' : ' · until removed') : 'narrative';
+    return core + ' · → ' + t;
   }
 
+  // Skill container: name/description/uses. Numbers live on its effects.
   function BossAbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
-    var typeState = useState(a.type || 'damage'); var type = typeState[0], setType = typeState[1];
-    var valState = useState(String(a.value != null ? a.value : 2)); var val = valState[0], setVal = valState[1];
-    var tkState = useState(a.target_kind || 'party_member'); var tk = tkState[0], setTk = tkState[1];
-    var refState = useState(a.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
-    var durState = useState(String(a.duration_turns != null ? a.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
     var usesState = useState(String(a.uses_per_session != null ? a.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      var payload = { name: name.trim(), description: desc.trim() || null, type: type, value: parseInt(val, 10) || 0,
-        target_kind: tk, target_ref: tk === 'class' ? ref : null,
-        duration_turns: parseInt(dur, 10) || 0, uses_per_session: parseInt(uses, 10) || 0 };
-      try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, uses_per_session: parseInt(uses, 10) || 0 }); }
+      catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-card-light)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the effect)'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
+        h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })),
+      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
+        'Using the skill fires ALL of its effects at once — add them after creating the skill. Skills fire only while the turn is locked and stay hidden from players until the DM reveals them.'),
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
+        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
+  }
+
+  function BossEffectForm(props) {
+    var x = props.initial || {};
+    var typeState = useState(x.type || 'damage'); var type = typeState[0], setType = typeState[1];
+    var valState = useState(String(x.value != null ? x.value : 2)); var val = valState[0], setVal = valState[1];
+    var tkState = useState(x.target_kind || 'party_member'); var tk = tkState[0], setTk = tkState[1];
+    var refState = useState(x.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
+    var durState = useState(String(x.duration_turns != null ? x.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    async function submit(e) {
+      e.preventDefault();
+      var payload = { type: type, value: parseInt(val, 10) || 0, target_kind: tk,
+        target_ref: tk === 'class' ? ref : null, duration_turns: parseInt(dur, 10) || 0 };
+      try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'Type'),
           h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
@@ -340,13 +361,11 @@
           h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
         type === 'dot' ? h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
-          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
-        h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
-          h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
+          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null),
       h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. Skills can only be fired while the turn is locked, and stay hidden from players until the DM reveals them.'),
+        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. One pick covers every chosen-player effect on the skill.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
-        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
+        h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
 
@@ -411,6 +430,7 @@
   function BossEditorModal(props) {
     var b = props.boss;
     var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
+    var fxFormState = useState(null); var fxForm = fxFormState[0], setFxForm = fxFormState[1]; // null | {abilityId, effect?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
 
@@ -425,8 +445,18 @@
       setAbForm(null); if (props.onChanged) await props.onChanged();
     }
     async function deleteAbility(a) {
-      if (!confirm('Delete skill “' + a.name + '”?')) return;
+      if (!confirm('Delete skill “' + a.name + '” and its effects?')) return;
       try { await PVRollAPI.request('DELETE', '/rp/boss-abilities/' + a.id); if (props.onChanged) await props.onChanged(); }
+      catch (e) { setErr(e.message); }
+    }
+    async function submitEffect(payload) {
+      if (fxForm.effect) await PVRollAPI.request('PATCH', '/rp/boss-ability-effects/' + fxForm.effect.id, payload);
+      else await PVRollAPI.request('POST', '/rp/boss-abilities/' + fxForm.abilityId + '/effects', payload);
+      setFxForm(null); if (props.onChanged) await props.onChanged();
+    }
+    async function deleteEffect(x) {
+      if (!confirm('Delete this effect?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/boss-ability-effects/' + x.id); if (props.onChanged) await props.onChanged(); }
       catch (e) { setErr(e.message); }
     }
 
@@ -438,16 +468,27 @@
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
-        !(b.abilities || []).length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No skills yet. Skills are what the DM fires during the locked (boss) turn.') :
+        !(b.abilities || []).length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No skills yet. Skills are what the DM fires during the locked (boss) turn — each can carry several effects.') :
           (b.abilities || []).map(function (a) {
-            return h('div', { key: a.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
-              h('div', null,
-                h('strong', null, a.name),
-                h('div', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.1rem' } }, bossAbilitySummary(a)),
-                a.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, a.description) : null),
-              h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
-                h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
-                h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕')));
+            return h('div', { key: a.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
+              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
+                h('div', null,
+                  h('strong', null, a.name),
+                  a.uses_per_session > 0 ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0 0.3rem' } }, a.uses_per_session + '×/session') : null,
+                  a.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, a.description) : null),
+                h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
+                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
+                  h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕'))),
+              (a.effects || []).map(function (x) {
+                return h('div', { key: x.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
+                  h('span', { style: { fontSize: '0.8rem' } }, bossEffectSummary(x)),
+                  h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
+                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteEffect(x); } }, '✕')));
+              }),
+              (fxForm && fxForm.abilityId === a.id)
+                ? h(BossEffectForm, { initial: fxForm.effect, onSubmit: submitEffect, onCancel: function () { setFxForm(null); } })
+                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: null }); } }, '+ Add effect'));
           })));
   }
 

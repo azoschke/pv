@@ -203,12 +203,27 @@
     .rp-ko { background: rgba(165,77,68,0.12); border: 1px solid var(--accent-red); color: var(--accent-red); }
     .rp-me-id { display: flex; align-items: center; gap: 0.45rem; justify-content: flex-end; }
 
-    /* Avatars (roster portraits) */
+    /* Avatars (roster portraits) — row layout must beat the base .rp-party-id
+       column rule above, so flex-direction is set explicitly. */
     .rp-avatar { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-color); }
     .rp-avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-brown); color: #fff;
       font-family: 'Stoke', serif; font-size: 0.9rem; }
-    .rp-party-id { display: flex; align-items: center; gap: 0.55rem; }
-    .rp-party-names { display: flex; flex-direction: column; }
+    .rp-party-id { display: flex; flex-direction: row; align-items: center; gap: 0.55rem; min-width: 0; }
+    .rp-party-names { display: flex; flex-direction: column; min-width: 0; }
+    .rp-party-names strong { overflow-wrap: anywhere; }
+
+    /* My Items — card grid matching the My Profile items view (square art,
+       torn contrast border). 2-up in the column on large screens. */
+    .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 0.8rem; }
+    .rp-item-card { background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.55rem; overflow: hidden; }
+    .rp-item-card .rp-card-media { aspect-ratio: 1 / 1; }
+    .rp-item-card-body { padding: 0.55rem 0.7rem 0.7rem; }
+
+    /* DM: per-boss visibility toggle on the battlefield card + multi-target picks */
+    .rp-boss-eye { margin-left: auto; align-self: flex-start; background: none; border: 0; cursor: pointer; color: var(--text-secondary); padding: 0.1rem; }
+    .rp-boss-eye .material-icons { font-size: 1.05rem; }
+    .rp-skill-picks { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; margin: 0.25rem 0 0.35rem; }
+    .rp-skill-picks label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer; }
 
     /* DM panel tabs + boss management */
     .rp-dm-tabs { display: flex; gap: 0.25rem; margin: 0.75rem 0 0.5rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }

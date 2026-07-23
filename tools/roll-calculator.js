@@ -157,8 +157,14 @@
         return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : ''), key: b.id },
           b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
           h('div', { className: 'rp-boss-info' },
-            h('div', { className: 'rp-boss-name' }, b.name, b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null),
-            h(BossHpBar, { boss: b })));
+            h('div', { className: 'rp-boss-name' }, b.name,
+              b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+              props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null),
+            h(BossHpBar, { boss: b })),
+          props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
+            title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
+            onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null);
       }));
   }
 
@@ -179,7 +185,7 @@
     function apply() {
       if (!selected) return;
       setBusy(true); setMsg('');
-      Promise.resolve(props.onApplyDamage(selected, capped))
+      Promise.resolve(props.onApplyDamage(selected, capped, parseInt(roll, 10) || 0))
         .then(function () { setBusy(false); setRoll(''); setMsg('Damage applied.'); setTimeout(function () { setMsg(''); }, 2500); })
         .catch(function (e) { setBusy(false); setMsg(e.message || 'Failed to apply.'); });
     }
@@ -325,27 +331,39 @@
   }
 
   // ── My Items ──────────────────────────────────────────────────────────────
+  // Card grid matching the My Profile > My Items look: square art with the
+  // torn contrast border on top, controls below. 2-up on large screens.
+  function CardMedia(props) {
+    var errState = useState(false); var imgErr = errState[0], setImgErr = errState[1];
+    return h('div', { className: 'rp-card-media' },
+      (props.url && !imgErr)
+        ? h('img', { src: props.url, alt: '', onError: function () { setImgErr(true); } })
+        : h('span', { className: 'rp-card-sig' }, (props.name || '').toLowerCase()),
+      h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' }));
+  }
   function ItemsPanel(props) {
     var items = props.items;
     if (!items.length) return h('div', { className: 'rp-card' }, h('h3', null, 'My Items'), h('p', { className: 'rp-note' }, 'No items equipped. An admin assigns and equips items.'));
     return h('div', { className: 'rp-card' }, h('h3', null, 'My Items'),
-      items.map(function (it) {
-        return h('div', { className: 'rp-item', key: it.item_id },
-          it.image_url ? h('img', { className: 'rp-item-img', src: it.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
-          h('div', { className: 'rp-item-name' }, it.name),
-          it.description ? h('p', { className: 'rp-item-flavor' }, it.description) : null,
-          (it.abilities || []).map(function (ab) {
-            return h('div', { className: 'rp-ability', key: ab.id },
-              h('div', { className: 'rp-ability-head' },
-                h('strong', null, ab.name),
-                ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
-                  onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
-              ab.description ? h('p', { className: 'rp-ability-desc' }, ab.description) : null,
-              (ab.modifiers || []).map(function (m) {
-                return h(ModifierRow, { key: m.id, modifier: m, party: props.party, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
-              }));
-          }));
-      }));
+      h('div', { className: 'rp-items-grid' },
+        items.map(function (it) {
+          return h('div', { className: 'rp-item-card', key: it.item_id },
+            h(CardMedia, { url: it.image_url, name: it.name }),
+            h('div', { className: 'rp-item-card-body' },
+              h('div', { className: 'rp-item-name' }, it.name),
+              it.description ? h('p', { className: 'rp-item-flavor' }, it.description) : null,
+              (it.abilities || []).map(function (ab) {
+                return h('div', { className: 'rp-ability', key: ab.id },
+                  h('div', { className: 'rp-ability-head' },
+                    h('strong', null, ab.name),
+                    ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
+                      onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
+                  ab.description ? h('p', { className: 'rp-ability-desc' }, ab.description) : null,
+                  (ab.modifiers || []).map(function (m) {
+                    return h(ModifierRow, { key: m.id, modifier: m, party: props.party, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
+                  }));
+              })));
+        })));
   }
 
   // ── Personal buffs ────────────────────────────────────────────────────────
@@ -449,32 +467,52 @@
   }
 
   // ── DM panel ──────────────────────────────────────────────────────────────
+  function bossEffectText(e) {
+    var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
+    var core = e.type === 'damage' ? e.value + ' dmg' : e.type === 'dot' ? e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' (' + e.duration_turns + 't)' : ' (until removed)') : 'narrative';
+    return core + ' → ' + t;
+  }
   function bossSkillSummary(a) {
-    var bits = [];
-    if (a.type === 'damage') bits.push(a.value + ' dmg');
-    else if (a.type === 'dot') bits.push(a.value + ' dmg/turn' + (a.duration_turns > 0 ? ' · ' + a.duration_turns + 't' : ' · until removed'));
-    else bits.push('narrative');
-    bits.push(a.target_kind === 'party_member' ? 'chosen target' : a.target_kind === 'class' ? String(a.target_ref || '').toUpperCase() : 'party');
+    var fx = (a.effects || []).map(bossEffectText);
+    var bits = fx.length ? [fx.join(' + ')] : ['no effects configured'];
     if (a.uses_per_session > 0) bits.push((a.uses_per_session - (a.uses_this_session || 0)) + '/' + a.uses_per_session + ' uses');
     return bits.join(' · ');
   }
+  // A skill may carry several effects; one pick set covers every chosen-target
+  // effect. 'party_members' anywhere upgrades the picker to multi-select.
   function DMBossSkillRow(props) {
     var a = props.ability; var boss = props.boss;
+    var effects = a.effects || [];
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
-    var needTarget = a.type !== 'none' && a.target_kind === 'party_member';
+    var picksState = useState({}); var picks = picksState[0], setPicks = picksState[1];
+    var needMulti = effects.some(function (e) { return e.type !== 'none' && e.target_kind === 'party_members'; });
+    var needSingle = !needMulti && effects.some(function (e) { return e.type !== 'none' && e.target_kind === 'party_member'; });
     var spent = a.uses_per_session > 0 && (a.uses_this_session || 0) >= a.uses_per_session;
     var living = (props.party || []).filter(function (p) { return !p.eliminated; });
-    var canUse = props.turnLocked && !boss.defeated && !spent && (!needTarget || pickTarget);
-    return h('div', { className: 'rp-mod' },
+    var pickedIds = Object.keys(picks).filter(function (k) { return picks[k]; }).map(Number);
+    var canUse = props.turnLocked && !boss.defeated && !spent && effects.length &&
+      (needMulti ? pickedIds.length > 0 : (!needSingle || pickTarget));
+    function togglePick(id) { var n = Object.assign({}, picks); n[id] = !n[id]; setPicks(n); }
+    function use() {
+      var ids = needMulti ? pickedIds : (needSingle && pickTarget ? [Number(pickTarget)] : []);
+      props.onUseSkill(boss, a, ids);
+      setPicks({}); setPickTarget('');
+    }
+    return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
       h('div', { className: 'rp-mod-info' },
         h('span', null, h('strong', null, a.name)),
-        h('span', { className: 'rp-mod-meta' }, bossSkillSummary(a))),
+        h('span', { className: 'rp-mod-meta' }, bossSkillSummary(a)),
+        needMulti ? h('div', { className: 'rp-skill-picks' },
+          living.map(function (p) {
+            return h('label', { key: p.member_id },
+              h('input', { type: 'checkbox', checked: !!picks[p.member_id], onChange: function () { togglePick(p.member_id); } }),
+              h('span', null, p.member_name));
+          })) : null),
       h('div', { className: 'rp-mod-control' },
-        needTarget ? h('select', { className: 'rp-select', value: pickTarget, onChange: function (e) { setPickTarget(e.target.value); } },
+        needSingle ? h('select', { className: 'rp-select', value: pickTarget, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse,
-          onClick: function () { props.onUseSkill(boss, a, needTarget ? Number(pickTarget) : null); } }, spent ? 'Spent' : 'Use')));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Spent' : 'Use')));
   }
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
@@ -587,8 +625,12 @@
             var sameTarget = l.actor_member_id === l.target_member_id && l.actor_member_id != null;
             var main = (l.note && sameTarget) ? (l.actor_name || 'Someone')
               : (l.actor_name || 'Someone') + ' → ' + (l.target_name || (l.target_member_id != null ? 'Member ' + l.target_member_id : '—'));
-            var right = l.note ? l.note : (fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : l.field === 'boss' ? 'boss HP' : 'HP') + ' (now ' + l.new_value + ')');
-            var rightClass = l.note ? 'rp-log-delta rp-log-note' : ('rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down'));
+            // Note-only rows (buffs, skill uses) vs numeric rows; numeric rows
+            // may carry a note suffix like "rolled 14" on boss damage.
+            var noteOnly = l.note && !l.delta;
+            var right = noteOnly ? l.note
+              : (fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : l.field === 'boss' ? 'boss HP' : 'HP') + ' (now ' + l.new_value + ')' + (l.note ? ' · ' + l.note : ''));
+            var rightClass = noteOnly ? 'rp-log-delta rp-log-note' : ('rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down'));
             return h('div', { className: 'rp-log', key: l.id },
               h('span', { className: 'rp-log-main' }, main),
               h('span', { className: rightClass }, right));
@@ -753,15 +795,16 @@
       return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/heal', { entries: entries }).then(refresh);
     }
     // Attack apply: the capped, computed damage lands on the chosen boss.
-    function onApplyDamage(bossId, amount) {
-      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + bossId + '/damage', { amount: amount }).then(refresh);
+    // The raw roll rides along purely so the DM log can show "rolled N".
+    function onApplyDamage(bossId, amount, roll) {
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + bossId + '/damage', { amount: amount, roll: roll || 0 }).then(refresh);
     }
     // DM boss controls
     function onBossAdd(libId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses', { boss_id: libId }); }); }
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseSkill(b, a, targetId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, target_member_id: targetId }); }); }
+    function onUseSkill(b, a, targetIds) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, target_member_ids: targetIds || [] }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
@@ -798,7 +841,7 @@
       (camp.turn_locked && !isDM) ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
       ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
 
-      h(BossBar, { bosses: data.bosses || [] }),
+      h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible }),
 
       isDM ? null : h(FloatingSkills, { effects: data.active_effects || [], bossEffects: data.boss_effects || [] }),
 
