@@ -68,6 +68,54 @@
     return '';
   }
 
+  // ── Plain-language descriptions ────────────────────────────────────────────
+  // Turns the raw modifier fields (type/value/target/mode/duration) into a
+  // readable sentence instead of jargon like "+8 attack output · → self · 1t".
+  var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
+  function typePhrase(type, value) {
+    var v = (value >= 0 ? '+' : '') + value;
+    switch (type) {
+      case 'attack_roll': return v + ' attack roll bonus';
+      case 'defense_roll': return v + ' defense roll bonus';
+      case 'heal_roll': return v + ' healing roll bonus';
+      case 'attack_output': return v + ' bonus attack damage';
+      case 'heal_output': return v + ' bonus healing';
+      case 'shield': return 'grants ' + value + ' shield';
+      case 'heal': return 'restores ' + value + ' HP';
+    }
+    return v + ' ' + String(type || '').replace(/_/g, ' ');
+  }
+  function targetPhrase(tk, ref) {
+    switch (tk) {
+      case 'self': return 'the holder';
+      case 'group': return 'the whole party';
+      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
+      case 'holder_item': return 'the item’s holder';
+      case 'party_member': return 'a chosen ally';
+    }
+    return '';
+  }
+  // For a catalogue modifier (My Items / admin): full "when → what → to whom" sentence.
+  function describeModifier(m) {
+    if (m.type === 'none') return m.label || 'Special effect — see the item text.';
+    var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
+    var core = typePhrase(m.type, m.value);
+    var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
+    var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
+    return when + ', ' + core + to + dur + '.';
+  }
+  // For an active effect (already resolved target_label + remaining turns).
+  function describeActiveEffect(e) {
+    if (e.type === 'none') return e.label || 'Special effect';
+    var core = typePhrase(e.type, e.value);
+    var tp = targetPhrase(e.target_kind, e.target_ref);
+    if (e.target_kind === 'party_member') tp = e.target_label || 'a chosen ally';
+    if (e.target_kind === 'holder_item') tp = e.target_label || 'the item’s holder';
+    var to = tp ? ' to ' + tp : '';
+    var dur = e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
+    return core + to + dur;
+  }
+
   // ── Action economy (client view) ──────────────────────────────────────────
   // my_turn: { limit, used, actions: [...], ko } from the worker. Older workers
   // don't send it — fall back to the legacy healed_this_turn behaviour.
@@ -325,13 +373,11 @@
   function ModifierRow(props) {
     var m = props.modifier;
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
-    var summary = [];
-    if (m.type !== 'none') summary.push(fmt(m.value) + ' ' + m.type.replace('_', ' '));
-    summary.push(targetText(m));
-    if (m.duration_turns > 0) summary.push(m.duration_turns + '-turn');
-    if (m.mode === 'activated' && m.uses_per_session > 0) summary.push((m.uses_per_session - (m.uses_this_session || 0)) + '/' + m.uses_per_session + ' uses');
-    if (m.active && m.remaining_turns != null) summary.push('active · ' + m.remaining_turns + (m.duration_turns ? '/' + m.duration_turns : '') + ' turns left');
-    else if (m.active) summary.push('active');
+    var plain = describeModifier(m);
+    var extras = [];
+    if (m.mode === 'activated' && m.uses_per_session > 0) extras.push((m.uses_per_session - (m.uses_this_session || 0)) + ' of ' + m.uses_per_session + ' uses left');
+    if (m.active && m.remaining_turns != null) extras.push('active — ' + m.remaining_turns + (m.duration_turns ? ' of ' + m.duration_turns : '') + ' turns left');
+    else if (m.active) extras.push('active now');
 
     var spent = m.mode === 'activated' && m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session;
     var control;
@@ -349,8 +395,8 @@
     }
     return h('div', { className: 'rp-mod' },
       h('div', { className: 'rp-mod-info' },
-        h('span', null, h('span', { className: 'rp-mod-mode' }, m.mode), ' ', h('strong', null, m.label || (m.type === 'none' ? 'effect' : m.type.replace('_', ' ')))),
-        h('span', { className: 'rp-mod-meta' }, summary.join(' · '))),
+        h('span', null, h('strong', null, m.label || (m.type === 'none' ? 'Effect' : typePhrase(m.type, m.value)))),
+        h('span', { className: 'rp-mod-meta' }, plain + (extras.length ? ' · ' + extras.join(' · ') : ''))),
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
 
@@ -705,9 +751,7 @@
               h('div', { className: 'rp-effect-info' },
                 h('strong', null, e.holder_name + ' — ' + e.item_name),
                 h('span', { className: 'rp-effect-meta' },
-                  (e.ability_name ? e.ability_name + ' · ' : '') + (e.label ? e.label + ' · ' : '') +
-                  (e.type === 'none' ? 'narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
-                  (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : ''))),
+                  (e.ability_name ? e.ability_name + ' · ' : '') + describeActiveEffect(e))),
               h('div', { className: 'rp-effect-ctl' },
                 e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
                 h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
@@ -755,8 +799,7 @@
     function openPop() { var s = Object.assign({}, seen); effects.forEach(function (e) { s[e.id] = true; }); bossEffects.forEach(function (e) { s['b' + e.id] = true; }); setSeen(s); setOpen(true); }
     function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
     function row(e) {
-      var detail = (e.type === 'none' ? 'Narrative' : fmt(e.value) + ' ' + e.type.replace('_', ' ')) + ' · → ' + e.target_label +
-        (e.remaining_turns != null ? ' · ' + e.remaining_turns + (e.duration_turns ? '/' + e.duration_turns : '') + ' turns left' : '');
+      var detail = describeActiveEffect(e);
       return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
         h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
           h('span', { className: 'rp-skill-text' },

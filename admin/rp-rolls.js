@@ -265,19 +265,38 @@
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
 
+  // Plain-language summary of a modifier (matches the player-facing wording in
+  // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
+  // holder, this turn. · 2 uses/session".
+  var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
+  function typePhrase(type, value) {
+    var v = (value >= 0 ? '+' : '') + value;
+    switch (type) {
+      case 'attack_roll': return v + ' attack roll bonus';
+      case 'defense_roll': return v + ' defense roll bonus';
+      case 'heal_roll': return v + ' healing roll bonus';
+      case 'attack_output': return v + ' bonus attack damage';
+      case 'heal_output': return v + ' bonus healing';
+      case 'shield': return 'grants ' + value + ' shield';
+      case 'heal': return 'restores ' + value + ' HP';
+    }
+    return v + ' ' + String(type || '').replace(/_/g, ' ');
+  }
   function modifierSummary(m, catalogue) {
+    if (m.type === 'none') return m.label ? m.label : 'Narrative effect (shown from the description).';
     var t;
     switch (m.target_kind) {
-      case 'self': t = 'self'; break;
-      case 'group': t = 'group'; break;
-      case 'class': t = String(m.target_ref || '').toUpperCase(); break;
-      case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'holder of ' + (it ? it.name : 'item'); break; }
-      case 'party_member': t = 'chosen target'; break;
+      case 'self': t = 'the holder'; break;
+      case 'group': t = 'the whole party'; break;
+      case 'class': t = 'all ' + (CLASS_PLURAL[m.target_ref] || String(m.target_ref || '').toUpperCase()); break;
+      case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'whoever holds ' + (it ? it.name : 'the item'); break; }
+      case 'party_member': t = 'a chosen ally'; break;
       default: t = '';
     }
-    return (m.type === 'none' ? 'narrative' : fmtNum(m.value) + ' ' + m.type.replace('_', ' ')) + ' · → ' + t + ' · ' + m.mode +
-      (m.duration_turns > 0 ? ' · ' + m.duration_turns + 't' : '') +
-      (m.mode === 'activated' && m.uses_per_session > 0 ? ' · ' + m.uses_per_session + '×' : '');
+    var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
+    var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
+    var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
+    return when + ', ' + typePhrase(m.type, m.value) + ' to ' + t + dur + '.' + uses;
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────
