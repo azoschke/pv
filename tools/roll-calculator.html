@@ -253,10 +253,14 @@
     .rp-boss-eye .material-icons { font-size: 1.05rem; }
     .rp-skill-picks { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; margin: 0.25rem 0 0.35rem; }
     .rp-skill-picks label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer; }
-    /* One targeting block per chosen-target effect on a boss skill. */
-    .rp-skill-effects { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.4rem; }
-    .rp-skill-eff { border-left: 2px solid var(--border-color); padding-left: 0.5rem; }
-    .rp-skill-eff-label { display: block; font-size: 0.78rem; color: var(--text-secondary); text-transform: capitalize; margin-bottom: 0.2rem; }
+    /* Boss skill = named container (like an item ability) with its effects
+       listed below, each fired on its own. */
+    .rp-boss-skill { border-top: 1px solid var(--border-color); padding: 0.4rem 0; }
+    .rp-boss-skill:first-of-type { border-top: 0; }
+    .rp-boss-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .rp-boss-skill-head strong { font-family: 'Stoke', serif; }
+    .rp-boss-skill-desc { margin: 0.15rem 0 0.3rem; font-size: 0.82rem; color: var(--text-secondary); white-space: pre-wrap; }
+    .rp-boss-skill .rp-mod { padding-left: 0.6rem; border-left: 2px solid var(--border-color); margin-top: 0.3rem; }
     .rp-hits { display: inline-flex; align-items: center; gap: 0.15rem; color: var(--text-secondary); font-size: 0.9rem; }
     .rp-hits-input { width: 3.2rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
       background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.35rem; }

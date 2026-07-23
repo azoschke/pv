@@ -299,33 +299,31 @@
   function bossEffectSummary(e) {
     var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
     var core = e.type === 'damage' ? e.value + ' dmg' : e.type === 'dot' ? e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' · ' + e.duration_turns + 't' : ' · until removed') : 'narrative';
-    return core + ' · → ' + t;
+    return core + (e.type === 'none' ? '' : ' · → ' + t) + (e.uses_per_session > 0 ? ' · ' + e.uses_per_session + '×/session' : '');
   }
 
-  // Skill container: name/description/uses. Numbers live on its effects.
+  // Skill container: name + description. Numbers and uses live on its effects,
+  // which the DM fires one at a time (like an item ability's modifiers).
   function BossAbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
-    var usesState = useState(String(a.uses_per_session != null ? a.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, uses_per_session: parseInt(uses, 10) || 0 }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-card-light)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the effect)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the skill)'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
-        h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })),
       h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Using the skill fires ALL of its effects at once — add them after creating the skill. Skills fire only while the turn is locked and stay hidden from players until the DM reveals them.'),
+        'Add effects after creating the skill — the DM fires each effect on its own, with its own uses. Skills fire only while the turn is locked and stay hidden from players until the DM reveals them.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -338,12 +336,13 @@
     var tkState = useState(x.target_kind || 'party_member'); var tk = tkState[0], setTk = tkState[1];
     var refState = useState(x.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
     var durState = useState(String(x.duration_turns != null ? x.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
+    var usesState = useState(String(x.uses_per_session != null ? x.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       var payload = { type: type, value: parseInt(val, 10) || 0, target_kind: tk,
-        target_ref: tk === 'class' ? ref : null, duration_turns: parseInt(dur, 10) || 0 };
+        target_ref: tk === 'class' ? ref : null, duration_turns: parseInt(dur, 10) || 0, uses_per_session: parseInt(uses, 10) || 0 };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
@@ -361,9 +360,11 @@
           h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
         type === 'dot' ? h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
-          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null),
+          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
+        h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
+          h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
       h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. One pick covers every chosen-player effect on the skill.'),
+        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. The DM fires this effect on its own, with its own uses/session.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -474,7 +475,6 @@
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
                 h('div', null,
                   h('strong', null, a.name),
-                  a.uses_per_session > 0 ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0 0.3rem' } }, a.uses_per_session + '×/session') : null,
                   a.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, a.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),

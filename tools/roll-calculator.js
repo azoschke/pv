@@ -536,64 +536,63 @@
     if (a.uses_per_session > 0) bits.push((a.uses_per_session - (a.uses_this_session || 0)) + '/' + a.uses_per_session + ' uses');
     return bits.join(' · ');
   }
-  // A skill may carry several effects, each aimed independently. Chosen-target
-  // effects (party_member / party_members) each get their own picker; class /
-  // group / narrative effects auto-resolve and are listed read-only.
-  function DMBossSkillRow(props) {
-    var a = props.ability; var boss = props.boss;
-    var effects = a.effects || [];
-    var selState = useState({}); var sel = selState[0], setSel = selState[1]; // effectId -> {single} or {multi:{id:bool}}
+  // One effect of a boss skill — its own targeting, hits, and Use button, plus
+  // its own session-use count. Mirrors an item's modifier row.
+  function DMBossEffectRow(props) {
+    var e = props.effect; var boss = props.boss; var living = props.living;
+    var singleState = useState(''); var single = singleState[0], setSingle = singleState[1];
+    var picksState = useState({}); var picks = picksState[0], setPicks = picksState[1];
     var hitsState = useState('1'); var hits = hitsState[0], setHits = hitsState[1];
-    var hasDamage = effects.some(function (e) { return e.type === 'damage' || e.type === 'dot'; });
-    var spent = a.uses_per_session > 0 && (a.uses_this_session || 0) >= a.uses_per_session;
-    var living = (props.party || []).filter(function (p) { return !p.eliminated; });
-    var pickEffects = effects.filter(function (e) { return e.type !== 'none' && (e.target_kind === 'party_member' || e.target_kind === 'party_members'); });
-
-    function picksFor(e) {
-      var s = sel[e.id]; if (!s) return [];
-      if (e.target_kind === 'party_member') return s.single ? [Number(s.single)] : [];
-      return Object.keys(s.multi || {}).filter(function (k) { return s.multi[k]; }).map(Number);
-    }
-    function setSingle(id, v) { var n = Object.assign({}, sel); n[id] = { single: v }; setSel(n); }
-    function toggleMulti(id, mid) { var n = Object.assign({}, sel); var cur = Object.assign({}, (n[id] && n[id].multi) || {}); cur[mid] = !cur[mid]; n[id] = { multi: cur }; setSel(n); }
-    var allPicked = pickEffects.every(function (e) { return picksFor(e).length > 0; });
-    var canUse = props.turnLocked && !boss.defeated && !spent && effects.length && allPicked;
+    var needSingle = e.type !== 'none' && e.target_kind === 'party_member';
+    var needMulti = e.type !== 'none' && e.target_kind === 'party_members';
+    var hasDamage = e.type === 'damage' || e.type === 'dot';
+    var spent = e.uses_per_session > 0 && (e.uses_this_session || 0) >= e.uses_per_session;
+    var pickedIds = Object.keys(picks).filter(function (k) { return picks[k]; }).map(Number);
+    var canUse = props.turnLocked && !boss.defeated && !spent &&
+      (needMulti ? pickedIds.length > 0 : needSingle ? !!single : true);
+    var summary = bossEffectText(e) + (e.uses_per_session > 0 ? ' · ' + (e.uses_per_session - (e.uses_this_session || 0)) + '/' + e.uses_per_session + ' uses' : '');
+    function toggle(id) { var n = Object.assign({}, picks); n[id] = !n[id]; setPicks(n); }
     function use() {
-      var effectTargets = {};
-      pickEffects.forEach(function (e) { effectTargets[e.id] = picksFor(e); });
-      props.onUseSkill(boss, a, effectTargets, Math.max(1, parseInt(hits, 10) || 1));
-      setSel({}); setHits('1');
+      var ids = needMulti ? pickedIds : (needSingle && single ? [Number(single)] : []);
+      props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1));
+      setSingle(''); setPicks({}); setHits('1');
     }
     return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
       h('div', { className: 'rp-mod-info' },
-        h('span', null, h('strong', null, a.name)),
-        h('span', { className: 'rp-mod-meta' }, bossSkillSummary(a)),
-        // One targeting block per chosen-target effect, so mixed skills are clear.
-        pickEffects.length ? h('div', { className: 'rp-skill-effects' },
-          pickEffects.map(function (e) {
-            return h('div', { className: 'rp-skill-eff', key: e.id },
-              h('span', { className: 'rp-skill-eff-label' }, bossEffectText(e)),
-              e.target_kind === 'party_member'
-                ? h('select', { className: 'rp-select', value: (sel[e.id] && sel[e.id].single) || '', onChange: function (ev) { setSingle(e.id, ev.target.value); } },
-                    h('option', { value: '' }, 'target…'),
-                    living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); }))
-                : h('div', { className: 'rp-skill-picks' },
-                    living.map(function (p) {
-                      var on = sel[e.id] && sel[e.id].multi && sel[e.id].multi[p.member_id];
-                      return h('label', { key: p.member_id },
-                        h('input', { type: 'checkbox', checked: !!on, onChange: function () { toggleMulti(e.id, p.member_id); } }),
-                        h('span', null, p.member_name));
-                    })));
+        h('span', { className: 'rp-mod-meta' }, summary),
+        needMulti ? h('div', { className: 'rp-skill-picks' },
+          living.map(function (p) {
+            return h('label', { key: p.member_id },
+              h('input', { type: 'checkbox', checked: !!picks[p.member_id], onChange: function () { toggle(p.member_id); } }),
+              h('span', null, p.member_name));
           })) : null),
       h('div', { className: 'rp-mod-control' },
-        h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
-          title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
-          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } }, a.revealed ? 'Shown' : 'Show'),
+        needSingle ? h('select', { className: 'rp-select', value: single, onChange: function (ev) { setSingle(ev.target.value); } },
+          h('option', { value: '' }, 'target…'),
+          living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
-          h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits,
-            onChange: function (e) { setHits(e.target.value); } })) : null,
+          h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Spent' : 'Use')));
+  }
+  // A skill is a named container (like an item ability): a Show toggle plus its
+  // effects, each fired on its own.
+  function DMBossSkillRow(props) {
+    var a = props.ability; var boss = props.boss;
+    var effects = a.effects || [];
+    var living = (props.party || []).filter(function (p) { return !p.eliminated; });
+    return h('div', { className: 'rp-boss-skill' },
+      h('div', { className: 'rp-boss-skill-head' },
+        h('strong', null, a.name),
+        h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
+          title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
+          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } }, a.revealed ? 'Shown' : 'Show')),
+      a.description ? h('p', { className: 'rp-boss-skill-desc' }, a.description) : null,
+      effects.length
+        ? effects.map(function (e) {
+            return h(DMBossEffectRow, { key: e.id, effect: e, boss: boss, living: living, turnLocked: props.turnLocked, onUseEffect: props.onUseEffect });
+          })
+        : h('p', { className: 'rp-note' }, 'No effects configured (add them in the admin Boss Library).'));
   }
   // Per-boss vulnerability window (damage taken multiplier).
   function DMBossVuln(props) {
@@ -641,7 +640,7 @@
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
           h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
           (b.abilities || []).map(function (a) {
-            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill });
+            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
           }),
           !(b.abilities || []).length ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null);
       }),
@@ -717,7 +716,7 @@
 
       tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
         onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
-        onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
+        onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
 
       tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, onResetAction: props.onResetAction }) : null,
 
@@ -908,7 +907,7 @@
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseSkill(b, a, effectTargets, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, effect_targets: effectTargets || {}, hits: hits || 1 }); }); }
+    function onUseEffect(b, e, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
@@ -954,7 +953,7 @@
         bosses: data.bosses || [], bossEffects: data.boss_effects || [], library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
         onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
-        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseSkill: onUseSkill, onRevealSkill: onRevealSkill,
+        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction }) : null,
 
       c ? h('div', { className: 'rp-grid' },
