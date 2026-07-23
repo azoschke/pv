@@ -340,39 +340,74 @@
   }
 
   // ── My Items ──────────────────────────────────────────────────────────────
-  // Card grid matching the My Profile > My Items look: square art with the
-  // torn contrast border on top, controls below. 2-up on large screens.
-  function CardMedia(props) {
-    var errState = useState(false); var imgErr = errState[0], setImgErr = errState[1];
-    return h('div', { className: 'rp-card-media' },
-      (props.url && !imgErr)
-        ? h('img', { src: props.url, alt: '', onError: function () { setImgErr(true); } })
-        : h('span', { className: 'rp-card-sig' }, (props.name || '').toLowerCase()),
-      h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' }));
+  // Mirrors My Profile > My Items: a grid of card thumbnails (art + name +
+  // ability count) that each open a detail popup. The popup carries the
+  // interactive modifier controls. Reuses the shared .venue-card / .venue-modal
+  // / .contrast-border styles from styles.css so the torn border and fallback
+  // tile behave exactly like the profile view.
+  var ITEM_FALLBACK_BG = 'linear-gradient(135deg, #2a1f1c 0%, #14100e 100%)';
+  function ItemCard(props) {
+    var it = props.item; var n = (it.abilities || []).length;
+    return h('button', { type: 'button', className: 'venue-card rp-item-card', 'aria-label': it.name, onClick: props.onOpen },
+      h('div', { className: 'venue-card-media' },
+        it.image_url
+          ? h('img', { className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
+          : h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+      h('div', { className: 'venue-card-body' },
+        h('div', { className: 'venue-card-title-row' }, h('h3', { className: 'venue-card-title' }, it.name)),
+        n ? h('p', { className: 'venue-card-location' }, n + (n === 1 ? ' ABILITY' : ' ABILITIES')) : null));
+  }
+  function ItemModal(props) {
+    var it = props.item;
+    useEffect(function () {
+      function onKey(e) { if (e.key === 'Escape' && props.onClose) props.onClose(); }
+      document.addEventListener('keydown', onKey);
+      var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+      return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    }, []);
+    var media = it.image_url
+      ? h('div', { className: 'contrast-media' },
+          h('img', { className: 'venue-modal-img', src: it.image_url, alt: '' }),
+          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }))
+      : h('div', { className: 'venue-modal-img venue-modal-img-fallback', style: { background: ITEM_FALLBACK_BG } },
+          h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
+          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }));
+    return h('div', { className: 'venue-modal-overlay is-open', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
+      h('div', { className: 'venue-modal rp-item-modal', role: 'dialog', 'aria-modal': 'true' },
+        h('button', { type: 'button', className: 'venue-modal-close', 'aria-label': 'Close', onClick: props.onClose }, '✕'),
+        media,
+        h('div', { className: 'venue-modal-content' },
+          h('h2', { className: 'venue-modal-title' }, it.name),
+          it.description ? h('p', { className: 'venue-modal-desc', style: { whiteSpace: 'pre-wrap' } }, it.description) : null,
+          (it.abilities || []).length ? h('div', { className: 'rp-item-abilities' },
+            (it.abilities || []).map(function (ab) {
+              return h('div', { className: 'rp-item-ability', key: ab.id },
+                h('div', { className: 'rp-ability-head' },
+                  h('strong', null, ab.name),
+                  ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
+                    onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
+                ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
+                (ab.modifiers || []).map(function (m) {
+                  return h(ModifierRow, { key: m.id, modifier: m, party: props.party, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
+                }));
+            })) : null)));
   }
   function ItemsPanel(props) {
     var items = props.items;
+    var openState = useState(null); var openId = openState[0], setOpenId = openState[1];
     if (!items.length) return h('div', { className: 'rp-card' }, h('h3', null, 'My Items'), h('p', { className: 'rp-note' }, 'No items equipped. An admin assigns and equips items.'));
+    // Re-derive the open item from live props each render so its controls track
+    // the latest poll (active/uses state) instead of a stale click-time snapshot.
+    var openItem = openId ? items.filter(function (it) { return it.item_id === openId; })[0] : null;
     return h('div', { className: 'rp-card' }, h('h3', null, 'My Items'),
       h('div', { className: 'rp-items-grid' },
         items.map(function (it) {
-          return h('div', { className: 'rp-item-card', key: it.item_id },
-            h(CardMedia, { url: it.image_url, name: it.name }),
-            h('div', { className: 'rp-item-card-body' },
-              h('div', { className: 'rp-item-name' }, it.name),
-              it.description ? h('p', { className: 'rp-item-flavor' }, it.description) : null,
-              (it.abilities || []).map(function (ab) {
-                return h('div', { className: 'rp-ability', key: ab.id },
-                  h('div', { className: 'rp-ability-head' },
-                    h('strong', null, ab.name),
-                    ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
-                      onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
-                  ab.description ? h('p', { className: 'rp-ability-desc' }, ab.description) : null,
-                  (ab.modifiers || []).map(function (m) {
-                    return h(ModifierRow, { key: m.id, modifier: m, party: props.party, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
-                  }));
-              })));
-        })));
+          return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenId(it.item_id); } });
+        })),
+      openItem ? h(ItemModal, { item: openItem, party: props.party, locked: props.locked,
+        onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll,
+        onClose: function () { setOpenId(null); } }) : null);
   }
 
   // ── Personal buffs ────────────────────────────────────────────────────────
@@ -459,19 +494,17 @@
         props.party.map(function (p) {
           var ko = p.eliminated;
           return h('div', { className: 'rp-party-row' + (ko ? ' is-elim' : '') + (p.member_id === props.myId ? ' is-me' : ''), key: p.member_id },
+            h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
             h('div', { className: 'rp-party-id' },
-              h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
-              h('div', { className: 'rp-party-names' },
-                h('strong', null, p.member_name),
-                h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role))),
+              h('strong', { className: 'rp-party-name' }, p.member_name),
+              ko ? h('span', { className: 'rp-elim-tag' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
-              h('div', { className: 'rp-hp-edit' },
+              h('div', { className: 'rp-hp-edit', title: 'HP' },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
-                h(HpStepper, { value: p.current_hp, max: p.max_hp, showMax: true, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
-              h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : '') },
+                h(HpStepper, { value: p.current_hp, max: p.max_hp, showMax: true, compact: true, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
+              h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : ''), title: 'Shield' },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
-                h(HpStepper, { value: p.shield_value, max: shieldMax, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } })),
-              ko ? h('span', { className: 'rp-elim-tag' }, 'KO') : null));
+                h(HpStepper, { value: p.shield_value, max: shieldMax, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } }))));
         })));
   }
 

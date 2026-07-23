@@ -98,13 +98,12 @@
     .rp-shield-edit.is-on { color: var(--accent-gold); }
     .rp-shield-edit .material-icons { font-size: 1rem; }
 
-    .rp-party { display: flex; flex-direction: column; gap: 0.35rem; }
-    .rp-party-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.45rem 0.5rem; border-radius: 0.4rem; background: var(--bg-card-light); }
-    .rp-party-row.is-me { outline: 2px solid var(--accent-brown); }
-    .rp-party-row.is-elim { opacity: 0.45; }
-    .rp-party-id { display: flex; flex-direction: column; }
-    .rp-party-role { font-size: 0.78rem; color: var(--text-secondary); }
-    .rp-party-stats { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; justify-content: flex-end; }
+    .rp-party { display: flex; flex-direction: column; gap: 0.25rem; }
+    .rp-party-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.4rem; border-radius: 0.4rem; background: var(--bg-card-light); }
+    .rp-party-row.is-me { outline: 1px solid var(--accent-brown); }
+    .rp-party-row.is-elim { opacity: 0.5; }
+    .rp-party-role { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
+    .rp-party-stats { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
     .rp-shield-tag { display: inline-flex; align-items: center; gap: 0.2rem; color: var(--text-secondary); font-size: 0.85rem; }
     .rp-shield-tag .material-icons { font-size: 1rem; }
     .rp-shield-tag.is-on { color: var(--accent-gold); }
@@ -205,19 +204,34 @@
 
     /* Avatars (roster portraits) — row layout must beat the base .rp-party-id
        column rule above, so flex-direction is set explicitly. */
-    .rp-avatar { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-color); }
+    .rp-avatar { width: 1.8rem; height: 1.8rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-color); }
     .rp-avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-brown); color: #fff;
-      font-family: 'Stoke', serif; font-size: 0.9rem; }
-    .rp-party-id { display: flex; flex-direction: row; align-items: center; gap: 0.55rem; min-width: 0; }
-    .rp-party-names { display: flex; flex-direction: column; min-width: 0; }
-    .rp-party-names strong { overflow-wrap: anywhere; }
+      font-family: 'Stoke', serif; font-size: 0.82rem; }
+    /* Header avatar can stay a touch larger. */
+    .rp-me-id .rp-avatar { width: 2rem; height: 2rem; }
+    .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+    .rp-party-name { font-size: 0.9rem; overflow-wrap: anywhere; }
+    /* Tighter steppers inside the party list so many members stay compact. */
+    .rp-party .rp-btn.is-small { padding: 0.05rem 0.42rem; }
+    .rp-party .rp-hp-edit, .rp-party .rp-shield-edit { gap: 0.2rem; }
+    .rp-party .rp-hp-edit .material-icons, .rp-party .rp-shield-edit .material-icons { font-size: 0.9rem; }
+    .rp-party .rp-stepper { gap: 0.2rem; }
+    .rp-party .rp-hp-max { font-size: 0.72rem; }
 
-    /* My Items — card grid matching the My Profile items view (square art,
-       torn contrast border). 2-up in the column on large screens. */
-    .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 0.8rem; }
-    .rp-item-card { background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.55rem; overflow: hidden; }
-    .rp-item-card .rp-card-media { aspect-ratio: 1 / 1; }
-    .rp-item-card-body { padding: 0.55rem 0.7rem 0.7rem; }
+    /* My Items — mirrors My Profile > My Items: card thumbnails that open a
+       detail popup. Reuses .venue-card / .venue-modal / .contrast-border from
+       styles.css (which set position:relative + overflow:hidden on the media,
+       so the torn border is clipped to the card instead of the whole page).
+       Item art is square, unlike the 16:10 venue default. */
+    .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.9rem; }
+    .rp-item-card { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; padding: 0; }
+    .rp-item-card .venue-card-media { aspect-ratio: 1 / 1; }
+    .rp-item-modal { max-width: 460px; }
+    .rp-item-modal .venue-modal-img, .rp-item-modal .contrast-media { aspect-ratio: 1 / 1; }
+    .rp-item-abilities { margin-top: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .rp-item-ability { padding: 0.7rem 0.75rem; background: var(--bg-card-light); border-radius: 0.4rem; }
+    .rp-item-ability > .rp-ability-head strong { font-family: 'Stoke', serif; font-size: 0.98rem; }
+    .rp-item-ability-desc { margin: 0.15rem 0 0.4rem; color: var(--text-secondary); white-space: pre-wrap; font-size: 0.88rem; }
 
     /* DM: per-boss visibility toggle on the battlefield card + multi-target picks */
     .rp-boss-eye { margin-left: auto; align-self: flex-start; background: none; border: 0; cursor: pointer; color: var(--text-secondary); padding: 0.1rem; }
