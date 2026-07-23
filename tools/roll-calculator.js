@@ -149,17 +149,23 @@
       h('div', { className: 'rp-hpbar' }, h('div', { className: 'rp-hpbar-fill', style: { width: pct + '%' } })),
       h('span', { className: 'rp-boss-hp-num' }, b.current_hp + ' / ' + b.max_hp));
   }
+  function vulnText(b) {
+    if (!b || !(b.damage_mult > 1)) return null;
+    return b.damage_mult + '× vulnerable' + (b.damage_mult_turns != null ? ' · ' + b.damage_mult_turns + 't' : '');
+  }
   function BossBar(props) {
     var bosses = props.bosses || [];
     if (!bosses.length) return null;
     return h('div', { className: 'rp-bossbar' },
       bosses.map(function (b) {
+        var vuln = vulnText(b);
         return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : ''), key: b.id },
           b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
           h('div', { className: 'rp-boss-info' },
             h('div', { className: 'rp-boss-name' }, b.name,
               b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-              props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null),
+              props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
+              vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
             h(BossHpBar, { boss: b })),
           props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
             title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
@@ -180,6 +186,8 @@
     var capped = Math.min(finalDmg, rules.max_damage_per_attack);
     var living = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var selected = bossPick && living.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (living.length ? String(living[0].id) : '');
+    var selBoss = living.filter(function (b) { return String(b.id) === selected; })[0];
+    var effDmg = selBoss && selBoss.damage_mult > 1 ? Math.max(1, Math.floor(capped * selBoss.damage_mult)) : capped;
     var canApply = living.length > 0 && !props.locked && props.canAttack && roll !== '' && capped > 0 && !busy;
 
     function apply() {
@@ -206,7 +214,8 @@
           h('select', { className: 'rp-select', value: selected, disabled: props.locked || busy, onChange: function (e) { setBossPick(e.target.value); } },
             living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))) : null,
         h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: apply },
-          busy ? 'Applying…' : 'Apply ' + capped + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
+          busy ? 'Applying…' : 'Apply ' + (effDmg !== capped ? capped + ' → ' + effDmg : capped) + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
+        (selBoss && selBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, selBoss.name + ' is ' + selBoss.damage_mult + '× vulnerable — damage is multiplied.') : null,
         msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null) : null);
   }
   function DefensePanel(props) {
@@ -468,8 +477,9 @@
 
   // ── DM panel ──────────────────────────────────────────────────────────────
   function bossEffectText(e) {
+    if (e.type === 'none') return 'narrative';  // no target for narrative effects
     var t = e.target_kind === 'party_member' ? 'chosen player' : e.target_kind === 'party_members' ? 'chosen players' : e.target_kind === 'class' ? String(e.target_ref || '').toUpperCase() : 'party';
-    var core = e.type === 'damage' ? e.value + ' dmg' : e.type === 'dot' ? e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' (' + e.duration_turns + 't)' : ' (until removed)') : 'narrative';
+    var core = e.type === 'damage' ? e.value + ' dmg' : e.value + ' dmg/turn' + (e.duration_turns > 0 ? ' (' + e.duration_turns + 't)' : ' (until removed)');
     return core + ' → ' + t;
   }
   function bossSkillSummary(a) {
@@ -485,8 +495,11 @@
     var effects = a.effects || [];
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
     var picksState = useState({}); var picks = picksState[0], setPicks = picksState[1];
+    var hitsState = useState('1'); var hits = hitsState[0], setHits = hitsState[1];
     var needMulti = effects.some(function (e) { return e.type !== 'none' && e.target_kind === 'party_members'; });
     var needSingle = !needMulti && effects.some(function (e) { return e.type !== 'none' && e.target_kind === 'party_member'; });
+    // "Hits" only matters when the skill actually deals numbers.
+    var hasDamage = effects.some(function (e) { return e.type === 'damage' || e.type === 'dot'; });
     var spent = a.uses_per_session > 0 && (a.uses_this_session || 0) >= a.uses_per_session;
     var living = (props.party || []).filter(function (p) { return !p.eliminated; });
     var pickedIds = Object.keys(picks).filter(function (k) { return picks[k]; }).map(Number);
@@ -495,8 +508,8 @@
     function togglePick(id) { var n = Object.assign({}, picks); n[id] = !n[id]; setPicks(n); }
     function use() {
       var ids = needMulti ? pickedIds : (needSingle && pickTarget ? [Number(pickTarget)] : []);
-      props.onUseSkill(boss, a, ids);
-      setPicks({}); setPickTarget('');
+      props.onUseSkill(boss, a, ids, Math.max(1, parseInt(hits, 10) || 1));
+      setPicks({}); setPickTarget(''); setHits('1');
     }
     return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
       h('div', { className: 'rp-mod-info' },
@@ -512,7 +525,32 @@
         needSingle ? h('select', { className: 'rp-select', value: pickTarget, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+        hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
+          h('span', null, '×'),
+          h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits,
+            onChange: function (e) { setHits(e.target.value); } })) : null,
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Spent' : 'Use')));
+  }
+  // Per-boss vulnerability window (damage taken multiplier).
+  function DMBossVuln(props) {
+    var b = props.boss;
+    var multState = useState(String(b.damage_mult != null ? b.damage_mult : 2)); var mult = multState[0], setMult = multState[1];
+    var turnsState = useState(''); var turns = turnsState[0], setTurns = turnsState[1];
+    var active = b.damage_mult > 1;
+    function apply() {
+      var mv = parseFloat(mult) || 1;
+      var tv = turns === '' ? null : Math.max(0, parseInt(turns, 10) || 0);
+      props.onSetVuln(b, mv, tv);
+    }
+    return h('div', { className: 'rp-vuln' },
+      h('span', { className: 'rp-vuln-label' }, 'Vulnerability'),
+      active ? h('span', { className: 'rp-boss-vuln-tag' }, vulnText(b)) : null,
+      h('label', { className: 'rp-hits', title: 'Damage-taken multiplier' },
+        h('span', null, '×'),
+        h('input', { className: 'rp-hits-input', type: 'number', min: 1, step: '0.5', inputMode: 'decimal', value: mult, onChange: function (e) { setMult(e.target.value); } })),
+      h('input', { className: 'rp-hits-input', type: 'number', min: 0, inputMode: 'numeric', placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); }, style: { width: '5rem' } }),
+      h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
+      active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSetVuln(b, 1, null); } }, 'Clear') : null);
   }
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
@@ -537,6 +575,7 @@
                 onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
                 h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
+          h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
           (b.abilities || []).map(function (a) {
             return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseSkill: props.onUseSkill });
           }),
@@ -547,7 +586,7 @@
       props.bossEffects && props.bossEffects.length ? h('div', { style: { marginTop: '0.75rem' } },
         h('h4', { className: 'rp-dm-sub' }, 'Active boss effects'),
         props.bossEffects.map(function (e) {
-          var detail = (e.type === 'dot' ? e.value + ' dmg/turn' : 'narrative') + ' · → ' + e.target_label +
+          var detail = (e.type === 'dot' ? e.value + ' dmg/turn' + (e.target_label ? ' · → ' + e.target_label : '') : 'narrative') +
             (e.remaining_turns != null ? ' · ' + e.remaining_turns + ' turns left' : '');
           return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
             h('div', { className: 'rp-effect-info' },
@@ -613,7 +652,7 @@
           })) : null,
 
       tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
-        onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
+        onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
         onUseSkill: props.onUseSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
 
       tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, onResetAction: props.onResetAction }) : null,
@@ -667,7 +706,7 @@
     }
     function bossRow(e) {
       var key = 'b' + e.id;
-      var detail = (e.type === 'dot' ? e.value + ' dmg/turn' : 'Effect') + ' · → ' + e.target_label +
+      var detail = (e.type === 'dot' ? e.value + ' dmg/turn' + (e.target_label ? ' · → ' + e.target_label : '') : 'Narrative') +
         (e.remaining_turns != null ? ' · ' + e.remaining_turns + ' turns left' : '');
       return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
         h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
@@ -803,8 +842,9 @@
     function onBossAdd(libId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses', { boss_id: libId }); }); }
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
+    function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseSkill(b, a, targetIds) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, target_member_ids: targetIds || [] }); }); }
+    function onUseSkill(b, a, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', { ability_id: a.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
@@ -849,7 +889,7 @@
         bosses: data.bosses || [], bossEffects: data.boss_effects || [], library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
         onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
-        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onUseSkill: onUseSkill,
+        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseSkill: onUseSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction }) : null,
 
       c ? h('div', { className: 'rp-grid' },
