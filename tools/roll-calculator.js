@@ -80,8 +80,11 @@
       case 'heal_roll': return v + ' healing roll bonus';
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
+      case 'attack_mult': return '×' + value + ' attack damage';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
+      case 'damage': return 'deals ' + value + ' damage';
+      case 'dot': return value + ' damage per turn';
     }
     return v + ' ' + String(type || '').replace(/_/g, ' ');
   }
@@ -92,6 +95,7 @@
       case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
       case 'holder_item': return 'the item’s holder';
       case 'party_member': return 'a chosen ally';
+      case 'boss': return 'a chosen enemy';
     }
     return '';
   }
@@ -158,7 +162,10 @@
     ctx.myModifiers.forEach(function (m) { if (m.type === rollType) add(modLabel(m), m.value); });
     var outputRows = [], outputTotal = 0;
     if (outputType) ctx.myModifiers.forEach(function (m) { if (m.type === outputType) { outputRows.push({ label: modLabel(m), value: m.value }); outputTotal += m.value; } });
-    return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal };
+    // Attack damage multipliers (item attack_mult) stack multiplicatively.
+    var mult = 1, multRows = [];
+    if (kind === 'attack') ctx.myModifiers.forEach(function (m) { if (m.type === 'attack_mult' && m.value >= 1) { mult *= m.value; multRows.push({ label: modLabel(m), value: m.value }); } });
+    return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal, mult: mult, multRows: multRows };
   }
 
   function Breakdown(props) {
@@ -216,6 +223,12 @@
           props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
         h(BossHpBar, { boss: b }),
+        (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
+          b.dots.map(function (dt) {
+            return h('span', { className: 'rp-boss-dot', key: dt.id },
+              '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + '/turn' + (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : ''),
+              props.isDM ? h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear DoT', onClick: function () { props.onBossDotRemove(b, dt); } }, '✕') : null);
+          })) : null,
         revealed.length ? h('div', { className: 'rp-boss-skills' },
           h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function () { setOpen(!open); } },
             (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's')),
@@ -233,7 +246,7 @@
     if (!bosses.length) return null;
     return h('div', { className: 'rp-bossbar' },
       bosses.map(function (b) {
-        return h(BossCard, { key: b.id, boss: b, isDM: props.isDM, onBossVisible: props.onBossVisible });
+        return h(BossCard, { key: b.id, boss: b, isDM: props.isDM, onBossVisible: props.onBossVisible, onBossDotRemove: props.onBossDotRemove });
       }));
   }
 
@@ -245,7 +258,8 @@
     var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
     var msgState = useState(''); var msg = msgState[0], setMsg = msgState[1];
     var calc = computeRoll('attack', roll, ctx); var dmg = damageFor(rules, calc.total);
-    var finalDmg = Math.max(0, dmg + calc.outputTotal);
+    var preMult = dmg + calc.outputTotal;
+    var finalDmg = Math.max(0, Math.round(preMult * calc.mult));
     var capped = Math.min(finalDmg, rules.max_damage_per_attack);
     var living = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var selected = bossPick && living.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (living.length ? String(living[0].id) : '');
@@ -265,9 +279,10 @@
       props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
       h('label', { className: 'rp-input-label' }, 'Raw D' + rules.attack_die + ' roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: rules.attack_die, value: roll, placeholder: 'e.g. 14', onChange: function (e) { setRoll(clampNum(e.target.value, rules.attack_die)); } })),
       h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, calc.total + ' → ' + dmg + ' Damage'))),
-      calc.outputRows.length ? h('div', { className: 'rp-breakdown rp-breakdown-output' },
+      (calc.outputRows.length || calc.multRows.length) ? h('div', { className: 'rp-breakdown rp-breakdown-output' },
         h('div', { className: 'rp-bd-row rp-bd-base' }, h('span', null, 'Base Damage'), h('span', null, String(dmg))),
         calc.outputRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: i }, h('span', null, r.label + ' damage'), h('span', null, fmt(r.value))); }),
+        calc.multRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: 'm' + i }, h('span', null, r.label), h('span', null, '×' + r.value)); }),
         h('div', { className: 'rp-bd-rule' }), h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Final Damage'), h('span', null, String(finalDmg)))) : null,
       capped < finalDmg ? h('p', { className: 'rp-note' }, 'Capped at ' + rules.max_damage_per_attack + ' damage per attack.') : null,
 
@@ -373,6 +388,7 @@
   function ModifierRow(props) {
     var m = props.modifier;
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
+    var bossPickState = useState(''); var bossPick = bossPickState[0], setBossPick = bossPickState[1];
     var plain = describeModifier(m);
     var extras = [];
     if (m.mode === 'activated' && m.uses_per_session > 0) extras.push((m.uses_per_session - (m.uses_this_session || 0)) + ' of ' + m.uses_per_session + ' uses left');
@@ -380,15 +396,20 @@
     else if (m.active) extras.push('active now');
 
     var spent = m.mode === 'activated' && m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session;
+    var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var control;
     if (m.mode === 'activated') {
       var needTarget = m.target_kind === 'party_member';
+      var needBoss = m.target_kind === 'boss';  // damage / dot to an enemy
+      var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
       control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           props.party.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || spent || (needTarget && !pickTarget),
-          onClick: function () { props.onActivate(m, needTarget ? Number(pickTarget) : null); } }, spent ? 'Spent' : 'Activate'));
+        (needBoss && liveBosses.length > 1) ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setBossPick(e.target.value); } },
+          liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || spent || (needTarget && !pickTarget) || (needBoss && !bossSel),
+          onClick: function () { props.onActivate(m, needTarget ? Number(pickTarget) : null, needBoss ? bossSel : null); } }, spent ? 'Spent' : 'Activate'));
     } else {
       control = h('button', { type: 'button', className: 'rp-btn is-small' + (m.active ? ' is-active' : ''), disabled: props.locked,
         onClick: function () { props.onToggle(m, !m.active); } }, m.active ? 'On' : 'Off');
@@ -450,7 +471,7 @@
                     onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
                 ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
                 (ab.modifiers || []).map(function (m) {
-                  return h(ModifierRow, { key: m.id, modifier: m, party: props.party, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
+                  return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
                 }));
             })) : null)));
   }
@@ -466,7 +487,7 @@
         items.map(function (it) {
           return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenId(it.item_id); } });
         })),
-      openItem ? h(ItemModal, { item: openItem, party: props.party, locked: props.locked,
+      openItem ? h(ItemModal, { item: openItem, party: props.party, bosses: props.bosses, locked: props.locked,
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll,
         onClose: function () { setOpenId(null); } }) : null);
   }
@@ -925,7 +946,7 @@
     function onShield(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { shield_value: Math.max(0, Math.min(v, rules.shield_max)) }); }); }
     function onSaveBuffs(body) { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + dataRef.current.character.member_id, body).then(refresh); }
     function onToggle(m, enabled) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled }); }); }
-    function onActivate(m, targetId) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: targetId }); }); }
+    function onActivate(m, targetId, bossId) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: targetId, target_boss_id: bossId || null }); }); }
     function onActivateAll(ab) { act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid() }); }); }
     function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
     function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
@@ -949,6 +970,7 @@
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
+    function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
     function onUseEffect(b, e, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
@@ -988,7 +1010,7 @@
       (camp.turn_locked && !isDM) ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
       ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
 
-      h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible }),
+      h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),
 
       isDM ? null : h(FloatingSkills, { effects: data.active_effects || [], bossEffects: data.boss_effects || [] }),
 
@@ -1007,7 +1029,7 @@
           h(BuffPanel, { character: c, locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: !canAct(data, 'buff') ? actionBlockReason(data, 'buff') : '', onSave: onSaveBuffs })),
         h('div', { className: 'rp-col' },
           h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }),
-          h(ItemsPanel, { items: data.items || [], party: data.party || [], locked: actionLocked || ko, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll }))
+          h(ItemsPanel, { items: data.items || [], party: data.party || [], bosses: data.bosses || [], locked: actionLocked || ko, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll }))
       ) : h(PartyPanel, { party: data.party || [], myId: null, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }));
   }
 

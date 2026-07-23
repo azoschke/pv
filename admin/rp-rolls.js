@@ -29,7 +29,15 @@
   ];
   // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
   // for activated/always; manual for targeted), 'none' is narrative-only text.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'heal_output', 'shield', 'heal', 'none'];
+  // attack_mult multiplies a target's attack damage; damage / dot hit an enemy.
+  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'none'];
+  var MOD_TYPE_LABELS = {
+    attack_roll: 'Attack roll bonus', defense_roll: 'Defense roll bonus', heal_roll: 'Healing roll bonus',
+    attack_output: 'Bonus attack damage', attack_mult: 'Attack damage multiplier (×)', heal_output: 'Bonus healing',
+    shield: 'Grant shield', heal: 'Restore HP', damage: 'Direct damage (to an enemy)', dot: 'Damage over time (to an enemy)', none: 'Narrative only'
+  };
+  // Types that hit an enemy boss (target is fixed to the chosen boss, Activated mode).
+  var BOSS_MOD_TYPES = ['damage', 'dot'];
   var TARGET_KINDS = [
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Group (everyone)' },
@@ -212,11 +220,14 @@
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var guideState = useState(false); var guide = guideState[0], setGuide = guideState[1];
 
+    var isBoss = BOSS_MOD_TYPES.indexOf(type) !== -1;  // damage / dot → a chosen enemy
     async function submit(e) {
       e.preventDefault();
-      var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: type, target_kind: tk,
-        mode: mode, uses_per_session: parseInt(uses, 10) || 0, duration_turns: parseInt(dur, 10) || 0 };
-      if (tk === 'class') payload.target_ref = ref || 'tank';
+      var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: type,
+        target_kind: isBoss ? 'boss' : tk, mode: isBoss ? 'activated' : mode,
+        uses_per_session: parseInt(uses, 10) || 0, duration_turns: parseInt(dur, 10) || 0 };
+      if (isBoss) payload.target_ref = null;
+      else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_item') { if (!ref) { setErr('Pick the item whose holder is targeted.'); return; } payload.target_ref = ref; }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
@@ -235,25 +246,29 @@
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'Label'),
           h('input', { type: 'text', value: label, placeholder: 'optional', onChange: function (e) { setLabel(e.target.value); } })),
-        h('div', { className: 'portal-field' }, h('label', null, 'Value'),
+        h('div', { className: 'portal-field' }, h('label', null, type === 'attack_mult' ? 'Multiplier (×)' : type === 'damage' ? 'Damage' : type === 'dot' ? 'Damage / turn' : 'Value'),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } })),
         h('div', { className: 'portal-field' }, h('label', null, 'Type'),
           h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
-            MOD_TYPES.map(function (t) { return h('option', { key: t, value: t }, t.replace('_', ' ')); }))),
-        h('div', { className: 'portal-field' }, h('label', null, 'Target'),
-          h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
-            TARGET_KINDS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
-        tk === 'class' ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
+            MOD_TYPES.map(function (t) { return h('option', { key: t, value: t }, MOD_TYPE_LABELS[t] || t.replace('_', ' ')); }))),
+        isBoss ? h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+          h('input', { type: 'text', value: 'A chosen enemy (picked on use)', disabled: true }))
+          : h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+            h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
+              TARGET_KINDS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
+        (!isBoss && tk === 'class') ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
-        tk === 'holder_item' ? h('div', { className: 'portal-field' }, h('label', null, 'Of item'),
+        (!isBoss && tk === 'holder_item') ? h('div', { className: 'portal-field' }, h('label', null, 'Of item'),
           h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
             h('option', { value: '' }, '— pick —'),
             (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null,
-        h('div', { className: 'portal-field' }, h('label', null, 'Mode'),
-          h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
-            MODES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-        mode === 'activated' ? h('div', { className: 'portal-field' }, h('label', null, 'Uses (0=∞)'),
+        isBoss ? h('div', { className: 'portal-field' }, h('label', null, 'Mode'),
+          h('input', { type: 'text', value: 'Activated (press to use)', disabled: true }))
+          : h('div', { className: 'portal-field' }, h('label', null, 'Mode'),
+            h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
+              MODES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+        (isBoss || mode === 'activated') ? h('div', { className: 'portal-field' }, h('label', null, 'Uses (0=∞)'),
           h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null,
         h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
           h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } }))
@@ -277,8 +292,11 @@
       case 'heal_roll': return v + ' healing roll bonus';
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
+      case 'attack_mult': return '×' + value + ' attack damage';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
+      case 'damage': return 'deals ' + value + ' damage';
+      case 'dot': return value + ' damage per turn';
     }
     return v + ' ' + String(type || '').replace(/_/g, ' ');
   }
@@ -291,6 +309,7 @@
       case 'class': t = 'all ' + (CLASS_PLURAL[m.target_ref] || String(m.target_ref || '').toUpperCase()); break;
       case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'whoever holds ' + (it ? it.name : 'the item'); break; }
       case 'party_member': t = 'a chosen ally'; break;
+      case 'boss': t = 'a chosen enemy'; break;
       default: t = '';
     }
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
