@@ -153,31 +153,39 @@
     if (!b || !(b.damage_mult > 1)) return null;
     return b.damage_mult + '× vulnerable' + (b.damage_mult_turns != null ? ' · ' + b.damage_mult_turns + 't' : '');
   }
+  function BossCard(props) {
+    var b = props.boss;
+    var vuln = vulnText(b);
+    // Skills the DM has toggled visible show their name + description under the
+    // boss, persistently, for everyone. Collapsible so a long list stays tidy.
+    var revealed = b.revealed_skills || [];
+    var openState = useState(true); var open = openState[0], setOpen = openState[1];
+    return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : '') },
+      b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
+      h('div', { className: 'rp-boss-info' },
+        h('div', { className: 'rp-boss-name' }, b.name,
+          b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+          props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
+          vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
+        h(BossHpBar, { boss: b }),
+        revealed.length ? h('div', { className: 'rp-boss-skills' },
+          h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function () { setOpen(!open); } },
+            (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's')),
+          open ? revealed.map(function (s) {
+            return h('div', { className: 'rp-boss-tele', key: s.id },
+              h('strong', null, s.name), s.description ? ' — ' + s.description : null);
+          }) : null) : null),
+      props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
+        title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
+        onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
+        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null);
+  }
   function BossBar(props) {
     var bosses = props.bosses || [];
     if (!bosses.length) return null;
     return h('div', { className: 'rp-bossbar' },
       bosses.map(function (b) {
-        var vuln = vulnText(b);
-        // Skills the DM has toggled visible show their name + description under
-        // the boss, persistently, for everyone.
-        var revealed = b.revealed_skills || [];
-        return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : ''), key: b.id },
-          b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
-          h('div', { className: 'rp-boss-info' },
-            h('div', { className: 'rp-boss-name' }, b.name,
-              b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-              props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
-              vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
-            revealed.map(function (s) {
-              return h('div', { className: 'rp-boss-tele', key: s.id },
-                h('strong', null, s.name), s.description ? ' — ' + s.description : null);
-            }),
-            h(BossHpBar, { boss: b })),
-          props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
-            title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
-            onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null);
+        return h(BossCard, { key: b.id, boss: b, isDM: props.isDM, onBossVisible: props.onBossVisible });
       }));
   }
 

@@ -177,8 +177,10 @@
     .rp-hp-max { color: var(--text-secondary); font-size: 0.85rem; }
 
     /* Battlefield (bosses) */
-    .rp-bossbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
-    .rp-boss-card { display: flex; align-items: center; gap: 0.7rem; background: var(--bg-card); border: 1px solid var(--accent-red);
+    .rp-bossbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.6rem; margin-bottom: 1rem; align-items: start; }
+    /* Top-align so a card with a long skill list doesn't vertically center a
+       shorter neighbour's content. */
+    .rp-boss-card { display: flex; align-items: flex-start; gap: 0.7rem; background: var(--bg-card); border: 1px solid var(--accent-red);
       border-radius: 0.6rem; padding: 0.6rem 0.8rem; }
     .rp-boss-card.is-down { opacity: 0.5; border-color: var(--border-color); }
     .rp-boss-img { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 1px solid var(--border-color); }
@@ -190,9 +192,13 @@
     .rp-boss-hp.is-hidden { color: var(--text-secondary); font-size: 0.85rem; gap: 0.35rem; }
     .rp-boss-hp.is-hidden .material-icons { font-size: 1rem; }
     .rp-boss-hp-num { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; }
-    /* Skill telegraph text revealed under the boss name (before damage). */
-    .rp-boss-tele { font-size: 0.85rem; color: var(--text-primary); margin: 0.25rem 0; line-height: 1.35; }
-    .rp-boss-tele strong { font-family: 'Stoke', serif; color: var(--accent-gold); }
+    /* Revealed skill text under the boss. Uses text-secondary for legible
+       contrast on dark backgrounds. */
+    .rp-boss-skills { margin-top: 0.35rem; }
+    .rp-boss-skills-toggle { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    .rp-boss-tele { font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0; line-height: 1.35; }
+    .rp-boss-tele strong { font-family: 'Stoke', serif; color: var(--text-secondary); }
     .rp-hpbar { flex: 1 1 auto; height: 0.55rem; background: var(--bg-darker); border-radius: 0.4rem; overflow: hidden; border: 1px solid var(--border-color); }
     .rp-hpbar-fill { height: 100%; background: var(--accent-red); border-radius: 0.4rem; transition: width 0.4s ease; }
 
@@ -250,8 +256,8 @@
     .rp-hits { display: inline-flex; align-items: center; gap: 0.15rem; color: var(--text-secondary); font-size: 0.9rem; }
     .rp-hits-input { width: 3.2rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
       background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.35rem; }
-    .rp-boss-vuln-tag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold);
-      border: 1px solid var(--accent-gold); border-radius: 0.3rem; padding: 0 0.3rem; }
+    .rp-boss-vuln-tag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+      border: 1px solid var(--border-color); border-radius: 0.3rem; padding: 0 0.3rem; }
     .rp-vuln { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.4rem 0; border-top: 1px solid var(--border-color); margin-top: 0.3rem; }
     .rp-vuln-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
 
