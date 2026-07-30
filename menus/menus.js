@@ -12,16 +12,10 @@
 //                                   room_number, image_url, item_count }]
 //    GET /menus?venue_id=<id> -> { venue, categories: [{ id, name, icon,
 //                                   sort_order, items: [...] }] }
-//
-//  STUB_UNTIL_WORKER: the menu routes ship in worker v22. Until that is
-//  deployed the page renders from STUB_DATA below so the layout can be
-//  reviewed. Flip to false once the worker is live, then delete the stub.
 // ============================================================================
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-
-  var STUB_UNTIL_WORKER = true;
 
   var DISTRICT_LABEL = {
     mist: "Mist", lavender_beds: "Lavender Beds", goblet: "Goblet",
@@ -291,16 +285,10 @@
   }
 
   async function fetchVenues() {
-    if (STUB_UNTIL_WORKER) return STUB_DATA.venues;
     return getJSON("/menus/venues");
   }
 
   async function fetchMenu(venueId) {
-    if (STUB_UNTIL_WORKER) {
-      var stub = STUB_DATA.menus[String(venueId)];
-      if (!stub) throw new Error("No stub menu for venue " + venueId);
-      return stub;
-    }
     return getJSON("/menus?venue_id=" + encodeURIComponent(venueId));
   }
 
@@ -332,69 +320,6 @@
     var wanted = new URLSearchParams(location.search).get("venue");
     if (wanted) selectVenue(wanted, false);
   }
-
-  // ── Stub data (delete once the worker ships) ──────────────────────────────
-  var STUB_DATA = {
-    venues: [
-      { id: 1, name: "The Drunken Phoenix", size: "mansion", district: "goblet",
-        ward: 12, plot: 30, room_number: null, image_url: null, item_count: 11 },
-      { id: 2, name: "Saltrest Teahouse", size: "house", district: "shirogane",
-        ward: 4, plot: 18, room_number: null, image_url: null, item_count: 6 }
-    ],
-    menus: {
-      "1": {
-        venue: { id: 1, name: "The Drunken Phoenix", size: "mansion",
-                 district: "goblet", ward: 12, plot: 30, room_number: null },
-        categories: [
-          { id: 1, name: "Small Plates", icon: "dish", sort_order: 0, items: [
-            { id: 1, name: "Dodo Skewers", cost: 400, image_url: null,
-              description: "Charred over open flame, dusted with Thanalan spice." },
-            { id: 2, name: "Rolanberry Cheese Board", cost: 750, image_url: null,
-              description: "Three cheeses, honeycomb, and toasted rye." },
-            { id: 3, name: "Salted Popotoes", cost: 200, image_url: null, description: null }
-          ]},
-          { id: 2, name: "From the Hearth", icon: "flame", sort_order: 1, items: [
-            { id: 4, name: "Buttered Rolanberry Pheasant", cost: 1200, image_url: null,
-              description: "Slow-roasted with root vegetables and a rolanberry glaze." },
-            { id: 5, name: "Highland Stew", cost: 900, image_url: null,
-              description: "Coerthan beef, barley, and black pepper. Served with bread." },
-            { id: 6, name: "Catch of the Day", cost: null, image_url: null,
-              description: "Ask your server — it changes with the tide." }
-          ]},
-          { id: 3, name: "Drink", icon: "tankard", sort_order: 2, items: [
-            { id: 7, name: "Phoenix Fire", cost: 600, image_url: null,
-              description: "House cocktail. Rum, citrus, and a great deal of confidence." },
-            { id: 8, name: "Ala Mhigan Ale", cost: 300, image_url: null, description: null },
-            { id: 9, name: "Bacchus Wine", cost: 450, image_url: null, description: null }
-          ]},
-          { id: 4, name: "Sweets", icon: "cake", sort_order: 3, items: [
-            { id: 10, name: "Rolanberry Cheesecake", cost: 550, image_url: null,
-              description: "The reason half the company comes here at all." },
-            { id: 11, name: "Honey Bread Pudding", cost: 400, image_url: null, description: null }
-          ]}
-        ]
-      },
-      "2": {
-        venue: { id: 2, name: "Saltrest Teahouse", size: "house",
-                 district: "shirogane", ward: 4, plot: 18, room_number: null },
-        categories: [
-          { id: 5, name: "Tea", icon: "teacup", sort_order: 0, items: [
-            { id: 12, name: "Doman Green", cost: 250, image_url: null,
-              description: "Steeped light. Served in the old style." },
-            { id: 13, name: "Smoked Barley", cost: 250, image_url: null, description: null },
-            { id: 14, name: "Sirensong Blend", cost: 400, image_url: null,
-              description: "House blend — jasmine, sea salt, and something the owner won't name." }
-          ]},
-          { id: 6, name: "Confections", icon: "fruit", sort_order: 1, items: [
-            { id: 15, name: "Mochi Trio", cost: 350, image_url: null, description: null },
-            { id: 16, name: "Persimmon Tart", cost: 450, image_url: null,
-              description: "Only when the fruit is in season." },
-            { id: 17, name: "Salted Plum", cost: 150, image_url: null, description: null }
-          ]}
-        ]
-      }
-    }
-  };
 
   boot();
 })();
