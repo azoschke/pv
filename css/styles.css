@@ -3998,12 +3998,10 @@ body.nav-sidebar-open {
 
 .menu-back-btn:hover { color: var(--accent-red); }
 
-/* The sheet itself — the menu card. Two columns need ~980px to keep the
-   name/leader/price run from collapsing, so this is wider than a single-column
-   menu would want, but still far narrower than the venues grid. */
+/* The sheet itself — the menu card. Runs the full content width like any
+   other page; the two-column item flow inside is what keeps line lengths
+   readable, so an outer clamp isn't needed. */
 .menu-sheet {
-  max-width: 980px;
-  margin: 0 auto;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
