@@ -4022,10 +4022,15 @@ body.nav-sidebar-open {
 }
 
 /* Masthead over the venue's own photograph. The image is texture here, not
-   subject: it is blurred, overscanned, and sunk under a veil in the theme's
-   own background colour, so the title keeps the page's normal ink in both
-   light and dark rather than fighting the photo for contrast. */
+   subject: lightly blurred, overscanned, and sunk under a dark veil.
+   Deliberately theme-independent — the band reads as a dusk-lit signboard in
+   light mode as much as in dark, and one treatment means one set of contrast
+   figures to stand behind instead of two. Its type therefore carries the
+   parchment inks rather than the page's, which invert underneath it. */
 .menu-sheet-header.has-hero {
+  /* The dark-theme ink pair, pinned so light mode gets it too. */
+  --menu-hero-ink:     #ebe3d0;
+  --menu-hero-ink-dim: #c5b89a;
   position: relative;
   /* Own stacking context, so the negative-z layers below stay above the
      sheet's background instead of falling behind it. */
@@ -4034,9 +4039,10 @@ body.nav-sidebar-open {
   margin: calc(var(--menu-sheet-pad-top) * -1) calc(var(--menu-sheet-pad) * -1) 0;
   padding: 3rem var(--menu-sheet-pad) 2.5rem;
   border-bottom: 1px solid var(--border-color);
+  color: var(--menu-hero-ink);
   /* Inherited by the title and location — enough to hold the type together
      where the veil thins over a bright patch of the photo. */
-  text-shadow: 0 1px 2px rgba(245, 243, 239, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* Overscanned just past the band so the blur's feathered edge never shows —
@@ -4050,10 +4056,10 @@ body.nav-sidebar-open {
   background-size: cover;
   background-position: center;
   /* Light blur only — enough to soften detail under the type without losing
-     the venue. Brightness is nudged toward the theme before the veil goes on:
-     a photo already sitting in the right range needs less covering up, so
-     more of it survives at the same legibility. Saturation is left alone. */
-  filter: blur(3px) brightness(1.08);
+     the venue. Brightness comes down a touch first: a photo already sitting
+     near the band's own range needs less covering up, so more of it survives
+     at the same legibility. Saturation is left alone. */
+  filter: blur(3px) brightness(0.85);
 }
 
 .menu-sheet-header.has-hero::after {
@@ -4064,35 +4070,13 @@ body.nav-sidebar-open {
   /* Thinnest at the top edge, where nothing sits over it, and heaviest across
      the middle where the title and location run. */
   background: linear-gradient(180deg,
-    rgba(245, 243, 239, 0.68) 0%,
-    rgba(245, 243, 239, 0.9) 42%,
-    rgba(245, 243, 239, 0.92) 100%);
-}
-
-/* Light mode is the tight one: the secondary ink is only ~4.8:1 on the plain
-   card to begin with, so over a photo it is deepened a step rather than
-   thickening the veil and losing the venue behind it. Dark mode has room to
-   spare and keeps the shared colour. */
-.menu-sheet-header.has-hero .menu-sheet-location { color: #5f5952; }
-
-[data-theme="dark"] .menu-sheet-header.has-hero {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-[data-theme="dark"] .menu-sheet-header.has-hero .menu-sheet-location {
-  color: var(--text-secondary);
-}
-
-[data-theme="dark"] .menu-sheet-header.has-hero::before {
-  filter: blur(3px) brightness(0.85);
-}
-
-[data-theme="dark"] .menu-sheet-header.has-hero::after {
-  background: linear-gradient(180deg,
     rgba(26, 22, 20, 0.56) 0%,
     rgba(26, 22, 20, 0.78) 42%,
     rgba(26, 22, 20, 0.84) 100%);
 }
+
+.menu-sheet-header.has-hero .menu-sheet-title { color: var(--menu-hero-ink); }
+.menu-sheet-header.has-hero .menu-sheet-location { color: var(--menu-hero-ink-dim); }
 
 /* The hero already closes with a rule, so the index band below it drops its
    own top border and butts straight up against it. */
