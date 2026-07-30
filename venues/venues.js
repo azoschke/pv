@@ -570,12 +570,20 @@
       (v.featured ? '<span class="venue-badge venue-badge-featured" style="position:static;"><span aria-hidden="true">&#9733;</span> FEATURED</span>' : "") +
       '<span class="venue-badge venue-badge-size" style="position:static;">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
 
+    // Menus live on their own page; the card itself stays unchanged, so this
+    // link is the only entry point from the directory.
+    var menuLinkHtml = v.has_menu
+      ? '<a class="venue-modal-menu-link" href="/pv/venues/menus.html?venue=' +
+        encodeURIComponent(v.id) + '">View Menu &rarr;</a>'
+      : "";
+
     modalBody.innerHTML =
       imgHtml +
       '<div class="venue-modal-content">' +
         '<div class="venue-modal-badges">' + badges + '</div>' +
         '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
         '<p class="venue-modal-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</p>' +
+        menuLinkHtml +
         '<div class="venue-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
