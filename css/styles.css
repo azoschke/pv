@@ -4067,12 +4067,13 @@ body.nav-sidebar-open {
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* Thinnest at the top edge, where nothing sits over it, and heaviest across
-     the middle where the title and location run. */
+  /* Light-handed: venue photographs are moderately dark to begin with, so the
+     veil only has to settle them. Thinnest at the top edge, where nothing
+     sits over it, and steady from the title down. */
   background: linear-gradient(180deg,
-    rgba(26, 22, 20, 0.56) 0%,
-    rgba(26, 22, 20, 0.78) 42%,
-    rgba(26, 22, 20, 0.84) 100%);
+    rgba(26, 22, 20, 0.3) 0%,
+    rgba(26, 22, 20, 0.5) 42%,
+    rgba(26, 22, 20, 0.5) 100%);
 }
 
 .menu-sheet-header.has-hero .menu-sheet-title { color: var(--menu-hero-ink); }
