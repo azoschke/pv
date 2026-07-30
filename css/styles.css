@@ -4002,10 +4002,15 @@ body.nav-sidebar-open {
    other page; the two-column item flow inside is what keeps line lengths
    readable, so an outer clamp isn't needed. */
 .menu-sheet {
+  /* Inline padding is a variable so the full-bleed bands (the category index
+     and each category heading) can cancel it with a negative margin and stay
+     in step at every breakpoint. */
+  --menu-sheet-pad: 2.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  padding: 2.25rem 2.5rem 2.75rem;
+  padding: 2.25rem var(--menu-sheet-pad) 2.75rem;
+  overflow: hidden;
 }
 
 .menu-sheet-header {
@@ -4029,14 +4034,19 @@ body.nav-sidebar-open {
   margin: 0;
 }
 
+/* A full-bleed band across the sheet: the negative inline margin cancels the
+   sheet padding, and the padding is put back inside so the links stay aligned
+   with the content above and below. */
 .menu-index {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.4rem 1.2rem;
-  margin-top: 1.4rem;
-  padding-top: 1.2rem;
+  margin: 1.4rem calc(var(--menu-sheet-pad) * -1) 0;
+  padding: 1rem var(--menu-sheet-pad);
+  background: var(--bg-staff-panel);
   border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .menu-index-link {
@@ -4067,7 +4077,8 @@ body.nav-sidebar-open {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  margin: 2.4rem 0 1.2rem;
+  /* Bleeds to the sheet edges so the flanking rules run the full width. */
+  margin: 2.4rem calc(var(--menu-sheet-pad) * -1) 1.2rem;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 0.95rem;
@@ -4244,12 +4255,12 @@ body.nav-sidebar-open {
 }
 
 @media (max-width: 1024px) {
-  .menu-sheet  { padding: 1.75rem 1.5rem 2rem; }
+  .menu-sheet  { --menu-sheet-pad: 1.5rem; padding: 1.75rem var(--menu-sheet-pad) 2rem; }
   .menu-items  { columns: 1; }
 }
 
 @media (max-width: 600px) {
-  .menu-sheet       { padding: 1.4rem 1.1rem 1.75rem; }
+  .menu-sheet       { --menu-sheet-pad: 1.1rem; padding: 1.4rem var(--menu-sheet-pad) 1.75rem; }
   .menu-sheet-title { font-size: 1.5rem; }
   .menu-thumb       { flex-basis: 96px; width: 96px; height: 96px; }
   .menu-thumb-icon  { width: 36px; height: 36px; }
