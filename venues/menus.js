@@ -104,6 +104,14 @@
     return n.toLocaleString("en-US") + " gil";
   }
 
+  function venueImage(id) {
+    if (id == null) return "";
+    for (var i = 0; i < allVenues.length; i++) {
+      if (String(allVenues[i].id) === String(id)) return allVenues[i].image_url || "";
+    }
+    return "";
+  }
+
   function slugForAnchor(name, id) {
     return "cat-" + id + "-" + String(name || "")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -233,13 +241,30 @@
       ? cats.map(categoryHtml).join("")
       : '<p class="menu-empty">This menu has not been filled in yet.</p>';
 
+    // The venue's own photograph doubles as the masthead backdrop. The chooser
+    // payload always carries image_url; the menu payload's venue object may
+    // not, so fall back to the card data already in hand.
+    var heroUrl = v.image_url || venueImage(v.id != null ? v.id : currentVenueId);
+
     sheetEl.innerHTML = '' +
-      '<header class="menu-sheet-header">' +
+      '<header class="menu-sheet-header' + (heroUrl ? ' has-hero' : '') + '">' +
         '<h1 class="menu-sheet-title">' + escapeHTML(v.name || "Menu") + '</h1>' +
         '<p class="menu-sheet-location">' + escapeHTML(locationLine(v)) + '</p>' +
       '</header>' +
       indexHtml +
       body;
+
+    // Set as a custom property rather than inlined into the markup: the URL
+    // goes in through the CSSOM, so it can never be read as anything but a
+    // value (an invalid one is simply dropped).
+    if (heroUrl) {
+      var headerEl = sheetEl.querySelector(".menu-sheet-header");
+      if (headerEl) {
+        headerEl.style.setProperty(
+          "--menu-hero-img", 'url("' + String(heroUrl).replace(/["\\]/g, "") + '")'
+        );
+      }
+    }
 
     fitNames();
     // Stoke arrives from Google Fonts after first paint; the fallback's

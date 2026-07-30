@@ -4006,16 +4006,79 @@ body.nav-sidebar-open {
      and each category heading) can cancel it with a negative margin and stay
      in step at every breakpoint. */
   --menu-sheet-pad: 2.5rem;
+  /* The top padding is a variable too, so the hero header can cancel it and
+     sit flush against the sheet's top edge at every breakpoint. */
+  --menu-sheet-pad-top: 2.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  padding: 2.25rem var(--menu-sheet-pad) 2.75rem;
+  padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2.75rem;
   overflow: hidden;
 }
 
 .menu-sheet-header {
   text-align: center;
   margin-bottom: 0.5rem;
+}
+
+/* Masthead over the venue's own photograph. The image is texture here, not
+   subject: it is blurred, overscanned, and sunk under a veil in the theme's
+   own background colour, so the title keeps the page's normal ink in both
+   light and dark rather than fighting the photo for contrast. */
+.menu-sheet-header.has-hero {
+  position: relative;
+  /* Own stacking context, so the negative-z layers below stay above the
+     sheet's background instead of falling behind it. */
+  isolation: isolate;
+  overflow: hidden;
+  margin: calc(var(--menu-sheet-pad-top) * -1) calc(var(--menu-sheet-pad) * -1) 0;
+  padding: 3rem var(--menu-sheet-pad) 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+  /* Inherited by the title and location — enough to hold the type together
+     where the veil thins over a bright patch of the photo. */
+  text-shadow: 0 1px 2px rgba(245, 243, 239, 0.6);
+}
+
+/* Overscanned past the band so the blur's feathered edge never shows. */
+.menu-sheet-header.has-hero::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: -2;
+  background-image: var(--menu-hero-img);
+  background-size: cover;
+  background-position: center;
+  /* Brightness is pushed toward the theme before the veil goes on: a photo
+     that already sits in the right range needs less covering up, so more of
+     its colour survives at the same legibility. */
+  filter: blur(16px) saturate(1.2) brightness(1.12);
+}
+
+.menu-sheet-header.has-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(245, 243, 239, 0.72) 0%, rgba(245, 243, 239, 0.9) 100%);
+}
+
+[data-theme="dark"] .menu-sheet-header.has-hero {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .menu-sheet-header.has-hero::before {
+  filter: blur(16px) saturate(1.1) brightness(0.6);
+}
+
+[data-theme="dark"] .menu-sheet-header.has-hero::after {
+  background: linear-gradient(180deg, rgba(26, 22, 20, 0.7) 0%, rgba(26, 22, 20, 0.9) 100%);
+}
+
+/* The hero already closes with a rule, so the index band below it drops its
+   own top border and butts straight up against it. */
+.menu-sheet-header.has-hero + .menu-index {
+  margin-top: 0;
+  border-top: 0;
 }
 
 .menu-sheet-title {
@@ -4272,14 +4335,19 @@ body.nav-sidebar-open {
 }
 
 @media (max-width: 1024px) {
-  .menu-sheet  { --menu-sheet-pad: 1.5rem; padding: 1.75rem var(--menu-sheet-pad) 2rem; }
+  .menu-sheet  { --menu-sheet-pad: 1.5rem; --menu-sheet-pad-top: 1.75rem;
+                 padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2rem; }
   .menu-items  { columns: 1; }
+  .menu-sheet-header.has-hero { padding: 2.5rem var(--menu-sheet-pad) 2rem; }
 }
 
 @media (max-width: 600px) {
-  .menu-sheet       { --menu-sheet-pad: 1.1rem; padding: 1.4rem var(--menu-sheet-pad) 1.75rem; }
+  .menu-sheet       { --menu-sheet-pad: 1.1rem; --menu-sheet-pad-top: 1.4rem;
+                      padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 1.75rem; }
   .menu-sheet-title { font-size: 1.5rem; }
   .menu-thumb       { flex-basis: 96px; width: 96px; height: 96px; }
   .menu-thumb-icon  { width: 36px; height: 36px; }
   .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
+  .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
+  .menu-sheet-header.has-hero::before { filter: blur(12px) saturate(1.15); }
 }
