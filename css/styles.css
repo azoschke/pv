@@ -4196,25 +4196,26 @@ body.nav-sidebar-open {
 
 .menu-item-head {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: baseline;
   gap: 0.4rem;
 }
 
-/* Leader and price travel as one unit. The flex-basis doubles as the
-   threshold: when a long name leaves less than this much room on its line,
-   the pair wraps whole onto the next line and the leader gets the full width
-   to run across, instead of surviving as a stub beside the first line. */
+/* Leader and price hold the first line, taking whatever the capped name
+   leaves them. Because the name can never fill the row, the leader always
+   has a run to make. */
 .menu-item-price {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  flex: 1 1 9rem;
-  min-width: 9rem;
+  flex: 1 1 auto;
 }
 
+/* Capped so long names wrap instead of crowding out the leader — whatever is
+   left of the row belongs to the dots and the price. */
 .menu-item-name {
   flex: 0 1 auto;
+  max-width: 15ch;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 1.05rem;
@@ -4225,7 +4226,7 @@ body.nav-sidebar-open {
 /* Dot leader. Rendered only when a price follows it — see menus.js. */
 .menu-item-leader {
   flex: 1 1 auto;
-  min-width: 1.2rem;
+  min-width: 2.5rem;
   border-bottom: 1px dotted var(--border-color);
   transform: translateY(-0.28rem);
 }
