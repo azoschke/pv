@@ -115,20 +115,18 @@
       : '<span class="menu-venue-card-sig">' +
         escapeHTML((v.name || "").toLowerCase()) + '</span>';
 
-    var count = Number(v.item_count) || 0;
-    var countLabel = count === 1 ? "1 item" : count + " items";
-
     return '' +
       '<button type="button" class="menu-venue-card" data-venue-id="' + escapeHTML(v.id) + '">' +
         '<span class="menu-venue-card-media"' +
           (v.image_url ? '' : ' style="background:linear-gradient(135deg,' +
             palette.from + ' 0%,' + palette.to + ' 100%)"') + '>' +
           media +
+          // Torn-edge overlay, same as the venue directory cards.
+          '<span class="contrast-border-half" aria-hidden="true"></span>' +
         '</span>' +
         '<span class="menu-venue-card-body">' +
           '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
           '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</span>' +
-          '<span class="menu-venue-card-count">' + countLabel + '</span>' +
         '</span>' +
       '</button>';
   }
