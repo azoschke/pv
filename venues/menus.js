@@ -240,7 +240,41 @@
       '</header>' +
       indexHtml +
       body;
+
+    fitNames();
+    // Stoke arrives from Google Fonts after first paint; the fallback's
+    // metrics differ, so measure again once the real face is in.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(fitNames);
+    }
   }
+
+  // A wrapped flex item keeps its full max-width, so a two-line name leaves
+  // dead space between its shorter last line and the dots. CSS has no
+  // "shrink to the widest rendered line" (fit-content gives the cap back,
+  // min-content breaks at the longest word), so measure the line boxes and
+  // set the width to the widest of them.
+  function fitNames() {
+    var names = sheetEl.querySelectorAll(".menu-item-name");
+    var range = document.createRange();
+    for (var i = 0; i < names.length; i++) {
+      var el = names[i];
+      el.style.width = "";
+      range.selectNodeContents(el);
+      var rects = range.getClientRects();
+      var widest = 0;
+      for (var j = 0; j < rects.length; j++) {
+        if (rects[j].width > widest) widest = rects[j].width;
+      }
+      if (widest) el.style.width = Math.ceil(widest) + "px";
+    }
+  }
+
+  var fitTimer = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitNames, 120);
+  });
 
   function showChooser(push) {
     currentVenueId = null;
