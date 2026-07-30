@@ -72,6 +72,9 @@
 
   // ── State ────────────────────────────────────────────────────────────────
   var allVenues = [];
+  // Which venue's menu is on screen, as a string; null while the chooser is
+  // showing. Lets popstate tell a real navigation from a fragment jump.
+  var currentVenueId = null;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function escapeHTML(str) {
@@ -236,22 +239,27 @@
   }
 
   function showChooser(push) {
+    currentVenueId = null;
     viewEl.hidden = true;
     chooserEl.hidden = false;
     introEl.hidden = false;
     sheetEl.innerHTML = "";
     document.title = "Phoenix Vanguard Menus";
+    // pathname alone drops both ?venue and any #category fragment.
     if (push) history.pushState({ venue: null }, "", location.pathname);
     window.scrollTo(0, 0);
   }
 
   function showView(push, venueId) {
+    currentVenueId = String(venueId);
     chooserEl.hidden = true;
     introEl.hidden = true;
     viewEl.hidden = false;
-    if (push) {
-      history.pushState({ venue: venueId }, "", location.pathname + "?venue=" + encodeURIComponent(venueId));
-    }
+    var href = location.pathname + "?venue=" + encodeURIComponent(venueId);
+    // Deep links arrive with no history state of their own; recording it keeps
+    // the entry consistent with the ones pushed below.
+    if (push) history.pushState({ venue: venueId }, "", href);
+    else history.replaceState({ venue: venueId }, "", href);
     window.scrollTo(0, 0);
   }
 
@@ -293,10 +301,19 @@
   // ── Boot ─────────────────────────────────────────────────────────────────
   backBtn.addEventListener("click", function () { showChooser(true); });
 
-  window.addEventListener("popstate", function (e) {
-    var venueId = e.state && e.state.venue;
-    if (venueId) selectVenue(venueId, false);
-    else showChooser(false);
+  // Read the target from the URL rather than history.state. Clicking a
+  // category jump link pushes a fragment-only entry with null state, which
+  // fires popstate in Chrome — trusting state alone read that as "no venue"
+  // and threw the reader back to the chooser mid-jump. Comparing the ?venue
+  // param against what is already open makes a fragment change a no-op, so
+  // the browser's own anchor scroll is left to do its job.
+  window.addEventListener("popstate", function () {
+    var venueId = new URLSearchParams(location.search).get("venue");
+    if (!venueId) {
+      if (currentVenueId !== null) showChooser(false);
+      return;
+    }
+    if (venueId !== currentVenueId) selectVenue(venueId, false);
   });
 
   async function boot() {

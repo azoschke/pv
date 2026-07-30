@@ -34,7 +34,7 @@
   var UPLOAD_WEBP_QUALITY = 0.82;
 
   // ── Category icons ───────────────────────────────────────────────────────
-  //  Must stay in sync with MENU_ICONS in menus/menus.js — the worker stores
+  //  Must stay in sync with MENU_ICONS in venues/menus.js — the worker stores
   //  only the key.
   var DEFAULT_ICON = 'dish';
   var MENU_ICONS = {

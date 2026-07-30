@@ -573,7 +573,7 @@
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="venue-modal-menu-link" href="/pv/menus/menus.html?venue=' +
+      ? '<a class="venue-modal-menu-link" href="/pv/venues/menus.html?venue=' +
         encodeURIComponent(v.id) + '">View Menu &rarr;</a>'
       : "";
 
