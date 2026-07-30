@@ -4039,19 +4039,21 @@ body.nav-sidebar-open {
   text-shadow: 0 1px 2px rgba(245, 243, 239, 0.6);
 }
 
-/* Overscanned past the band so the blur's feathered edge never shows. */
+/* Overscanned just past the band so the blur's feathered edge never shows —
+   in pixels, not a percentage, to keep the extra crop off the photo minimal. */
 .menu-sheet-header.has-hero::before {
   content: '';
   position: absolute;
-  inset: -12%;
+  inset: -12px;
   z-index: -2;
   background-image: var(--menu-hero-img);
   background-size: cover;
   background-position: center;
-  /* Brightness is pushed toward the theme before the veil goes on: a photo
-     that already sits in the right range needs less covering up, so more of
-     its colour survives at the same legibility. */
-  filter: blur(16px) saturate(1.2) brightness(1.12);
+  /* Light blur only — enough to soften detail under the type without losing
+     the venue. Brightness is nudged toward the theme before the veil goes on:
+     a photo already sitting in the right range needs less covering up, so
+     more of it survives at the same legibility. Saturation is left alone. */
+  filter: blur(3px) brightness(1.08);
 }
 
 .menu-sheet-header.has-hero::after {
@@ -4059,19 +4061,37 @@ body.nav-sidebar-open {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(245, 243, 239, 0.72) 0%, rgba(245, 243, 239, 0.9) 100%);
+  /* Thinnest at the top edge, where nothing sits over it, and heaviest across
+     the middle where the title and location run. */
+  background: linear-gradient(180deg,
+    rgba(245, 243, 239, 0.68) 0%,
+    rgba(245, 243, 239, 0.9) 42%,
+    rgba(245, 243, 239, 0.92) 100%);
 }
+
+/* Light mode is the tight one: the secondary ink is only ~4.8:1 on the plain
+   card to begin with, so over a photo it is deepened a step rather than
+   thickening the veil and losing the venue behind it. Dark mode has room to
+   spare and keeps the shared colour. */
+.menu-sheet-header.has-hero .menu-sheet-location { color: #5f5952; }
 
 [data-theme="dark"] .menu-sheet-header.has-hero {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
+[data-theme="dark"] .menu-sheet-header.has-hero .menu-sheet-location {
+  color: var(--text-secondary);
+}
+
 [data-theme="dark"] .menu-sheet-header.has-hero::before {
-  filter: blur(16px) saturate(1.1) brightness(0.6);
+  filter: blur(3px) brightness(0.85);
 }
 
 [data-theme="dark"] .menu-sheet-header.has-hero::after {
-  background: linear-gradient(180deg, rgba(26, 22, 20, 0.7) 0%, rgba(26, 22, 20, 0.9) 100%);
+  background: linear-gradient(180deg,
+    rgba(26, 22, 20, 0.56) 0%,
+    rgba(26, 22, 20, 0.78) 42%,
+    rgba(26, 22, 20, 0.84) 100%);
 }
 
 /* The hero already closes with a rule, so the index band below it drops its
@@ -4349,5 +4369,4 @@ body.nav-sidebar-open {
   .menu-thumb-icon  { width: 36px; height: 36px; }
   .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
   .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
-  .menu-sheet-header.has-hero::before { filter: blur(12px) saturate(1.15); }
 }
