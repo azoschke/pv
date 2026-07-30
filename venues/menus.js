@@ -169,10 +169,14 @@
       : "";
 
     // The dot leader only renders alongside a price — a leader running into
-    // nothing reads as a mistake.
+    // nothing reads as a mistake. Leader and price are wrapped together so a
+    // long name pushes the pair onto its own line intact rather than leaving
+    // the leader stranded as a stub beside the first line.
     var priceRun = cost
-      ? '<span class="menu-item-leader" aria-hidden="true"></span>' +
-        '<span class="menu-item-cost">' + escapeHTML(cost) + '</span>'
+      ? '<span class="menu-item-price">' +
+          '<span class="menu-item-leader" aria-hidden="true"></span>' +
+          '<span class="menu-item-cost">' + escapeHTML(cost) + '</span>' +
+        '</span>'
       : "";
 
     return '' +

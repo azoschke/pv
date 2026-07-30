@@ -4196,11 +4196,25 @@ body.nav-sidebar-open {
 
 .menu-item-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem;
 }
 
+/* Leader and price travel as one unit. The flex-basis doubles as the
+   threshold: when a long name leaves less than this much room on its line,
+   the pair wraps whole onto the next line and the leader gets the full width
+   to run across, instead of surviving as a stub beside the first line. */
+.menu-item-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex: 1 1 9rem;
+  min-width: 9rem;
+}
+
 .menu-item-name {
+  flex: 0 1 auto;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 1.05rem;
@@ -4238,7 +4252,9 @@ body.nav-sidebar-open {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 1.1rem;
+  /* Sits between the location line and the description; the location already
+     carries 1rem beneath it, so only a gap below is needed. */
+  margin: 0 0 1.1rem;
   font-family: 'Stoke', serif;
   font-size: 0.78rem;
   letter-spacing: 0.1em;

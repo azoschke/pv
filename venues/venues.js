@@ -583,8 +583,8 @@
         '<div class="venue-modal-badges">' + badges + '</div>' +
         '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
         '<p class="venue-modal-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</p>' +
-        '<div class="venue-modal-desc">' + descHtml + '</div>' +
         menuLinkHtml +
+        '<div class="venue-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
 
