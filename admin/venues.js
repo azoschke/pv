@@ -172,8 +172,17 @@
       gallery_images: ['', '', ''],
       tags: [],
       extra_tags: [],
-      featured: false
+      featured: false,
+      has_menu: false
     };
+  }
+
+  // A menu only makes sense for a venue that serves something, and the flag
+  // is what gates item creation server-side — so it is only offered once the
+  // venue is tagged Tavern or Restaurant.
+  function menuEligible(tags) {
+    if (!Array.isArray(tags)) return false;
+    return tags.indexOf('tavern') !== -1 || tags.indexOf('restaurant') !== -1;
   }
 
   function venueToDraft(v) {
@@ -198,7 +207,8 @@
       gallery_images: galleryImages,
       tags: Array.isArray(v.tags) ? v.tags.slice() : [],
       extra_tags: Array.isArray(v.extra_tags) ? v.extra_tags.slice() : [],
-      featured: !!v.featured
+      featured: !!v.featured,
+      has_menu: !!v.has_menu
     };
   }
 
@@ -219,7 +229,10 @@
         .filter(function (g) { return !!g; }),
       tags: draft.tags.slice(),
       extra_tags: draft.extra_tags.slice(),
-      featured: !!draft.featured
+      featured: !!draft.featured,
+      // Untagging Tavern/Restaurant clears the flag rather than leaving a
+      // stale one behind on a venue that can no longer show the checkbox.
+      has_menu: menuEligible(draft.tags) && !!draft.has_menu
     };
   }
 
@@ -612,6 +625,27 @@
         )
       ),
 
+      menuEligible(draft.tags) ? h('div', { className: 'portal-field' },
+        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+          h('input', {
+            type: 'checkbox',
+            checked: !!draft.has_menu,
+            onChange: function (e) { setField('has_menu', e.target.checked); }
+          }),
+          h('span', null, 'Has a menu')
+        ),
+        h('p', {
+          style: {
+            margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)'
+          }
+        },
+          isEdit && initial && initial.has_menu && !draft.has_menu
+            ? 'Unchecking this hides the menu from the site and blocks new items. ' +
+              'Existing items are kept and return if you re-check it.'
+            : 'Enables the Menus tab for this venue and lists it on the public menus page.'
+        )
+      ) : null,
+
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit', className: 'portal-btn', disabled: saving
@@ -704,7 +738,7 @@
     );
   }
 
-  function Venues() {
+  function VenueDirectory() {
     var listState = useState([]);
     var list = listState[0], setList = listState[1];
     var loadingState = useState(true);
@@ -854,6 +888,35 @@
           onCancel: function () { setFormOpen(null); }
         })
       ) : null
+    );
+  }
+
+  // ── Section shell ────────────────────────────────────────────────────────
+  //  Directory (the venue table) and Menus (per-venue menu editing) are two
+  //  views of the same section, so they share the portal's sub-nav strip
+  //  rather than becoming a second entry in the portal sidebar.
+  function Venues(props) {
+    var tabState = useState('directory');
+    var tab = tabState[0], setTab = tabState[1];
+
+    var MenusTab = window.PVAdminVenueMenus;
+
+    return h('div', null,
+      h(window.PVAdminSubnav, {
+        tabs: [
+          { id: 'directory', label: 'Directory' },
+          { id: 'menus',     label: 'Menus' }
+        ],
+        active: tab,
+        onChange: setTab
+      }),
+      tab === 'menus'
+        ? (MenusTab
+            ? h(MenusTab, { session: props && props.session })
+            : h('div', { className: 'portal-card' },
+                h('div', { className: 'portal-flash error' },
+                  'admin/venue-menus.js failed to load.')))
+        : h(VenueDirectory, null)
     );
   }
 

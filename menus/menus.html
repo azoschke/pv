@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phoenix Vanguard Menus</title>
+
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">Phoenix Vanguard</p>
+      <h1 class="app-title">Venue Menus</h1>
+    </header>
+
+    <p class="landing-intro" id="menus-intro">
+      Fare and drink served at the company&rsquo;s taverns and restaurants.
+      Choose a venue to read its menu.
+    </p>
+
+    <!-- Venue chooser — the landing state. -->
+    <section id="menus-chooser" class="menus-chooser">
+      <div id="menus-venue-grid" class="menu-venue-grid">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <!-- Menu view — replaces the chooser once a venue is picked. -->
+    <section id="menus-view" class="menus-view" hidden>
+      <button type="button" class="menu-back-btn" id="menu-back-btn">
+        &larr; All Menus
+      </button>
+
+      <article class="menu-sheet" id="menu-sheet">
+        <!-- populated by JS -->
+      </article>
+    </section>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="/pv/menus/menus.js"></script>
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
