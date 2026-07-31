@@ -4248,6 +4248,21 @@ body.nav-sidebar-open {
   opacity: 0.7;
 }
 
+/* The same wash at a whisper over real photographs, so a half-photographed
+   menu reads as one set of thumbs rather than two. ::after, not ::before —
+   a generated first child would paint under the img. */
+.menu-thumb:not(.is-placeholder)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, rgba(107, 68, 35, .16), rgba(139, 111, 71, .16));
+  pointer-events: none;
+}
+
+[data-theme="dark"] .menu-thumb:not(.is-placeholder)::after {
+  background: linear-gradient(140deg, rgba(38, 22, 14, .3), rgba(74, 66, 57, .28));
+}
+
 .menu-thumb-icon {
   position: relative;
   z-index: 1;
@@ -4317,26 +4332,66 @@ body.nav-sidebar-open {
 }
 
 /* ── Venue modal "View Menu" link ────────────────────────────────────────── */
+/* A chip, not a button: it sits between the location line and the description
+   in a modal that is mostly reading matter, so it is padded to about half a
+   button's height and kept in the secondary ink until hovered. The pill
+   radius follows the action chips elsewhere in the app. */
 .venue-modal-menu-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  /* Sits between the location line and the description; the location already
-     carries 1rem beneath it, so only a gap below is needed. */
+  /* The location already carries 1rem beneath it, so only a gap below. */
   margin: 0 0 1.1rem;
+  padding: 0.32rem 0.7rem;
   font-family: 'Stoke', serif;
   font-size: 0.78rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--accent-brown);
+  line-height: 1;
+  color: var(--text-secondary);
   text-decoration: none;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.15rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.venue-modal-menu-link:hover {
+.venue-modal-menu-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--accent-brown);
+  transition: color 0.18s ease;
+}
+
+/* Nudges forward on hover — the one bit of movement the chip makes. */
+.venue-modal-menu-arrow {
+  transition: transform 0.18s ease;
+}
+
+.venue-modal-menu-link:hover,
+.venue-modal-menu-link:focus-visible {
   color: var(--accent-red);
-  border-bottom-color: var(--accent-red);
+  border-color: var(--accent-red);
+  background: var(--bg-card-light);
+}
+
+.venue-modal-menu-link:hover .venue-modal-menu-icon,
+.venue-modal-menu-link:focus-visible .venue-modal-menu-icon {
+  color: var(--accent-red);
+}
+
+.venue-modal-menu-link:hover .venue-modal-menu-arrow,
+.venue-modal-menu-link:focus-visible .venue-modal-menu-arrow {
+  transform: translateX(0.15rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venue-modal-menu-link,
+  .venue-modal-menu-icon,
+  .venue-modal-menu-arrow { transition: none; }
+  .venue-modal-menu-link:hover .venue-modal-menu-arrow,
+  .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }
 }
 
 @media (max-width: 1024px) {
