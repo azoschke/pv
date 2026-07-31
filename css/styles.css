@@ -3238,6 +3238,12 @@ body.nav-sidebar-open {
 
 .venue-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
+/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
+   work from the moment they appear. That is a focus move, not a focus stop —
+   the box should not draw the global ring. Controls inside it still do. */
+.venue-modal:focus,
+.venue-modal:focus-visible { outline: none; }
+
 .venue-modal-img {
   width: 100%;
   display: block;
