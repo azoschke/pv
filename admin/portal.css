@@ -1286,7 +1286,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 /* Same wash the menu thumbs carry, and only where there is art to wash — the
    fallback tile is already the gradient. Blended on colour, so the artwork
-   keeps its own luminance and takes the theme's hue. */
+   keeps its own luminance and takes the theme's hue.
+   Stays below the torn edge: .contrast-border-half carries z-index 1 and this
+   is z-index auto, so the border paints after the wash and is not part of the
+   backdrop it blends with. Keep it that way — a z-index here would tint it. */
 .rp-card-media:has(img)::after {
   content: '';
   position: absolute;
