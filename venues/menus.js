@@ -164,7 +164,7 @@
   function itemHtml(item, icon) {
     var cost = formatCost(item.cost);
     var thumb = item.image_url
-      ? '<span class="menu-thumb">' +
+      ? '<span class="menu-thumb sketch-wash">' +
           '<img src="' + escapeHTML(item.image_url) + '" alt="" ' +
           'loading="lazy" decoding="async" />' +
         '</span>'

@@ -3290,6 +3290,51 @@ body.nav-sidebar-open {
           mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
 }
 
+/* Sketch wash — the shared tint for the site's illustrations. Put it on the
+   box that holds the artwork (a card's media tile, a thumb, a modal image
+   wrapper) and it lends that box's contents the parchment hue of the theme.
+   Blended on colour, not laid over as a veil: the illustration keeps its own
+   luminance, so linework stays exactly as dark as it was drawn.
+
+   Gated on :has(img), so a container that swaps between artwork and a text or
+   gradient fallback can carry the class unconditionally and only be washed
+   when there is something to wash.
+
+   Stays below any torn edge in the same box: .contrast-border/-half carry
+   z-index 1 and this is z-index auto, so they paint after the wash and are
+   not part of the backdrop it blends with. Keep it that way — a z-index here
+   would tint the border along with the art.
+
+   --sketch-wash-alpha tunes the strength per surface; the default is the
+   subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
+.sketch-wash {
+  --sketch-wash-tint-from: 107, 68, 35;
+  --sketch-wash-tint-to:   139, 111, 71;
+  --sketch-wash-alpha: 0.1;
+  position: relative;
+  /* Own stacking context, so the blend composites against the artwork inside
+     the box and not whatever sits behind it. */
+  isolation: isolate;
+}
+
+.sketch-wash:has(img)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg,
+    rgba(var(--sketch-wash-tint-from), var(--sketch-wash-alpha)),
+    rgba(var(--sketch-wash-tint-to), var(--sketch-wash-alpha)));
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+/* The blend carries hue and saturation, so each theme keeps its own pair —
+   dark's is the more muted of the two. */
+[data-theme="dark"] .sketch-wash {
+  --sketch-wash-tint-from: 38, 22, 14;
+  --sketch-wash-tint-to:   74, 66, 57;
+}
+
 .venue-gallery {
   position: relative;
   width: 100%;
@@ -4203,9 +4248,6 @@ body.nav-sidebar-open {
    half-photographed menu from looking ragged. */
 .menu-thumb {
   position: relative;
-  /* Own stacking context, so the colour blend below composites against the
-     artwork inside the thumb and not the sheet behind it. */
-  isolation: isolate;
   flex: 0 0 120px;
   width: 120px;
   height: 120px;
@@ -4251,25 +4293,9 @@ body.nav-sidebar-open {
   opacity: 0.7;
 }
 
-/* The same wash over real artwork, so a half-illustrated menu reads as one
-   set of thumbs rather than two. Blended on colour, not laid over as a veil:
-   it lends the placeholder's hue while the illustration keeps its own
-   luminance, so the linework stays as dark and as legible as it was drawn.
-   The blend still carries hue and saturation, so each theme keeps its own
-   pair — dark mode's is the more muted of the two and has to stay that way.
-   ::after, not ::before — a generated first child would paint under the img. */
-.menu-thumb:not(.is-placeholder)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(140deg, rgba(107, 68, 35, .25), rgba(139, 111, 71, .25));
-  mix-blend-mode: color;
-  pointer-events: none;
-}
-
-[data-theme="dark"] .menu-thumb:not(.is-placeholder)::after {
-  background: linear-gradient(140deg, rgba(38, 22, 14, .25), rgba(74, 66, 57, .25));
-}
+/* Menu artwork sits on a light sheet at small size and carries the tint
+   better than the darker card media does, so it runs above the default. */
+.menu-thumb.sketch-wash { --sketch-wash-alpha: 0.25; }
 
 .menu-thumb-icon {
   position: relative;
