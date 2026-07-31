@@ -4334,17 +4334,19 @@ body.nav-sidebar-open {
   flex: 1 1 auto;
 }
 
-/* Capped so long names wrap instead of crowding out the leader — whatever is
-   left of the row belongs to the dots and the price. */
 .menu-item-name {
   flex: 0 1 auto;
-  max-width: 15ch;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 1.05rem;
   line-height: 1.3;
   color: var(--text-primary);
 }
+
+/* Capped so long names wrap instead of crowding out the leader — whatever is
+   left of the row belongs to the dots and the price. Only when a price is
+   actually there: with nothing to make room for, the name takes the row. */
+.menu-item-head:has(.menu-item-price) .menu-item-name { max-width: 15ch; }
 
 /* Dot leader. Rendered only when a price follows it — see menus.js. */
 .menu-item-leader {
