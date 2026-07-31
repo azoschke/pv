@@ -4255,6 +4255,8 @@ body.nav-sidebar-open {
    set of thumbs rather than two. Blended on colour, not laid over as a veil:
    it lends the placeholder's hue while the illustration keeps its own
    luminance, so the linework stays as dark and as legible as it was drawn.
+   The blend still carries hue and saturation, so each theme keeps its own
+   pair — dark mode's is the more muted of the two and has to stay that way.
    ::after, not ::before — a generated first child would paint under the img. */
 .menu-thumb:not(.is-placeholder)::after {
   content: '';
@@ -4263,6 +4265,10 @@ body.nav-sidebar-open {
   background: linear-gradient(140deg, rgba(107, 68, 35, .5), rgba(139, 111, 71, .5));
   mix-blend-mode: color;
   pointer-events: none;
+}
+
+[data-theme="dark"] .menu-thumb:not(.is-placeholder)::after {
+  background: linear-gradient(140deg, rgba(38, 22, 14, .5), rgba(74, 66, 57, .5));
 }
 
 .menu-thumb-icon {
