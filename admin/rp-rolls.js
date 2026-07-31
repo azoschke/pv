@@ -117,7 +117,7 @@
       // Portrait pulled from the member's roster profile when they have one;
       // otherwise the venue-style fallback tile (gradient + name in script).
       // Full-bleed image + torn contrast border, matching the item cards.
-      h('div', { className: 'rp-card-media' },
+      h('div', { className: 'rp-card-media sketch-wash' },
         (props.imageUrl && !imgErr)
           ? h('img', { src: props.imageUrl, alt: '', onError: function () { setImgErr(true); } })
           : h('span', { className: 'rp-card-sig' }, (ch.member_name || '').toLowerCase()),
@@ -464,7 +464,7 @@
     var b = props.boss;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media' },
+      h('div', { className: 'rp-card-media sketch-wash' },
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
           : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
@@ -701,7 +701,7 @@
     var it = props.item;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media' },
+      h('div', { className: 'rp-card-media sketch-wash' },
         (it.image_url && !imgErr)
           ? h('img', { src: it.image_url, alt: '', onError: function () { setImgErr(true); } })
           : h('span', { className: 'rp-card-sig' }, (it.name || '').toLowerCase()),

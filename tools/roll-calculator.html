@@ -174,6 +174,15 @@
     .rp-hp-input { width: 3.1rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
       background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.35rem; }
     .rp-hp-input.is-compact { width: 2.3rem; }
+    /* Native spinners off — this field is the one number input that already
+       has a stepper either side of it, and the browser's arrows are not an
+       equivalent second one: they only set the field, so nothing is written
+       until it blurs, where − and + schedule the debounced commit. They are
+       also absent on iOS and Android, so they cannot be the only control.
+       Same treatment as .count-input in styles.css. */
+    .rp-hp-input { -moz-appearance: textfield; }
+    .rp-hp-input::-webkit-outer-spin-button,
+    .rp-hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .rp-hp-max { color: var(--text-secondary); font-size: 0.85rem; }
 
     /* Battlefield (bosses) */
@@ -232,6 +241,21 @@
     /* HP value can be 2–3 digits and the number spinner eats width — give it room.
        Shield is single-digit (0–3) so its compact width is left alone. */
     .rp-party .rp-hp-edit .rp-hp-input { width: 3.6rem; }
+    /* Narrow screens: the two steppers alone need ~15rem, which leaves a name
+       column too thin to read. Break the row in two — portrait, name and role
+       on top, HP and shield on a full-width line beneath. */
+    @media (max-width: 600px) {
+      .rp-party-row { flex-wrap: wrap; row-gap: 0.35rem; padding: 0.4rem; }
+      /* Zero basis, not auto: a long name's max-content width would otherwise
+         count against the first line and bump the whole block below the
+         portrait. At 0 it always fits beside it and wraps its own text. */
+      .rp-party-id { flex: 1 1 0; flex-direction: row; flex-wrap: wrap;
+        align-items: baseline; gap: 0.1rem 0.45rem; }
+      /* Grouped under the name rather than spread edge to edge — at 600px the
+         two controls would otherwise sit a long way apart. Wraps again if the
+         screen is narrow enough that they still don't fit side by side. */
+      .rp-party-stats { flex: 1 0 100%; margin-left: 0; flex-wrap: wrap; gap: 0.3rem 1.4rem; }
+    }
 
     /* My Items — mirrors My Profile > My Items: card thumbnails that open a
        detail popup. Reuses .venue-card / .venue-modal / .contrast-border from

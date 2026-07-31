@@ -285,7 +285,7 @@
     return h('button', {
       type: 'button', className: 'venue-card pv-item-card', 'aria-label': it.name, onClick: props.onOpen
     },
-      h('div', { className: 'venue-card-media' },
+      h('div', { className: 'venue-card-media sketch-wash' },
         it.image_url
           ? h('img', {
               className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy',

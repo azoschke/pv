@@ -3238,6 +3238,12 @@ body.nav-sidebar-open {
 
 .venue-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
+/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
+   work from the moment they appear. That is a focus move, not a focus stop —
+   the box should not draw the global ring. Controls inside it still do. */
+.venue-modal:focus,
+.venue-modal:focus-visible { outline: none; }
+
 .venue-modal-img {
   width: 100%;
   display: block;
@@ -3288,6 +3294,51 @@ body.nav-sidebar-open {
   aspect-ratio: 319.4136 / 42.48;
   -webkit-mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
           mask: url("/pv/assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
+}
+
+/* Sketch wash — the shared tint for the site's illustrations. Put it on the
+   box that holds the artwork (a card's media tile, a thumb, a modal image
+   wrapper) and it lends that box's contents the parchment hue of the theme.
+   Blended on colour, not laid over as a veil: the illustration keeps its own
+   luminance, so linework stays exactly as dark as it was drawn.
+
+   Gated on :has(img), so a container that swaps between artwork and a text or
+   gradient fallback can carry the class unconditionally and only be washed
+   when there is something to wash.
+
+   Stays below any torn edge in the same box: .contrast-border/-half carry
+   z-index 1 and this is z-index auto, so they paint after the wash and are
+   not part of the backdrop it blends with. Keep it that way — a z-index here
+   would tint the border along with the art.
+
+   --sketch-wash-alpha tunes the strength per surface; the default is the
+   subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
+.sketch-wash {
+  --sketch-wash-tint-from: 107, 68, 35;
+  --sketch-wash-tint-to:   139, 111, 71;
+  --sketch-wash-alpha: 0.1;
+  position: relative;
+  /* Own stacking context, so the blend composites against the artwork inside
+     the box and not whatever sits behind it. */
+  isolation: isolate;
+}
+
+.sketch-wash:has(img)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg,
+    rgba(var(--sketch-wash-tint-from), var(--sketch-wash-alpha)),
+    rgba(var(--sketch-wash-tint-to), var(--sketch-wash-alpha)));
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+/* The blend carries hue and saturation, so each theme keeps its own pair —
+   dark's is the more muted of the two. */
+[data-theme="dark"] .sketch-wash {
+  --sketch-wash-tint-from: 38, 22, 14;
+  --sketch-wash-tint-to:   74, 66, 57;
 }
 
 .venue-gallery {
@@ -4006,16 +4057,84 @@ body.nav-sidebar-open {
      and each category heading) can cancel it with a negative margin and stay
      in step at every breakpoint. */
   --menu-sheet-pad: 2.5rem;
+  /* The top padding is a variable too, so the hero header can cancel it and
+     sit flush against the sheet's top edge at every breakpoint. */
+  --menu-sheet-pad-top: 2.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  padding: 2.25rem var(--menu-sheet-pad) 2.75rem;
+  padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2.75rem;
   overflow: hidden;
 }
 
 .menu-sheet-header {
   text-align: center;
   margin-bottom: 0.5rem;
+}
+
+/* Masthead over the venue's own photograph. The image is texture here, not
+   subject: lightly blurred, overscanned, and sunk under a dark veil.
+   Deliberately theme-independent — the band reads as a dusk-lit signboard in
+   light mode as much as in dark, and one treatment means one set of contrast
+   figures to stand behind instead of two. Its type therefore carries the
+   parchment inks rather than the page's, which invert underneath it. */
+.menu-sheet-header.has-hero {
+  /* The dark-theme ink pair, pinned so light mode gets it too. */
+  --menu-hero-ink:     #ebe3d0;
+  --menu-hero-ink-dim: #c5b89a;
+  position: relative;
+  /* Own stacking context, so the negative-z layers below stay above the
+     sheet's background instead of falling behind it. */
+  isolation: isolate;
+  overflow: hidden;
+  margin: calc(var(--menu-sheet-pad-top) * -1) calc(var(--menu-sheet-pad) * -1) 0;
+  padding: 3rem var(--menu-sheet-pad) 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--menu-hero-ink);
+  /* Inherited by the title and location — enough to hold the type together
+     where the veil thins over a bright patch of the photo. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Overscanned just past the band so the blur's feathered edge never shows —
+   in pixels, not a percentage, to keep the extra crop off the photo minimal. */
+.menu-sheet-header.has-hero::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  z-index: -2;
+  background-image: var(--menu-hero-img);
+  background-size: cover;
+  background-position: center;
+  /* Light blur only — enough to soften detail under the type without losing
+     the venue. Brightness comes down a touch first: a photo already sitting
+     near the band's own range needs less covering up, so more of it survives
+     at the same legibility. Saturation is left alone. */
+  filter: blur(3px) brightness(0.85);
+}
+
+.menu-sheet-header.has-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Light-handed: venue photographs are moderately dark to begin with, so the
+     veil only has to settle them. Thinnest at the top edge, where nothing
+     sits over it, and steady from the title down. */
+  background: linear-gradient(180deg,
+    rgba(26, 22, 20, 0.3) 0%,
+    rgba(26, 22, 20, 0.5) 42%,
+    rgba(26, 22, 20, 0.5) 100%);
+}
+
+.menu-sheet-header.has-hero .menu-sheet-title { color: var(--menu-hero-ink); }
+.menu-sheet-header.has-hero .menu-sheet-location { color: var(--menu-hero-ink-dim); }
+
+/* The hero already closes with a rule, so the index band below it drops its
+   own top border and butts straight up against it. */
+.menu-sheet-header.has-hero + .menu-index {
+  margin-top: 0;
+  border-top: 0;
 }
 
 .menu-sheet-title {
@@ -4180,6 +4299,10 @@ body.nav-sidebar-open {
   opacity: 0.7;
 }
 
+/* Menu artwork sits on a light sheet at small size and carries the tint
+   better than the darker card media does, so it runs above the default. */
+.menu-thumb.sketch-wash { --sketch-wash-alpha: 0.25; }
+
 .menu-thumb-icon {
   position: relative;
   z-index: 1;
@@ -4211,17 +4334,19 @@ body.nav-sidebar-open {
   flex: 1 1 auto;
 }
 
-/* Capped so long names wrap instead of crowding out the leader — whatever is
-   left of the row belongs to the dots and the price. */
 .menu-item-name {
   flex: 0 1 auto;
-  max-width: 15ch;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 1.05rem;
   line-height: 1.3;
   color: var(--text-primary);
 }
+
+/* Capped so long names wrap instead of crowding out the leader — whatever is
+   left of the row belongs to the dots and the price. Only when a price is
+   actually there: with nothing to make room for, the name takes the row. */
+.menu-item-head:has(.menu-item-price) .menu-item-name { max-width: 15ch; }
 
 /* Dot leader. Rendered only when a price follows it — see menus.js. */
 .menu-item-leader {
@@ -4249,37 +4374,79 @@ body.nav-sidebar-open {
 }
 
 /* ── Venue modal "View Menu" link ────────────────────────────────────────── */
+/* A chip, not a button: it sits between the location line and the description
+   in a modal that is mostly reading matter, so it is padded to about half a
+   button's height and kept in the secondary ink until hovered. The pill
+   radius follows the action chips elsewhere in the app. */
 .venue-modal-menu-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  /* Sits between the location line and the description; the location already
-     carries 1rem beneath it, so only a gap below is needed. */
+  /* The location already carries 1rem beneath it, so only a gap below. */
   margin: 0 0 1.1rem;
+  padding: 0.32rem 0.7rem;
   font-family: 'Stoke', serif;
   font-size: 0.78rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--accent-brown);
+  line-height: 1;
+  color: var(--text-secondary);
   text-decoration: none;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.15rem;
+  background: var(--bg-darker);
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.venue-modal-menu-link:hover {
+/* Nudges forward on hover — the one bit of movement the chip makes. */
+.venue-modal-menu-arrow {
+  transition: transform 0.18s ease;
+}
+
+.venue-modal-menu-link:hover,
+.venue-modal-menu-link:focus-visible {
   color: var(--accent-red);
-  border-bottom-color: var(--accent-red);
+  border-color: var(--accent-red);
+  background: var(--bg-card-light);
+}
+
+.venue-modal-menu-link:hover .venue-modal-menu-arrow,
+.venue-modal-menu-link:focus-visible .venue-modal-menu-arrow {
+  transform: translateX(0.15rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venue-modal-menu-link,
+  .venue-modal-menu-arrow { transition: none; }
+  .venue-modal-menu-link:hover .venue-modal-menu-arrow,
+  .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }
 }
 
 @media (max-width: 1024px) {
-  .menu-sheet  { --menu-sheet-pad: 1.5rem; padding: 1.75rem var(--menu-sheet-pad) 2rem; }
+  .menu-sheet  { --menu-sheet-pad: 1.5rem; --menu-sheet-pad-top: 1.75rem;
+                 padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2rem; }
   .menu-items  { columns: 1; }
+  .menu-sheet-header.has-hero { padding: 2.5rem var(--menu-sheet-pad) 2rem; }
 }
 
 @media (max-width: 600px) {
-  .menu-sheet       { --menu-sheet-pad: 1.1rem; padding: 1.4rem var(--menu-sheet-pad) 1.75rem; }
+  .menu-sheet       { --menu-sheet-pad: 1.1rem; --menu-sheet-pad-top: 1.4rem;
+                      padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 1.75rem; }
   .menu-sheet-title { font-size: 1.5rem; }
   .menu-thumb       { flex-basis: 96px; width: 96px; height: 96px; }
   .menu-thumb-icon  { width: 36px; height: 36px; }
   .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
+  .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
+}
+
+/* Extra small: a 96px square beside the text leaves the description wrapping
+   every three or four words, so the thumb takes a row of its own above the
+   name and the item reads straight down. */
+@media (max-width: 480px) {
+  .menu-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .menu-item-body { width: 100%; }
 }

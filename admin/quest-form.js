@@ -424,7 +424,7 @@
         h('label', null, 'Reward'),
         h('input', {
           type: 'text', value: draft.reward, maxLength: 200,
-          placeholder: 'e.g. 50,000 gil + salvage rights',
+          placeholder: 'e.g. 50,000 gil',
           onChange: function (e) { setField('reward', e.target.value); }
         })
       ),

@@ -95,7 +95,7 @@
 
     <!-- Detail modal (reuses the venue modal shell) -->
     <div class="venue-modal-overlay" id="codex-modal-overlay" aria-hidden="true">
-      <div class="venue-modal" role="dialog" aria-modal="true" aria-labelledby="codex-modal-title">
+      <div class="venue-modal" id="codex-modal" role="dialog" aria-modal="true" aria-labelledby="codex-modal-title" tabindex="-1">
         <button type="button" class="venue-modal-close" id="codex-modal-close" aria-label="Close">&#10005;</button>
         <div class="venue-modal-body" id="codex-modal-body">
           <!-- populated by JS -->
@@ -142,6 +142,7 @@
     var modalOverlay = document.getElementById('codex-modal-overlay');
     var modalBody   = document.getElementById('codex-modal-body');
     var modalClose  = document.getElementById('codex-modal-close');
+    var modalEl     = document.getElementById('codex-modal');
 
     // ── State ────────────────────────────────────────────────────────────────
     var allEntries = [];
@@ -434,7 +435,7 @@
 
       modalBody.innerHTML =
         (e.image_url
-          ? '<div class="contrast-media">' +
+          ? '<div class="contrast-media sketch-wash">' +
               '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.parentElement.remove()">' +
               '<span class="contrast-border" aria-hidden="true"></span>' +
             '</div>'
@@ -459,7 +460,14 @@
 
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
-      if (modalClose && modalClose.focus) { try { modalClose.focus(); } catch (_) {} }
+      // Focus the dialog itself, not the close button. Focus has to land
+      // inside the modal for Escape and Tab to work, but putting it on a
+      // control paints that control's focus ring — and a programmatic focus
+      // counts as keyboard-initiated whenever the open was not a mouse click
+      // (a ?e= deep link on load, or Enter on a row), so the X came up ringed.
+      // The dialog is tabindex="-1" and draws no ring of its own; Tab from
+      // here still reaches the close button, which rings normally.
+      if (modalEl && modalEl.focus) { try { modalEl.focus(); } catch (_) {} }
       try { history.replaceState(null, '', '?e=' + encodeURIComponent(e.slug)); } catch (_) {}
     }
 
