@@ -4262,13 +4262,13 @@ body.nav-sidebar-open {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(140deg, rgba(107, 68, 35, .5), rgba(139, 111, 71, .5));
+  background: linear-gradient(140deg, rgba(107, 68, 35, .25), rgba(139, 111, 71, .25));
   mix-blend-mode: color;
   pointer-events: none;
 }
 
 [data-theme="dark"] .menu-thumb:not(.is-placeholder)::after {
-  background: linear-gradient(140deg, rgba(38, 22, 14, .5), rgba(74, 66, 57, .5));
+  background: linear-gradient(140deg, rgba(38, 22, 14, .25), rgba(74, 66, 57, .25));
 }
 
 .menu-thumb-icon {
