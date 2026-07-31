@@ -4203,6 +4203,9 @@ body.nav-sidebar-open {
    half-photographed menu from looking ragged. */
 .menu-thumb {
   position: relative;
+  /* Own stacking context, so the colour blend below composites against the
+     artwork inside the thumb and not the sheet behind it. */
+  isolation: isolate;
   flex: 0 0 120px;
   width: 120px;
   height: 120px;
@@ -4248,19 +4251,18 @@ body.nav-sidebar-open {
   opacity: 0.7;
 }
 
-/* The same wash at a whisper over real photographs, so a half-photographed
-   menu reads as one set of thumbs rather than two. ::after, not ::before —
-   a generated first child would paint under the img. */
+/* The same wash over real artwork, so a half-illustrated menu reads as one
+   set of thumbs rather than two. Blended on colour, not laid over as a veil:
+   it lends the placeholder's hue while the illustration keeps its own
+   luminance, so the linework stays as dark and as legible as it was drawn.
+   ::after, not ::before — a generated first child would paint under the img. */
 .menu-thumb:not(.is-placeholder)::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(140deg, rgba(107, 68, 35, .16), rgba(139, 111, 71, .16));
+  background: linear-gradient(140deg, rgba(107, 68, 35, .5), rgba(139, 111, 71, .5));
+  mix-blend-mode: color;
   pointer-events: none;
-}
-
-[data-theme="dark"] .menu-thumb:not(.is-placeholder)::after {
-  background: linear-gradient(140deg, rgba(38, 22, 14, .3), rgba(74, 66, 57, .28));
 }
 
 .menu-thumb-icon {
@@ -4356,14 +4358,6 @@ body.nav-sidebar-open {
   transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.venue-modal-menu-icon {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 auto;
-  color: var(--accent-brown);
-  transition: color 0.18s ease;
-}
-
 /* Nudges forward on hover — the one bit of movement the chip makes. */
 .venue-modal-menu-arrow {
   transition: transform 0.18s ease;
@@ -4376,11 +4370,6 @@ body.nav-sidebar-open {
   background: var(--bg-card-light);
 }
 
-.venue-modal-menu-link:hover .venue-modal-menu-icon,
-.venue-modal-menu-link:focus-visible .venue-modal-menu-icon {
-  color: var(--accent-red);
-}
-
 .venue-modal-menu-link:hover .venue-modal-menu-arrow,
 .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow {
   transform: translateX(0.15rem);
@@ -4388,7 +4377,6 @@ body.nav-sidebar-open {
 
 @media (prefers-reduced-motion: reduce) {
   .venue-modal-menu-link,
-  .venue-modal-menu-icon,
   .venue-modal-menu-arrow { transition: none; }
   .venue-modal-menu-link:hover .venue-modal-menu-arrow,
   .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }
@@ -4409,4 +4397,16 @@ body.nav-sidebar-open {
   .menu-thumb-icon  { width: 36px; height: 36px; }
   .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
   .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
+}
+
+/* Extra small: a 96px square beside the text leaves the description wrapping
+   every three or four words, so the thumb takes a row of its own above the
+   name and the item reads straight down. */
+@media (max-width: 480px) {
+  .menu-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .menu-item-body { width: 100%; }
 }

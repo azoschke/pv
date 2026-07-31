@@ -571,19 +571,10 @@
       '<span class="venue-badge venue-badge-size" style="position:static;">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
 
     // Menus live on their own page; the card itself stays unchanged, so this
-    // link is the only entry point from the directory. The cloche is the same
-    // glyph the menus page uses as its default category icon, drawn to the
-    // same 24x24 stroked convention — the link and its destination share a
-    // mark rather than the link wearing a badge of its own.
+    // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
       ? '<a class="venue-modal-menu-link" href="/pv/venues/menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
-          '<svg class="venue-modal-menu-icon" viewBox="0 0 24 24" fill="none" ' +
-            'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" ' +
-            'stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M3 18h18"/><path d="M5 18a7 7 0 0 1 14 0"/>' +
-            '<circle cx="12" cy="6" r="1"/>' +
-          '</svg>' +
           'View Menu' +
           '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +
         '</a>'
