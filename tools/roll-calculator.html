@@ -174,6 +174,15 @@
     .rp-hp-input { width: 3.1rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums;
       background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.35rem; }
     .rp-hp-input.is-compact { width: 2.3rem; }
+    /* Native spinners off — this field is the one number input that already
+       has a stepper either side of it, and the browser's arrows are not an
+       equivalent second one: they only set the field, so nothing is written
+       until it blurs, where − and + schedule the debounced commit. They are
+       also absent on iOS and Android, so they cannot be the only control.
+       Same treatment as .count-input in styles.css. */
+    .rp-hp-input { -moz-appearance: textfield; }
+    .rp-hp-input::-webkit-outer-spin-button,
+    .rp-hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .rp-hp-max { color: var(--text-secondary); font-size: 0.85rem; }
 
     /* Battlefield (bosses) */
