@@ -301,12 +301,14 @@
 
     return '<button type="button" class="cal-event" data-id="' + escapeHTML(e.id) + '">' +
         thumb +
-        timeHTML +
-        '<div class="cal-event-body">' +
-          '<div class="cal-event-title-row">' + badge +
-            '<span class="cal-event-title">' + escapeHTML(e.title) + '</span>' +
+        '<div class="cal-event-content">' +
+          timeHTML +
+          '<div class="cal-event-body">' +
+            '<div class="cal-event-title-row">' + badge +
+              '<span class="cal-event-title">' + escapeHTML(e.title) + '</span>' +
+            '</div>' +
+            metaHTML +
           '</div>' +
-          metaHTML +
         '</div>' +
       '</button>';
   }
@@ -392,11 +394,12 @@
       '<div class="cal-modal-meta">' + rows + '</div>' +
       (e.description ? '<div class="cal-modal-desc">' + escapeHTML(e.description) + '</div>' : "");
 
-    modalOverlay.classList.add("active");
+    // styles.css shows the overlay via .is-open (not .active).
+    modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
   }
   function closeModal() {
-    modalOverlay.classList.remove("active");
+    modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
   }
 

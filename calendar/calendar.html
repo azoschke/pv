@@ -21,7 +21,9 @@
        signed out (the gate panel stands in). */
     #calendar-layout[hidden] { display: none !important; }
 
-    .cal-intro { margin: 0 0 1.5rem; color: var(--text-secondary); }
+    /* Keep .landing-intro's auto side-margins (centering) — only override the
+       bottom gap. Setting `margin: 0 0 …` would drop the `auto` and left-align. */
+    .cal-intro { margin: 0 auto 1.75rem; }
 
     /* Day group: a divider header (no filled band — the "raised" tone flips
        lighter than cards in dark mode, so a fill reads as a stray stripe). */
@@ -33,32 +35,38 @@
     }
     .cal-day-weekday { font-family: 'Stoke', serif; font-size: 1.15rem; letter-spacing: 0.03em; }
     .cal-day-date { font-size: 0.9rem; color: var(--text-secondary); }
-    .cal-day-header.is-today { border-bottom-color: var(--accent-gold); }
+    .cal-day-header.is-today { border-bottom-color: var(--accent-red); }
     .cal-day-header.is-today .cal-day-weekday,
-    .cal-day-header.is-today .cal-day-date { color: var(--accent-gold); }
+    .cal-day-header.is-today .cal-day-date { color: var(--accent-red); }
     .cal-today-tag {
       margin-left: auto; align-self: center;
       font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
-      border: 1px solid var(--accent-gold); color: var(--accent-gold);
+      border: 1px solid var(--accent-red); color: var(--accent-red);
       border-radius: 2rem; padding: 0.05rem 0.5rem;
     }
 
-    /* Event row — cover image leads, then time + details. Click opens detail. */
+    /* Event row — cover image leads, flush to the card edges, then details.
+       Click opens the detail modal. */
     .cal-event {
-      display: flex; align-items: center; gap: 1rem; width: 100%;
-      text-align: left; font: inherit; color: inherit; cursor: pointer;
+      display: flex; align-items: stretch; gap: 0; width: 100%; min-height: 150px;
+      text-align: left; font: inherit; color: inherit; cursor: pointer; overflow: hidden;
       background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 0.55rem; padding: 0.85rem; margin-bottom: 0.65rem;
+      border-radius: 0.55rem; margin-bottom: 0.65rem;
       transition: border-color 0.15s ease, transform 0.05s ease;
     }
     .cal-event:hover { border-color: var(--accent-brown); }
     .cal-event:active { transform: translateY(1px); }
 
-    /* Full aspect ratio preserved (height auto), capped so a tall poster can't
-       blow out the row. */
+    /* Flush to the card — no padding frame — and fills the full card height. */
     .cal-event-thumb {
-      flex: 0 0 auto; width: 180px; height: auto; max-height: 130px;
-      border-radius: 0.45rem; border: 1px solid var(--border-color); display: block;
+      flex: 0 0 auto; width: 260px; align-self: stretch;
+      object-fit: cover; display: block; border: 0;
+    }
+
+    /* Text content carries the padding the image intentionally skips. */
+    .cal-event-content {
+      flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 1rem;
+      padding: 0.9rem 1.1rem;
     }
 
     .cal-event-time {
@@ -76,10 +84,11 @@
     .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
     .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
 
-    @media (max-width: 560px) {
-      .cal-event { flex-wrap: wrap; }
-      .cal-event-thumb { width: 100%; max-height: 200px; object-fit: cover; }
-      .cal-event-time { flex-basis: 4.5rem; }
+    @media (max-width: 620px) {
+      .cal-event { flex-direction: column; align-items: stretch; min-height: 0; }
+      .cal-event-thumb { width: 100%; height: 180px; }
+      .cal-event-content { flex-wrap: wrap; }
+      .cal-event-time { flex-basis: auto; border-right: 0; padding-right: 0; }
     }
 
     /* Category badge — one accent per prefix. */
