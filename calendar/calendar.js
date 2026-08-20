@@ -478,7 +478,9 @@
   }
 
   function cellMediaHTML(ev) {
-    return '<div class="cal-cell-media" style="background-image:url(&quot;' + escapeHTML(ev.image_url) + '&quot;)"></div>' +
+    // Cells show only a heavily-zoomed right slice, so use the hi-res rendition
+    // to keep it crisp.
+    return '<div class="cal-cell-media" style="background-image:url(&quot;' + escapeHTML(hiResImage(ev.image_url)) + '&quot;)"></div>' +
            '<div class="cal-cell-scrim"></div>';
   }
   function cellEventChip(e) {
@@ -589,8 +591,9 @@
       rows += '<div class="cal-modal-meta-row"><span class="cal-modal-meta-label">Repeats</span><span>Recurring event</span></div>';
     }
 
-    modalBody.innerHTML =
-      (e.image_url ? '<img class="cal-modal-media" src="' + escapeHTML(hiResImage(e.image_url)) + '" alt="" />' : "") +
+    var hiUrl = e.image_url ? hiResImage(e.image_url) : null;
+    var bodyHtml =
+      (hiUrl ? '<img class="cal-modal-media" src="' + escapeHTML(hiUrl) + '" alt="" />' : "") +
       '<div class="cal-modal-content">' +
         '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
         '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
@@ -598,9 +601,26 @@
         (e.description ? '<div class="cal-modal-desc">' + renderMarkdown(e.description) + '</div>' : "") +
       '</div>';
 
-    // styles.css shows the overlay via .is-open (not .active).
-    modalOverlay.classList.add("is-open");
-    modalOverlay.setAttribute("aria-hidden", "false");
+    function reveal() {
+      modalBody.innerHTML = bodyHtml;              // image is warm → paints at once
+      modalOverlay.classList.add("is-open");        // styles.css reveals via .is-open
+      modalOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    // Preload the hero image so it opens WITH the modal. A slight delay is
+    // acceptable; cap it so a slow/broken image never blocks the modal.
+    if (hiUrl) {
+      var pre = new Image();
+      var opened = false;
+      var go = function () { if (opened) return; opened = true; reveal(); };
+      pre.onload = go;
+      pre.onerror = go;
+      pre.src = hiUrl;
+      if (pre.complete) go();
+      setTimeout(go, 2500);
+    } else {
+      reveal();
+    }
   }
   function closeModal() {
     modalOverlay.classList.remove("is-open");
