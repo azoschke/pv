@@ -50,7 +50,6 @@
   var searchInput  = document.getElementById("calendar-search");
   var catListEl    = document.getElementById("filter-category-list");
   var resetBtn     = document.getElementById("filter-reset");
-  var refreshBtn   = document.getElementById("calendar-refresh");
   var agendaEl     = document.getElementById("calendar-agenda");
   var weekEl       = document.getElementById("calendar-week");
   var monthEl      = document.getElementById("calendar-month");
@@ -678,8 +677,6 @@
     catListEl.querySelectorAll("input[type=checkbox]").forEach(function (i) { i.checked = false; });
     render();
   });
-
-  refreshBtn.addEventListener("click", load);
 
   // View toggle.
   function setView(v) {
