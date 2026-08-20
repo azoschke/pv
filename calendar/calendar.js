@@ -408,22 +408,9 @@
       '</button>';
   }
 
-  function renderAgenda() {
-    updateCounts();
-    var events = applyFilters().slice().sort(function (a, b) {
-      return (parseUtc(a.starts_at) || 0) - (parseUtc(b.starts_at) || 0);
-    });
-
-    countEl.textContent = events.length + (events.length === 1 ? " event" : " events");
-
-    if (!events.length) {
-      agendaEl.innerHTML = allEvents.length
-        ? '<div class="cal-empty">No events match your filters.</div>'
-        : '<div class="cal-empty">No upcoming events are scheduled right now.</div>';
-      return;
-    }
-
-    // Group into days, preserving chronological order.
+  // Group a sorted event list into day sections (header + rows). Shared by the
+  // Agenda and Week views so they render identically.
+  function agendaSectionsHTML(events) {
     var groups = [];
     var index = {};
     var tKey = todayKey();
@@ -437,7 +424,7 @@
       groups[index[key]].events.push(e);
     });
 
-    var html = groups.map(function (g) {
+    return groups.map(function (g) {
       var header;
       if (g.ms) {
         var parts = fmtDayParts(g.ms);
@@ -453,8 +440,20 @@
       }
       return '<section class="cal-day">' + header + g.events.map(eventRowHTML).join("") + '</section>';
     }).join("");
+  }
 
-    agendaEl.innerHTML = html;
+  function byStart(a, b) { return (parseUtc(a.starts_at) || 0) - (parseUtc(b.starts_at) || 0); }
+
+  function renderAgenda() {
+    updateCounts();
+    var events = applyFilters().slice().sort(byStart);
+    countEl.textContent = events.length + (events.length === 1 ? " event" : " events");
+
+    agendaEl.innerHTML = events.length
+      ? agendaSectionsHTML(events)
+      : (allEvents.length
+          ? '<div class="cal-empty">No events match your filters.</div>'
+          : '<div class="cal-empty">No upcoming events are scheduled right now.</div>');
   }
 
   // ── Month + week grids ─────────────────────────────────────────────────────
@@ -528,50 +527,23 @@
     monthEl.innerHTML = html;
   }
 
+  // Week view reuses the agenda's day-section styling, scoped to the seven days
+  // of the displayed week.
   function renderWeek() {
     updateCounts();
-    var byDay = bucketByDay();
-
     var start = startOfWeek(weekCursor);
-    var end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
-    periodLabelEl.textContent = fmtRange(start, end);
-    var tKey = todayKey();
+    var startMs = start.getTime();
+    var endMs = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7).getTime();
+    periodLabelEl.textContent = fmtRange(start, new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
 
-    var html = '<div class="cal-week-grid">';
-    for (var i = 0; i < 7; i++) {
-      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-      var evs = byDay[dayKey(d.getTime())] || [];
-      var isToday = dayKey(d.getTime()) === tKey;
+    var events = applyFilters().filter(function (e) {
+      var ms = parseUtc(e.starts_at);
+      return ms != null && ms >= startMs && ms < endMs;
+    }).sort(byStart);
 
-      var cls = "cal-week-day" + (isToday ? " is-today" : "") + (evs.length ? " has-events" : "");
-      var single = evs.length === 1 ? ' data-single-id="' + escapeHTML(evs[0].id) + '"' : "";
-
-      var cards = evs.map(function (e) {
-        var cat = e.category || "uncategorized";
-        var sMs = parseUtc(e.starts_at);
-        var thumb = e.image_url
-          ? '<div class="cal-week-thumb" style="background-image:url(&quot;' + escapeHTML(e.image_url) + '&quot;)"></div>'
-          : "";
-        return '<button type="button" class="cal-week-event" data-id="' + escapeHTML(e.id) + '">' +
-          thumb +
-          '<div class="cal-week-ev-body">' +
-            '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
-            '<span class="cal-week-ev-time">' + (sMs ? escapeHTML(fmtTime(sMs)) : "") + '</span>' +
-            '<span class="cal-week-ev-title">' + escapeHTML(e.title) + '</span>' +
-          '</div>' +
-        '</button>';
-      }).join("");
-
-      html += '<div class="' + cls + '"' + single + '>' +
-        '<div class="cal-week-dayhead">' +
-          '<span class="cal-week-dow">' + WEEKDAYS[d.getDay()] + '</span>' +
-          '<span class="cal-week-date">' + d.getDate() + '</span>' +
-        '</div>' +
-        '<div class="cal-week-events">' + cards + '</div>' +
-      '</div>';
-    }
-    html += '</div>';
-    weekEl.innerHTML = html;
+    weekEl.innerHTML = events.length
+      ? agendaSectionsHTML(events)
+      : '<div class="cal-empty">No events this week.</div>';
   }
 
   // Dispatch to the active view (all three share filters + the detail modal).
@@ -724,9 +696,9 @@
     if (e) openModal(e);
   }
   function onEventClick(ev) {
-    var btn = ev.target.closest(".cal-event, .cal-cell-event, .cal-week-event");
+    var btn = ev.target.closest(".cal-event, .cal-cell-event");
     if (btn) { openById(btn.getAttribute("data-id")); return; }
-    var cell = ev.target.closest(".cal-cell[data-single-id], .cal-week-day[data-single-id]");
+    var cell = ev.target.closest(".cal-cell[data-single-id]");
     if (cell) openById(cell.getAttribute("data-single-id"));
   }
   agendaEl.addEventListener("click", onEventClick);

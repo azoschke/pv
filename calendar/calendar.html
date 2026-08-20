@@ -191,43 +191,6 @@
     .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cal-cell[data-single-id] { cursor: pointer; }
 
-    /* Week grid — one column per day, event cards stacked. */
-    .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; align-items: start; }
-    .cal-week-day {
-      display: flex; flex-direction: column; min-height: 8rem;
-      border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden;
-      background: var(--bg-card);
-    }
-    .cal-week-day.is-today { border-color: var(--accent-red); }
-    .cal-week-day[data-single-id] { cursor: pointer; }
-    .cal-week-dayhead {
-      display: flex; align-items: baseline; justify-content: space-between; gap: 0.3rem;
-      padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border-color);
-    }
-    .cal-week-dow { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
-    .cal-week-day.is-today .cal-week-dow, .cal-week-day.is-today .cal-week-date { color: var(--accent-red); }
-    .cal-week-date { font-family: 'Stoke', serif; font-size: 1rem; font-variant-numeric: tabular-nums; }
-    .cal-week-events { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.4rem; }
-    .cal-week-event {
-      display: flex; flex-direction: column; gap: 0.3rem; width: 100%; text-align: left;
-      border: 1px solid var(--border-color); border-radius: 0.35rem; overflow: hidden;
-      background: var(--bg-card-light); color: inherit; font: inherit; cursor: pointer; padding: 0;
-    }
-    .cal-week-event:hover { border-color: var(--accent-brown); }
-    .cal-week-thumb {
-      width: 100%; height: 4.5rem; background-repeat: no-repeat;
-      background-position: right center; background-size: cover;
-    }
-    .cal-week-ev-body { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.4rem 0.5rem 0.5rem; }
-    .cal-week-ev-time { font-size: 0.8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-    .cal-week-ev-title { font-family: 'Stoke', serif; font-size: 0.92rem; overflow-wrap: anywhere; }
-    .cal-week-event .cal-badge { align-self: flex-start; }
-
-    @media (max-width: 720px) {
-      .cal-week-grid { grid-template-columns: 1fr; }
-      .cal-week-day { min-height: 0; }
-    }
-
     @media (max-width: 620px) {
       .cal-month-grid { gap: 0.2rem; }
       .cal-cell-num { font-size: 0.72rem; padding: 0.15rem 0.25rem; }
