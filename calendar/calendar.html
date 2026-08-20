@@ -77,10 +77,13 @@
     .cal-event-end { font-size: 0.78rem; color: var(--text-secondary); }
 
     .cal-event-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-    .cal-event-title-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    /* Badge sits on its own line above the title (the title wraps on longer
+       events anyway, so keeping them inline just looked ragged). */
+    .cal-event-title-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
     .cal-event-title { font-family: 'Stoke', serif; font-size: 1.1rem; overflow-wrap: anywhere; }
     .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
     .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
+    .cal-loc-icon { width: 1em; height: 1em; flex: 0 0 auto; }
 
     /* When the row's own column gets narrow (small screen, or the filter
        sidebar open on a mid-size screen), stack: full banner on top, then the
@@ -297,7 +300,7 @@
             &#9776; Filters
           </button>
           <div class="cal-viewtoggle" role="group" aria-label="Calendar view">
-            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">Agenda</button>
+            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">List</button>
             <button type="button" class="cal-view-btn" id="view-week" aria-pressed="false">Week</button>
             <button type="button" class="cal-view-btn" id="view-month" aria-pressed="false">Month</button>
           </div>

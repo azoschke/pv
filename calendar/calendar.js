@@ -40,6 +40,13 @@
   var CATEGORY_LABEL = {};
   CATEGORIES.forEach(function (c) { CATEGORY_LABEL[c.slug] = c.label; });
 
+  // Line-art map-pin, matching the site's icon style (menus.js): stroked,
+  // currentColor, 1.5 weight.
+  var LOC_ICON =
+    '<svg class="cal-loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+
   // ── DOM refs ───────────────────────────────────────────────────────────────
   var statusEl     = document.getElementById("calendar-status");
   var layoutEl     = document.getElementById("calendar-layout");
@@ -72,9 +79,12 @@
   var view = "agenda";                            // "agenda" | "week" | "month"
   var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
   var weekCursor = null;                           // a Date within the displayed week
-  // Navigation floor — no past periods, since old events aren't kept.
+  // Navigation bounds — no past periods (old events aren't kept) and none past
+  // the last scheduled event (nothing to show there).
   var monthFloor = { year: 0, month: 0 };
   var weekFloorMs = 0;
+  var monthCeil = { year: 0, month: 0 };
+  var weekCeilMs = 0;
 
   // ── Session (shared with the management portal) ────────────────────────────
   function getSession() {
@@ -386,7 +396,7 @@
 
     var meta = [];
     if (e.location) {
-      meta.push('<span class="cal-event-loc">📍 ' + escapeHTML(e.location) + '</span>');
+      meta.push('<span class="cal-event-loc">' + LOC_ICON + escapeHTML(e.location) + '</span>');
     }
     if (e.recurring) {
       meta.push('<span class="cal-recurring">↻ Recurring</span>');
@@ -654,6 +664,7 @@
     }).then(function (data) {
       if (data === null) return;  // gate already shown
       allEvents = Array.isArray(data) ? data : [];
+      computeBounds();
       showLayout();
       buildFilterUI();
       render();
@@ -693,18 +704,48 @@
   viewWeekBtn.addEventListener("click", function () { setView("week"); });
   viewMonthBtn.addEventListener("click", function () { setView("month"); });
 
-  // At the earliest allowed period? (No navigating into the past — those
-  // events are gone.)
+  // Latest period with events becomes the ceiling; never below the floor.
+  function computeBounds() {
+    var maxMs = 0;
+    allEvents.forEach(function (e) {
+      var ms = parseUtc(e.starts_at);
+      if (ms != null && ms > maxMs) maxMs = ms;
+    });
+    if (maxMs) {
+      var d = new Date(maxMs);
+      monthCeil = { year: d.getFullYear(), month: d.getMonth() };
+      weekCeilMs = startOfWeek(d).getTime();
+    } else {
+      monthCeil = { year: monthFloor.year, month: monthFloor.month };
+      weekCeilMs = weekFloorMs;
+    }
+    if (monthCeil.year < monthFloor.year ||
+        (monthCeil.year === monthFloor.year && monthCeil.month < monthFloor.month)) {
+      monthCeil = { year: monthFloor.year, month: monthFloor.month };
+    }
+    if (weekCeilMs < weekFloorMs) weekCeilMs = weekFloorMs;
+  }
+
+  // No navigating into the past (events are gone) or past the last event.
   function atEarliest() {
     if (view === "week") return startOfWeek(weekCursor).getTime() <= weekFloorMs;
     return monthCursor.year < monthFloor.year ||
       (monthCursor.year === monthFloor.year && monthCursor.month <= monthFloor.month);
   }
-  function updateNav() { prevBtn.disabled = atEarliest(); }
+  function atLatest() {
+    if (view === "week") return startOfWeek(weekCursor).getTime() >= weekCeilMs;
+    return monthCursor.year > monthCeil.year ||
+      (monthCursor.year === monthCeil.year && monthCursor.month >= monthCeil.month);
+  }
+  function updateNav() {
+    prevBtn.disabled = atEarliest();
+    nextBtn.disabled = atLatest();
+  }
 
   // Period navigation — steps by month or by week depending on the active view.
   function shiftPeriod(delta) {
     if (delta < 0 && atEarliest()) return;
+    if (delta > 0 && atLatest()) return;
     if (view === "week") {
       var s = startOfWeek(weekCursor);
       weekCursor = new Date(s.getFullYear(), s.getMonth(), s.getDate() + delta * 7);
