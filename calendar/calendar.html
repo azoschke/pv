@@ -26,8 +26,10 @@
     .cal-intro { margin: 0 auto 1.75rem; }
 
     /* Day group: a divider header (no filled band — the "raised" tone flips
-       lighter than cards in dark mode, so a fill reads as a stray stripe). */
-    .cal-day { margin-bottom: 1.75rem; }
+       lighter than cards in dark mode, so a fill reads as a stray stripe).
+       container-type lets the rows below respond to the actual content width
+       (which the filter sidebar changes) rather than the viewport. */
+    .cal-day { margin-bottom: 1.75rem; container-type: inline-size; }
     .cal-day-header {
       display: flex; align-items: baseline; gap: 0.6rem;
       padding: 0 0.1rem 0.5rem; margin-bottom: 0.85rem;
@@ -80,11 +82,20 @@
     .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
     .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
 
-    @media (max-width: 620px) {
+    /* When the row's own column gets narrow (small screen, or the filter
+       sidebar open on a mid-size screen), stack: full banner on top, then the
+       time stays to the LEFT of the title beneath it — consistent at every
+       width, no crushed title column. */
+    @container (max-width: 780px) {
       .cal-event { flex-direction: column; align-items: stretch; }
       .cal-event-thumb { width: 100%; height: auto; }
-      .cal-event-content { flex-wrap: wrap; }
-      .cal-event-time { flex-basis: auto; border-right: 0; padding-right: 0; }
+    }
+    /* Fallback for browsers without container queries: use the viewport. */
+    @supports not (container-type: inline-size) {
+      @media (max-width: 780px) {
+        .cal-event { flex-direction: column; align-items: stretch; }
+        .cal-event-thumb { width: 100%; height: auto; }
+      }
     }
 
     /* Category badge — one accent per prefix. */
