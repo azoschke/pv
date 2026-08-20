@@ -180,6 +180,7 @@
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   }
   function todayKey() { return dayKey(Date.now()); }
+  function tomorrowKey() { return dayKey(Date.now() + 86400000); }
 
   // Sunday-anchored start of the week containing `date`, at local midnight.
   function startOfWeek(date) {
@@ -414,6 +415,7 @@
     var groups = [];
     var index = {};
     var tKey = todayKey();
+    var tomKey = tomorrowKey();
     events.forEach(function (e) {
       var ms = parseUtc(e.starts_at);
       var key = ms ? dayKey(ms) : "undated";
@@ -429,11 +431,12 @@
       if (g.ms) {
         var parts = fmtDayParts(g.ms);
         var isToday = g.key === tKey;
+        // Relabel today/tomorrow in place of the weekday name (no separate tag).
+        var weekday = isToday ? "Today" : (g.key === tomKey ? "Tomorrow" : parts.weekday);
         header =
           '<div class="cal-day-header' + (isToday ? " is-today" : "") + '">' +
-            '<span class="cal-day-weekday">' + escapeHTML(parts.weekday) + '</span>' +
+            '<span class="cal-day-weekday">' + escapeHTML(weekday) + '</span>' +
             '<span class="cal-day-date">' + escapeHTML(parts.date) + '</span>' +
-            (isToday ? '<span class="cal-today-tag">Today</span>' : "") +
           '</div>';
       } else {
         header = '<div class="cal-day-header"><span class="cal-day-weekday">Date TBD</span></div>';
