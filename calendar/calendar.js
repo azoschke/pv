@@ -34,6 +34,7 @@
     { slug: "collab",          label: "Collab" },
     { slug: "event",           label: "Event" },
     { slug: "fc",              label: "FC" },
+    { slug: "update",          label: "Update" },
     { slug: "uncategorized",   label: "Uncategorized" }
   ];
   var CATEGORY_LABEL = {};
@@ -51,12 +52,14 @@
   var resetBtn     = document.getElementById("filter-reset");
   var refreshBtn   = document.getElementById("calendar-refresh");
   var agendaEl     = document.getElementById("calendar-agenda");
+  var weekEl       = document.getElementById("calendar-week");
   var monthEl      = document.getElementById("calendar-month");
   var countEl      = document.getElementById("calendar-count");
   var viewAgendaBtn= document.getElementById("view-agenda");
+  var viewWeekBtn  = document.getElementById("view-week");
   var viewMonthBtn = document.getElementById("view-month");
   var monthNavEl   = document.getElementById("cal-monthnav");
-  var monthLabelEl = document.getElementById("cal-month-label");
+  var periodLabelEl= document.getElementById("cal-period-label");
   var prevBtn      = document.getElementById("cal-prev");
   var nextBtn      = document.getElementById("cal-next");
   var todayBtn     = document.getElementById("cal-today-btn");
@@ -67,8 +70,9 @@
   // ── State ──────────────────────────────────────────────────────────────────
   var allEvents = [];
   var filters = { search: "", categories: {} };  // categories: { rp: true, ... }
-  var view = "agenda";                            // "agenda" | "month"
+  var view = "agenda";                            // "agenda" | "week" | "month"
   var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
+  var weekCursor = null;                           // a Date within the displayed week
 
   // ── Session (shared with the management portal) ────────────────────────────
   function getSession() {
@@ -116,12 +120,83 @@
       : url + (url.indexOf("?") === -1 ? "?" : "&") + "size=1024";
   }
 
+  // ── Discord markdown ───────────────────────────────────────────────────────
+  // Render the subset Discord uses in event descriptions to safe HTML. Input is
+  // HTML-escaped FIRST, so every tag we emit below is one we control — the
+  // markdown source can never inject markup.
+  function fmtRelative(ms) {
+    var diff = ms - Date.now();
+    var future = diff >= 0;
+    var s = Math.round(Math.abs(diff) / 1000);
+    var units = [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60], ["second", 1]];
+    for (var i = 0; i < units.length; i++) {
+      var n = Math.floor(s / units[i][1]);
+      if (n >= 1) {
+        var label = n + " " + units[i][0] + (n === 1 ? "" : "s");
+        return future ? "in " + label : label + " ago";
+      }
+    }
+    return "just now";
+  }
+
+  function fmtDiscordTs(unixSec, style) {
+    var ms = unixSec * 1000;
+    var d = new Date(ms);
+    if (isNaN(d.getTime())) return "";
+    switch (style) {
+      case "t": return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      case "T": return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
+      case "d": return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
+      case "D": return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      case "F": return d.toLocaleString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+      case "R": return fmtRelative(ms);
+      default:  return d.toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+    }
+  }
+
+  function renderMarkdown(text) {
+    if (text == null) return "";
+    var s = escapeHTML(String(text));
+    s = s.replace(/```([\s\S]*?)```/g, function (_m, c) { return "<pre><code>" + c.replace(/^\n+|\n+$/g, "") + "</code></pre>"; });
+    s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^\n]+?)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/__([^\n]+?)__/g, "<u>$1</u>");
+    s = s.replace(/~~([^\n]+?)~~/g, "<s>$1</s>");
+    s = s.replace(/\*([^*\n]+?)\*/g, "<em>$1</em>");
+    s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=$|[\s).,!?])/g, "$1<em>$2</em>");
+    // Masked links [text](url) before bare-URL autolinking.
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Discord timestamps <t:unix[:style]> — angle brackets are escaped.
+    s = s.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, function (_m, ts, style) { return fmtDiscordTs(Number(ts), style || "f"); });
+    // Bare URLs not already inside an href.
+    s = s.replace(/(^|[^"'>=])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
+    s = s.replace(/\n/g, "<br>");
+    return s;
+  }
+
   // Local Y-M-D key so events bucket into the viewer's calendar day.
   function dayKey(ms) {
     var d = new Date(ms);
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   }
   function todayKey() { return dayKey(Date.now()); }
+
+  // Sunday-anchored start of the week containing `date`, at local midnight.
+  function startOfWeek(date) {
+    var d = new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+  }
+
+  // Compact date range label, e.g. "Aug 17 – 23, 2026" or "Aug 31 – Sep 6".
+  function fmtRange(start, end) {
+    var sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+    var sameYear = start.getFullYear() === end.getFullYear();
+    var sMonth = start.toLocaleDateString(undefined, { month: "short" });
+    var eMonth = end.toLocaleDateString(undefined, { month: "short" });
+    if (sameMonth) return sMonth + " " + start.getDate() + " – " + end.getDate() + ", " + end.getFullYear();
+    if (sameYear)  return sMonth + " " + start.getDate() + " – " + eMonth + " " + end.getDate() + ", " + end.getFullYear();
+    return sMonth + " " + start.getDate() + ", " + start.getFullYear() + " – " + eMonth + " " + end.getDate() + ", " + end.getFullYear();
+  }
 
   function fmtDayParts(ms) {
     var d = new Date(ms);
@@ -382,13 +457,11 @@
     agendaEl.innerHTML = html;
   }
 
-  // ── Month grid ─────────────────────────────────────────────────────────────
+  // ── Month + week grids ─────────────────────────────────────────────────────
   var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  function renderMonth() {
-    updateCounts();
-
-    // Bucket filtered events by local day, each day sorted by start time.
+  // Filtered events bucketed by local day, each day sorted by start time.
+  function bucketByDay() {
     var byDay = {};
     applyFilters().forEach(function (e) {
       var ms = parseUtc(e.starts_at);
@@ -399,42 +472,54 @@
     Object.keys(byDay).forEach(function (k) {
       byDay[k].sort(function (a, b) { return (parseUtc(a.starts_at) || 0) - (parseUtc(b.starts_at) || 0); });
     });
+    return byDay;
+  }
+
+  function cellMediaHTML(ev) {
+    return '<div class="cal-cell-media" style="background-image:url(&quot;' + escapeHTML(ev.image_url) + '&quot;)"></div>' +
+           '<div class="cal-cell-scrim"></div>';
+  }
+  function cellEventChip(e) {
+    var cat = e.category || "uncategorized";
+    return '<button type="button" class="cal-cell-event" data-id="' + escapeHTML(e.id) + '" title="' + escapeHTML(e.title) + '">' +
+      '<span class="cal-cell-dot" data-cat="' + escapeHTML(cat) + '"></span>' +
+      '<span class="cal-cell-ev-title">' + escapeHTML(e.title) + '</span>' +
+    '</button>';
+  }
+
+  function renderMonth() {
+    updateCounts();
+    var byDay = bucketByDay();
 
     var year = monthCursor.year, month = monthCursor.month;
     var first = new Date(year, month, 1);
-    monthLabelEl.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    periodLabelEl.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-    // Grid starts on the Sunday on//before the 1st, runs a fixed 6 weeks.
-    var gridStart = new Date(year, month, 1 - first.getDay());
+    // Grid starts on the Sunday on/before the 1st. Render only the weeks the
+    // month actually touches (no trailing all-next-month week).
+    var startDow = first.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var weeks = Math.ceil((startDow + daysInMonth) / 7);
+    var gridStart = new Date(year, month, 1 - startDow);
     var tKey = todayKey();
 
     var html = '<div class="cal-month-grid">';
     WEEKDAYS.forEach(function (w) { html += '<div class="cal-dow">' + w + '</div>'; });
 
-    for (var i = 0; i < 42; i++) {
+    for (var i = 0; i < weeks * 7; i++) {
       var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
-      var key = dayKey(d.getTime());
-      var evs = byDay[key] || [];
+      var evs = byDay[dayKey(d.getTime())] || [];
       var cls = "cal-cell";
       if (d.getMonth() !== month) cls += " is-out";
-      if (key === tKey) cls += " is-today";
+      if (dayKey(d.getTime()) === tKey) cls += " is-today";
       if (evs.length) cls += " has-events";
 
-      // Cell background is the first event's banner (right-slice via CSS).
-      var media = (evs.length && evs[0].image_url)
-        ? '<div class="cal-cell-media" style="background-image:url(&quot;' + escapeHTML(evs[0].image_url) + '&quot;)"></div>' +
-          '<div class="cal-cell-scrim"></div>'
-        : "";
+      // A single-event day is clickable anywhere; multi-event days use chips.
+      var single = evs.length === 1 ? ' data-single-id="' + escapeHTML(evs[0].id) + '"' : "";
+      var media = (evs.length && evs[0].image_url) ? cellMediaHTML(evs[0]) : "";
+      var evHtml = evs.map(cellEventChip).join("");
 
-      var evHtml = evs.map(function (e) {
-        var cat = e.category || "uncategorized";
-        return '<button type="button" class="cal-cell-event" data-id="' + escapeHTML(e.id) + '" title="' + escapeHTML(e.title) + '">' +
-          '<span class="cal-cell-dot" data-cat="' + escapeHTML(cat) + '"></span>' +
-          '<span class="cal-cell-ev-title">' + escapeHTML(e.title) + '</span>' +
-        '</button>';
-      }).join("");
-
-      html += '<div class="' + cls + '">' + media +
+      html += '<div class="' + cls + '"' + single + '>' + media +
         '<div class="cal-cell-num">' + d.getDate() + '</div>' +
         (evHtml ? '<div class="cal-cell-events">' + evHtml + '</div>' : "") +
       '</div>';
@@ -443,16 +528,65 @@
     monthEl.innerHTML = html;
   }
 
-  // Dispatch to the active view (both share filters + the detail modal).
+  function renderWeek() {
+    updateCounts();
+    var byDay = bucketByDay();
+
+    var start = startOfWeek(weekCursor);
+    var end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    periodLabelEl.textContent = fmtRange(start, end);
+    var tKey = todayKey();
+
+    var html = '<div class="cal-week-grid">';
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      var evs = byDay[dayKey(d.getTime())] || [];
+      var isToday = dayKey(d.getTime()) === tKey;
+
+      var cls = "cal-week-day" + (isToday ? " is-today" : "") + (evs.length ? " has-events" : "");
+      var single = evs.length === 1 ? ' data-single-id="' + escapeHTML(evs[0].id) + '"' : "";
+
+      var cards = evs.map(function (e) {
+        var cat = e.category || "uncategorized";
+        var sMs = parseUtc(e.starts_at);
+        var thumb = e.image_url
+          ? '<div class="cal-week-thumb" style="background-image:url(&quot;' + escapeHTML(e.image_url) + '&quot;)"></div>'
+          : "";
+        return '<button type="button" class="cal-week-event" data-id="' + escapeHTML(e.id) + '">' +
+          thumb +
+          '<div class="cal-week-ev-body">' +
+            '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
+            '<span class="cal-week-ev-time">' + (sMs ? escapeHTML(fmtTime(sMs)) : "") + '</span>' +
+            '<span class="cal-week-ev-title">' + escapeHTML(e.title) + '</span>' +
+          '</div>' +
+        '</button>';
+      }).join("");
+
+      html += '<div class="' + cls + '"' + single + '>' +
+        '<div class="cal-week-dayhead">' +
+          '<span class="cal-week-dow">' + WEEKDAYS[d.getDay()] + '</span>' +
+          '<span class="cal-week-date">' + d.getDate() + '</span>' +
+        '</div>' +
+        '<div class="cal-week-events">' + cards + '</div>' +
+      '</div>';
+    }
+    html += '</div>';
+    weekEl.innerHTML = html;
+  }
+
+  // Dispatch to the active view (all three share filters + the detail modal).
   function render() {
-    var isMonth = view === "month";
-    agendaEl.hidden = isMonth;
-    monthEl.hidden = !isMonth;
-    monthNavEl.hidden = !isMonth;
-    countEl.hidden = isMonth;
-    viewAgendaBtn.setAttribute("aria-pressed", isMonth ? "false" : "true");
-    viewMonthBtn.setAttribute("aria-pressed", isMonth ? "true" : "false");
-    if (isMonth) renderMonth(); else renderAgenda();
+    agendaEl.hidden = view !== "agenda";
+    weekEl.hidden = view !== "week";
+    monthEl.hidden = view !== "month";
+    monthNavEl.hidden = view === "agenda";
+    countEl.hidden = view !== "agenda";
+    viewAgendaBtn.setAttribute("aria-pressed", view === "agenda" ? "true" : "false");
+    viewWeekBtn.setAttribute("aria-pressed", view === "week" ? "true" : "false");
+    viewMonthBtn.setAttribute("aria-pressed", view === "month" ? "true" : "false");
+    if (view === "month") renderMonth();
+    else if (view === "week") renderWeek();
+    else renderAgenda();
   }
 
   // ── Detail modal ───────────────────────────────────────────────────────────
@@ -486,7 +620,7 @@
         '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
         '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
         '<div class="cal-modal-meta">' + rows + '</div>' +
-        (e.description ? '<div class="cal-modal-desc">' + escapeHTML(e.description) + '</div>' : "") +
+        (e.description ? '<div class="cal-modal-desc">' + renderMarkdown(e.description) + '</div>' : "") +
       '</div>';
 
     // styles.css shows the overlay via .is-open (not .active).
@@ -552,38 +686,51 @@
 
   refreshBtn.addEventListener("click", load);
 
-  // View toggle + month navigation.
+  // View toggle.
   function setView(v) {
     view = v;
     try { localStorage.setItem(VIEW_KEY, v); } catch (_e) {}
     render();
   }
   viewAgendaBtn.addEventListener("click", function () { setView("agenda"); });
+  viewWeekBtn.addEventListener("click", function () { setView("week"); });
   viewMonthBtn.addEventListener("click", function () { setView("month"); });
 
-  function shiftMonth(delta) {
-    var m = monthCursor.month + delta;
-    var y = monthCursor.year + Math.floor(m / 12);
-    monthCursor = { year: y, month: ((m % 12) + 12) % 12 };
-    renderMonth();
+  // Period navigation — steps by month or by week depending on the active view.
+  function shiftPeriod(delta) {
+    if (view === "week") {
+      var s = startOfWeek(weekCursor);
+      weekCursor = new Date(s.getFullYear(), s.getMonth(), s.getDate() + delta * 7);
+      renderWeek();
+    } else {
+      var m = monthCursor.month + delta;
+      monthCursor = { year: monthCursor.year + Math.floor(m / 12), month: ((m % 12) + 12) % 12 };
+      renderMonth();
+    }
   }
-  prevBtn.addEventListener("click", function () { shiftMonth(-1); });
-  nextBtn.addEventListener("click", function () { shiftMonth(1); });
+  prevBtn.addEventListener("click", function () { shiftPeriod(-1); });
+  nextBtn.addEventListener("click", function () { shiftPeriod(1); });
   todayBtn.addEventListener("click", function () {
     var n = new Date();
     monthCursor = { year: n.getFullYear(), month: n.getMonth() };
-    renderMonth();
+    weekCursor = n;
+    if (view === "week") renderWeek(); else renderMonth();
   });
 
-  // Detail modal opens from either view (agenda rows or month-cell events).
-  function onEventClick(ev) {
-    var btn = ev.target.closest(".cal-event, .cal-cell-event");
-    if (!btn) return;
-    var id = btn.getAttribute("data-id");
+  // Detail modal opens from any view: an explicit event chip/row/card, or
+  // clicking anywhere on a day that has exactly one event.
+  function openById(id) {
     var e = allEvents.find(function (x) { return String(x.id) === String(id); });
     if (e) openModal(e);
   }
+  function onEventClick(ev) {
+    var btn = ev.target.closest(".cal-event, .cal-cell-event, .cal-week-event");
+    if (btn) { openById(btn.getAttribute("data-id")); return; }
+    var cell = ev.target.closest(".cal-cell[data-single-id], .cal-week-day[data-single-id]");
+    if (cell) openById(cell.getAttribute("data-single-id"));
+  }
   agendaEl.addEventListener("click", onEventClick);
+  weekEl.addEventListener("click", onEventClick);
   monthEl.addEventListener("click", onEventClick);
 
   modalClose.addEventListener("click", closeModal);
@@ -596,8 +743,9 @@
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   loadFilters();
-  try { var v = localStorage.getItem(VIEW_KEY); if (v === "month" || v === "agenda") view = v; } catch (_e) {}
+  try { var v = localStorage.getItem(VIEW_KEY); if (v === "month" || v === "week" || v === "agenda") view = v; } catch (_e) {}
   var now = new Date();
   monthCursor = { year: now.getFullYear(), month: now.getMonth() };
+  weekCursor = now;
   load();
 })();

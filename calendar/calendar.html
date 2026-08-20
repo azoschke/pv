@@ -109,6 +109,7 @@
     .cal-badge[data-cat="collab"]          { border-color: #a58a4d; color: #e6cd97; }
     .cal-badge[data-cat="event"]           { border-color: #6b7280; color: #b7bcc4; }
     .cal-badge[data-cat="fc"]              { border-color: #c0913c; color: var(--accent-gold); }
+    .cal-badge[data-cat="update"]          { border-color: #3f9a94; color: #86d8d0; }
 
     .cal-recurring {
       display: inline-flex; align-items: center; gap: 0.25rem;
@@ -186,7 +187,46 @@
     .cal-cell-dot[data-cat="collab"]          { background: #a58a4d; }
     .cal-cell-dot[data-cat="event"]           { background: #6b7280; }
     .cal-cell-dot[data-cat="fc"]              { background: var(--accent-gold); }
+    .cal-cell-dot[data-cat="update"]          { background: #3f9a94; }
     .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-cell[data-single-id] { cursor: pointer; }
+
+    /* Week grid — one column per day, event cards stacked. */
+    .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; align-items: start; }
+    .cal-week-day {
+      display: flex; flex-direction: column; min-height: 8rem;
+      border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden;
+      background: var(--bg-card);
+    }
+    .cal-week-day.is-today { border-color: var(--accent-red); }
+    .cal-week-day[data-single-id] { cursor: pointer; }
+    .cal-week-dayhead {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 0.3rem;
+      padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border-color);
+    }
+    .cal-week-dow { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+    .cal-week-day.is-today .cal-week-dow, .cal-week-day.is-today .cal-week-date { color: var(--accent-red); }
+    .cal-week-date { font-family: 'Stoke', serif; font-size: 1rem; font-variant-numeric: tabular-nums; }
+    .cal-week-events { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.4rem; }
+    .cal-week-event {
+      display: flex; flex-direction: column; gap: 0.3rem; width: 100%; text-align: left;
+      border: 1px solid var(--border-color); border-radius: 0.35rem; overflow: hidden;
+      background: var(--bg-card-light); color: inherit; font: inherit; cursor: pointer; padding: 0;
+    }
+    .cal-week-event:hover { border-color: var(--accent-brown); }
+    .cal-week-thumb {
+      width: 100%; height: 4.5rem; background-repeat: no-repeat;
+      background-position: right center; background-size: cover;
+    }
+    .cal-week-ev-body { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.4rem 0.5rem 0.5rem; }
+    .cal-week-ev-time { font-size: 0.8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .cal-week-ev-title { font-family: 'Stoke', serif; font-size: 0.92rem; overflow-wrap: anywhere; }
+    .cal-week-event .cal-badge { align-self: flex-start; }
+
+    @media (max-width: 720px) {
+      .cal-week-grid { grid-template-columns: 1fr; }
+      .cal-week-day { min-height: 0; }
+    }
 
     @media (max-width: 620px) {
       .cal-month-grid { gap: 0.2rem; }
@@ -220,7 +260,17 @@
     .cal-modal-meta { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.95rem; }
     .cal-modal-meta-row { display: flex; gap: 0.5rem; }
     .cal-modal-meta-label { flex: 0 0 5rem; color: var(--text-secondary); }
-    .cal-modal-desc { white-space: pre-wrap; line-height: 1.5; overflow-wrap: anywhere; }
+    .cal-modal-desc { line-height: 1.55; overflow-wrap: anywhere; }
+    .cal-modal-desc a { color: var(--accent-red); }
+    .cal-modal-desc code {
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em;
+      background: var(--bg-darker); border-radius: 0.25rem; padding: 0.05rem 0.3rem;
+    }
+    .cal-modal-desc pre {
+      background: var(--bg-darker); border-radius: 0.4rem; padding: 0.6rem 0.75rem;
+      overflow-x: auto; margin: 0.5rem 0;
+    }
+    .cal-modal-desc pre code { background: none; padding: 0; }
   </style>
 </head>
 <body>
@@ -278,13 +328,14 @@
           </button>
           <div class="cal-viewtoggle" role="group" aria-label="Calendar view">
             <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">Agenda</button>
+            <button type="button" class="cal-view-btn" id="view-week" aria-pressed="false">Week</button>
             <button type="button" class="cal-view-btn" id="view-month" aria-pressed="false">Month</button>
           </div>
           <span class="venues-result-count" id="calendar-count" aria-live="polite"></span>
           <div class="cal-monthnav" id="cal-monthnav" hidden>
-            <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="Previous month">&#8249;</button>
-            <span class="cal-month-label" id="cal-month-label" aria-live="polite"></span>
-            <button type="button" class="cal-nav-btn" id="cal-next" aria-label="Next month">&#8250;</button>
+            <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="Previous">&#8249;</button>
+            <span class="cal-month-label" id="cal-period-label" aria-live="polite"></span>
+            <button type="button" class="cal-nav-btn" id="cal-next" aria-label="Next">&#8250;</button>
             <button type="button" class="cal-nav-btn cal-nav-today" id="cal-today-btn">Today</button>
           </div>
           <button type="button" class="venues-filter-reset" id="calendar-refresh" title="Refresh from Discord">
@@ -293,6 +344,9 @@
         </div>
 
         <div id="calendar-agenda">
+          <!-- populated by JS -->
+        </div>
+        <div id="calendar-week" hidden>
           <!-- populated by JS -->
         </div>
         <div id="calendar-month" hidden>
