@@ -86,13 +86,13 @@
        sidebar open on a mid-size screen), stack: full banner on top, then the
        time stays to the LEFT of the title beneath it — consistent at every
        width, no crushed title column. */
-    @container (max-width: 780px) {
+    @container (max-width: 650px) {
       .cal-event { flex-direction: column; align-items: stretch; }
       .cal-event-thumb { width: 100%; height: auto; }
     }
     /* Fallback for browsers without container queries: use the viewport. */
     @supports not (container-type: inline-size) {
-      @media (max-width: 780px) {
+      @media (max-width: 650px) {
         .cal-event { flex-direction: column; align-items: stretch; }
         .cal-event-thumb { width: 100%; height: auto; }
       }
