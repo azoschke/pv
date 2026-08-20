@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phoenix Vanguard Calendar</title>
+
+  <meta property="og:image" content="https://images.phoenixvanguard-tools.com/pv-fc-share.jpg">
+  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="/pv/css/styles.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+  <style>
+    /* Calendar agenda — grouped-by-day list of Discord scheduled events.
+       Reuses the campaign/venues sidebar+main layout from styles.css; only the
+       agenda-specific chrome lives here. */
+
+    /* The campaign layout sets its own display, which beats the [hidden]
+       attribute's UA display:none — force it so the whole board hides when
+       signed out (the gate panel stands in). */
+    #calendar-layout[hidden] { display: none !important; }
+
+    /* Keep .landing-intro's auto side-margins (centering) — only override the
+       bottom gap. Setting `margin: 0 0 …` would drop the `auto` and left-align. */
+    .cal-intro { margin: 0 auto 1.75rem; }
+
+    /* Day group: a divider header (no filled band — the "raised" tone flips
+       lighter than cards in dark mode, so a fill reads as a stray stripe).
+       container-type lets the rows below respond to the actual content width
+       (which the filter sidebar changes) rather than the viewport. */
+    .cal-day { margin-bottom: 1.75rem; container-type: inline-size; }
+    .cal-day-header {
+      display: flex; align-items: baseline; gap: 0.6rem;
+      padding: 0 0.1rem 0.5rem; margin-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .cal-day-weekday { font-family: 'Stoke', serif; font-size: 1.15rem; letter-spacing: 0.03em; }
+    .cal-day-date { font-size: 0.9rem; color: var(--text-secondary); }
+    .cal-day-header.is-today { border-bottom-color: var(--accent-red); }
+    .cal-day-header.is-today .cal-day-weekday,
+    .cal-day-header.is-today .cal-day-date { color: var(--accent-red); }
+
+    /* Event row — cover image leads, flush to the card edges, then details.
+       Click opens the detail modal. */
+    .cal-event {
+      display: flex; align-items: center; gap: 0; width: 100%; padding: 0;
+      text-align: left; font: inherit; color: inherit; cursor: pointer; overflow: hidden;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 0.55rem; margin-bottom: 0.65rem;
+      transition: border-color 0.15s ease, transform 0.05s ease;
+    }
+    .cal-event:hover { border-color: var(--accent-brown); }
+    .cal-event:active { transform: translateY(1px); }
+
+    /* Natural aspect ratio kept (fixed height, auto width), flush to the card
+       edges — no padding frame. The image is the tallest element, so it defines
+       the card height and touches top/bottom/left; the card's overflow:hidden +
+       radius rounds its outer corners. No object-fit, so nothing is cropped. */
+    .cal-event-thumb {
+      flex: 0 0 auto; height: 132px; width: auto; display: block; border: 0;
+    }
+
+    /* Text content carries the padding the image intentionally skips. */
+    .cal-event-content {
+      flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 1rem;
+      padding: 0.9rem 1.1rem;
+    }
+
+    .cal-event-time {
+      flex: 0 0 5rem; display: flex; flex-direction: column; gap: 0.1rem;
+      font-variant-numeric: tabular-nums; padding-right: 0.9rem;
+      border-right: 1px solid var(--border-color); align-self: stretch;
+      justify-content: center;
+    }
+    .cal-event-start { font-size: 1.02rem; }
+    .cal-event-end { font-size: 0.78rem; color: var(--text-secondary); }
+
+    .cal-event-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+    /* Badge sits on its own line above the title (the title wraps on longer
+       events anyway, so keeping them inline just looked ragged). */
+    .cal-event-title-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+    .cal-event-title { font-family: 'Stoke', serif; font-size: 1.1rem; overflow-wrap: anywhere; }
+    .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
+    .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
+    .cal-loc-icon { width: 1em; height: 1em; flex: 0 0 auto; }
+
+    /* When the row's own column gets narrow (small screen, or the filter
+       sidebar open on a mid-size screen), stack: full banner on top, then the
+       time stays to the LEFT of the title beneath it — consistent at every
+       width, no crushed title column. */
+    @container (max-width: 650px) {
+      .cal-event { flex-direction: column; align-items: stretch; }
+      .cal-event-thumb { width: 100%; height: auto; }
+    }
+    /* Fallback for browsers without container queries: use the viewport. */
+    @supports not (container-type: inline-size) {
+      @media (max-width: 650px) {
+        .cal-event { flex-direction: column; align-items: stretch; }
+        .cal-event-thumb { width: 100%; height: auto; }
+      }
+    }
+
+    /* Category badge — one accent per prefix. */
+    .cal-badge {
+      display: inline-flex; align-items: center;
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
+      border-radius: 2rem; padding: 0.08rem 0.55rem;
+      border: 1px solid var(--border-color); color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .cal-badge[data-cat="rp"]              { border-color: #7b5cc0; color: #b79cf0; }
+    .cal-badge[data-cat="rp-campaign"]     { border-color: #a54d9c; color: #e0a0d8; }
+    .cal-badge[data-cat="community-event"] { border-color: #4d86a5; color: #97c8e6; }
+    .cal-badge[data-cat="seasonal"]        { border-color: #4da572; color: #93dcae; }
+    .cal-badge[data-cat="pve"]             { border-color: #a55a4d; color: #e6a197; }
+    .cal-badge[data-cat="collab"]          { border-color: #a58a4d; color: #e6cd97; }
+    .cal-badge[data-cat="event"]           { border-color: #6b7280; color: #b7bcc4; }
+    .cal-badge[data-cat="fc"]              { border-color: #c0913c; color: var(--accent-gold); }
+    .cal-badge[data-cat="update"]          { border-color: #3f9a94; color: #86d8d0; }
+
+    .cal-recurring {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.72rem; color: var(--text-secondary);
+    }
+
+    /* View toggle (Agenda / Month) */
+    .cal-viewtoggle { display: inline-flex; border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden; }
+    .cal-view-btn {
+      border: 0; background: var(--bg-card-light); color: var(--text-secondary);
+      font: inherit; font-size: 0.9rem; padding: 0.32rem 0.9rem; cursor: pointer;
+    }
+    .cal-view-btn + .cal-view-btn { border-left: 1px solid var(--border-color); }
+    .cal-view-btn[aria-pressed="true"] { background: var(--accent-brown); color: #fff; }
+
+    /* Month navigation */
+    .cal-monthnav { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .cal-monthnav[hidden] { display: none !important; }
+    .cal-month-label { font-family: 'Stoke', serif; font-size: 1.05rem; min-width: 9.5rem; text-align: center; }
+    .cal-nav-btn {
+      border: 1px solid var(--border-color); background: var(--bg-card-light); color: var(--text-primary);
+      font: inherit; border-radius: 0.35rem; padding: 0.2rem 0.6rem; cursor: pointer; line-height: 1.4;
+    }
+    .cal-nav-btn:hover { border-color: var(--accent-brown); }
+    .cal-nav-btn:disabled { opacity: 0.35; cursor: default; }
+    .cal-nav-btn:disabled:hover { border-color: var(--border-color); }
+    .cal-nav-today { font-size: 0.85rem; }
+
+    /* Month grid */
+    .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
+    .cal-dow {
+      text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-secondary); padding: 0.2rem 0;
+    }
+    .cal-cell {
+      position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+      border: 1px solid var(--border-color); border-radius: 0.4rem;
+      background: var(--bg-card); display: flex; flex-direction: column;
+    }
+    .cal-cell.is-out { opacity: 0.4; }
+    .cal-cell.is-today { border-color: var(--accent-red); }
+
+    /* Banner art lives in the right ~20-25% of the cover; zoom the height so a
+       right-anchored slice of roughly that width fills the square. */
+    .cal-cell-media {
+      position: absolute; inset: 0;
+      background-repeat: no-repeat; background-position: right center; background-size: auto 175%;
+    }
+    .cal-cell-scrim {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.10) 100%);
+    }
+    .cal-cell-num {
+      position: relative; z-index: 1; padding: 0.25rem 0.4rem;
+      font-size: 0.85rem; font-variant-numeric: tabular-nums;
+    }
+    .cal-cell.has-events .cal-cell-num { color: #fff; }
+    .cal-cell.is-today .cal-cell-num { color: var(--accent-red); font-weight: 700; }
+    .cal-cell.has-events.is-today .cal-cell-num { color: #fff; text-shadow: 0 0 5px var(--accent-red); }
+
+    .cal-cell-events {
+      position: relative; z-index: 1; margin-top: auto;
+      display: flex; flex-direction: column; gap: 0.15rem; padding: 0.3rem; overflow: hidden;
+    }
+    .cal-cell-event {
+      display: flex; align-items: center; gap: 0.3rem; width: 100%; text-align: left;
+      border: 0; background: rgba(0,0,0,0.4); color: #fff; font: inherit; font-size: 0.72rem;
+      line-height: 1.25; padding: 0.15rem 0.35rem; border-radius: 0.3rem; cursor: pointer;
+    }
+    .cal-cell-event:hover { background: rgba(0,0,0,0.68); }
+    .cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--border-color); }
+    .cal-cell-dot[data-cat="rp"]              { background: #7b5cc0; }
+    .cal-cell-dot[data-cat="rp-campaign"]     { background: #a54d9c; }
+    .cal-cell-dot[data-cat="community-event"] { background: #4d86a5; }
+    .cal-cell-dot[data-cat="seasonal"]        { background: #4da572; }
+    .cal-cell-dot[data-cat="pve"]             { background: #a55a4d; }
+    .cal-cell-dot[data-cat="collab"]          { background: #a58a4d; }
+    .cal-cell-dot[data-cat="event"]           { background: #6b7280; }
+    .cal-cell-dot[data-cat="fc"]              { background: var(--accent-gold); }
+    .cal-cell-dot[data-cat="update"]          { background: #3f9a94; }
+    .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-cell[data-single-id] { cursor: pointer; }
+
+    @media (max-width: 620px) {
+      .cal-month-grid { gap: 0.2rem; }
+      .cal-cell-num { font-size: 0.72rem; padding: 0.15rem 0.25rem; }
+      .cal-cell-event { font-size: 0.58rem; padding: 0.1rem 0.25rem; }
+      .cal-cell-dot { width: 0.4rem; height: 0.4rem; }
+      .cal-month-label { min-width: 7rem; font-size: 0.95rem; }
+    }
+
+    /* Status region: loading / gate / error / empty. */
+    .cal-panel {
+      max-width: 520px; margin: 3rem auto; text-align: center;
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 0.75rem; padding: 2.25rem 1.75rem;
+    }
+    .cal-panel h2 { font-family: 'Stoke', serif; margin: 0 0 0.5rem; }
+    .cal-panel p { color: var(--text-secondary); margin: 0 0 1.25rem; }
+    .cal-panel-btn {
+      display: inline-block; border: 1px solid var(--accent-brown); background: var(--accent-brown);
+      color: #fff; padding: 0.5rem 1.1rem; border-radius: 0.4rem; cursor: pointer;
+      text-decoration: none; font: inherit;
+    }
+    .cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
+
+    /* Detail modal reuses .job-modal-* from styles.css. The hero image bleeds
+       to the modal edges (the modal's own overflow:hidden rounds its corners);
+       only the text content is padded. */
+    .cal-modal-media { display: block; width: 100%; height: auto; border: 0; margin: 0; }
+    .cal-modal-content { padding: 1.5rem; }
+    .cal-modal-title { font-family: 'Stoke', serif; font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
+    .cal-modal-meta { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.95rem; }
+    .cal-modal-meta-row { display: flex; gap: 0.5rem; }
+    .cal-modal-meta-label { flex: 0 0 5rem; color: var(--text-secondary); }
+    .cal-modal-desc { line-height: 1.55; overflow-wrap: anywhere; }
+    .cal-modal-desc a { color: var(--accent-red); }
+    .cal-modal-desc code {
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em;
+      background: var(--bg-darker); border-radius: 0.25rem; padding: 0.05rem 0.3rem;
+    }
+    .cal-modal-desc pre {
+      background: var(--bg-darker); border-radius: 0.4rem; padding: 0.6rem 0.75rem;
+      overflow-x: auto; margin: 0.5rem 0;
+    }
+    .cal-modal-desc pre code { background: none; padding: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+
+    <header class="app-header">
+      <p class="app-subtitle">Phoenix Vanguard</p>
+      <h1 class="app-title">Calendar</h1>
+    </header>
+
+    <p class="landing-intro cal-intro">Upcoming Phoenix Vanguard events.</p>
+
+    <!-- Status region: shown for loading / sign-in / error / empty; hidden once
+         the agenda renders. -->
+    <div id="calendar-status"></div>
+
+    <div class="campaign-layout" id="calendar-layout" hidden>
+
+      <!-- Filter sidebar -->
+      <aside class="campaign-sidebar venues-sidebar" id="calendar-sidebar" aria-label="Event filters">
+        <div class="campaign-sidebar-header">
+          <span class="campaign-sidebar-title">Filters</span>
+          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
+        </div>
+
+        <div class="venues-filter-body">
+          <div class="venues-filter-group">
+            <label class="venues-filter-label" for="calendar-search">Search</label>
+            <input
+              id="calendar-search"
+              class="venues-filter-input"
+              type="search"
+              placeholder="Title, location, keyword..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="venues-filter-group" id="filter-category-group">
+            <span class="venues-filter-label">Category</span>
+            <ul class="venues-filter-list" id="filter-category-list" role="list"></ul>
+          </div>
+
+          <button type="button" class="venues-filter-reset" id="filter-reset">
+            Reset filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="campaign-main" id="calendar-main">
+        <div class="campaign-toolbar venues-toolbar">
+          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+            &#9776; Filters
+          </button>
+          <div class="cal-viewtoggle" role="group" aria-label="Calendar view">
+            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">List</button>
+            <button type="button" class="cal-view-btn" id="view-week" aria-pressed="false">Week</button>
+            <button type="button" class="cal-view-btn" id="view-month" aria-pressed="false">Month</button>
+          </div>
+          <span class="venues-result-count" id="calendar-count" aria-live="polite"></span>
+          <div class="cal-monthnav" id="cal-monthnav" hidden>
+            <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="Previous">&#8249;</button>
+            <span class="cal-month-label" id="cal-period-label" aria-live="polite"></span>
+            <button type="button" class="cal-nav-btn" id="cal-next" aria-label="Next">&#8250;</button>
+            <button type="button" class="cal-nav-btn cal-nav-today" id="cal-today-btn">Today</button>
+          </div>
+        </div>
+
+        <div id="calendar-agenda">
+          <!-- populated by JS -->
+        </div>
+        <div id="calendar-week" hidden>
+          <!-- populated by JS -->
+        </div>
+        <div id="calendar-month" hidden>
+          <!-- populated by JS -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile overlay -->
+    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+
+    <!-- Detail modal -->
+    <div class="job-modal-overlay" id="calendar-modal-overlay" aria-hidden="true">
+      <div class="job-modal" role="dialog" aria-modal="true" aria-labelledby="calendar-modal-title">
+        <button type="button" class="job-modal-close" id="calendar-modal-close" aria-label="Close">&#10005;</button>
+        <div class="job-modal-body" id="calendar-modal-body">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
+    </div>
+  </div>
+
+  <script src="/pv/admin/api.js"></script>
+  <script src="/pv/calendar/calendar.js"></script>
+  <script src="/pv/js/nav.js"></script>
+</body>
+</html>
