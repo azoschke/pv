@@ -48,7 +48,7 @@
     /* Event row — cover image leads, flush to the card edges, then details.
        Click opens the detail modal. */
     .cal-event {
-      display: flex; align-items: center; gap: 0; width: 100%;
+      display: flex; align-items: center; gap: 0; width: 100%; padding: 0;
       text-align: left; font: inherit; color: inherit; cursor: pointer; overflow: hidden;
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 0.55rem; margin-bottom: 0.65rem;
@@ -115,6 +115,87 @@
       font-size: 0.72rem; color: var(--text-secondary);
     }
 
+    /* View toggle (Agenda / Month) */
+    .cal-viewtoggle { display: inline-flex; border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden; }
+    .cal-view-btn {
+      border: 0; background: var(--bg-card-light); color: var(--text-secondary);
+      font: inherit; font-size: 0.9rem; padding: 0.32rem 0.9rem; cursor: pointer;
+    }
+    .cal-view-btn + .cal-view-btn { border-left: 1px solid var(--border-color); }
+    .cal-view-btn[aria-pressed="true"] { background: var(--accent-brown); color: #fff; }
+
+    /* Month navigation */
+    .cal-monthnav { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .cal-monthnav[hidden] { display: none !important; }
+    .cal-month-label { font-family: 'Stoke', serif; font-size: 1.05rem; min-width: 9.5rem; text-align: center; }
+    .cal-nav-btn {
+      border: 1px solid var(--border-color); background: var(--bg-card-light); color: var(--text-primary);
+      font: inherit; border-radius: 0.35rem; padding: 0.2rem 0.6rem; cursor: pointer; line-height: 1.4;
+    }
+    .cal-nav-btn:hover { border-color: var(--accent-brown); }
+    .cal-nav-today { font-size: 0.85rem; }
+
+    /* Month grid */
+    .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
+    .cal-dow {
+      text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-secondary); padding: 0.2rem 0;
+    }
+    .cal-cell {
+      position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+      border: 1px solid var(--border-color); border-radius: 0.4rem;
+      background: var(--bg-card); display: flex; flex-direction: column;
+    }
+    .cal-cell.is-out { opacity: 0.4; }
+    .cal-cell.is-today { border-color: var(--accent-red); }
+
+    /* Banner art lives in the right ~20-25% of the cover; zoom the height so a
+       right-anchored slice of roughly that width fills the square. */
+    .cal-cell-media {
+      position: absolute; inset: 0;
+      background-repeat: no-repeat; background-position: right center; background-size: auto 175%;
+    }
+    .cal-cell-scrim {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.10) 100%);
+    }
+    .cal-cell-num {
+      position: relative; z-index: 1; padding: 0.25rem 0.4rem;
+      font-size: 0.85rem; font-variant-numeric: tabular-nums;
+    }
+    .cal-cell.has-events .cal-cell-num { color: #fff; }
+    .cal-cell.is-today .cal-cell-num { color: var(--accent-red); font-weight: 700; }
+    .cal-cell.has-events.is-today .cal-cell-num { color: #fff; text-shadow: 0 0 5px var(--accent-red); }
+
+    .cal-cell-events {
+      position: relative; z-index: 1; margin-top: auto;
+      display: flex; flex-direction: column; gap: 0.15rem; padding: 0.3rem; overflow: hidden;
+    }
+    .cal-cell-event {
+      display: flex; align-items: center; gap: 0.3rem; width: 100%; text-align: left;
+      border: 0; background: rgba(0,0,0,0.4); color: #fff; font: inherit; font-size: 0.72rem;
+      line-height: 1.25; padding: 0.15rem 0.35rem; border-radius: 0.3rem; cursor: pointer;
+    }
+    .cal-cell-event:hover { background: rgba(0,0,0,0.68); }
+    .cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--border-color); }
+    .cal-cell-dot[data-cat="rp"]              { background: #7b5cc0; }
+    .cal-cell-dot[data-cat="rp-campaign"]     { background: #a54d9c; }
+    .cal-cell-dot[data-cat="community-event"] { background: #4d86a5; }
+    .cal-cell-dot[data-cat="seasonal"]        { background: #4da572; }
+    .cal-cell-dot[data-cat="pve"]             { background: #a55a4d; }
+    .cal-cell-dot[data-cat="collab"]          { background: #a58a4d; }
+    .cal-cell-dot[data-cat="event"]           { background: #6b7280; }
+    .cal-cell-dot[data-cat="fc"]              { background: var(--accent-gold); }
+    .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    @media (max-width: 620px) {
+      .cal-month-grid { gap: 0.2rem; }
+      .cal-cell-num { font-size: 0.72rem; padding: 0.15rem 0.25rem; }
+      .cal-cell-event { font-size: 0.58rem; padding: 0.1rem 0.25rem; }
+      .cal-cell-dot { width: 0.4rem; height: 0.4rem; }
+      .cal-month-label { min-width: 7rem; font-size: 0.95rem; }
+    }
+
     /* Status region: loading / gate / error / empty. */
     .cal-panel {
       max-width: 520px; margin: 3rem auto; text-align: center;
@@ -130,14 +211,11 @@
     }
     .cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
 
-    /* Detail modal reuses .job-modal-* from styles.css; a couple of additions.
-       The shared body has no padding (other modals bleed their hero image to
-       the edges), so pad it here and inset the image with its own radius. */
-    #calendar-modal-body { padding: 1.5rem; }
-    .cal-modal-media {
-      display: block; width: 100%; height: auto;
-      border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--border-color);
-    }
+    /* Detail modal reuses .job-modal-* from styles.css. The hero image bleeds
+       to the modal edges (the modal's own overflow:hidden rounds its corners);
+       only the text content is padded. */
+    .cal-modal-media { display: block; width: 100%; height: auto; border: 0; margin: 0; }
+    .cal-modal-content { padding: 1.5rem; }
     .cal-modal-title { font-family: 'Stoke', serif; font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
     .cal-modal-meta { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.95rem; }
     .cal-modal-meta-row { display: flex; gap: 0.5rem; }
@@ -198,13 +276,26 @@
           <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
             &#9776; Filters
           </button>
+          <div class="cal-viewtoggle" role="group" aria-label="Calendar view">
+            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">Agenda</button>
+            <button type="button" class="cal-view-btn" id="view-month" aria-pressed="false">Month</button>
+          </div>
           <span class="venues-result-count" id="calendar-count" aria-live="polite"></span>
+          <div class="cal-monthnav" id="cal-monthnav" hidden>
+            <button type="button" class="cal-nav-btn" id="cal-prev" aria-label="Previous month">&#8249;</button>
+            <span class="cal-month-label" id="cal-month-label" aria-live="polite"></span>
+            <button type="button" class="cal-nav-btn" id="cal-next" aria-label="Next month">&#8250;</button>
+            <button type="button" class="cal-nav-btn cal-nav-today" id="cal-today-btn">Today</button>
+          </div>
           <button type="button" class="venues-filter-reset" id="calendar-refresh" title="Refresh from Discord">
             &#8635; Refresh
           </button>
         </div>
 
         <div id="calendar-agenda">
+          <!-- populated by JS -->
+        </div>
+        <div id="calendar-month" hidden>
           <!-- populated by JS -->
         </div>
       </main>

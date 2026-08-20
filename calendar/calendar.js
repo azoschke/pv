@@ -21,6 +21,7 @@
   var SESSION_KEY = "pv.admin.session";
   var FILTER_KEY  = "pv-calendar-filters";
   var SIDEBAR_KEY = "pv-calendar-sidebar-hidden";
+  var VIEW_KEY    = "pv-calendar-view";
 
   // The eight prefixes, kept exactly as they are, plus the catch-all. Order is
   // display order in the sidebar. Slugs match the worker's category slugs.
@@ -50,7 +51,15 @@
   var resetBtn     = document.getElementById("filter-reset");
   var refreshBtn   = document.getElementById("calendar-refresh");
   var agendaEl     = document.getElementById("calendar-agenda");
+  var monthEl      = document.getElementById("calendar-month");
   var countEl      = document.getElementById("calendar-count");
+  var viewAgendaBtn= document.getElementById("view-agenda");
+  var viewMonthBtn = document.getElementById("view-month");
+  var monthNavEl   = document.getElementById("cal-monthnav");
+  var monthLabelEl = document.getElementById("cal-month-label");
+  var prevBtn      = document.getElementById("cal-prev");
+  var nextBtn      = document.getElementById("cal-next");
+  var todayBtn     = document.getElementById("cal-today-btn");
   var modalOverlay = document.getElementById("calendar-modal-overlay");
   var modalBody    = document.getElementById("calendar-modal-body");
   var modalClose   = document.getElementById("calendar-modal-close");
@@ -58,6 +67,8 @@
   // ── State ──────────────────────────────────────────────────────────────────
   var allEvents = [];
   var filters = { search: "", categories: {} };  // categories: { rp: true, ... }
+  var view = "agenda";                            // "agenda" | "month"
+  var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
 
   // ── Session (shared with the management portal) ────────────────────────────
   function getSession() {
@@ -229,7 +240,7 @@
         if (input.checked) filters.categories[cat.slug] = true;
         else delete filters.categories[cat.slug];
         saveFilters();
-        renderAgenda();
+        render();
       });
 
       var text = document.createElement("span");
@@ -371,6 +382,79 @@
     agendaEl.innerHTML = html;
   }
 
+  // ── Month grid ─────────────────────────────────────────────────────────────
+  var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function renderMonth() {
+    updateCounts();
+
+    // Bucket filtered events by local day, each day sorted by start time.
+    var byDay = {};
+    applyFilters().forEach(function (e) {
+      var ms = parseUtc(e.starts_at);
+      if (ms == null) return;
+      var k = dayKey(ms);
+      (byDay[k] || (byDay[k] = [])).push(e);
+    });
+    Object.keys(byDay).forEach(function (k) {
+      byDay[k].sort(function (a, b) { return (parseUtc(a.starts_at) || 0) - (parseUtc(b.starts_at) || 0); });
+    });
+
+    var year = monthCursor.year, month = monthCursor.month;
+    var first = new Date(year, month, 1);
+    monthLabelEl.textContent = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+    // Grid starts on the Sunday on//before the 1st, runs a fixed 6 weeks.
+    var gridStart = new Date(year, month, 1 - first.getDay());
+    var tKey = todayKey();
+
+    var html = '<div class="cal-month-grid">';
+    WEEKDAYS.forEach(function (w) { html += '<div class="cal-dow">' + w + '</div>'; });
+
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+      var key = dayKey(d.getTime());
+      var evs = byDay[key] || [];
+      var cls = "cal-cell";
+      if (d.getMonth() !== month) cls += " is-out";
+      if (key === tKey) cls += " is-today";
+      if (evs.length) cls += " has-events";
+
+      // Cell background is the first event's banner (right-slice via CSS).
+      var media = (evs.length && evs[0].image_url)
+        ? '<div class="cal-cell-media" style="background-image:url(&quot;' + escapeHTML(evs[0].image_url) + '&quot;)"></div>' +
+          '<div class="cal-cell-scrim"></div>'
+        : "";
+
+      var evHtml = evs.map(function (e) {
+        var cat = e.category || "uncategorized";
+        return '<button type="button" class="cal-cell-event" data-id="' + escapeHTML(e.id) + '" title="' + escapeHTML(e.title) + '">' +
+          '<span class="cal-cell-dot" data-cat="' + escapeHTML(cat) + '"></span>' +
+          '<span class="cal-cell-ev-title">' + escapeHTML(e.title) + '</span>' +
+        '</button>';
+      }).join("");
+
+      html += '<div class="' + cls + '">' + media +
+        '<div class="cal-cell-num">' + d.getDate() + '</div>' +
+        (evHtml ? '<div class="cal-cell-events">' + evHtml + '</div>' : "") +
+      '</div>';
+    }
+    html += '</div>';
+    monthEl.innerHTML = html;
+  }
+
+  // Dispatch to the active view (both share filters + the detail modal).
+  function render() {
+    var isMonth = view === "month";
+    agendaEl.hidden = isMonth;
+    monthEl.hidden = !isMonth;
+    monthNavEl.hidden = !isMonth;
+    countEl.hidden = isMonth;
+    viewAgendaBtn.setAttribute("aria-pressed", isMonth ? "false" : "true");
+    viewMonthBtn.setAttribute("aria-pressed", isMonth ? "true" : "false");
+    if (isMonth) renderMonth(); else renderAgenda();
+  }
+
   // ── Detail modal ───────────────────────────────────────────────────────────
   function openModal(e) {
     var startMs = parseUtc(e.starts_at);
@@ -398,10 +482,12 @@
 
     modalBody.innerHTML =
       (e.image_url ? '<img class="cal-modal-media" src="' + escapeHTML(hiResImage(e.image_url)) + '" alt="" />' : "") +
-      '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
-      '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
-      '<div class="cal-modal-meta">' + rows + '</div>' +
-      (e.description ? '<div class="cal-modal-desc">' + escapeHTML(e.description) + '</div>' : "");
+      '<div class="cal-modal-content">' +
+        '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
+        '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
+        '<div class="cal-modal-meta">' + rows + '</div>' +
+        (e.description ? '<div class="cal-modal-desc">' + escapeHTML(e.description) + '</div>' : "") +
+      '</div>';
 
     // styles.css shows the overlay via .is-open (not .active).
     modalOverlay.classList.add("is-open");
@@ -437,7 +523,7 @@
       allEvents = Array.isArray(data) ? data : [];
       showLayout();
       buildFilterUI();
-      renderAgenda();
+      render();
     }).catch(function (err) {
       renderError(err && err.message);
     });
@@ -452,7 +538,7 @@
   searchInput.addEventListener("input", function () {
     filters.search = searchInput.value;
     saveFilters();
-    renderAgenda();
+    render();
   });
 
   resetBtn.addEventListener("click", function () {
@@ -461,18 +547,44 @@
     saveFilters();
     searchInput.value = "";
     catListEl.querySelectorAll("input[type=checkbox]").forEach(function (i) { i.checked = false; });
-    renderAgenda();
+    render();
   });
 
   refreshBtn.addEventListener("click", load);
 
-  agendaEl.addEventListener("click", function (ev) {
-    var btn = ev.target.closest(".cal-event");
+  // View toggle + month navigation.
+  function setView(v) {
+    view = v;
+    try { localStorage.setItem(VIEW_KEY, v); } catch (_e) {}
+    render();
+  }
+  viewAgendaBtn.addEventListener("click", function () { setView("agenda"); });
+  viewMonthBtn.addEventListener("click", function () { setView("month"); });
+
+  function shiftMonth(delta) {
+    var m = monthCursor.month + delta;
+    var y = monthCursor.year + Math.floor(m / 12);
+    monthCursor = { year: y, month: ((m % 12) + 12) % 12 };
+    renderMonth();
+  }
+  prevBtn.addEventListener("click", function () { shiftMonth(-1); });
+  nextBtn.addEventListener("click", function () { shiftMonth(1); });
+  todayBtn.addEventListener("click", function () {
+    var n = new Date();
+    monthCursor = { year: n.getFullYear(), month: n.getMonth() };
+    renderMonth();
+  });
+
+  // Detail modal opens from either view (agenda rows or month-cell events).
+  function onEventClick(ev) {
+    var btn = ev.target.closest(".cal-event, .cal-cell-event");
     if (!btn) return;
     var id = btn.getAttribute("data-id");
     var e = allEvents.find(function (x) { return String(x.id) === String(id); });
     if (e) openModal(e);
-  });
+  }
+  agendaEl.addEventListener("click", onEventClick);
+  monthEl.addEventListener("click", onEventClick);
 
   modalClose.addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", function (ev) {
@@ -484,5 +596,8 @@
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   loadFilters();
+  try { var v = localStorage.getItem(VIEW_KEY); if (v === "month" || v === "agenda") view = v; } catch (_e) {}
+  var now = new Date();
+  monthCursor = { year: now.getFullYear(), month: now.getMonth() };
   load();
 })();
