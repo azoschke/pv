@@ -96,6 +96,15 @@
     return new Date(ms).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   }
 
+  // The worker builds the CDN URL at ?size=512 for list thumbnails; the modal
+  // shows it much larger, so request a bigger rendition to avoid softness.
+  function hiResImage(url) {
+    if (!url) return url;
+    return /([?&])size=\d+/.test(url)
+      ? url.replace(/([?&])size=\d+/, "$1size=1024")
+      : url + (url.indexOf("?") === -1 ? "?" : "&") + "size=1024";
+  }
+
   // Local Y-M-D key so events bucket into the viewer's calendar day.
   function dayKey(ms) {
     var d = new Date(ms);
@@ -388,7 +397,7 @@
     }
 
     modalBody.innerHTML =
-      (e.image_url ? '<img class="cal-modal-media" src="' + escapeHTML(e.image_url) + '" alt="" />' : "") +
+      (e.image_url ? '<img class="cal-modal-media" src="' + escapeHTML(hiResImage(e.image_url)) + '" alt="" />' : "") +
       '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
       '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
       '<div class="cal-modal-meta">' + rows + '</div>' +

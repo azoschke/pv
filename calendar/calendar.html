@@ -48,7 +48,7 @@
     /* Event row — cover image leads, flush to the card edges, then details.
        Click opens the detail modal. */
     .cal-event {
-      display: flex; align-items: stretch; gap: 0; width: 100%; min-height: 150px;
+      display: flex; align-items: center; gap: 0; width: 100%;
       text-align: left; font: inherit; color: inherit; cursor: pointer; overflow: hidden;
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 0.55rem; margin-bottom: 0.65rem;
@@ -57,10 +57,12 @@
     .cal-event:hover { border-color: var(--accent-brown); }
     .cal-event:active { transform: translateY(1px); }
 
-    /* Flush to the card — no padding frame — and fills the full card height. */
+    /* Natural aspect ratio kept (fixed height, auto width), flush to the card
+       edges — no padding frame. The image is the tallest element, so it defines
+       the card height and touches top/bottom/left; the card's overflow:hidden +
+       radius rounds its outer corners. No object-fit, so nothing is cropped. */
     .cal-event-thumb {
-      flex: 0 0 auto; width: 260px; align-self: stretch;
-      object-fit: cover; display: block; border: 0;
+      flex: 0 0 auto; height: 132px; width: auto; display: block; border: 0;
     }
 
     /* Text content carries the padding the image intentionally skips. */
@@ -85,8 +87,8 @@
     .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
 
     @media (max-width: 620px) {
-      .cal-event { flex-direction: column; align-items: stretch; min-height: 0; }
-      .cal-event-thumb { width: 100%; height: 180px; }
+      .cal-event { flex-direction: column; align-items: stretch; }
+      .cal-event-thumb { width: 100%; height: auto; }
       .cal-event-content { flex-wrap: wrap; }
       .cal-event-time { flex-basis: auto; border-right: 0; padding-right: 0; }
     }
@@ -128,7 +130,10 @@
     }
     .cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
 
-    /* Detail modal reuses .job-modal-* from styles.css; a couple of additions. */
+    /* Detail modal reuses .job-modal-* from styles.css; a couple of additions.
+       The shared body has no padding (other modals bleed their hero image to
+       the edges), so pad it here and inset the image with its own radius. */
+    #calendar-modal-body { padding: 1.5rem; }
     .cal-modal-media {
       display: block; width: 100%; height: auto;
       border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--border-color);
