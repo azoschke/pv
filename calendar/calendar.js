@@ -300,6 +300,7 @@
       : "";
 
     return '<button type="button" class="cal-event" data-id="' + escapeHTML(e.id) + '">' +
+        thumb +
         timeHTML +
         '<div class="cal-event-body">' +
           '<div class="cal-event-title-row">' + badge +
@@ -307,7 +308,6 @@
           '</div>' +
           metaHTML +
         '</div>' +
-        thumb +
       '</button>';
   }
 

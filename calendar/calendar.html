@@ -16,56 +16,70 @@
        Reuses the campaign/venues sidebar+main layout from styles.css; only the
        agenda-specific chrome lives here. */
 
-    .cal-intro { margin: 0 0 1.25rem; color: var(--text-secondary); }
+    /* The campaign layout sets its own display, which beats the [hidden]
+       attribute's UA display:none — force it so the whole board hides when
+       signed out (the gate panel stands in). */
+    #calendar-layout[hidden] { display: none !important; }
 
-    /* Day group: sticky header + its event rows. */
-    .cal-day { margin-bottom: 1.5rem; }
+    .cal-intro { margin: 0 0 1.5rem; color: var(--text-secondary); }
+
+    /* Day group: a divider header (no filled band — the "raised" tone flips
+       lighter than cards in dark mode, so a fill reads as a stray stripe). */
+    .cal-day { margin-bottom: 1.75rem; }
     .cal-day-header {
-      position: sticky; top: 0; z-index: 2;
-      background: var(--bg-darker);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.5rem 0.2rem; margin-bottom: 0.5rem;
-      font-family: 'Stoke', serif; letter-spacing: 0.03em;
       display: flex; align-items: baseline; gap: 0.6rem;
+      padding: 0 0.1rem 0.5rem; margin-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
     }
-    .cal-day-header.is-today { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
-    .cal-day-weekday { font-size: 1.05rem; }
-    .cal-day-date { font-size: 0.85rem; color: var(--text-secondary); }
+    .cal-day-weekday { font-family: 'Stoke', serif; font-size: 1.15rem; letter-spacing: 0.03em; }
+    .cal-day-date { font-size: 0.9rem; color: var(--text-secondary); }
+    .cal-day-header.is-today { border-bottom-color: var(--accent-gold); }
+    .cal-day-header.is-today .cal-day-weekday,
     .cal-day-header.is-today .cal-day-date { color: var(--accent-gold); }
     .cal-today-tag {
-      margin-left: auto; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+      margin-left: auto; align-self: center;
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
       border: 1px solid var(--accent-gold); color: var(--accent-gold);
       border-radius: 2rem; padding: 0.05rem 0.5rem;
     }
 
-    /* Event row — click to open detail. */
+    /* Event row — cover image leads, then time + details. Click opens detail. */
     .cal-event {
-      display: flex; align-items: stretch; gap: 0.85rem; width: 100%;
+      display: flex; align-items: center; gap: 1rem; width: 100%;
       text-align: left; font: inherit; color: inherit; cursor: pointer;
       background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 0.55rem; padding: 0.7rem 0.85rem; margin-bottom: 0.5rem;
+      border-radius: 0.55rem; padding: 0.85rem; margin-bottom: 0.65rem;
       transition: border-color 0.15s ease, transform 0.05s ease;
     }
     .cal-event:hover { border-color: var(--accent-brown); }
     .cal-event:active { transform: translateY(1px); }
 
+    /* Full aspect ratio preserved (height auto), capped so a tall poster can't
+       blow out the row. */
+    .cal-event-thumb {
+      flex: 0 0 auto; width: 180px; height: auto; max-height: 130px;
+      border-radius: 0.45rem; border: 1px solid var(--border-color); display: block;
+    }
+
     .cal-event-time {
-      flex: 0 0 5.2rem; display: flex; flex-direction: column; gap: 0.1rem;
-      font-variant-numeric: tabular-nums; padding-right: 0.85rem;
-      border-right: 1px solid var(--border-color);
+      flex: 0 0 5rem; display: flex; flex-direction: column; gap: 0.1rem;
+      font-variant-numeric: tabular-nums; padding-right: 0.9rem;
+      border-right: 1px solid var(--border-color); align-self: stretch;
+      justify-content: center;
     }
     .cal-event-start { font-size: 1.02rem; }
     .cal-event-end { font-size: 0.78rem; color: var(--text-secondary); }
 
-    .cal-event-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.28rem; }
+    .cal-event-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
     .cal-event-title-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .cal-event-title { font-family: 'Stoke', serif; font-size: 1.05rem; overflow-wrap: anywhere; }
+    .cal-event-title { font-family: 'Stoke', serif; font-size: 1.1rem; overflow-wrap: anywhere; }
     .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
     .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
 
-    .cal-event-thumb {
-      flex: 0 0 3.4rem; width: 3.4rem; height: 3.4rem; align-self: center;
-      border-radius: 0.4rem; object-fit: cover; border: 1px solid var(--border-color);
+    @media (max-width: 560px) {
+      .cal-event { flex-wrap: wrap; }
+      .cal-event-thumb { width: 100%; max-height: 200px; object-fit: cover; }
+      .cal-event-time { flex-basis: 4.5rem; }
     }
 
     /* Category badge — one accent per prefix. */
@@ -107,7 +121,7 @@
 
     /* Detail modal reuses .job-modal-* from styles.css; a couple of additions. */
     .cal-modal-media {
-      width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+      display: block; width: 100%; height: auto;
       border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--border-color);
     }
     .cal-modal-title { font-family: 'Stoke', serif; font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
@@ -126,10 +140,7 @@
       <h1 class="app-title">Calendar</h1>
     </header>
 
-    <p class="landing-intro cal-intro">
-      Upcoming Phoenix Vanguard events, pulled live from our Discord and grouped by day.
-      Filter by category to find what's for you.
-    </p>
+    <p class="landing-intro cal-intro">Upcoming Phoenix Vanguard events.</p>
 
     <!-- Status region: shown for loading / sign-in / error / empty; hidden once
          the agenda renders. -->
