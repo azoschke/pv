@@ -72,6 +72,9 @@
   var view = "agenda";                            // "agenda" | "week" | "month"
   var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
   var weekCursor = null;                           // a Date within the displayed week
+  // Navigation floor — no past periods, since old events aren't kept.
+  var monthFloor = { year: 0, month: 0 };
+  var weekFloorMs = 0;
 
   // ── Session (shared with the management portal) ────────────────────────────
   function getSession() {
@@ -529,6 +532,7 @@
     }
     html += '</div>';
     monthEl.innerHTML = html;
+    updateNav();
   }
 
   // Week view reuses the agenda's day-section styling, scoped to the seven days
@@ -548,6 +552,7 @@
     weekEl.innerHTML = events.length
       ? agendaSectionsHTML(events)
       : '<div class="cal-empty">No events this week.</div>';
+    updateNav();
   }
 
   // Dispatch to the active view (all three share filters + the detail modal).
@@ -688,8 +693,18 @@
   viewWeekBtn.addEventListener("click", function () { setView("week"); });
   viewMonthBtn.addEventListener("click", function () { setView("month"); });
 
+  // At the earliest allowed period? (No navigating into the past — those
+  // events are gone.)
+  function atEarliest() {
+    if (view === "week") return startOfWeek(weekCursor).getTime() <= weekFloorMs;
+    return monthCursor.year < monthFloor.year ||
+      (monthCursor.year === monthFloor.year && monthCursor.month <= monthFloor.month);
+  }
+  function updateNav() { prevBtn.disabled = atEarliest(); }
+
   // Period navigation — steps by month or by week depending on the active view.
   function shiftPeriod(delta) {
+    if (delta < 0 && atEarliest()) return;
     if (view === "week") {
       var s = startOfWeek(weekCursor);
       weekCursor = new Date(s.getFullYear(), s.getMonth(), s.getDate() + delta * 7);
@@ -738,6 +753,8 @@
   try { var v = localStorage.getItem(VIEW_KEY); if (v === "month" || v === "week" || v === "agenda") view = v; } catch (_e) {}
   var now = new Date();
   monthCursor = { year: now.getFullYear(), month: now.getMonth() };
+  monthFloor = { year: now.getFullYear(), month: now.getMonth() };
   weekCursor = now;
+  weekFloorMs = startOfWeek(now).getTime();
   load();
 })();
