@@ -607,7 +607,7 @@
     weekEl.hidden = view !== "week";
     monthEl.hidden = view !== "month";
     monthNavEl.hidden = view === "agenda";
-    countEl.hidden = view !== "agenda";
+    countEl.hidden = true;  // event count is not surfaced in any view
     viewAgendaBtn.setAttribute("aria-pressed", view === "agenda" ? "true" : "false");
     viewWeekBtn.setAttribute("aria-pressed", view === "week" ? "true" : "false");
     viewMonthBtn.setAttribute("aria-pressed", view === "month" ? "true" : "false");
