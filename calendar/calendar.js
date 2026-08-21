@@ -87,7 +87,7 @@
   // ── State ──────────────────────────────────────────────────────────────────
   var allEvents = [];
   var filters = { search: "", categories: {} };  // categories: { rp: true, ... }
-  var view = "agenda";                            // "agenda" | "week" | "month"
+  var view = "month";                             // default view; a saved choice overrides at boot
   var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
   var weekCursor = null;                           // a Date within the displayed week
   // Navigation bounds — no past periods (old events aren't kept) and none past
