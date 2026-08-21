@@ -47,6 +47,17 @@
     'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
 
+  // Modal meta icons — same line-art style, labelled for screen readers since
+  // they replace the "When / Where / Repeats" text labels.
+  function metaIcon(label, paths) {
+    return '<svg class="cal-modal-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="' + label + '">' +
+      paths + '</svg>';
+  }
+  var CLOCK_ICON  = metaIcon("When",  '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.75"/>');
+  var PIN_ICON    = metaIcon("Where", '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>');
+  var REPEAT_ICON = metaIcon("Repeats", '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>');
+
   // ── DOM refs ───────────────────────────────────────────────────────────────
   var statusEl     = document.getElementById("calendar-status");
   var layoutEl     = document.getElementById("calendar-layout");
@@ -76,7 +87,7 @@
   // ── State ──────────────────────────────────────────────────────────────────
   var allEvents = [];
   var filters = { search: "", categories: {} };  // categories: { rp: true, ... }
-  var view = "agenda";                            // "agenda" | "week" | "month"
+  var view = "month";                             // default view; a saved choice overrides at boot
   var monthCursor = { year: 0, month: 0 };        // displayed month (month 0-based)
   var weekCursor = null;                           // a Date within the displayed week
   // Navigation bounds — no past periods (old events aren't kept) and none past
@@ -166,10 +177,8 @@
     }
   }
 
-  function renderMarkdown(text) {
-    if (text == null) return "";
-    var s = escapeHTML(String(text));
-    s = s.replace(/```([\s\S]*?)```/g, function (_m, c) { return "<pre><code>" + c.replace(/^\n+|\n+$/g, "") + "</code></pre>"; });
+  // Inline formatting only (no block structure). Input is already HTML-escaped.
+  function renderInlineMarkdown(s) {
     s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
     s = s.replace(/\*\*([^\n]+?)\*\*/g, "<strong>$1</strong>");
     s = s.replace(/__([^\n]+?)__/g, "<u>$1</u>");
@@ -182,8 +191,35 @@
     s = s.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, function (_m, ts, style) { return fmtDiscordTs(Number(ts), style || "f"); });
     // Bare URLs not already inside an href.
     s = s.replace(/(^|[^"'>=])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
-    s = s.replace(/\n/g, "<br>");
     return s;
+  }
+
+  // Render the Discord markdown subset to safe HTML. Blocks separated by blank
+  // lines become <p> paragraphs (a single newline inside one stays a <br>), so
+  // paragraph gaps are set by CSS margins instead of stacked <br> — the latter
+  // rendered every blank line as a full empty line. Input is HTML-escaped first,
+  // so every emitted tag is one we control. Fenced ``` blocks are split out
+  // before paragraph handling so their contents stay literal.
+  function renderMarkdown(text) {
+    if (text == null) return "";
+    var escaped = escapeHTML(String(text));
+    // Odd indices are the fenced-code contents captured by the split group.
+    var chunks = escaped.split(/```([\s\S]*?)```/);
+    var out = "";
+    for (var i = 0; i < chunks.length; i++) {
+      if (i % 2 === 1) {
+        out += "<pre><code>" + chunks[i].replace(/^\n+|\n+$/g, "") + "</code></pre>";
+        continue;
+      }
+      var block = chunks[i].replace(/^\n+|\n+$/g, "");   // trim edges next to fences
+      if (!block) continue;
+      block.split(/\n{2,}/).forEach(function (para) {
+        var p = para.replace(/^\n+|\n+$/g, "");
+        if (!p) return;
+        out += "<p>" + renderInlineMarkdown(p).replace(/\n/g, "<br>") + "</p>";
+      });
+    }
+    return out;
   }
 
   // Local Y-M-D key so events bucket into the viewer's calendar day.
@@ -571,7 +607,7 @@
     weekEl.hidden = view !== "week";
     monthEl.hidden = view !== "month";
     monthNavEl.hidden = view === "agenda";
-    countEl.hidden = view !== "agenda";
+    countEl.hidden = true;  // event count is not surfaced in any view
     viewAgendaBtn.setAttribute("aria-pressed", view === "agenda" ? "true" : "false");
     viewWeekBtn.setAttribute("aria-pressed", view === "week" ? "true" : "false");
     viewMonthBtn.setAttribute("aria-pressed", view === "month" ? "true" : "false");
@@ -597,12 +633,12 @@
     }
 
     var rows = "";
-    rows += '<div class="cal-modal-meta-row"><span class="cal-modal-meta-label">When</span><span>' + escapeHTML(when) + '</span></div>';
+    rows += '<div class="cal-modal-meta-row">' + CLOCK_ICON + '<span>' + escapeHTML(when) + '</span></div>';
     if (e.location) {
-      rows += '<div class="cal-modal-meta-row"><span class="cal-modal-meta-label">Where</span><span>' + escapeHTML(e.location) + '</span></div>';
+      rows += '<div class="cal-modal-meta-row">' + PIN_ICON + '<span>' + escapeHTML(e.location) + '</span></div>';
     }
     if (e.recurring) {
-      rows += '<div class="cal-modal-meta-row"><span class="cal-modal-meta-label">Repeats</span><span>Recurring event</span></div>';
+      rows += '<div class="cal-modal-meta-row">' + REPEAT_ICON + '<span>Recurring event</span></div>';
     }
 
     var hiUrl = e.image_url ? hiResImage(e.image_url) : null;
@@ -678,6 +714,33 @@
   closeBtn.addEventListener("click", closeSidebar);
   overlay.addEventListener("click", closeSidebar);
   restoreSidebarState();
+
+  // Rotating a phone to landscape (e.g. ~390px → ~844px) crosses the 768px
+  // breakpoint where the sidebar stops being an off-screen drawer and becomes
+  // the desktop inline column — which is shown by default, so the filter panel
+  // appeared to "open" on its own. Track the mode and, on a mobile→desktop
+  // crossing, collapse the sidebar unless the drawer was deliberately open, so
+  // filters stay put across a rotation. (styles.css owns the 768px breakpoint
+  // and is shared by other pages, so this is handled here rather than there.)
+  var wasMobile = isMobile();
+  window.addEventListener("resize", function () {
+    var nowMobile = isMobile();
+    if (nowMobile === wasMobile) return;
+    wasMobile = nowMobile;
+    if (nowMobile) {
+      // Into drawer mode: drop the desktop-only class (no effect on the drawer).
+      sidebarEl.classList.remove("sidebar-hidden");
+    } else {
+      // Into inline mode: clear any drawer state and keep it collapsed unless it
+      // was open, so it doesn't spring into view.
+      var wasOpen = sidebarEl.classList.contains("sidebar-open");
+      sidebarEl.classList.remove("sidebar-open");
+      overlay.classList.remove("active");
+      overlay.setAttribute("aria-hidden", "true");
+      if (wasOpen) sidebarEl.classList.remove("sidebar-hidden");
+      else sidebarEl.classList.add("sidebar-hidden");
+    }
+  });
 
   searchInput.addEventListener("input", function () {
     filters.search = searchInput.value;

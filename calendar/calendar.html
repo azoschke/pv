@@ -101,27 +101,54 @@
       }
     }
 
-    /* Category badge — one accent per prefix. */
+    /* Category badge — matches the Job / Bounty Board badge system
+       (.job-badge in styles.css): a solid dark-tinted chip with light text,
+       so it reads on any background in both themes. Colours reuse the board's
+       established category palette, grouped per the agreed list:
+         purple  #6b4f8b  (house_staff)  → RP, RP Campaign, Community Event
+         green   #2f6b4f  (medical)       → Seasonal
+         gold    #8b6f47  (contractor)    → Collab, Event
+         red     #8b3a3f  (mercenary)     → PVE
+         brand   --accent-red (open)      → FC (the flagship)
+         blue    #2c5a73  (pirate)        → Update */
     .cal-badge {
-      display: inline-flex; align-items: center;
-      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
-      border-radius: 2rem; padding: 0.08rem 0.55rem;
-      border: 1px solid var(--border-color); color: var(--text-secondary);
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-family: 'Stoke', serif; font-size: 0.6rem; line-height: 1;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      border-radius: 0.25rem; padding: 0.2rem 0.5rem;
+      color: #f3e9d2; background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.12); white-space: nowrap;
     }
-    .cal-badge[data-cat="rp"]              { border-color: #7b5cc0; color: #b79cf0; }
-    .cal-badge[data-cat="rp-campaign"]     { border-color: #a54d9c; color: #e0a0d8; }
-    .cal-badge[data-cat="community-event"] { border-color: #4d86a5; color: #97c8e6; }
-    .cal-badge[data-cat="seasonal"]        { border-color: #4da572; color: #93dcae; }
-    .cal-badge[data-cat="pve"]             { border-color: #a55a4d; color: #e6a197; }
-    .cal-badge[data-cat="collab"]          { border-color: #a58a4d; color: #e6cd97; }
-    .cal-badge[data-cat="event"]           { border-color: #6b7280; color: #b7bcc4; }
-    .cal-badge[data-cat="fc"]              { border-color: #c0913c; color: var(--accent-gold); }
-    .cal-badge[data-cat="update"]          { border-color: #3f9a94; color: #86d8d0; }
+    .cal-badge[data-cat="rp"],
+    .cal-badge[data-cat="rp-campaign"],
+    .cal-badge[data-cat="community-event"] { background: #6b4f8b; color: #fff; }
+    .cal-badge[data-cat="seasonal"]        { background: #2f6b4f; color: #fff; }
+    .cal-badge[data-cat="collab"],
+    .cal-badge[data-cat="event"]           { background: #8b6f47; color: #fff; }
+    .cal-badge[data-cat="pve"]             { background: #8b3a3f; color: #fff; }
+    .cal-badge[data-cat="fc"]              { background: var(--accent-red); color: #fff; }
+    .cal-badge[data-cat="update"]          { background: #2c5a73; color: #fff; }
 
     .cal-recurring {
       display: inline-flex; align-items: center; gap: 0.25rem;
       font-size: 0.72rem; color: var(--text-secondary);
+    }
+
+    /* Toolbar layout — three columns so the centre element is centred in the
+       whole bar no matter how wide the Filters button or view toggle are:
+       Filters left, period nav / result count centred, view toggle right. The
+       1fr side columns stay equal, so the middle column is always dead-centre.
+       Count and period nav share the centre column (only one shows at a time).
+       Below 760px it falls back to the base wrapping flex row. */
+    #calendar-main .venues-toolbar {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    }
+    #calendar-main #sidebar-toggle-btn { grid-column: 1; justify-self: start; }
+    #calendar-main .venues-result-count,
+    #calendar-main .cal-monthnav { grid-column: 2; justify-self: center; }
+    #calendar-main .cal-viewtoggle { grid-column: 3; justify-self: end; }
+    @media (max-width: 760px) {
+      #calendar-main .venues-toolbar { display: flex; }
     }
 
     /* View toggle (Agenda / Month) */
@@ -189,15 +216,15 @@
     }
     .cal-cell-event:hover { background: rgba(0,0,0,0.68); }
     .cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--border-color); }
-    .cal-cell-dot[data-cat="rp"]              { background: #7b5cc0; }
-    .cal-cell-dot[data-cat="rp-campaign"]     { background: #a54d9c; }
-    .cal-cell-dot[data-cat="community-event"] { background: #4d86a5; }
-    .cal-cell-dot[data-cat="seasonal"]        { background: #4da572; }
-    .cal-cell-dot[data-cat="pve"]             { background: #a55a4d; }
-    .cal-cell-dot[data-cat="collab"]          { background: #a58a4d; }
-    .cal-cell-dot[data-cat="event"]           { background: #6b7280; }
-    .cal-cell-dot[data-cat="fc"]              { background: var(--accent-gold); }
-    .cal-cell-dot[data-cat="update"]          { background: #3f9a94; }
+    .cal-cell-dot[data-cat="rp"],
+    .cal-cell-dot[data-cat="rp-campaign"],
+    .cal-cell-dot[data-cat="community-event"] { background: #6b4f8b; }
+    .cal-cell-dot[data-cat="seasonal"]        { background: #2f6b4f; }
+    .cal-cell-dot[data-cat="collab"],
+    .cal-cell-dot[data-cat="event"]           { background: #8b6f47; }
+    .cal-cell-dot[data-cat="pve"]             { background: #8b3a3f; }
+    .cal-cell-dot[data-cat="fc"]              { background: var(--accent-red); }
+    .cal-cell-dot[data-cat="update"]          { background: #2c5a73; }
     .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cal-cell[data-single-id] { cursor: pointer; }
 
@@ -230,10 +257,17 @@
     .cal-modal-media { display: block; width: 100%; height: auto; border: 0; margin: 0; }
     .cal-modal-content { padding: 1.5rem; }
     .cal-modal-title { font-family: 'Stoke', serif; font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
-    .cal-modal-meta { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.95rem; }
-    .cal-modal-meta-row { display: flex; gap: 0.5rem; }
-    .cal-modal-meta-label { flex: 0 0 5rem; color: var(--text-secondary); }
+    /* Meta rows lead with an icon (When = clock, Where = pin, Repeats = loop)
+       instead of a fixed label column — the old `flex: 0 0 5rem` label left an
+       oversized tab-like gap before short values. */
+    .cal-modal-meta { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1rem; font-size: 0.95rem; }
+    .cal-modal-meta-row { display: flex; align-items: flex-start; gap: 0.55rem; }
+    .cal-modal-meta-icon { flex: 0 0 auto; width: 1.05em; height: 1.05em; margin-top: 0.12em; color: var(--text-secondary); }
     .cal-modal-desc { line-height: 1.55; overflow-wrap: anywhere; }
+    /* Description is rendered as <p> blocks; a modest margin gives paragraph
+       separation without the full blank line that back-to-back <br> produced. */
+    .cal-modal-desc p { margin: 0 0 0.6rem; }
+    .cal-modal-desc p:last-child { margin-bottom: 0; }
     .cal-modal-desc a { color: var(--accent-red); }
     .cal-modal-desc code {
       font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em;
@@ -300,9 +334,9 @@
             &#9776; Filters
           </button>
           <div class="cal-viewtoggle" role="group" aria-label="Calendar view">
-            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="true">List</button>
+            <button type="button" class="cal-view-btn" id="view-month" aria-pressed="true">Month</button>
             <button type="button" class="cal-view-btn" id="view-week" aria-pressed="false">Week</button>
-            <button type="button" class="cal-view-btn" id="view-month" aria-pressed="false">Month</button>
+            <button type="button" class="cal-view-btn" id="view-agenda" aria-pressed="false">All Events</button>
           </div>
           <span class="venues-result-count" id="calendar-count" aria-live="polite"></span>
           <div class="cal-monthnav" id="cal-monthnav" hidden>
