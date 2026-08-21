@@ -101,12 +101,16 @@
       }
     }
 
-    /* Category badge — one accent per prefix. Filled pill (tinted background +
-       readable text + matching border) so the label clears contrast on the
-       card in BOTH themes. The old scheme was a light-on-transparent colour
-       tuned for dark mode only, which washed out on the light parchment card.
-       Colours are defined per theme: dark, saturated text on a pale tint for
-       light mode; bright text on a deep tint for dark mode. */
+    /* Category badge — filled pill (tinted background + readable text +
+       matching border) so the label clears contrast on the card in BOTH
+       themes. The old scheme was a light-on-transparent colour tuned for dark
+       mode only, which washed out on the light parchment card. Colours are
+       defined per theme: dark, saturated text on a pale tint for light mode;
+       bright text on a deep tint for dark mode.
+
+       Categories are grouped by hue (agreed colour list): the three RP-flavoured
+       prefixes share purple, Collab + Event share gold, PVE + FC share the brand
+       red (FC being the flagship), Seasonal is green, Update is blue. */
     .cal-badge {
       display: inline-flex; align-items: center;
       font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
@@ -115,25 +119,25 @@
       background: var(--bg-card-light); white-space: nowrap;
     }
     /* Light mode (default). */
-    .cal-badge[data-cat="rp"]              { color: #5b34a8; background: #efe9fb; border-color: #cbb8ef; }
-    .cal-badge[data-cat="rp-campaign"]     { color: #98297e; background: #fbe8f6; border-color: #ecb4dd; }
-    .cal-badge[data-cat="community-event"] { color: #1d6890; background: #e6f2fa; border-color: #a8d2ea; }
+    .cal-badge[data-cat="rp"],
+    .cal-badge[data-cat="rp-campaign"],
+    .cal-badge[data-cat="community-event"] { color: #5b34a8; background: #efe9fb; border-color: #cbb8ef; }
     .cal-badge[data-cat="seasonal"]        { color: #23744a; background: #e6f5ec; border-color: #a6dbba; }
-    .cal-badge[data-cat="pve"]             { color: #ad3f2c; background: #fceae5; border-color: #f0b3a4; }
-    .cal-badge[data-cat="collab"]          { color: #b25a12; background: #fbeeda; border-color: #eec596; }
-    .cal-badge[data-cat="event"]           { color: #4f5b68; background: #eceef1; border-color: #c2c9d1; }
-    .cal-badge[data-cat="fc"]              { color: #8a6410; background: #f7efd6; border-color: #e2cd8e; }
-    .cal-badge[data-cat="update"]          { color: #1a7d76; background: #e3f4f2; border-color: #a1ddd6; }
+    .cal-badge[data-cat="collab"],
+    .cal-badge[data-cat="event"]           { color: #8a6410; background: #f7efd6; border-color: #e2cd8e; }
+    .cal-badge[data-cat="pve"],
+    .cal-badge[data-cat="fc"]              { color: #a54d44; background: #fbeae5; border-color: #eeb3aa; }
+    .cal-badge[data-cat="update"]          { color: #1d6890; background: #e6f2fa; border-color: #a8d2ea; }
     /* Dark mode. */
-    [data-theme="dark"] .cal-badge[data-cat="rp"]              { color: #c6b2f6; background: #2f2740; border-color: #5f4b93; }
-    [data-theme="dark"] .cal-badge[data-cat="rp-campaign"]     { color: #ecabe0; background: #3a2838; border-color: #8a4d82; }
-    [data-theme="dark"] .cal-badge[data-cat="community-event"] { color: #a2d4f0; background: #233340; border-color: #3f6f8f; }
+    [data-theme="dark"] .cal-badge[data-cat="rp"],
+    [data-theme="dark"] .cal-badge[data-cat="rp-campaign"],
+    [data-theme="dark"] .cal-badge[data-cat="community-event"] { color: #c6b2f6; background: #2f2740; border-color: #5f4b93; }
     [data-theme="dark"] .cal-badge[data-cat="seasonal"]        { color: #9de1b8; background: #213528; border-color: #3f7a58; }
-    [data-theme="dark"] .cal-badge[data-cat="pve"]             { color: #f1ac9e; background: #3a2823; border-color: #8f4f42; }
-    [data-theme="dark"] .cal-badge[data-cat="collab"]          { color: #eed092; background: #352d1f; border-color: #8a7038; }
-    [data-theme="dark"] .cal-badge[data-cat="event"]           { color: #c2c8d1; background: #2b2e33; border-color: #5a636e; }
-    [data-theme="dark"] .cal-badge[data-cat="fc"]              { color: #e7ba54; background: #352b1a; border-color: #8a6a2a; }
-    [data-theme="dark"] .cal-badge[data-cat="update"]          { color: #90dad2; background: #1f3332; border-color: #3f7d77; }
+    [data-theme="dark"] .cal-badge[data-cat="collab"],
+    [data-theme="dark"] .cal-badge[data-cat="event"]           { color: #e7ba54; background: #352b1a; border-color: #8a6a2a; }
+    [data-theme="dark"] .cal-badge[data-cat="pve"],
+    [data-theme="dark"] .cal-badge[data-cat="fc"]              { color: #e79a8e; background: #3a2823; border-color: #8f4f42; }
+    [data-theme="dark"] .cal-badge[data-cat="update"]          { color: #a2d4f0; background: #233340; border-color: #3f6f8f; }
 
     .cal-recurring {
       display: inline-flex; align-items: center; gap: 0.25rem;
@@ -205,15 +209,15 @@
     }
     .cal-cell-event:hover { background: rgba(0,0,0,0.68); }
     .cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--border-color); }
-    .cal-cell-dot[data-cat="rp"]              { background: #9b7ce0; }
-    .cal-cell-dot[data-cat="rp-campaign"]     { background: #d072c2; }
-    .cal-cell-dot[data-cat="community-event"] { background: #5aa6cc; }
+    .cal-cell-dot[data-cat="rp"],
+    .cal-cell-dot[data-cat="rp-campaign"],
+    .cal-cell-dot[data-cat="community-event"] { background: #9b7ce0; }
     .cal-cell-dot[data-cat="seasonal"]        { background: #5cc088; }
-    .cal-cell-dot[data-cat="pve"]             { background: #d0705c; }
-    .cal-cell-dot[data-cat="collab"]          { background: #d0a24d; }
-    .cal-cell-dot[data-cat="event"]           { background: #8a929c; }
-    .cal-cell-dot[data-cat="fc"]              { background: #e0b24a; }
-    .cal-cell-dot[data-cat="update"]          { background: #4fbdb5; }
+    .cal-cell-dot[data-cat="collab"],
+    .cal-cell-dot[data-cat="event"]           { background: #d0a24d; }
+    .cal-cell-dot[data-cat="pve"],
+    .cal-cell-dot[data-cat="fc"]              { background: #d0705c; }
+    .cal-cell-dot[data-cat="update"]          { background: #5aa6cc; }
     .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cal-cell[data-single-id] { cursor: pointer; }
 
