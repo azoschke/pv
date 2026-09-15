@@ -6,7 +6,7 @@ const MEDIC_IDS = {
     'Addison Tyrrell':   '271478962964791298',
     'Lixiss Valra':      '505184303198765060',
     'Nikita Lynkasch':   '224310874180026378',
-    'Camily Mily':       '593575045255659520',
+    'Camimi Mili':       '593575045255659520',
     'Tasha Theja':       '1472340765702225994'
 };
 
