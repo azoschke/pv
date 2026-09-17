@@ -196,7 +196,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Ability name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to the player)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Description'),
         h('textarea', { rows: 4, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
         h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
@@ -441,7 +441,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (staff-only notes)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (admin notes)'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
@@ -518,7 +518,7 @@
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
-        !(b.abilities || []).length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No skills yet. Skills are what the DM fires during the locked (boss) turn — each can carry several effects.') :
+        !(b.abilities || []).length ? null :
           (b.abilities || []).map(function (a) {
             return h('div', { key: a.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
@@ -763,7 +763,7 @@
         abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability'),
         abilities === null ? h('p', null, 'Loading…') :
-          (!abilities.length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'No abilities yet. All item effects live on abilities — add one to get started.') :
+          (!abilities.length ? null :
           abilities.map(function (ab) {
             return h('div', { key: ab.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
@@ -1136,12 +1136,11 @@
                     members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
                       h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
                         h('option', { value: '' }, '— none —'),
-                        (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))),
-                  h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Controls turns and the active-effects panel. May also be a rostered character.')),
+                        (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); })))),
 
                 // Add a member — kept at the top of the panel, right under the DM.
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
-                  h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Add a member'),
+                  h('label', { className: 'portal-block-label' }, 'Add a member'),
                   members === null ? h('p', null, 'Loading members…') :
                     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
                       h('div', { className: 'portal-field' }, h('label', null, 'Member'),
@@ -1172,7 +1171,7 @@
                   var onCount = camp.length - offCount;
                   return h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
                     h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
-                      h('p', { style: { margin: 0, fontWeight: 600, flex: '1 1 auto' } }, 'Campaign items'),
+                      h('label', { className: 'portal-block-label', style: { margin: 0, flex: '1 1 auto' } }, 'Campaign items'),
                       h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem' } },
                         loading ? 'Loading…' : (onCount + ' on · ' + offCount + ' off')),
                       h('button', { type: 'button', className: 'portal-btn is-small', disabled: loading || offCount === 0,
@@ -1199,7 +1198,7 @@
                 // Bosses staged for this campaign. The DM manages HP/visibility and
                 // fires skills live from the calculator; this is pre-session setup.
                 bossesSupported ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
-                  h('p', { style: { margin: '0 0 0.5rem', fontWeight: 600 } }, 'Bosses'),
+                  h('label', { className: 'portal-block-label' }, 'Bosses'),
                   campBosses === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading…') :
                     (!campBosses.length ? h('p', { style: { margin: '0 0 0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'No bosses staged for this campaign.') :
                       campBosses.map(function (b) {
@@ -1210,13 +1209,13 @@
                             h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove')));
                       })),
                   h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-                    h('select', { value: campBossPick, style: { flex: '1 1 12rem' }, onChange: function (e) { setCampBossPick(e.target.value); } },
+                    h('select', { className: 'portal-select', value: campBossPick, style: { flex: '1 1 12rem' }, onChange: function (e) { setCampBossPick(e.target.value); } },
                       h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
                       bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
                     h('button', { type: 'button', className: 'portal-btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
                   h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'The same library boss can be added more than once for multi-enemy fights.')) : null,
 
-                h('p', { style: { margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'Roster'),
+                h('label', { className: 'portal-block-label' }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
                   roster.map(function (ch) {
                     return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
