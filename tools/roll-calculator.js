@@ -295,7 +295,7 @@
           h('select', { className: 'rp-select', value: selected, disabled: props.locked || busy, onChange: function (e) { setBossPick(e.target.value); } },
             living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))) : null,
         h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: apply },
-          busy ? 'Applying…' : 'Apply ' + (effDmg !== capped ? capped + ' → ' + effDmg : capped) + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
+          busy ? 'Applying…' : 'Apply ' + effDmg + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
         (selBoss && selBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, selBoss.name + ' is vulnerable, damage is multiplied ' + selBoss.damage_mult + '×.') : null,
         msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null) : null);
   }
@@ -549,10 +549,10 @@
         type ? h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, title: 'Lock this buff in as your action for the turn', onClick: applyNow }, 'Apply') : null));
   }
   function buffStatusText(b) {
-    if (b.state === 'draft') return 'pending — becomes your action at end of turn';
+    if (b.state === 'draft') return 'becomes your action at end of turn';
     if (b.pending) return 'activates next turn (' + b.duration + (b.duration === 1 ? ' turn)' : ' turns)');
     if (!b.enabled) return 'paused by DM';
-    return 'live — ' + b.remaining_turns + (b.remaining_turns === 1 ? ' turn left' : ' turns left');
+    return b.remaining_turns + (b.remaining_turns === 1 ? ' turn left' : ' turns left');
   }
   function CommittedBuffRow(props) {
     var b = props.buff;
@@ -749,7 +749,8 @@
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var library = props.library || [];
-    return h('div', null,
+    return h('div', { className: 'rp-dm-section' },
+      h('h4', { className: 'rp-dm-sub' }, 'Bosses'),
       h('div', { className: 'rp-boss-add' },
         h('select', { className: 'rp-select', value: pick, onChange: function (e) { setPick(e.target.value); } },
           h('option', { value: '' }, library.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
@@ -840,7 +841,7 @@
         return h('div', { className: 'rp-effect is-off', key: b.id },
           h('div', { className: 'rp-effect-info' },
             h('strong', null, buffName(b)),
-            h('span', { className: 'rp-effect-meta' }, 'pending — not committed until End Turn')));
+            h('span', { className: 'rp-effect-meta' }, 'not committed until End Turn')));
       }));
   }
   function DMPanel(props) {
@@ -1108,7 +1109,7 @@
     // player has spent their action for the turn.
     var actionUsed = !!(data.my_turn && data.my_turn.limit > 0 && data.my_turn.used >= data.my_turn.limit);
     var turnNotice = actionLocked
-      ? (isDM ? 'Turn is locked — resolving the boss turn.' : 'Turn is locked — the DM is acting.')
+      ? (isDM ? 'Boss turn — Player actions locked.' : 'Turn is locked — the DM is acting.')
       : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
 
     return h('div', { className: 'rp-tool' },

@@ -270,7 +270,9 @@
     .rp-party .rp-hp-edit, .rp-party .rp-shield-edit { gap: 0.2rem; }
     .rp-party .rp-hp-edit .material-icons, .rp-party .rp-shield-edit .material-icons { font-size: 0.9rem; }
     .rp-party .rp-stepper { gap: 0.2rem; }
-    .rp-party .rp-hp-max { font-size: 0.72rem; }
+    /* Fixed-width max label so every HP block is the same width — the right-aligned
+       HP and shield controls then line up in columns down the party list. */
+    .rp-party .rp-hp-max { font-size: 0.72rem; display: inline-block; min-width: 2.1rem; text-align: left; }
     /* HP value can be 2–3 digits and the number spinner eats width — give it room.
        Shield is single-digit (0–3) so its compact width is left alone. */
     .rp-party .rp-hp-edit .rp-hp-input { width: 2.6rem; }
