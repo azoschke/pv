@@ -749,8 +749,7 @@
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var library = props.library || [];
-    return h('div', { className: 'rp-dm-section' },
-      h('h4', { className: 'rp-dm-sub' }, 'Bosses'),
+    return h('div', null,
       h('div', { className: 'rp-boss-add' },
         h('select', { className: 'rp-select', value: pick, onChange: function (e) { setPick(e.target.value); } },
           h('option', { value: '' }, library.length ? '— add a boss from the library —' : 'No bosses in the library yet'),

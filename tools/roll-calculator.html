@@ -342,8 +342,8 @@
     .rp-skill-picks label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer; }
     /* Boss skill = named container (like an item ability) with its effects
        listed below, each fired on its own. */
-    .rp-boss-skill { border-top: 1px solid var(--border-color); padding: 0.4rem 0; }
-    .rp-boss-skill:first-of-type { border-top: 0; }
+    /* Each boss skill is a distinct card on the boss panel for contrast. */
+    .rp-boss-skill { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.5rem 0.6rem; margin-top: 0.45rem; }
     .rp-boss-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
     .rp-boss-skill-head strong { font-family: 'Stoke', serif; }
     .rp-boss-skill-desc { margin: 0.15rem 0 0.3rem; font-size: 0.82rem; color: var(--text-secondary); white-space: pre-wrap; }
@@ -364,7 +364,8 @@
     .rp-dm-tab.is-active { color: var(--text-primary); border-bottom-color: var(--accent-gold); }
     .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
     .rp-boss-add .rp-select { flex: 1 1 14rem; }
-    .rp-dm-boss { border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-bottom: 0.5rem; }
+    /* Each boss is its own boxed panel (visibility), like the other DM sections. */
+    .rp-dm-boss { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem 0.75rem; margin-bottom: 0.6rem; }
     .rp-dm-boss.is-down { opacity: 0.55; }
     .rp-dm-boss-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .rp-dm-boss-head strong { font-family: 'Stoke', serif; }
