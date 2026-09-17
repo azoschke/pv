@@ -83,10 +83,11 @@
 
     .rp-locked { background: rgba(165,77,68,0.12); border: 1px solid var(--accent-red); color: var(--accent-red); }
 
-    /* Prominent single-column notice above the action columns: action-used or turn-locked. */
+    /* Prominent single-column notice above the action columns: action-used or turn-locked.
+       Red in both states — the gold read too low-contrast in dark mode. */
     .rp-turn-notice { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 0.5rem; text-align: center; font-size: 0.98rem;
-      background: rgba(198,166,100,0.14); border: 1px solid var(--accent-gold); color: var(--accent-gold); }
-    .rp-turn-notice.is-locked { background: rgba(165,77,68,0.14); border-color: var(--accent-red); color: var(--accent-red); }
+      background: rgba(165,77,68,0.14); border: 1px solid var(--accent-red); color: var(--accent-red); }
+    .rp-turn-notice.is-locked { background: rgba(165,77,68,0.22); }
 
     .rp-buff-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.35rem 0; }
     .rp-buff-label { color: var(--text-secondary); font-size: 0.9rem; }
@@ -95,7 +96,9 @@
     .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; font-family: inherit; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
     .rp-buff-dur { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
     .rp-buff-dur-input { width: 3.2rem; }
-    .rp-buff-edit { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
+    /* DM buff controls: an icon + compact stepper per field (bonus, turns). */
+    .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.2rem; }
+    .rp-buff-ctl .material-icons { font-size: 1rem; color: var(--text-secondary); }
     /* Committed buffs (read-only for the player; DM edits them in Active Effects). */
     .rp-buff-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
     .rp-buff-live { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.55rem;
@@ -287,7 +290,8 @@
        of load order, so the modal actually widens — near-fullscreen on large. */
     .venue-modal.rp-item-modal { max-width: min(1600px, 94vw); }
     .rp-item-modal .venue-modal-img, .rp-item-modal .contrast-media { aspect-ratio: 1 / 1; }
-    .rp-item-abilities { margin-top: 1.1rem; display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: start; }
+    /* stretch so both skill cards in a row fill to the taller one's height. */
+    .rp-item-abilities { margin-top: 1.1rem; display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: stretch; }
     .rp-item-ability { padding: 0.7rem 0.75rem; background: var(--bg-card-light); border-radius: 0.4rem; }
     .rp-item-ability > .rp-ability-head strong { font-family: 'Stoke', serif; font-size: 0.98rem; }
     .rp-item-ability-desc { margin: 0.15rem 0 0.4rem; color: var(--text-secondary); white-space: pre-wrap; font-size: 0.88rem; }
@@ -308,8 +312,9 @@
          right edge, and flip it so the teeth face outward. */
       .rp-item-modal > .contrast-media .contrast-border,
       .rp-item-modal > .venue-modal-img-fallback .contrast-border {
-        left: auto; right: 0; top: 50%; bottom: auto; width: 100%; height: auto;
-        transform-origin: center center; transform: translate(50%, -50%) rotate(90deg) scaleY(-1);
+        left: auto; right: 0; top: 50%; bottom: auto; width: 140vh; height: 2.6rem; aspect-ratio: auto;
+        transform-origin: center center;
+        transform: translate(calc(70vh - 1.3rem), -1.3rem) rotate(90deg) scaleX(-1);
       }
     }
 

@@ -33,6 +33,9 @@
   var ARMOR_LABEL = { heavy: 'Heavy Armor', medium: 'Medium Armor', light: 'Light Armor' };
   var ROLE_LABEL  = { tank: 'Tank', dps: 'DPS', healer: 'Healer' };
   var BUFF_LABEL  = { attack_roll: 'Attack', defense_roll: 'Defense', heal_roll: 'Heal' };
+  // Material Icons (classic set) standing in for each buff type: offense bolt,
+  // a guard/deflect glyph for defense (not the shield used elsewhere), heart for heal.
+  var BUFF_ICON   = { attack_roll: 'bolt', defense_roll: 'block', heal_roll: 'favorite' };
 
   // Mirrors the worker's DEFAULT_RULES — used only when the worker predates
   // v9.5 and the sync payload has no `rules` block.
@@ -812,18 +815,6 @@
             onClick: function () { props.onResetAction(p.member_id); } }, 'Reset action'));
       }));
   }
-  // Inline bonus editor for the DM (commits on blur / Enter).
-  function DMBuffValue(props) {
-    var b = props.buff;
-    var vState = useState(String(b.value)); var v = vState[0], setV = vState[1];
-    useEffect(function () { setV(String(b.value)); }, [b.value]);
-    function commit() { var n = parseInt(v, 10); if (isNaN(n)) { setV(String(b.value)); return; } if (n !== b.value) props.onChange(n); }
-    return h('label', { className: 'rp-buff-edit', title: 'Bonus' },
-      h('span', null, BUFF_LABEL[b.type] || b.type),
-      h('input', { className: 'rp-hits-input', type: 'number', inputMode: 'numeric', value: v,
-        onChange: function (e) { setV(e.target.value); }, onBlur: commit,
-        onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }));
-  }
   // Committed personal buffs, DM-controllable (edit bonus / adjust turns / pause /
   // remove), plus a read-out of any not-yet-committed drafts. Sits in Turn & Effects.
   function DMPersonalBuffs(props) {
@@ -841,8 +832,12 @@
             h('strong', null, buffName(b)),
             h('span', { className: 'rp-effect-meta' }, meta)),
           h('div', { className: 'rp-effect-ctl' },
-            h(DMBuffValue, { buff: b, onChange: function (v) { props.onBuffPatch(b, { value: v }); } }),
-            h(Stepper, { value: b.remaining_turns, label: String(b.remaining_turns), disabled: false, onChange: function (v) { props.onBuffPatch(b, { remaining_turns: Math.max(0, v) }); } }),
+            h('div', { className: 'rp-buff-ctl', title: (BUFF_LABEL[b.type] || b.type) + ' bonus' },
+              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, BUFF_ICON[b.type] || 'bolt'),
+              h(Stepper, { value: b.value, label: fmt(b.value), compact: true, disabled: false, onChange: function (v) { props.onBuffPatch(b, { value: v }); } })),
+            h('div', { className: 'rp-buff-ctl', title: 'Turns' },
+              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'schedule'),
+              h(Stepper, { value: b.remaining_turns, label: String(b.remaining_turns), compact: true, disabled: false, onChange: function (v) { props.onBuffPatch(b, { remaining_turns: Math.max(0, v) }); } })),
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBuffPatch(b, { enabled: !b.enabled }); } }, b.enabled ? 'Pause' : 'Resume'),
             h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBuffRemove(b); } }, '✕')));
       }),
@@ -1113,11 +1108,12 @@
     var actionLocked = camp.turn_locked;
     var bookLocked = camp.turn_locked && !isDM;
     var ctx = c ? { character: c, myModifiers: data.my_modifiers || [], rules: rules } : null;
-    // One prominent notice above the action columns: locked while the DM resolves,
-    // otherwise a reminder once this player has spent their action for the turn.
-    var turnLockedForMe = actionLocked && !isDM;
+    // One prominent notice above the action columns: locked while the turn is
+    // resolving (shown to everyone, DM included), otherwise a reminder once this
+    // player has spent their action for the turn.
     var actionUsed = !!(data.my_turn && data.my_turn.limit > 0 && data.my_turn.used >= data.my_turn.limit);
-    var turnNotice = turnLockedForMe ? 'Turn is locked — the DM is acting.'
+    var turnNotice = actionLocked
+      ? (isDM ? 'Turn is locked — resolving the boss turn.' : 'Turn is locked — the DM is acting.')
       : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
 
     return h('div', { className: 'rp-tool' },
@@ -1144,7 +1140,7 @@
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
-      (c && turnNotice) ? h('div', { className: 'rp-turn-notice' + (turnLockedForMe ? ' is-locked' : '') }, turnNotice) : null,
+      (c && turnNotice) ? h('div', { className: 'rp-turn-notice' + (actionLocked ? ' is-locked' : '') }, turnNotice) : null,
 
       c ? h('div', { className: 'rp-grid' },
         h('div', { className: 'rp-col' },
