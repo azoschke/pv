@@ -497,7 +497,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-field input[type="date"],
 .portal-field input[type="number"],
 .portal-field textarea,
-.portal-field select {
+.portal-field select, .portal-select {
   background: var(--form-input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -505,6 +505,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 4px;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
+}
+/* Standalone section-title style (Stoke, uppercase) — used only on the specific
+   campaign-panel titles, never grouped with the form inputs above. */
+.portal-block-label {
+  display: block;
+  margin: 0 0 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 .portal-field textarea { min-height: 5rem; resize: vertical; }
 .portal-field-help {

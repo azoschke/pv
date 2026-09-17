@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,0" rel="stylesheet">
 
   <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="/pv/css/styles.css">
@@ -83,11 +84,43 @@
 
     .rp-locked { background: rgba(165,77,68,0.12); border: 1px solid var(--accent-red); color: var(--accent-red); }
 
+    /* Prominent single-column notice above the action columns: action-used or turn-locked.
+       Red in both states — the gold read too low-contrast in dark mode. */
+    .rp-turn-notice { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 0.5rem; text-align: center; font-size: 0.98rem;
+      background: rgba(165,77,68,0.14); border: 1px solid var(--accent-red); color: var(--accent-red); }
+    .rp-turn-notice.is-locked { background: rgba(165,77,68,0.22); }
+
     .rp-buff-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.35rem 0; }
     .rp-buff-label { color: var(--text-secondary); font-size: 0.9rem; }
     .rp-buff-controls { display: flex; gap: 0.4rem; align-items: center; }
     .rp-select { padding: 0.35rem 0.5rem; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; font-family: inherit; font-size: 1rem; }
     .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; font-family: inherit; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
+    .rp-buff-dur { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
+    .rp-buff-dur-input { width: 3.2rem; }
+    .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal;
+      line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap;
+      word-wrap: normal; direction: ltr; -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; }
+    /* DM buff controls: each field (bonus, turns) is its own boxed icon+stepper, like
+       a party row, so the groups don't run together. */
+    .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.35rem;
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; }
+    /* Only the leading type/clock glyph is muted; the stepper − / + keep the button's
+       white so they match the party steppers' contrast. */
+    .rp-buff-ctl > .material-symbols-outlined { font-size: 1.05rem; color: var(--text-secondary); }
+    /* Narrow stepper − / + buttons everywhere; the glyphs are Material Symbols so we
+       can weight them and keep them optically centred. */
+    .rp-stepper .rp-btn { padding: 0.1rem 0.2rem; line-height: 1; }
+    .rp-stepper .rp-btn .material-symbols-outlined { font-size: 1rem; vertical-align: middle; font-variation-settings: 'wght' 600; }
+    /* DM Tools sub-sections get the Change Log's boxed background. */
+    .rp-dm-section { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.6rem; }
+    .rp-dm-section > .rp-dm-sub:first-child { margin-top: 0.1rem; }
+    /* Committed buffs (read-only for the player; DM edits them in Active Effects). */
+    .rp-buff-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
+    .rp-buff-live { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.55rem;
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; }
+    .rp-buff-live.is-live { border-color: var(--accent-gold); }
+    .rp-buff-live-name { font-weight: 600; }
+    .rp-buff-live-meta { font-size: 0.78rem; color: var(--text-secondary); }
 
     .rp-stepper { display: inline-flex; align-items: center; gap: 0.4rem; }
     .rp-step-val { min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; }
@@ -233,14 +266,16 @@
     .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
     .rp-party-name { font-size: 0.9rem; overflow-wrap: anywhere; }
     /* Tighter steppers inside the party list so many members stay compact. */
-    .rp-party .rp-btn.is-small { padding: 0.05rem 0.42rem; }
+    .rp-party .rp-btn.is-small { padding: 0.05rem 0.2rem; }
     .rp-party .rp-hp-edit, .rp-party .rp-shield-edit { gap: 0.2rem; }
     .rp-party .rp-hp-edit .material-icons, .rp-party .rp-shield-edit .material-icons { font-size: 0.9rem; }
     .rp-party .rp-stepper { gap: 0.2rem; }
-    .rp-party .rp-hp-max { font-size: 0.72rem; }
+    /* Fixed-width max label so every HP block is the same width — the right-aligned
+       HP and shield controls then line up in columns down the party list. */
+    .rp-party .rp-hp-max { font-size: 0.72rem; display: inline-block; min-width: 2.1rem; text-align: left; }
     /* HP value can be 2–3 digits and the number spinner eats width — give it room.
        Shield is single-digit (0–3) so its compact width is left alone. */
-    .rp-party .rp-hp-edit .rp-hp-input { width: 3.6rem; }
+    .rp-party .rp-hp-edit .rp-hp-input { width: 2.6rem; }
     /* Narrow screens: the two steppers alone need ~15rem, which leaves a name
        column too thin to read. Break the row in two — portrait, name and role
        on top, HP and shield on a full-width line beneath. */
@@ -268,12 +303,37 @@
     .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.9rem; }
     .rp-item-card { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; padding: 0; }
     .rp-item-card .venue-card-media { aspect-ratio: 1 / 1; }
-    .rp-item-modal { max-width: 460px; }
+    /* Double class beats styles.css's `.venue-modal { max-width: 640px }` regardless
+       of load order, so the modal actually widens — near-fullscreen on large. */
+    .venue-modal.rp-item-modal { max-width: min(1600px, 94vw); }
     .rp-item-modal .venue-modal-img, .rp-item-modal .contrast-media { aspect-ratio: 1 / 1; }
-    .rp-item-abilities { margin-top: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    /* stretch so both skill cards in a row fill to the taller one's height. */
+    .rp-item-abilities { margin-top: 1.1rem; display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: stretch; }
     .rp-item-ability { padding: 0.7rem 0.75rem; background: var(--bg-card-light); border-radius: 0.4rem; }
     .rp-item-ability > .rp-ability-head strong { font-family: 'Stoke', serif; font-size: 0.98rem; }
     .rp-item-ability-desc { margin: 0.15rem 0 0.4rem; color: var(--text-secondary); white-space: pre-wrap; font-size: 0.88rem; }
+    /* Skills go two-column once there's width to read them, independent of where the
+       art sits; back to one column when it gets too narrow. */
+    @media (min-width: 620px) { .rp-item-abilities { grid-template-columns: 1fr 1fr; } }
+    /* Art beside the text on wide screens: a generous column that STRETCHES to the
+       content height and covers (vertical crop), rather than a fixed square that
+       leaves dead space. Below this the art stacks on top (tablet/mobile untouched). */
+    @media (min-width: 900px) {
+      .venue-modal.rp-item-modal { display: flex; align-items: stretch; gap: 1.25rem; }
+      .rp-item-modal > .contrast-media,
+      .rp-item-modal > .venue-modal-img-fallback { flex: 0 0 38%; width: 38%; align-self: stretch; aspect-ratio: auto; overflow: hidden; }
+      .rp-item-modal > .contrast-media .venue-modal-img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: auto; }
+      .rp-item-modal .venue-modal-content { flex: 1 1 auto; min-width: 0; max-height: 88vh; overflow-y: auto; }
+      /* Art is on the left, so the torn texture edge belongs on its RIGHT side (the
+         seam with the text): rotate the horizontal torn mask 90°, centre it on the
+         right edge, and flip it so the teeth face outward. */
+      .rp-item-modal > .contrast-media .contrast-border,
+      .rp-item-modal > .venue-modal-img-fallback .contrast-border {
+        left: auto; right: -3px; top: 50%; bottom: auto; width: 140vh; height: 2.6rem; aspect-ratio: auto;
+        transform-origin: center center;
+        transform: translate(calc(70vh - 1.3rem), -1.3rem) rotate(90deg) scaleY(-1);
+      }
+    }
 
     /* DM: per-boss visibility toggle on the battlefield card + multi-target picks */
     .rp-boss-eye { margin-left: auto; align-self: flex-start; background: none; border: 0; cursor: pointer; color: var(--text-secondary); padding: 0.1rem; }
@@ -282,8 +342,8 @@
     .rp-skill-picks label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer; }
     /* Boss skill = named container (like an item ability) with its effects
        listed below, each fired on its own. */
-    .rp-boss-skill { border-top: 1px solid var(--border-color); padding: 0.4rem 0; }
-    .rp-boss-skill:first-of-type { border-top: 0; }
+    /* Each boss skill is a distinct card on the boss panel for contrast. */
+    .rp-boss-skill { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.5rem 0.6rem; margin-top: 0.45rem; }
     .rp-boss-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
     .rp-boss-skill-head strong { font-family: 'Stoke', serif; }
     .rp-boss-skill-desc { margin: 0.15rem 0 0.3rem; font-size: 0.82rem; color: var(--text-secondary); white-space: pre-wrap; }
@@ -304,7 +364,8 @@
     .rp-dm-tab.is-active { color: var(--text-primary); border-bottom-color: var(--accent-gold); }
     .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
     .rp-boss-add .rp-select { flex: 1 1 14rem; }
-    .rp-dm-boss { border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-bottom: 0.5rem; }
+    /* Each boss is its own boxed panel (visibility), like the other DM sections. */
+    .rp-dm-boss { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem 0.75rem; margin-bottom: 0.6rem; }
     .rp-dm-boss.is-down { opacity: 0.55; }
     .rp-dm-boss-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .rp-dm-boss-head strong { font-family: 'Stoke', serif; }
