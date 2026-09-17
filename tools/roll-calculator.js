@@ -1,25 +1,5 @@
 // ============================================================================
-//  RollCalculator (v5) — player + DM roll calculator / party tracker.
-//
-//  Worker resolves each player's applicable modifiers (my_modifiers); the page
-//  computes the breakdown and drives toggles/activations, the party HP+shield
-//  steppers, personal buffs, and the DM turn engine + active-effects panel.
-//
-//  v5 additions (worker v9.5):
-//    • System rules arrive in the sync payload (data.rules) and drive all roll
-//      math — armor mods, class passives, damage tiers, dice, caps. FALLBACK_RULES
-//      mirrors the historical values so the page still works against an older
-//      worker that doesn't send rules yet.
-//    • Battlefield bar: campaign bosses with HP bars (per-instance hp_visible).
-//      Attack rolls apply their final (capped, read-only) damage to a boss.
-//    • Action economy: one action per turn across attack/heal/buff (rules-driven).
-//      Header chip shows the state; a spent action disables the other panels.
-//    • Knocked Out: 0 HP blocks all actions until HP is restored; all UI language
-//      uses "Knocked Out"/"KO" (the API field is still `eliminated`).
-//    • DM panel reorganised into tabs: Turn & Effects / Bosses / Players / Log.
-//      Boss skills fire only while the turn is locked; DoTs and reveals are
-//      managed per-effect (hidden from players until the DM toggles them).
-//    • Party rows show roster-profile portraits (public med-worker /roster).
+//  RollCalculator (v6) — player + DM roll calculator / party tracker.
 // ============================================================================
 
 (function () {
@@ -36,8 +16,6 @@
   // Material Symbols glyphs per buff type (crossed swords / reinforced shield / heart).
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
 
-  // Mirrors the worker's DEFAULT_RULES — used only when the worker predates
-  // v9.5 and the sync payload has no `rules` block.
   var FALLBACK_RULES = {
     role_base_hp: { tank: 25, dps: 20, healer: 15 },
     shield_max: 3,
@@ -71,8 +49,6 @@
   }
 
   // ── Plain-language descriptions ────────────────────────────────────────────
-  // Turns the raw modifier fields (type/value/target/mode/duration) into a
-  // readable sentence instead of jargon like "+8 attack output · → self · 1t".
   var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
   function typePhrase(type, value) {
     var v = (value >= 0 ? '+' : '') + value;
@@ -123,8 +99,6 @@
   }
 
   // ── Action economy (client view) ──────────────────────────────────────────
-  // my_turn: { limit, used, actions: [...], ko } from the worker. Older workers
-  // don't send it — fall back to the legacy healed_this_turn behaviour.
   function canAct(data, type) {
     var t = data.my_turn;
     if (!t) return type === 'heal' ? !data.healed_this_turn : true;
@@ -183,14 +157,14 @@
     return h('div', { className: 'rp-gate' },
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'lock'),
       h('h2', null, 'Members only'),
-      h('p', null, 'Sign in with your character account to use the Roll Calculator.'),
+      h('p', null, 'Sign in with your account to use the Roll Calculator.'),
       h('a', { className: 'rp-btn', href: '/pv/admin/login.html?redirect=/pv/tools/roll-calculator.html' }, 'Sign in'));
   }
   function PausedCard(props) {
     return h('div', { className: 'rp-gate' },
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'pause_circle'),
       h('h2', null, props.title || 'No active session'),
-      h('p', null, props.message || 'There is no live campaign session right now. When an officer starts one and adds your character, the calculator will unlock automatically.'),
+      h('p', null, props.message || 'There is no live campaign session right now.'),
       props.onResume ? h('button', { type: 'button', className: 'rp-btn', onClick: props.onResume }, 'Resume session') : null);
   }
 
@@ -214,8 +188,6 @@
   function BossCard(props) {
     var b = props.boss;
     var vuln = vulnText(b);
-    // Skills the DM has toggled visible show their name + description under the
-    // boss, persistently, for everyone. Collapsible so a long list stays tidy.
     var revealed = b.revealed_skills || [];
     var openState = useState(true); var open = openState[0], setOpen = openState[1];
     return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : '') },
