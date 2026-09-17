@@ -523,6 +523,15 @@
     function onVal(e) { var v = e.target.value; setVal(v); if (type) schedule(type, v, dur); }
     function onDur(e) { var v = e.target.value; setDur(v); if (type) schedule(type, val, v); }
     function commitNow() { if (timerRef.current) clearTimeout(timerRef.current); if (type) fire(type, val, dur); }
+    // Apply saves the current values and commits them now (locks the buff in as this
+    // turn's action) instead of waiting for the DM's End Turn.
+    function applyNow() {
+      if (!type) return;
+      pendingRef.current = false; if (timerRef.current) clearTimeout(timerRef.current);
+      var n = parseInt(val, 10); if (isNaN(n)) n = 0;
+      var dd = parseInt(dur, 10); if (isNaN(dd) || dd < 1) dd = 1;
+      props.onApply({ type: type, value: n, duration: dd });
+    }
     return h('div', { className: 'rp-buff-row' },
       h('span', { className: 'rp-buff-label' }, 'New buff'),
       h('div', { className: 'rp-buff-controls' },
@@ -534,7 +543,8 @@
           h('span', null, 'for'),
           h('input', { className: 'rp-buff-val rp-buff-dur-input', type: 'number', min: 1, inputMode: 'numeric', value: dur, disabled: props.disabled,
             onChange: onDur, onBlur: commitNow, onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
-          h('span', null, 'turns')) : null));
+          h('span', null, 'turns')) : null,
+        type ? h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, title: 'Lock this buff in as your action for the turn', onClick: applyNow }, 'Apply') : null));
   }
   function buffStatusText(b) {
     if (b.state === 'draft') return 'pending — becomes your action at end of turn';
@@ -562,7 +572,7 @@
       props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
       committed.length ? h('div', { className: 'rp-buff-list' }, committed.map(function (b) { return h(CommittedBuffRow, { key: b.id, buff: b }); })) : null,
       showDraft
-        ? h(DraftBuffRow, { draft: draft, disabled: disabled, onSave: props.onSaveDraft })
+        ? h(DraftBuffRow, { draft: draft, disabled: disabled, onSave: props.onSaveDraft, onApply: props.onApplyBuff })
         : (!committed.length ? h('p', { className: 'rp-note' }, roomForNew ? 'Setting a buff uses your action this turn.' : 'Buff slots full (max 3; an active shield counts as one).') : null),
       h('p', { className: 'rp-note' }, 'Set one buff per turn. Attacking or healing will discard a pending buff. Max buff 3 slots, including shield.'));
   }
@@ -1030,6 +1040,12 @@
     function onHp(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { current_hp: Math.max(0, Math.min(v, p.max_hp)) }); }); }
     function onShield(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { shield_value: Math.max(0, Math.min(v, rules.shield_max)) }); }); }
     function onSaveBuffDraft(body) { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/buffs/draft', body).then(refresh); }
+    // Apply = save the draft, then commit it now (locks it in as the turn's action).
+    function onApplyBuff(body) {
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/buffs/draft', body)
+        .then(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/buffs/apply', {}); })
+        .then(refresh).catch(function (e) { setErr(e.message || 'Failed to apply buff.'); });
+    }
     function onBuffPatch(b, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id, body); }); }
     function onBuffRemove(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id); }); }
     function onToggle(m, enabled) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled }); }); }
@@ -1122,7 +1138,7 @@
           h(AttackPanel, { ctx: ctx, bosses: data.bosses || [], locked: actionLocked || ko, canAttack: canAct(data, 'attack'), blockReason: '', onApplyDamage: onApplyDamage }),
           h(DefensePanel, { ctx: ctx }),
           h(HealPanel, { ctx: ctx, party: data.party || [], locked: actionLocked || ko, canHeal: canAct(data, 'heal'), blockReason: '', onApplyHeal: onApplyHeal }),
-          h(BuffPanel, { character: c, buffs: data.my_personal_buffs || [], locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: '', onSaveDraft: onSaveBuffDraft })),
+          h(BuffPanel, { character: c, buffs: data.my_personal_buffs || [], locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: '', onSaveDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff })),
         h('div', { className: 'rp-col' },
           h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }),
           h(ItemsPanel, { items: data.items || [], party: data.party || [], bosses: data.bosses || [], locked: actionLocked || ko, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll }))
