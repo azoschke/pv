@@ -812,8 +812,20 @@
             onClick: function () { props.onResetAction(p.member_id); } }, 'Reset action'));
       }));
   }
-  // Committed personal buffs, DM-controllable (adjust turns / pause / remove), plus
-  // a read-out of any not-yet-committed drafts. Sits in the Turn & Effects tab.
+  // Inline bonus editor for the DM (commits on blur / Enter).
+  function DMBuffValue(props) {
+    var b = props.buff;
+    var vState = useState(String(b.value)); var v = vState[0], setV = vState[1];
+    useEffect(function () { setV(String(b.value)); }, [b.value]);
+    function commit() { var n = parseInt(v, 10); if (isNaN(n)) { setV(String(b.value)); return; } if (n !== b.value) props.onChange(n); }
+    return h('label', { className: 'rp-buff-edit', title: 'Bonus' },
+      h('span', null, BUFF_LABEL[b.type] || b.type),
+      h('input', { className: 'rp-hits-input', type: 'number', inputMode: 'numeric', value: v,
+        onChange: function (e) { setV(e.target.value); }, onBlur: commit,
+        onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }));
+  }
+  // Committed personal buffs, DM-controllable (edit bonus / adjust turns / pause /
+  // remove), plus a read-out of any not-yet-committed drafts. Sits in Turn & Effects.
   function DMPersonalBuffs(props) {
     var buffs = props.buffs || []; var drafts = props.drafts || [];
     if (!buffs.length && !drafts.length) return null;
@@ -829,6 +841,7 @@
             h('strong', null, buffName(b)),
             h('span', { className: 'rp-effect-meta' }, meta)),
           h('div', { className: 'rp-effect-ctl' },
+            h(DMBuffValue, { buff: b, onChange: function (v) { props.onBuffPatch(b, { value: v }); } }),
             h(Stepper, { value: b.remaining_turns, label: String(b.remaining_turns), disabled: false, onChange: function (v) { props.onBuffPatch(b, { remaining_turns: Math.max(0, v) }); } }),
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBuffPatch(b, { enabled: !b.enabled }); } }, b.enabled ? 'Pause' : 'Resume'),
             h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBuffRemove(b); } }, '✕')));

@@ -95,6 +95,7 @@
     .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; font-family: inherit; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
     .rp-buff-dur { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
     .rp-buff-dur-input { width: 3.2rem; }
+    .rp-buff-edit { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
     /* Committed buffs (read-only for the player; DM edits them in Active Effects). */
     .rp-buff-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
     .rp-buff-live { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.55rem;
@@ -283,8 +284,8 @@
     .rp-item-card { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; padding: 0; }
     .rp-item-card .venue-card-media { aspect-ratio: 1 / 1; }
     /* Double class beats styles.css's `.venue-modal { max-width: 640px }` regardless
-       of load order, so the modal actually widens. */
-    .venue-modal.rp-item-modal { max-width: 960px; }
+       of load order, so the modal actually widens — near-fullscreen on large. */
+    .venue-modal.rp-item-modal { max-width: min(1600px, 94vw); }
     .rp-item-modal .venue-modal-img, .rp-item-modal .contrast-media { aspect-ratio: 1 / 1; }
     .rp-item-abilities { margin-top: 1.1rem; display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: start; }
     .rp-item-ability { padding: 0.7rem 0.75rem; background: var(--bg-card-light); border-radius: 0.4rem; }
@@ -293,21 +294,22 @@
     /* Skills go two-column once there's width to read them, independent of where the
        art sits; back to one column when it gets too narrow. */
     @media (min-width: 620px) { .rp-item-abilities { grid-template-columns: 1fr 1fr; } }
-    /* Art moves beside the text only when the modal is wide enough to keep the image
-       a proper square (it stays a fixed square column, never stretched to a sliver).
-       Below this the art stacks on top, full width (tablet/mobile untouched). */
+    /* Art beside the text on wide screens: a generous column that STRETCHES to the
+       content height and covers (vertical crop), rather than a fixed square that
+       leaves dead space. Below this the art stacks on top (tablet/mobile untouched). */
     @media (min-width: 900px) {
-      .venue-modal.rp-item-modal { display: flex; align-items: flex-start; gap: 1.25rem; }
+      .venue-modal.rp-item-modal { display: flex; align-items: stretch; gap: 1.25rem; }
       .rp-item-modal > .contrast-media,
-      .rp-item-modal > .venue-modal-img-fallback { flex: 0 0 320px; width: 320px; align-self: flex-start; aspect-ratio: 1 / 1; overflow: hidden; }
-      .rp-item-modal .venue-modal-content { flex: 1 1 auto; min-width: 0; max-height: 84vh; overflow-y: auto; }
-      /* Art is on the left now, so the torn texture edge belongs on its RIGHT side
-         (the seam with the text). Rotate the horizontal torn mask 90° and centre it
-         on the right edge, running top-to-bottom. */
+      .rp-item-modal > .venue-modal-img-fallback { flex: 0 0 38%; width: 38%; align-self: stretch; aspect-ratio: auto; overflow: hidden; }
+      .rp-item-modal > .contrast-media .venue-modal-img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: auto; }
+      .rp-item-modal .venue-modal-content { flex: 1 1 auto; min-width: 0; max-height: 88vh; overflow-y: auto; }
+      /* Art is on the left, so the torn texture edge belongs on its RIGHT side (the
+         seam with the text): rotate the horizontal torn mask 90°, centre it on the
+         right edge, and flip it so the teeth face outward. */
       .rp-item-modal > .contrast-media .contrast-border,
       .rp-item-modal > .venue-modal-img-fallback .contrast-border {
         left: auto; right: 0; top: 50%; bottom: auto; width: 100%; height: auto;
-        transform-origin: center center; transform: translate(50%, -50%) rotate(90deg);
+        transform-origin: center center; transform: translate(50%, -50%) rotate(90deg) scaleY(-1);
       }
     }
 
