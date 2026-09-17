@@ -104,7 +104,9 @@
        a party row, so the groups don't run together. */
     .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.35rem;
       background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; }
-    .rp-buff-ctl .material-symbols-outlined { font-size: 1.05rem; color: var(--text-secondary); }
+    /* Only the leading type/clock glyph is muted; the stepper − / + keep the button's
+       white so they match the party steppers' contrast. */
+    .rp-buff-ctl > .material-symbols-outlined { font-size: 1.05rem; color: var(--text-secondary); }
     /* Narrow stepper − / + buttons everywhere; the glyphs are Material Symbols so we
        can weight them and keep them optically centred. */
     .rp-stepper .rp-btn { padding: 0.1rem 0.2rem; line-height: 1; }
@@ -264,14 +266,14 @@
     .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
     .rp-party-name { font-size: 0.9rem; overflow-wrap: anywhere; }
     /* Tighter steppers inside the party list so many members stay compact. */
-    .rp-party .rp-btn.is-small { padding: 0.05rem 0.42rem; }
+    .rp-party .rp-btn.is-small { padding: 0.05rem 0.2rem; }
     .rp-party .rp-hp-edit, .rp-party .rp-shield-edit { gap: 0.2rem; }
     .rp-party .rp-hp-edit .material-icons, .rp-party .rp-shield-edit .material-icons { font-size: 0.9rem; }
     .rp-party .rp-stepper { gap: 0.2rem; }
     .rp-party .rp-hp-max { font-size: 0.72rem; }
     /* HP value can be 2–3 digits and the number spinner eats width — give it room.
        Shield is single-digit (0–3) so its compact width is left alone. */
-    .rp-party .rp-hp-edit .rp-hp-input { width: 3.6rem; }
+    .rp-party .rp-hp-edit .rp-hp-input { width: 2.6rem; }
     /* Narrow screens: the two steppers alone need ~15rem, which leaves a name
        column too thin to read. Break the row in two — portrait, name and role
        on top, HP and shield on a full-width line beneath. */

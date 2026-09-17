@@ -209,7 +209,7 @@
   }
   function vulnText(b) {
     if (!b || !(b.damage_mult > 1)) return null;
-    return b.damage_mult + '× vulnerable' + (b.damage_mult_turns != null ? ' · ' + b.damage_mult_turns + 't' : '');
+    return b.damage_mult + '× vulnerable' + (b.damage_mult_turns != null ? ' · ' + b.damage_mult_turns + (b.damage_mult_turns === 1 ? ' turn' : ' turns') : '');
   }
   function BossCard(props) {
     var b = props.boss;
@@ -296,7 +296,7 @@
             living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))) : null,
         h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: apply },
           busy ? 'Applying…' : 'Apply ' + (effDmg !== capped ? capped + ' → ' + effDmg : capped) + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
-        (selBoss && selBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, selBoss.name + ' is ' + selBoss.damage_mult + '× vulnerable — damage is multiplied.') : null,
+        (selBoss && selBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, selBoss.name + ' is vulnerable, damage is multiplied ' + selBoss.damage_mult + '×.') : null,
         msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null) : null);
   }
   function DefensePanel(props) {
@@ -550,7 +550,7 @@
   }
   function buffStatusText(b) {
     if (b.state === 'draft') return 'pending — becomes your action at end of turn';
-    if (b.pending) return 'primed — activates next turn (' + b.duration + (b.duration === 1 ? ' turn)' : ' turns)');
+    if (b.pending) return 'activates next turn (' + b.duration + (b.duration === 1 ? ' turn)' : ' turns)');
     if (!b.enabled) return 'paused by DM';
     return 'live — ' + b.remaining_turns + (b.remaining_turns === 1 ? ' turn left' : ' turns left');
   }
@@ -820,7 +820,7 @@
       h('h4', { className: 'rp-dm-sub' }, 'Personal buffs'),
       buffs.map(function (b) {
         var meta = b.pending
-          ? 'primed — activates next turn (' + b.duration + (b.duration === 1 ? ' turn)' : ' turns)')
+          ? 'activates next turn (' + b.duration + (b.duration === 1 ? ' turn)' : ' turns)')
           : b.remaining_turns + (b.remaining_turns === 1 ? ' turn left' : ' turns left');
         return h('div', { className: 'rp-effect' + (b.enabled ? '' : ' is-off'), key: b.id },
           h('div', { className: 'rp-effect-info' },
