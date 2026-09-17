@@ -83,6 +83,11 @@
 
     .rp-locked { background: rgba(165,77,68,0.12); border: 1px solid var(--accent-red); color: var(--accent-red); }
 
+    /* Prominent single-column notice above the action columns: action-used or turn-locked. */
+    .rp-turn-notice { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 0.5rem; text-align: center; font-size: 0.98rem;
+      background: rgba(198,166,100,0.14); border: 1px solid var(--accent-gold); color: var(--accent-gold); }
+    .rp-turn-notice.is-locked { background: rgba(165,77,68,0.14); border-color: var(--accent-red); color: var(--accent-red); }
+
     .rp-buff-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.35rem 0; }
     .rp-buff-label { color: var(--text-secondary); font-size: 0.9rem; }
     .rp-buff-controls { display: flex; gap: 0.4rem; align-items: center; }

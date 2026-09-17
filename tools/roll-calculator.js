@@ -188,7 +188,8 @@
     return h('div', { className: 'rp-gate' },
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'pause_circle'),
       h('h2', null, props.title || 'No active session'),
-      h('p', null, props.message || 'There is no live campaign session right now. When an officer starts one and adds your character, the calculator will unlock automatically.'));
+      h('p', null, props.message || 'There is no live campaign session right now. When an officer starts one and adds your character, the calculator will unlock automatically.'),
+      props.onResume ? h('button', { type: 'button', className: 'rp-btn', onClick: props.onResume }, 'Resume session') : null);
   }
 
   // ── Battlefield (bosses) ──────────────────────────────────────────────────
@@ -533,7 +534,7 @@
           h('span', null, 'for'),
           h('input', { className: 'rp-buff-val rp-buff-dur-input', type: 'number', min: 1, inputMode: 'numeric', value: dur, disabled: props.disabled,
             onChange: onDur, onBlur: commitNow, onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
-          h('span', null, 't')) : null));
+          h('span', null, 'turns')) : null));
   }
   function buffStatusText(b) {
     if (b.state === 'draft') return 'pending — becomes your action at end of turn';
@@ -563,7 +564,7 @@
       showDraft
         ? h(DraftBuffRow, { draft: draft, disabled: disabled, onSave: props.onSaveDraft })
         : (!committed.length ? h('p', { className: 'rp-note' }, roomForNew ? 'Setting a buff uses your action this turn.' : 'Buff slots full (max 3; an active shield counts as one).') : null),
-      h('p', { className: 'rp-note' }, 'Set one buff per turn — it uses your action and activates next turn. Attacking or healing instead discards a pending buff. Max 3 slots (an active shield uses one); once set, only the DM can change it. Shields are edited in the Party panel.'));
+      h('p', { className: 'rp-note' }, 'Set one buff per turn. Attacking or healing will discard a pending buff. Max buff 3 slots, including shield.'));
   }
 
   // ── Party (HP + shield, universal) ────────────────────────────────────────
@@ -1069,7 +1070,8 @@
     if (err && !data) return h('div', { className: 'rp-gate' }, h('p', { className: 'rp-flash error' }, err));
     if (!data || !data.active) {
       if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your login isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
-      if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session.' });
+      if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session.',
+        onResume: data.can_resume ? function () { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + data.campaign_id + '/session/resume', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to resume.'); }); } : null });
       return h(PausedCard, {});
     }
 
@@ -1082,6 +1084,12 @@
     var actionLocked = camp.turn_locked;
     var bookLocked = camp.turn_locked && !isDM;
     var ctx = c ? { character: c, myModifiers: data.my_modifiers || [], rules: rules } : null;
+    // One prominent notice above the action columns: locked while the DM resolves,
+    // otherwise a reminder once this player has spent their action for the turn.
+    var turnLockedForMe = actionLocked && !isDM;
+    var actionUsed = !!(data.my_turn && data.my_turn.limit > 0 && data.my_turn.used >= data.my_turn.limit);
+    var turnNotice = turnLockedForMe ? 'Turn is locked — the DM is acting.'
+      : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
 
     return h('div', { className: 'rp-tool' },
       h('header', { className: 'rp-header' },
@@ -1093,7 +1101,6 @@
           c ? h('span', null, ROLE_LABEL[c.class_role] + ' · ' + ARMOR_LABEL[c.armor_type]) : null,
           c ? h(ActionChip, { myTurn: data.my_turn }) : null)),
       err ? h('div', { className: 'rp-flash error' }, err) : null,
-      (camp.turn_locked && !isDM) ? h('div', { className: 'rp-flash rp-locked' }, 'Turn locked — the DM is resolving. Hang tight until the next turn.') : null,
       ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
 
       h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),
@@ -1108,12 +1115,14 @@
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
+      (c && turnNotice) ? h('div', { className: 'rp-turn-notice' + (turnLockedForMe ? ' is-locked' : '') }, turnNotice) : null,
+
       c ? h('div', { className: 'rp-grid' },
         h('div', { className: 'rp-col' },
-          h(AttackPanel, { ctx: ctx, bosses: data.bosses || [], locked: actionLocked || ko, canAttack: canAct(data, 'attack'), blockReason: !canAct(data, 'attack') ? actionBlockReason(data, 'attack') : '', onApplyDamage: onApplyDamage }),
+          h(AttackPanel, { ctx: ctx, bosses: data.bosses || [], locked: actionLocked || ko, canAttack: canAct(data, 'attack'), blockReason: '', onApplyDamage: onApplyDamage }),
           h(DefensePanel, { ctx: ctx }),
-          h(HealPanel, { ctx: ctx, party: data.party || [], locked: actionLocked || ko, canHeal: canAct(data, 'heal'), blockReason: !canAct(data, 'heal') ? actionBlockReason(data, 'heal') : '', onApplyHeal: onApplyHeal }),
-          h(BuffPanel, { character: c, buffs: data.my_personal_buffs || [], locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: !canAct(data, 'buff') ? actionBlockReason(data, 'buff') : '', onSaveDraft: onSaveBuffDraft })),
+          h(HealPanel, { ctx: ctx, party: data.party || [], locked: actionLocked || ko, canHeal: canAct(data, 'heal'), blockReason: '', onApplyHeal: onApplyHeal }),
+          h(BuffPanel, { character: c, buffs: data.my_personal_buffs || [], locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: '', onSaveDraft: onSaveBuffDraft })),
         h('div', { className: 'rp-col' },
           h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }),
           h(ItemsPanel, { items: data.items || [], party: data.party || [], bosses: data.bosses || [], locked: actionLocked || ko, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll }))
