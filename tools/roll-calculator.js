@@ -33,9 +33,8 @@
   var ARMOR_LABEL = { heavy: 'Heavy Armor', medium: 'Medium Armor', light: 'Light Armor' };
   var ROLE_LABEL  = { tank: 'Tank', dps: 'DPS', healer: 'Healer' };
   var BUFF_LABEL  = { attack_roll: 'Attack', defense_roll: 'Defense', heal_roll: 'Heal' };
-  // Material Icons (classic set) standing in for each buff type: offense bolt,
-  // a guard/deflect glyph for defense (not the shield used elsewhere), heart for heal.
-  var BUFF_ICON   = { attack_roll: 'bolt', defense_roll: 'block', heal_roll: 'favorite' };
+  // Material Symbols glyphs per buff type (crossed swords / reinforced shield / heart).
+  var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
 
   // Mirrors the worker's DEFAULT_RULES — used only when the worker predates
   // v9.5 and the sync payload has no `rules` block.
@@ -751,10 +750,6 @@
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var library = props.library || [];
     return h('div', null,
-      h('p', { className: 'rp-note', style: { marginTop: 0 } },
-        props.campaign.turn_locked
-          ? 'Turn locked — boss skills are live.'
-          : 'Boss skills unlock while the turn is locked (press End Turn — it’s the boss’ turn).'),
       h('div', { className: 'rp-boss-add' },
         h('select', { className: 'rp-select', value: pick, onChange: function (e) { setPick(e.target.value); } },
           h('option', { value: '' }, library.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
@@ -800,7 +795,6 @@
     (props.turnActions || []).forEach(function (t) { byMember[t.member_id] = t.actions; });
     var draftBy = {}; (props.buffDrafts || []).forEach(function (b) { draftBy[b.member_id] = b; });
     return h('div', null,
-      h('p', { className: 'rp-note', style: { marginTop: 0 } }, 'See at a glance who has spent their action this turn — a pending buff shows here before it commits at End Turn. Reset a spent action if it was a misclick. KO’d players regain the ability to act the moment their HP is raised above 0 in the Party panel.'),
       (props.party || []).map(function (p) {
         var acts = byMember[p.member_id] || [];
         var draft = draftBy[p.member_id];
@@ -833,10 +827,10 @@
             h('span', { className: 'rp-effect-meta' }, meta)),
           h('div', { className: 'rp-effect-ctl' },
             h('div', { className: 'rp-buff-ctl', title: (BUFF_LABEL[b.type] || b.type) + ' bonus' },
-              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, BUFF_ICON[b.type] || 'bolt'),
+              h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, BUFF_ICON[b.type] || 'swords'),
               h(Stepper, { value: b.value, label: fmt(b.value), compact: true, disabled: false, onChange: function (v) { props.onBuffPatch(b, { value: v }); } })),
             h('div', { className: 'rp-buff-ctl', title: 'Turns' },
-              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'schedule'),
+              h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'schedule'),
               h(Stepper, { value: b.remaining_turns, label: String(b.remaining_turns), compact: true, disabled: false, onChange: function (v) { props.onBuffPatch(b, { remaining_turns: Math.max(0, v) }); } })),
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBuffPatch(b, { enabled: !b.enabled }); } }, b.enabled ? 'Pause' : 'Resume'),
             h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBuffRemove(b); } }, '✕')));
@@ -862,7 +856,6 @@
       h('div', { className: 'rp-dm-session' },
         h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
         h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session')),
-      h('p', { className: 'rp-note' }, 'End Turn locks the board (the boss’ turn — boss skills go live). Next Turn ticks all timers and DoTs, clears everyone’s spent action, and reopens play. Pause keeps everyone’s values but sends the party back to the standby screen.'),
       h('div', { className: 'rp-dm-tabs' },
         tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
 

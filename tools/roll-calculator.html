@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
 
   <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="/pv/css/styles.css">
@@ -96,9 +97,16 @@
     .rp-buff-val { width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 1rem; font-family: inherit; background: var(--bg-card-light); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.4rem; box-sizing: border-box; }
     .rp-buff-dur { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--text-secondary); font-size: 0.85rem; }
     .rp-buff-dur-input { width: 3.2rem; }
-    /* DM buff controls: an icon + compact stepper per field (bonus, turns). */
-    .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.2rem; }
-    .rp-buff-ctl .material-icons { font-size: 1rem; color: var(--text-secondary); }
+    .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal;
+      line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap;
+      word-wrap: normal; direction: ltr; -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; }
+    /* DM buff controls: each field (bonus, turns) is its own boxed icon+stepper, like
+       a party row, so the groups don't run together. */
+    .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.35rem;
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; }
+    .rp-buff-ctl .material-symbols-outlined { font-size: 1.05rem; color: var(--text-secondary); }
+    /* Narrower stepper − / + buttons everywhere they appear. */
+    .rp-stepper .rp-btn.is-small { padding: 0.1rem 0.35rem; }
     /* Committed buffs (read-only for the player; DM edits them in Active Effects). */
     .rp-buff-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
     .rp-buff-live { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.55rem;
@@ -314,7 +322,7 @@
       .rp-item-modal > .venue-modal-img-fallback .contrast-border {
         left: auto; right: 0; top: 50%; bottom: auto; width: 140vh; height: 2.6rem; aspect-ratio: auto;
         transform-origin: center center;
-        transform: translate(calc(70vh - 1.3rem), -1.3rem) rotate(90deg) scaleX(-1);
+        transform: translate(calc(70vh - 1.3rem), -1.3rem) rotate(90deg) scaleY(-1);
       }
     }
 
