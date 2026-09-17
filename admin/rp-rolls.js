@@ -809,7 +809,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (shown to the player)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
         ? h(PVAdminQuestUtils.ImageField, {
