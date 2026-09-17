@@ -282,7 +282,9 @@
     .rp-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.9rem; }
     .rp-item-card { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; padding: 0; }
     .rp-item-card .venue-card-media { aspect-ratio: 1 / 1; }
-    .rp-item-modal { max-width: 940px; }
+    /* Double class beats styles.css's `.venue-modal { max-width: 640px }` regardless
+       of load order, so the modal actually widens. */
+    .venue-modal.rp-item-modal { max-width: 960px; }
     .rp-item-modal .venue-modal-img, .rp-item-modal .contrast-media { aspect-ratio: 1 / 1; }
     .rp-item-abilities { margin-top: 1.1rem; display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: start; }
     .rp-item-ability { padding: 0.7rem 0.75rem; background: var(--bg-card-light); border-radius: 0.4rem; }
@@ -293,12 +295,20 @@
     @media (min-width: 620px) { .rp-item-abilities { grid-template-columns: 1fr 1fr; } }
     /* Art moves beside the text only when the modal is wide enough to keep the image
        a proper square (it stays a fixed square column, never stretched to a sliver).
-       Below this the art stacks on top, full width. */
+       Below this the art stacks on top, full width (tablet/mobile untouched). */
     @media (min-width: 900px) {
-      .rp-item-modal { display: flex; align-items: flex-start; gap: 1.25rem; }
+      .venue-modal.rp-item-modal { display: flex; align-items: flex-start; gap: 1.25rem; }
       .rp-item-modal > .contrast-media,
-      .rp-item-modal > .venue-modal-img-fallback { flex: 0 0 320px; width: 320px; align-self: flex-start; }
+      .rp-item-modal > .venue-modal-img-fallback { flex: 0 0 320px; width: 320px; align-self: flex-start; aspect-ratio: 1 / 1; overflow: hidden; }
       .rp-item-modal .venue-modal-content { flex: 1 1 auto; min-width: 0; max-height: 84vh; overflow-y: auto; }
+      /* Art is on the left now, so the torn texture edge belongs on its RIGHT side
+         (the seam with the text). Rotate the horizontal torn mask 90° and centre it
+         on the right edge, running top-to-bottom. */
+      .rp-item-modal > .contrast-media .contrast-border,
+      .rp-item-modal > .venue-modal-img-fallback .contrast-border {
+        left: auto; right: 0; top: 50%; bottom: auto; width: 100%; height: auto;
+        transform-origin: center center; transform: translate(50%, -50%) rotate(90deg);
+      }
     }
 
     /* DM: per-boss visibility toggle on the battlefield card + multi-target picks */
