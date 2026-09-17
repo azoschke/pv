@@ -7,7 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,0" rel="stylesheet">
 
   <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="/pv/css/styles.css">
@@ -105,8 +105,13 @@
     .rp-buff-ctl { display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.35rem;
       background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; }
     .rp-buff-ctl .material-symbols-outlined { font-size: 1.05rem; color: var(--text-secondary); }
-    /* Narrower stepper − / + buttons everywhere they appear. */
-    .rp-stepper .rp-btn.is-small { padding: 0.1rem 0.35rem; }
+    /* Narrow stepper − / + buttons everywhere; the glyphs are Material Symbols so we
+       can weight them and keep them optically centred. */
+    .rp-stepper .rp-btn { padding: 0.1rem 0.2rem; line-height: 1; }
+    .rp-stepper .rp-btn .material-symbols-outlined { font-size: 1rem; vertical-align: middle; font-variation-settings: 'wght' 600; }
+    /* DM Tools sub-sections get the Change Log's boxed background. */
+    .rp-dm-section { background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem 0.7rem; margin-top: 0.6rem; }
+    .rp-dm-section > .rp-dm-sub:first-child { margin-top: 0.1rem; }
     /* Committed buffs (read-only for the player; DM edits them in Active Effects). */
     .rp-buff-list { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.5rem; }
     .rp-buff-live { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.35rem 0.55rem;
@@ -320,7 +325,7 @@
          right edge, and flip it so the teeth face outward. */
       .rp-item-modal > .contrast-media .contrast-border,
       .rp-item-modal > .venue-modal-img-fallback .contrast-border {
-        left: auto; right: 0; top: 50%; bottom: auto; width: 140vh; height: 2.6rem; aspect-ratio: auto;
+        left: auto; right: -3px; top: 50%; bottom: auto; width: 140vh; height: 2.6rem; aspect-ratio: auto;
         transform-origin: center center;
         transform: translate(calc(70vh - 1.3rem), -1.3rem) rotate(90deg) scaleY(-1);
       }

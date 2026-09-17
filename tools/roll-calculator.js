@@ -582,9 +582,9 @@
   // ── Party (HP + shield, universal) ────────────────────────────────────────
   function Stepper(props) {
     return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value - 1); } }, '−'),
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { props.onChange(props.value - 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
       h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { props.onChange(props.value + 1); } }, '+'));
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { props.onChange(props.value + 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   // HP control: free-typed absolute value plus ± nudges. Nudges update the display
   // instantly but the write is debounced, so a burst of clicks lands as one PATCH —
@@ -603,12 +603,12 @@
     function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = clamp(cur + d); setVal(String(next)); schedule(next); }
     function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } n = clamp(n); setVal(String(n)); commitNow(n); }
     return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(-1); } }, '−'),
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { nudge(-1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
       h('input', { className: 'rp-hp-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
         onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
       props.showMax ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, onClick: function () { nudge(1); } }, '+'));
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   function Avatar(props) {
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
@@ -794,7 +794,8 @@
     var byMember = {};
     (props.turnActions || []).forEach(function (t) { byMember[t.member_id] = t.actions; });
     var draftBy = {}; (props.buffDrafts || []).forEach(function (b) { draftBy[b.member_id] = b; });
-    return h('div', null,
+    return h('div', { className: 'rp-dm-section' },
+      h('h4', { className: 'rp-dm-sub' }, 'Players'),
       (props.party || []).map(function (p) {
         var acts = byMember[p.member_id] || [];
         var draft = draftBy[p.member_id];
@@ -815,7 +816,7 @@
     var buffs = props.buffs || []; var drafts = props.drafts || [];
     if (!buffs.length && !drafts.length) return null;
     function buffName(b) { return b.member_name + ' — ' + (BUFF_LABEL[b.type] || b.type) + ' ' + (b.value >= 0 ? '+' : '') + b.value; }
-    return h('div', { style: { marginTop: '0.75rem' } },
+    return h('div', { className: 'rp-dm-section' },
       h('h4', { className: 'rp-dm-sub' }, 'Personal buffs'),
       buffs.map(function (b) {
         var meta = b.pending
@@ -859,7 +860,8 @@
       h('div', { className: 'rp-dm-tabs' },
         tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
 
-      tab === 'turn' ? h('div', { className: 'rp-dm-effects' },
+      tab === 'turn' ? h('div', null,
+        h('div', { className: 'rp-dm-section' },
         h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
         !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
           effects.map(function (e) {
@@ -872,7 +874,7 @@
                 e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
                 h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
                 h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
-          }),
+          })),
         h(DMPersonalBuffs, { buffs: props.personalBuffs || [], drafts: props.buffDrafts || [], onBuffPatch: props.onBuffPatch, onBuffRemove: props.onBuffRemove })) : null,
 
       tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
