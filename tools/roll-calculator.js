@@ -125,7 +125,8 @@
     var t = data.my_turn;
     if (t && t.ko) return 'You’re knocked out — you can’t act until your HP is restored.';
     if (type === 'heal' && !t && data.healed_this_turn) return 'You can only heal once per turn.';
-    if (t && t.limit > 0 && t.used >= t.limit) return 'Action used this turn: ' + (t.actions || []).join(', ') + '.';
+    // "Action used this turn" is already shown in the turn banner above the
+    // composer — no need to repeat it as a note on each tabbed card.
     return '';
   }
   function ActionChip(props) {
@@ -517,7 +518,7 @@
             if (heal.mode === 'single') { if (String(p.member_id) === String(heal.targetId)) pill = heal.pool; }
             else if (Object.prototype.hasOwnProperty.call(heal.alloc, p.member_id)) pill = heal.alloc[p.member_id];
           }
-          var rowClickable = heal && heal.active && !ko && !props.locked;
+          var rowClickable = heal && heal.active && !ko && !props.locked && heal.canRetarget;
           function pickRow() { if (rowClickable) heal.onTarget(p.member_id); }
           return h('div', { className: 'rp-party-row' + (ko ? ' is-elim' : '') + (p.member_id === props.myId ? ' is-me' : '') + (isTarget ? ' is-target' : '') + (rowClickable ? ' is-pickable' : ''),
               key: p.member_id, role: rowClickable ? 'button' : null, tabIndex: rowClickable ? 0 : null,
@@ -658,7 +659,9 @@
     }
     function setHealAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, healAlloc); next[id] = n; setHealAlloc(next); }
     // Row / dropdown targeting share one selection (single = set; aoe = toggle).
-    function onHealRowTarget(id) { if (effHealMode === 'single') setHealSingle(String(id)); else toggleHealTarget(id); }
+    // Non-healers self-heal only — worker rules reject anything else, so keep the
+    // target (and the highlighted party row) locked to the acting player.
+    function onHealRowTarget(id) { if (!isHealer) return; if (effHealMode === 'single') setHealSingle(String(id)); else toggleHealTarget(id); }
     var healSingleMember = healLiving.filter(function (p) { return String(p.member_id) === String(healSingle); })[0]
       || party.filter(function (p) { return String(p.member_id) === String(healSingle); })[0];
 
@@ -759,7 +762,7 @@
 
     var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
 
-    var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget };
+    var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget, canRetarget: isHealer };
 
     return h('div', null,
       h(BossBar, { bosses: bosses, isDM: props.isDM,
