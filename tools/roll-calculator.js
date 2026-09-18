@@ -342,9 +342,7 @@
   function ItemsStrip(props) {
     var items = props.items || [];
     var openState = useState(null); var openId = openState[0], setOpenId = openState[1];
-    if (!items.length) return h('div', { className: 'rp-items-panel' },
-      h('h3', { className: 'rp-section-label' }, 'Items'),
-      h('p', { className: 'rp-note' }, 'No items equipped. An admin assigns and equips items.'));
+    if (!items.length) return null;  // no items → hide the section entirely
     // Default to the first item selected, and re-derive the open item from live
     // props each render so its controls track the latest poll (active/uses state).
     var effId = (openId != null && items.some(function (it) { return it.item_id === openId; })) ? openId : items[0].item_id;
@@ -707,7 +705,7 @@
           h(RollHero, { value: healRoll, max: rules.heal_die, caption: 'D' + rules.heal_die + ' ROLL', ariaLabel: 'Raw D' + rules.heal_die + ' heal roll',
             disabled: locked, onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setHealRoll(v); var nc = computeRoll('heal', v, ctx); setHealAlloc(evenSplit(allocIds, nc.total + nc.outputTotal)); } }),
           h(ChipExpr, { terms: healTerms, resultText: pool + ' heal', tone: 'heal' })),
-        effHealMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D' + rules.heal_die + ' target count (max people)',
+        effHealMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'D' + rules.heal_die + ' target count (max people)',
           h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 1, max: rules.aoe_max_targets, value: healCount, placeholder: 'e.g. 3', onChange: function (e) { setHealCount(clampNum(e.target.value, rules.aoe_max_targets)); } })) : null,
         h('div', { className: 'rp-divider' }),
         effHealMode === 'single' ? h('div', { className: 'rp-target-block' },
@@ -717,7 +715,7 @@
                 healLiving.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); }))
               : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
             (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
-          !isHealer ? h('p', { className: 'rp-note' }, 'Self-heal only — applies to you.') : null,
+          !isHealer ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
           h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
             healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
@@ -730,8 +728,7 @@
                 h('span', null, p.member_name + (p.member_id === c.member_id ? ' (you)' : '')),
                 h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(healAlloc[id]), disabled: locked, onChange: function (e) { setHealAmount(id, e.target.value); } }));
             })) : h('p', { className: 'rp-note' }, 'No targets selected yet.'),
-            h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' target(s)'),
-            h('p', { className: 'rp-note' }, 'Allocated ' + allocated + ' / ' + pool + '.'),
+            h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' targets'),
             healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null));
     }
 

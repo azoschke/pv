@@ -39,6 +39,8 @@
     .rp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
     @media (max-width: 860px) { .rp-grid { grid-template-columns: 1fr; } }
     .rp-col { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+    /* Tabs + composer are one unit — tighter than the 1rem column gap. */
+    .rp-action-col { gap: 0.5rem; }
     /* Keep the action composer in view while a long roster scrolls. */
     @media (min-width: 861px) { .rp-action-col { position: sticky; top: 1rem; align-self: start; } }
 
@@ -76,7 +78,7 @@
     .rp-commit[disabled] { opacity: 0.45; cursor: not-allowed; }
 
     /* ── Tabbed action card ── */
-    .rp-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+    .rp-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 0; }
     .rp-tab { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; background: var(--bg-card); border: 0;
       border-radius: 0.6rem; padding: 0.75rem 0.4rem; cursor: pointer; color: var(--text-primary); font: inherit; }
     .rp-tab-icon { font-size: 1.5rem; color: var(--text-secondary); }
@@ -131,7 +133,8 @@
 
     /* ── Battlefield (enemies) ── */
     .rp-battlefield { margin-bottom: 1.25rem; }
-    .rp-bossbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.6rem; align-items: start; }
+    /* Stretch so every enemy card in a row shares the tallest one's height. */
+    .rp-bossbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.6rem; align-items: stretch; }
     .rp-boss-card { position: relative; display: flex; align-items: flex-start; gap: 0.7rem; background: var(--bg-card);
       border-radius: 0.6rem; padding: 0.7rem 0.85rem; }
     .rp-boss-card.is-pickable { cursor: pointer; }
