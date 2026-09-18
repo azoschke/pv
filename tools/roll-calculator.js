@@ -43,6 +43,13 @@
   // Clamp a raw number-input string to [0, max]; keeps '' so the field can be cleared.
   function clampNum(raw, max) { if (raw === '' || raw == null) return ''; var n = parseInt(raw, 10); if (isNaN(n)) return ''; if (n < 0) n = 0; if (n > max) n = max; return String(n); }
   function fmt(n) { return (n >= 0 ? '+' : '') + n; }
+  // Shorten a multi-word name to "First L." — used on the heal target so the
+  // highlighted row (ring + pill) wraps less. Single-word names are left alone.
+  function abbrevLastName(name) {
+    var parts = String(name || '').trim().split(/\s+/);
+    if (parts.length < 2) return name;
+    return parts.slice(0, -1).join(' ') + ' ' + parts[parts.length - 1].charAt(0) + '.';
+  }
   function modLabel(m) { return m.label ? m.label : (m.item_name + (m.ability_name ? ' · ' + m.ability_name : '')); }
   function targetText(m) {
     switch (m.target_kind) {
@@ -228,9 +235,14 @@
       h('div', { className: 'rp-boss-info' },
         h('div', { className: 'rp-boss-name' }, b.name,
           b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-          props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
-        h(BossHpBar, { boss: b }),
+        h('div', { className: 'rp-boss-hp-line' },
+          h(BossHpBar, { boss: b }),
+          props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
+            title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
+            onClick: function (e) { e.stopPropagation(); props.onBossVisible(b, !b.hp_visible); } },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null),
+        props.isDM && !b.hp_visible ? h('div', { className: 'rp-boss-hp-hidden' }, 'HP hidden from players') : null,
         props.isTarget ? h('div', { className: 'rp-boss-target-note' }, 'Target') : null,
         (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
           b.dots.map(function (dt) {
@@ -244,11 +256,7 @@
           open ? revealed.map(function (s) {
             return h('div', { className: 'rp-boss-tele', key: s.id },
               h('strong', null, s.name), s.description ? ' — ' + s.description : null);
-          }) : null) : null),
-      props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
-        title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
-        onClick: function (e) { e.stopPropagation(); props.onBossVisible(b, !b.hp_visible); } },
-        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null);
+          }) : null) : null));
   }
   function BossBar(props) {
     var bosses = props.bosses || [];
@@ -306,10 +314,11 @@
     var it = props.item;
     return h('button', { type: 'button', className: 'rp-item-tile' + (props.selected ? ' is-selected' : ''), 'aria-pressed': props.selected ? 'true' : 'false',
         'aria-label': it.name, onClick: props.onSelect },
-      h('span', { className: 'rp-item-thumb' },
+      h('span', { className: 'rp-item-thumb sketch-wash' },
         it.image_url
           ? h('img', { className: 'rp-item-thumb-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
-          : h('span', { className: 'rp-item-thumb-fallback', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } })),
+          : h('span', { className: 'rp-item-thumb-fallback', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } }),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('span', { className: 'rp-item-tile-name' }, it.name));
   }
   function ItemDetail(props) {
@@ -509,7 +518,7 @@
               onKeyDown: rowClickable ? function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickRow(); } } : null },
             h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
             h('div', { className: 'rp-party-id' },
-              h('strong', { className: 'rp-party-name' }, p.member_name),
+              h('strong', { className: 'rp-party-name' }, isTarget ? abbrevLastName(p.member_name) : p.member_name),
               ko ? h('span', { className: 'rp-elim-tag' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
               pill != null ? h('span', { className: 'rp-heal-pill' }, 'Heal ' + fmt(pill)) : null,
@@ -741,7 +750,7 @@
       defend: defendBody
     };
 
-    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SET' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
+    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
 
     var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget };
 
@@ -847,7 +856,9 @@
         h('strong', null, a.name),
         h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
           title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
-          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } }, a.revealed ? 'Shown' : 'Show')),
+          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } },
+          h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, a.revealed ? 'visibility' : 'visibility_off'),
+          a.revealed ? 'Shown' : 'Show')),
       a.description ? h('p', { className: 'rp-boss-skill-desc' }, a.description) : null,
       effects.length
         ? effects.map(function (e) {
