@@ -222,7 +222,15 @@
     var b = props.boss;
     var vuln = vulnText(b);
     var revealed = b.revealed_skills || [];
-    var openState = useState(true); var open = openState[0], setOpen = openState[1];
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    // Track which revealed skills the viewer has seen, so a newly-shown skill
+    // gets an unseen badge (like Active Skills). Opening the list marks them seen.
+    var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
+    var revealedIds = revealed.map(function (s) { return s.id; }).join(',');
+    useEffect(function () {
+      if (open && revealed.length) setSeen(function (prev) { var m = Object.assign({}, prev); revealed.forEach(function (s) { m[s.id] = true; }); return m; });
+    }, [open, revealedIds]);
+    var unseenSkills = revealed.filter(function (s) { return !seen[s.id]; }).length;
     // Attack-mode: the card is the enemy target picker.
     var clickable = props.attackMode && !b.defeated;
     function pick() { if (clickable && props.onTarget) props.onTarget(String(b.id)); }
@@ -252,7 +260,8 @@
           })) : null,
         revealed.length ? h('div', { className: 'rp-boss-skills' },
           h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function (e) { e.stopPropagation(); setOpen(!open); } },
-            (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's')),
+            (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's'),
+            (!open && unseenSkills > 0) ? h('span', { className: 'rp-boss-skills-badge' }, String(unseenSkills)) : null),
           open ? h('div', { className: 'rp-boss-skills-pop' }, revealed.map(function (s) {
             return h('div', { className: 'rp-boss-tele', key: s.id },
               h('strong', null, s.name), s.description ? ' — ' + s.description : null);
