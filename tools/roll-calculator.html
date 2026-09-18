@@ -72,7 +72,7 @@
 
     /* Full-width commit button — the composer's primary action. */
     .rp-commit { display: block; width: 100%; border: 0; background: var(--accent-brown); color: var(--rp-btn-ink);
-      font-family: 'Stoke', serif; font-size: 1.15rem; padding: 0.75rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+      font-family: 'Stoke', serif; font-size: 1rem; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; }
     .rp-commit[disabled] { opacity: 0.45; cursor: not-allowed; }
 
     /* ── Tabbed action card ── */
@@ -272,18 +272,21 @@
     .rp-modal-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; }
     .rp-modal { background: var(--bg-card); border-radius: 0.75rem; width: min(460px, 100%); max-height: 80vh; overflow-y: auto;
       padding: 1rem 1.15rem; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-    .rp-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .rp-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.1rem; }
     .rp-modal-head h3 { margin: 0; font-family: 'Stoke', serif; }
-    .rp-skill-group { margin-top: 0.6rem; }
-    .rp-skill-group-title { margin: 0 0 0.2rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
-    .rp-skill { border-top: 1px solid var(--border-color); }
+    .rp-modal-help { margin: 0.1rem 0 0.6rem; }
+    .rp-skill-group { margin-top: 0.9rem; }
+    /* Prominent section headings in the header font, per request. */
+    .rp-skill-group-title { margin: 0 0 0.4rem; font-family: 'Stoke', serif; font-size: 1rem; color: var(--text-primary); }
+    /* Each entry is a boxed card, like the DM boss rows, for clearer separation. */
+    .rp-skill { background: var(--bg-card-light); border-radius: 0.5rem; margin-bottom: 0.4rem; }
     .rp-skill-head { display: flex; align-items: flex-start; gap: 0.5rem; width: 100%; background: none; border: 0; color: var(--text-primary);
-      font: inherit; text-align: left; padding: 0.5rem 0; cursor: pointer; }
+      font: inherit; text-align: left; padding: 0.55rem 0.7rem; cursor: pointer; }
     .rp-skill-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
     .rp-skill-name { overflow-wrap: anywhere; }
     .rp-skill-sum { color: var(--text-secondary); font-size: 0.82rem; text-transform: capitalize; overflow-wrap: anywhere; }
     .rp-skill-caret { flex: 0 0 auto; font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.1rem; }
-    .rp-skill-body { padding: 0 0 0.55rem 0.1rem; }
+    .rp-skill-body { padding: 0 0.7rem 0.55rem; }
     .rp-skill-label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.15rem; }
     .rp-skill-desc { margin: 0; font-size: 0.85rem; color: var(--text-primary); white-space: pre-wrap; }
     .rp-skill-desc.rp-muted { color: var(--text-secondary); font-style: italic; }
@@ -320,6 +323,10 @@
     .rp-dm-boss-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .rp-dm-boss-head strong { font-family: 'Stoke', serif; }
     .rp-dm-boss-head .rp-effect-ctl { margin-left: auto; }
+    .rp-dm-boss-toggle { display: inline-flex; align-items: center; gap: 0.35rem; background: none; border: 0; cursor: pointer; color: var(--text-primary); font: inherit; padding: 0; }
+    .rp-dm-boss-toggle .material-icons { font-size: 1.1rem; color: var(--text-secondary); }
+    .rp-dm-boss-count { font-size: 0.72rem; color: var(--text-secondary); }
+    .rp-dm-boss-body { margin-top: 0.5rem; }
     .rp-vuln { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.4rem 0; border-top: 1px solid var(--border-color); margin-top: 0.3rem; }
     .rp-vuln-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
     .rp-boss-skill { background: var(--bg-card-light); border-radius: 0.4rem; padding: 0.5rem 0.6rem; margin-top: 0.45rem; }

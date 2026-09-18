@@ -575,9 +575,9 @@
         h('div', { className: 'rp-modal-head' },
           h('h3', null, 'Active Skills'),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),
+        h('p', { className: 'rp-note rp-modal-help' }, 'Tap a skill to see its modifiers and description.'),
         (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
-          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow)),
-        h('p', { className: 'rp-note' }, 'Tap a skill to see its modifiers and description.')));
+          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow))));
   }
 
   // ── Combat board (character view): enemies + tabbed composer + party + items ─
@@ -887,6 +887,33 @@
       h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
       active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSetVuln(b, 1, null); } }, 'Clear') : null);
   }
+  // One staged boss in the DM deck — collapsible so a long skill list doesn't
+  // bloat the panel. Collapsed by default; the head (name, HP, eye, remove)
+  // stays visible.
+  function DMBossManageRow(props) {
+    var b = props.boss;
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    var skillCount = (b.abilities || []).length;
+    return h('div', { className: 'rp-dm-boss' + (b.defeated ? ' is-down' : '') },
+      h('div', { className: 'rp-dm-boss-head' },
+        h('button', { type: 'button', className: 'rp-dm-boss-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
+          h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
+          h('strong', null, b.name),
+          h('span', { className: 'rp-dm-boss-count' }, skillCount + ' skill' + (skillCount === 1 ? '' : 's'))),
+        b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+        h('div', { className: 'rp-effect-ctl' },
+          h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
+            onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
+            h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
+          h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
+      open ? h('div', { className: 'rp-dm-boss-body' },
+        h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
+        (b.abilities || []).map(function (a) {
+          return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
+        }),
+        !skillCount ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null) : null);
+  }
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var library = props.library || [];
@@ -897,20 +924,9 @@
           library.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: !pick, onClick: function () { props.onBossAdd(pick); setPick(''); } }, 'Add')),
       (props.bosses || []).map(function (b) {
-        return h('div', { className: 'rp-dm-boss' + (b.defeated ? ' is-down' : ''), key: b.id },
-          h('div', { className: 'rp-dm-boss-head' },
-            h('strong', null, b.name), b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-            h('div', { className: 'rp-effect-ctl' },
-              h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
-              h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
-                onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
-                h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
-              h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
-          h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
-          (b.abilities || []).map(function (a) {
-            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
-          }),
-          !(b.abilities || []).length ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null);
+        return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party,
+          onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
+          onSetVuln: props.onSetVuln, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
       }),
       !(props.bosses || []).length ? h('p', { className: 'rp-note' }, 'No bosses on the field.') : null,
 
