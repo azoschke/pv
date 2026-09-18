@@ -1,5 +1,8 @@
 // ============================================================================
-//  RollCalculator (v6) — player + DM roll calculator / party tracker.
+//  RollCalculator (v7) — player + DM roll calculator / party tracker.
+//  v7: borderless layout — one tabbed action composer, enemy/party targeting
+//  with live projections, item image strip, Active Skills modal, collapsible
+//  DM Control Deck. Data plumbing / handlers unchanged from v6.
 // ============================================================================
 
 (function () {
@@ -15,6 +18,8 @@
   var BUFF_LABEL  = { attack_roll: 'Attack', defense_roll: 'Defense', heal_roll: 'Heal' };
   // Material Symbols glyphs per buff type (crossed swords / reinforced shield / heart).
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
+  // Tab glyphs.
+  var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield' };
 
   var FALLBACK_RULES = {
     role_base_hp: { tank: 25, dps: 20, healer: 15 },
@@ -38,6 +43,13 @@
   // Clamp a raw number-input string to [0, max]; keeps '' so the field can be cleared.
   function clampNum(raw, max) { if (raw === '' || raw == null) return ''; var n = parseInt(raw, 10); if (isNaN(n)) return ''; if (n < 0) n = 0; if (n > max) n = max; return String(n); }
   function fmt(n) { return (n >= 0 ? '+' : '') + n; }
+  // Shorten a multi-word name to "First L." — used on the heal target so the
+  // highlighted row (ring + pill) wraps less. Single-word names are left alone.
+  function abbrevLastName(name) {
+    var parts = String(name || '').trim().split(/\s+/);
+    if (parts.length < 2) return name;
+    return parts.slice(0, -1).join(' ') + ' ' + parts[parts.length - 1].charAt(0) + '.';
+  }
   function modLabel(m) { return m.label ? m.label : (m.item_name + (m.ability_name ? ' · ' + m.ability_name : '')); }
   function targetText(m) {
     switch (m.target_kind) {
@@ -144,12 +156,33 @@
     return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal, mult: mult, multRows: multRows };
   }
 
-  function Breakdown(props) {
-    var calc = props.calc;
-    return h('div', { className: 'rp-breakdown' },
-      h('div', { className: 'rp-bd-row rp-bd-base' }, h('span', null, 'Roll'), h('span', null, String(calc.base))),
-      calc.rows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: i }, h('span', null, r.label), h('span', null, fmt(r.value))); }),
-      h('div', { className: 'rp-bd-rule' }), props.children);
+  // ── Presentational building blocks ─────────────────────────────────────────
+  // The hero roll field — the largest control in a composer.
+  function RollHero(props) {
+    return h('label', { className: 'rp-roll-hero' },
+      h('input', { className: 'rp-roll-input', type: 'number', inputMode: 'numeric', min: 0, max: props.max,
+        value: props.value, placeholder: props.placeholder != null ? props.placeholder : '0', disabled: props.disabled,
+        'aria-label': props.ariaLabel, onChange: props.onChange }),
+      h('span', { className: 'rp-roll-caption' }, props.caption));
+  }
+  // A horizontal "roll + mods = result" chip expression. terms are plain strings.
+  function ChipExpr(props) {
+    var kids = [];
+    (props.terms || []).forEach(function (t, i) {
+      if (i) kids.push(h('span', { className: 'rp-chip-op', key: 'op' + i }, '+'));
+      kids.push(h('span', { className: 'rp-chip', key: 't' + i }, t));
+    });
+    kids.push(h('span', { className: 'rp-chip-op', key: 'eq' }, '='));
+    kids.push(h('span', { className: 'rp-chip rp-chip-result tone-' + (props.tone || 'neutral'), key: 'res' }, props.resultText));
+    return h('div', { className: 'rp-chip-expr' }, kids);
+  }
+
+  // Even split of a pool across N member ids; earliest ids take the remainder.
+  function evenSplit(ids, total) {
+    var out = {}; var n = ids.length; if (!n) return out;
+    var base = Math.floor(total / n); var rem = total - base * n;
+    ids.forEach(function (id, i) { out[id] = base + (i < rem ? 1 : 0); });
+    return out;
   }
 
   // ── Gate cards ────────────────────────────────────────────────────────────
@@ -168,7 +201,7 @@
       props.onResume ? h('button', { type: 'button', className: 'rp-btn', onClick: props.onResume }, 'Resume session') : null);
   }
 
-  // ── Battlefield (bosses) ──────────────────────────────────────────────────
+  // ── Battlefield (enemies) ──────────────────────────────────────────────────
   function BossHpBar(props) {
     var b = props.boss;
     if (b.current_hp == null) {
@@ -189,177 +222,65 @@
     var b = props.boss;
     var vuln = vulnText(b);
     var revealed = b.revealed_skills || [];
-    var openState = useState(true); var open = openState[0], setOpen = openState[1];
-    return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : '') },
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    // Track which revealed skills the viewer has seen, so a newly-shown skill
+    // gets an unseen badge (like Active Skills). Opening the list marks them seen.
+    var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
+    var revealedIds = revealed.map(function (s) { return s.id; }).join(',');
+    useEffect(function () {
+      if (open && revealed.length) setSeen(function (prev) { var m = Object.assign({}, prev); revealed.forEach(function (s) { m[s.id] = true; }); return m; });
+    }, [open, revealedIds]);
+    var unseenSkills = revealed.filter(function (s) { return !seen[s.id]; }).length;
+    // Attack-mode: the card is the enemy target picker.
+    var clickable = props.attackMode && !b.defeated;
+    function pick() { if (clickable && props.onTarget) props.onTarget(String(b.id)); }
+    return h('div', { className: 'rp-boss-card' + (b.defeated ? ' is-down' : '') + (props.isTarget ? ' is-target' : '') + (clickable ? ' is-pickable' : ''),
+        role: clickable ? 'button' : null, tabIndex: clickable ? 0 : null,
+        'aria-pressed': clickable ? (props.isTarget ? 'true' : 'false') : null,
+        onClick: clickable ? pick : null,
+        onKeyDown: clickable ? function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } } : null },
       b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
       h('div', { className: 'rp-boss-info' },
         h('div', { className: 'rp-boss-name' }, b.name,
           b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-          props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
-        h(BossHpBar, { boss: b }),
+        h('div', { className: 'rp-boss-hp-line' },
+          h(BossHpBar, { boss: b }),
+          props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
+            title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
+            onClick: function (e) { e.stopPropagation(); props.onBossVisible(b, !b.hp_visible); } },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null),
+        props.isDM && !b.hp_visible ? h('div', { className: 'rp-boss-hp-hidden' }, 'HP hidden from players') : null,
+        props.isTarget ? h('div', { className: 'rp-boss-target-note' }, 'Target') : null,
         (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
           b.dots.map(function (dt) {
             return h('span', { className: 'rp-boss-dot', key: dt.id },
               '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + '/turn' + (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : ''),
-              props.isDM ? h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear DoT', onClick: function () { props.onBossDotRemove(b, dt); } }, '✕') : null);
+              props.isDM ? h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear DoT', onClick: function (e) { e.stopPropagation(); props.onBossDotRemove(b, dt); } }, '✕') : null);
           })) : null,
         revealed.length ? h('div', { className: 'rp-boss-skills' },
-          h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function () { setOpen(!open); } },
-            (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's')),
-          open ? revealed.map(function (s) {
+          h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function (e) { e.stopPropagation(); setOpen(!open); } },
+            (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's'),
+            (!open && unseenSkills > 0) ? h('span', { className: 'rp-boss-skills-badge' }, String(unseenSkills)) : null),
+          open ? h('div', { className: 'rp-boss-skills-pop' }, revealed.map(function (s) {
             return h('div', { className: 'rp-boss-tele', key: s.id },
               h('strong', null, s.name), s.description ? ' — ' + s.description : null);
-          }) : null) : null),
-      props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
-        title: b.hp_visible ? 'HP is visible to players — click to hide' : 'HP is hidden from players — click to show',
-        onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
-        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, b.hp_visible ? 'visibility' : 'visibility_off')) : null);
+          })) : null) : null));
   }
   function BossBar(props) {
     var bosses = props.bosses || [];
     if (!bosses.length) return null;
-    return h('div', { className: 'rp-bossbar' },
-      bosses.map(function (b) {
-        return h(BossCard, { key: b.id, boss: b, isDM: props.isDM, onBossVisible: props.onBossVisible, onBossDotRemove: props.onBossDotRemove });
-      }));
+    return h('div', { className: 'rp-battlefield' },
+      h('h3', { className: 'rp-section-label' }, 'Enemies'),
+      h('div', { className: 'rp-bossbar' },
+        bosses.map(function (b) {
+          return h(BossCard, { key: b.id, boss: b, isDM: props.isDM,
+            attackMode: props.attackMode, isTarget: props.attackMode && String(b.id) === String(props.targetId), onTarget: props.onTarget,
+            onBossVisible: props.onBossVisible, onBossDotRemove: props.onBossDotRemove });
+        })));
   }
 
-  // ── Roll panels ───────────────────────────────────────────────────────────
-  function AttackPanel(props) {
-    var ctx = props.ctx; var rules = ctx.rules;
-    var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
-    var bossState = useState(''); var bossPick = bossState[0], setBossPick = bossState[1];
-    var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
-    var msgState = useState(''); var msg = msgState[0], setMsg = msgState[1];
-    var calc = computeRoll('attack', roll, ctx); var dmg = damageFor(rules, calc.total);
-    var preMult = dmg + calc.outputTotal;
-    var finalDmg = Math.max(0, Math.round(preMult * calc.mult));
-    var capped = Math.min(finalDmg, rules.max_damage_per_attack);
-    var living = (props.bosses || []).filter(function (b) { return !b.defeated; });
-    var selected = bossPick && living.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (living.length ? String(living[0].id) : '');
-    var selBoss = living.filter(function (b) { return String(b.id) === selected; })[0];
-    var effDmg = selBoss && selBoss.damage_mult > 1 ? Math.max(1, Math.floor(capped * selBoss.damage_mult)) : capped;
-    var canApply = living.length > 0 && !props.locked && props.canAttack && roll !== '' && capped > 0 && !busy;
-
-    function apply() {
-      if (!selected) return;
-      setBusy(true); setMsg('');
-      Promise.resolve(props.onApplyDamage(selected, capped, parseInt(roll, 10) || 0))
-        .then(function () { setBusy(false); setRoll(''); setMsg('Damage applied.'); setTimeout(function () { setMsg(''); }, 2500); })
-        .catch(function (e) { setBusy(false); setMsg(e.message || 'Failed to apply.'); });
-    }
-
-    return h('div', { className: 'rp-card' }, h('h3', null, 'Attack Roll'),
-      props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
-      h('label', { className: 'rp-input-label' }, 'Raw D' + rules.attack_die + ' roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: rules.attack_die, value: roll, placeholder: 'e.g. 14', onChange: function (e) { setRoll(clampNum(e.target.value, rules.attack_die)); } })),
-      h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, calc.total + ' → ' + dmg + ' Damage'))),
-      (calc.outputRows.length || calc.multRows.length) ? h('div', { className: 'rp-breakdown rp-breakdown-output' },
-        h('div', { className: 'rp-bd-row rp-bd-base' }, h('span', null, 'Base Damage'), h('span', null, String(dmg))),
-        calc.outputRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: i }, h('span', null, r.label + ' damage'), h('span', null, fmt(r.value))); }),
-        calc.multRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: 'm' + i }, h('span', null, r.label), h('span', null, '×' + r.value)); }),
-        h('div', { className: 'rp-bd-rule' }), h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Final Damage'), h('span', null, String(finalDmg)))) : null,
-      capped < finalDmg ? h('p', { className: 'rp-note' }, 'Capped at ' + rules.max_damage_per_attack + ' damage per attack.') : null,
-
-      // Apply to a boss — the number is computed and read-only by design.
-      living.length ? h('div', { className: 'rp-heal-apply' },
-        living.length > 1 ? h('label', { className: 'rp-input-label' }, 'Target',
-          h('select', { className: 'rp-select', value: selected, disabled: props.locked || busy, onChange: function (e) { setBossPick(e.target.value); } },
-            living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))) : null,
-        h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: apply },
-          busy ? 'Applying…' : 'Apply ' + effDmg + ' damage to ' + (living.length > 1 ? 'target' : living[0].name)),
-        (selBoss && selBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, selBoss.name + ' is vulnerable, damage is multiplied ' + selBoss.damage_mult + '×.') : null,
-        msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null) : null);
-  }
-  function DefensePanel(props) {
-    var rules = props.ctx.rules;
-    var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
-    var calc = computeRoll('defense', roll, props.ctx);
-    return h('div', { className: 'rp-card' }, h('h3', null, 'Defensive Roll'),
-      h('label', { className: 'rp-input-label' }, 'Raw D' + rules.attack_die + ' roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: rules.attack_die, value: roll, placeholder: 'e.g. 10', onChange: function (e) { setRoll(clampNum(e.target.value, rules.attack_die)); } })),
-      h(Breakdown, { calc: calc }, h('div', { className: 'rp-bd-row rp-bd-total' }, h('span', null, 'Modified Roll'), h('span', null, String(calc.total)))),
-      h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
-  }
-  // Even split of a pool across N member ids; earliest ids take the remainder.
-  function evenSplit(ids, total) {
-    var out = {}; var n = ids.length; if (!n) return out;
-    var base = Math.floor(total / n); var rem = total - base * n;
-    ids.forEach(function (id, i) { out[id] = base + (i < rem ? 1 : 0); });
-    return out;
-  }
-  function HealPanel(props) {
-    var ctx = props.ctx; var rules = ctx.rules; var me = ctx.character; var party = props.party || [];
-    var isHealer = me.class_role === 'healer';
-    var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
-    var modeState = useState('single'); var mode = modeState[0], setMode = modeState[1];
-    var countState = useState(''); var count = countState[0], setCount = countState[1];
-    var singleState = useState(String(me.member_id)); var single = singleState[0], setSingle = singleState[1];
-    var allocState = useState({}); var alloc = allocState[0], setAlloc = allocState[1]; // member_id -> amount
-    var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
-    var msgState = useState(''); var msg = msgState[0], setMsg = msgState[1];
-
-    var effMode = isHealer ? mode : 'single';
-    var calc = computeRoll('heal', roll, ctx); var pool = calc.total + calc.outputTotal;
-    // KO'd (0 HP) allies can't be healed back up during a session — exclude them.
-    var living = party.filter(function (p) { return !p.eliminated; });
-    var maxPeople = Math.max(1, parseInt(count, 10) || 1);
-    var selectedIds = Object.keys(alloc).map(Number);
-    var allocated = selectedIds.reduce(function (s, id) { return s + (Number(alloc[id]) || 0); }, 0);
-
-    function reset() { setRoll(''); setCount(''); setAlloc({}); }
-    function flash(m) { setMsg(m); setTimeout(function () { setMsg(''); }, 2500); }
-    function apply(entries) {
-      var clean = entries.filter(function (e) { return e.amount > 0; });
-      if (!clean.length) return;
-      setBusy(true); setMsg('');
-      Promise.resolve(props.onApplyHeal(clean)).then(function () { setBusy(false); reset(); flash('Healing applied.'); })
-        .catch(function (e) { setBusy(false); setMsg(e.message || 'Failed to apply.'); });
-    }
-    function applySingle() { var id = isHealer ? Number(single) : me.member_id; apply([{ member_id: id, amount: pool }]); }
-    function applyAoe() { apply(selectedIds.map(function (id) { return { member_id: id, amount: Number(alloc[id]) || 0 }; })); }
-    function toggleTarget(id) {
-      var ids = selectedIds.slice();
-      if (alloc.hasOwnProperty(id)) ids = ids.filter(function (x) { return x !== id; });
-      else { if (ids.length >= maxPeople) return; ids = ids.concat(id); }
-      setAlloc(evenSplit(ids, pool));
-    }
-    function setAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, alloc); next[id] = n; setAlloc(next); }
-
-    var canApply = !props.locked && !busy && pool > 0 && props.canHeal;
-    return h('div', { className: 'rp-card' }, h('h3', null, 'Healing Roll'),
-      props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
-      isHealer ? h('div', { className: 'rp-seg' },
-        h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'single' ? ' is-active' : ''), onClick: function () { setMode('single'); } }, 'Single Target'),
-        h('button', { type: 'button', className: 'rp-seg-btn' + (mode === 'aoe' ? ' is-active' : ''), onClick: function () { setMode('aoe'); } }, 'AOE')) : null,
-      h('label', { className: 'rp-input-label' }, 'Raw D' + rules.heal_die + ' heal roll', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 0, max: rules.heal_die, value: roll, placeholder: 'e.g. 3', onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setRoll(v); var nc = computeRoll('heal', v, ctx); setAlloc(evenSplit(selectedIds, nc.total + nc.outputTotal)); } })),
-      effMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'Raw D' + rules.heal_die + ' target count (max people)', h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 1, max: rules.aoe_max_targets, value: count, placeholder: 'e.g. 3', onChange: function (e) { setCount(clampNum(e.target.value, rules.aoe_max_targets)); } })) : null,
-      h(Breakdown, { calc: calc }, calc.outputRows.map(function (r, i) { return h('div', { className: 'rp-bd-row', key: 'o' + i }, h('span', null, r.label), h('span', null, fmt(r.value))); })
-        .concat([h('div', { className: 'rp-bd-row rp-bd-total', key: 'tot' }, h('span', null, 'Modified Heal'), h('span', null, String(pool)))])),
-
-      // Single-target apply
-      effMode === 'single' ? h('div', { className: 'rp-heal-apply' },
-        isHealer ? h('label', { className: 'rp-input-label' }, 'Target',
-          h('select', { className: 'rp-select', value: single, disabled: props.locked, onChange: function (e) { setSingle(e.target.value); } },
-            living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name + (p.member_id === me.member_id ? ' (you)' : '')); })))
-          : h('p', { className: 'rp-note' }, 'Self-heal only — applies to you.'),
-        h('button', { type: 'button', className: 'rp-btn', disabled: !canApply, onClick: applySingle }, busy ? 'Applying…' : 'Apply +' + pool + ' to target')) : null,
-
-      // AOE distribute
-      effMode === 'aoe' ? h('div', { className: 'rp-heal-apply' },
-        h('p', { className: 'rp-note' }, 'Select up to ' + maxPeople + ' to split ' + pool + ' across (even by default — adjust as needed). Allocated ' + allocated + ' / ' + pool + '.'),
-        h('div', { className: 'rp-heal-targets' }, living.map(function (p) {
-          var on = alloc.hasOwnProperty(p.member_id);
-          return h('div', { className: 'rp-heal-target' + (on ? ' is-on' : ''), key: p.member_id },
-            h('label', { className: 'rp-heal-pick' },
-              h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && selectedIds.length >= maxPeople), onChange: function () { toggleTarget(p.member_id); } }),
-              h('span', null, p.member_name + (p.member_id === me.member_id ? ' (you)' : ''))),
-            on ? h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(alloc[p.member_id]), disabled: props.locked, onChange: function (e) { setAmount(p.member_id, e.target.value); } }) : null);
-        })),
-        h('button', { type: 'button', className: 'rp-btn', disabled: !canApply || allocated <= 0, onClick: applyAoe }, busy ? 'Applying…' : 'Apply heal to ' + selectedIds.length + ' target(s)')) : null,
-      msg ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, msg) : null);
-  }
-
-  // ── Modifier row (in My Items) ────────────────────────────────────────────
+  // ── Modifier row (in item detail) ──────────────────────────────────────────
   function ModifierRow(props) {
     var m = props.modifier;
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
@@ -396,75 +317,53 @@
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
 
-  // ── My Items ──────────────────────────────────────────────────────────────
-  // Mirrors My Profile > My Items: a grid of card thumbnails (art + name +
-  // ability count) that each open a detail popup. The popup carries the
-  // interactive modifier controls. Reuses the shared .venue-card / .venue-modal
-  // / .contrast-border styles from styles.css so the torn border and fallback
-  // tile behave exactly like the profile view.
+  // ── Items — image strip + inline detail (no modal) ─────────────────────────
   var ITEM_FALLBACK_BG = 'linear-gradient(135deg, #2a1f1c 0%, #14100e 100%)';
-  function ItemCard(props) {
-    var it = props.item; var n = (it.abilities || []).length;
-    return h('button', { type: 'button', className: 'venue-card rp-item-card', 'aria-label': it.name, onClick: props.onOpen },
-      h('div', { className: 'venue-card-media' },
-        it.image_url
-          ? h('img', { className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
-          : h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
-      h('div', { className: 'venue-card-body' },
-        h('div', { className: 'venue-card-title-row' }, h('h3', { className: 'venue-card-title' }, it.name)),
-        n ? h('p', { className: 'venue-card-location' }, n + (n === 1 ? ' ABILITY' : ' ABILITIES')) : null));
-  }
-  function ItemModal(props) {
+  function ItemTile(props) {
     var it = props.item;
-    useEffect(function () {
-      function onKey(e) { if (e.key === 'Escape' && props.onClose) props.onClose(); }
-      document.addEventListener('keydown', onKey);
-      var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-      return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-    }, []);
-    var media = it.image_url
-      ? h('div', { className: 'contrast-media' },
-          h('img', { className: 'venue-modal-img', src: it.image_url, alt: '' }),
-          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }))
-      : h('div', { className: 'venue-modal-img venue-modal-img-fallback', style: { background: ITEM_FALLBACK_BG } },
-          h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
-          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }));
-    return h('div', { className: 'venue-modal-overlay is-open', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
-      h('div', { className: 'venue-modal rp-item-modal', role: 'dialog', 'aria-modal': 'true' },
-        h('button', { type: 'button', className: 'venue-modal-close', 'aria-label': 'Close', onClick: props.onClose }, '✕'),
-        media,
-        h('div', { className: 'venue-modal-content' },
-          h('h2', { className: 'venue-modal-title' }, it.name),
-          it.description ? h('p', { className: 'venue-modal-desc', style: { whiteSpace: 'pre-wrap' } }, it.description) : null,
-          (it.abilities || []).length ? h('div', { className: 'rp-item-abilities' },
-            (it.abilities || []).map(function (ab) {
-              return h('div', { className: 'rp-item-ability', key: ab.id },
-                h('div', { className: 'rp-ability-head' },
-                  h('strong', null, ab.name),
-                  ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
-                    onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
-                ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
-                (ab.modifiers || []).map(function (m) {
-                  return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
-                }));
-            })) : null)));
+    return h('button', { type: 'button', className: 'rp-item-tile' + (props.selected ? ' is-selected' : ''), 'aria-pressed': props.selected ? 'true' : 'false',
+        'aria-label': it.name, onClick: props.onSelect },
+      h('span', { className: 'rp-item-thumb sketch-wash' },
+        it.image_url
+          ? h('img', { className: 'rp-item-thumb-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
+          : h('span', { className: 'rp-item-thumb-fallback', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } }),
+        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+      h('span', { className: 'rp-item-tile-name' }, it.name));
   }
-  function ItemsPanel(props) {
-    var items = props.items;
+  function ItemDetail(props) {
+    var it = props.item;
+    return h('div', { className: 'rp-item-detail' },
+      h('h3', { className: 'rp-item-detail-name' }, it.name),
+      it.description ? h('p', { className: 'rp-item-detail-desc' }, it.description) : null,
+      (it.abilities || []).length ? h('div', { className: 'rp-item-abilities' },
+        (it.abilities || []).map(function (ab) {
+          return h('div', { className: 'rp-item-ability', key: ab.id },
+            h('div', { className: 'rp-ability-head' },
+              h('strong', null, ab.name),
+              ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
+                onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
+            ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
+            (ab.modifiers || []).map(function (m) {
+              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
+            }));
+        })) : null);
+  }
+  function ItemsStrip(props) {
+    var items = props.items || [];
     var openState = useState(null); var openId = openState[0], setOpenId = openState[1];
-    if (!items.length) return h('div', { className: 'rp-items-panel' }, h('h3', null, 'My Items'), h('p', { className: 'rp-note' }, 'No items equipped. An admin assigns and equips items.'));
-    // Re-derive the open item from live props each render so its controls track
-    // the latest poll (active/uses state) instead of a stale click-time snapshot.
-    var openItem = openId ? items.filter(function (it) { return it.item_id === openId; })[0] : null;
-    return h('div', { className: 'rp-items-panel' }, h('h3', null, 'My Items'),
-      h('div', { className: 'rp-items-grid' },
+    if (!items.length) return null;  // no items → hide the section entirely
+    // Default to the first item selected, and re-derive the open item from live
+    // props each render so its controls track the latest poll (active/uses state).
+    var effId = (openId != null && items.some(function (it) { return it.item_id === openId; })) ? openId : items[0].item_id;
+    var openItem = items.filter(function (it) { return it.item_id === effId; })[0];
+    return h('div', { className: 'rp-items-panel' },
+      h('h3', { className: 'rp-section-label' }, 'Items'),
+      h('div', { className: 'rp-items-strip' },
         items.map(function (it) {
-          return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenId(it.item_id); } });
+          return h(ItemTile, { key: it.item_id, item: it, selected: it.item_id === effId, onSelect: function () { setOpenId(it.item_id); } });
         })),
-      openItem ? h(ItemModal, { item: openItem, party: props.party, bosses: props.bosses, locked: props.locked,
-        onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll,
-        onClose: function () { setOpenId(null); } }) : null);
+      openItem ? h(ItemDetail, { item: openItem, party: props.party, bosses: props.bosses, locked: props.locked,
+        onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }) : null);
   }
 
   // ── Personal buffs ────────────────────────────────────────────────────────
@@ -507,7 +406,7 @@
       props.onApply({ type: type, value: n, duration: dd });
     }
     return h('div', { className: 'rp-buff-row' },
-      h('span', { className: 'rp-buff-label' }, 'New buff'),
+      h('span', { className: 'rp-buff-label' }, 'Set one buff'),
       h('div', { className: 'rp-buff-controls' },
         h('select', { className: 'rp-select', value: type, disabled: props.disabled, onChange: onType },
           h('option', { value: '' }, '— empty —'), h('option', { value: 'attack_roll' }, 'Attack'), h('option', { value: 'defense_roll' }, 'Defense'), h('option', { value: 'heal_roll' }, 'Heal')),
@@ -526,13 +425,22 @@
     if (!b.enabled) return 'paused by DM';
     return b.remaining_turns + (b.remaining_turns === 1 ? ' turn left' : ' turns left');
   }
-  function CommittedBuffRow(props) {
-    var b = props.buff;
-    return h('div', { className: 'rp-buff-live' + (b.live ? ' is-live' : '') },
-      h('span', { className: 'rp-buff-live-name' }, (BUFF_LABEL[b.type] || b.type) + ' ' + (b.value >= 0 ? '+' : '') + b.value),
-      h('span', { className: 'rp-buff-live-meta' }, buffStatusText(b)));
+  // The three buff slots, visualised as chips (committed buffs + an active shield,
+  // then empties). Max 3, an active shield counting as one.
+  function BuffSlots(props) {
+    var committed = props.committed || [];
+    var chips = [];
+    committed.forEach(function (b) { chips.push({ key: 'b' + b.id, label: (BUFF_LABEL[b.type] || b.type) + ' ' + fmt(b.value), meta: buffStatusText(b), on: true }); });
+    if (props.shield > 0) chips.push({ key: 'shield', label: 'Shield ' + props.shield, meta: 'active', on: true });
+    while (chips.length < 3) chips.push({ key: 'empty' + chips.length, label: 'slot ' + (chips.length + 1) + ' · empty', meta: '', on: false });
+    return h('div', { className: 'rp-buff-slots' },
+      chips.slice(0, 3).map(function (c) {
+        return h('div', { className: 'rp-buff-slot' + (c.on ? ' is-filled' : ''), key: c.key, title: c.meta || undefined },
+          h('span', { className: 'rp-buff-slot-name' }, c.label),
+          c.meta ? h('span', { className: 'rp-buff-slot-meta' }, c.meta) : null);
+      }));
   }
-  function BuffPanel(props) {
+  function BuffComposer(props) {
     var c = props.character;
     var buffs = props.buffs || [];
     var committed = buffs.filter(function (b) { return b.state === 'committed'; });
@@ -542,9 +450,9 @@
     var roomForNew = usedSlots < 3;
     var disabled = props.locked || !props.canBuff;
     var showDraft = !!draft || (roomForNew && props.canBuff && !props.locked);
-    return h('div', { className: 'rp-card' }, h('h3', null, 'Personal Buffs'),
-      props.blockReason ? h('p', { className: 'rp-note', style: { color: 'var(--accent-gold)' } }, props.blockReason) : null,
-      committed.length ? h('div', { className: 'rp-buff-list' }, committed.map(function (b) { return h(CommittedBuffRow, { key: b.id, buff: b }); })) : null,
+    return h('div', { className: 'rp-composer' },
+      props.blockReason ? h('p', { className: 'rp-note rp-note-warn' }, props.blockReason) : null,
+      h(BuffSlots, { committed: committed, shield: c.shield_value }),
       showDraft
         ? h(DraftBuffRow, { draft: draft, disabled: disabled, onSave: props.onSaveDraft, onApply: props.onApplyBuff })
         : (!committed.length ? h('p', { className: 'rp-note' }, roomForNew ? 'Setting a buff uses your action this turn.' : 'Buff slots full (max 3; an active shield counts as one).') : null),
@@ -554,9 +462,9 @@
   // ── Party (HP + shield, universal) ────────────────────────────────────────
   function Stepper(props) {
     return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { props.onChange(props.value - 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
+      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { props.onChange(props.value - 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
       h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { props.onChange(props.value + 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
+      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { props.onChange(props.value + 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   // HP control: free-typed absolute value plus ± nudges. Nudges update the display
   // instantly but the write is debounced, so a burst of clicks lands as one PATCH —
@@ -575,12 +483,12 @@
     function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = clamp(cur + d); setVal(String(next)); schedule(next); }
     function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } n = clamp(n); setVal(String(n)); commitNow(n); }
     return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { nudge(-1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
+      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { nudge(-1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
       h('input', { className: 'rp-hp-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
         onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
       props.showMax ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
+      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   function Avatar(props) {
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
@@ -590,23 +498,289 @@
   }
   function PartyPanel(props) {
     var shieldMax = props.shieldMax != null ? props.shieldMax : 3;
-    return h('div', { className: 'rp-card' }, h('h3', null, 'Party'),
+    var heal = props.heal;  // { active, mode, targetId, pool, alloc, onTarget } | null
+    return h('div', { className: 'rp-card rp-party-card' },
+      h('div', { className: 'rp-party-head' },
+        h('h3', { className: 'rp-section-label' }, 'Party'),
+        props.showSkills ? h('button', { type: 'button', className: 'rp-skills-btn', onClick: props.onOpenSkills },
+          h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'auto_awesome'),
+          h('span', null, 'Active skills'),
+          props.skillsUnseen > 0 ? h('span', { className: 'rp-skills-badge' }, String(props.skillsUnseen)) : null) : null),
       h('div', { className: 'rp-party' },
         props.party.map(function (p) {
           var ko = p.eliminated;
-          return h('div', { className: 'rp-party-row' + (ko ? ' is-elim' : '') + (p.member_id === props.myId ? ' is-me' : ''), key: p.member_id },
+          var isTarget = heal && heal.active && !ko && (heal.mode === 'single'
+            ? String(p.member_id) === String(heal.targetId)
+            : Object.prototype.hasOwnProperty.call(heal.alloc, p.member_id));
+          var pill = null;
+          if (heal && heal.active && !ko) {
+            if (heal.mode === 'single') { if (String(p.member_id) === String(heal.targetId)) pill = heal.pool; }
+            else if (Object.prototype.hasOwnProperty.call(heal.alloc, p.member_id)) pill = heal.alloc[p.member_id];
+          }
+          var rowClickable = heal && heal.active && !ko && !props.locked;
+          function pickRow() { if (rowClickable) heal.onTarget(p.member_id); }
+          return h('div', { className: 'rp-party-row' + (ko ? ' is-elim' : '') + (p.member_id === props.myId ? ' is-me' : '') + (isTarget ? ' is-target' : '') + (rowClickable ? ' is-pickable' : ''),
+              key: p.member_id, role: rowClickable ? 'button' : null, tabIndex: rowClickable ? 0 : null,
+              onClick: rowClickable ? pickRow : null,
+              onKeyDown: rowClickable ? function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickRow(); } } : null },
             h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
             h('div', { className: 'rp-party-id' },
-              h('strong', { className: 'rp-party-name' }, p.member_name),
+              h('strong', { className: 'rp-party-name' }, isTarget ? abbrevLastName(p.member_name) : p.member_name),
               ko ? h('span', { className: 'rp-elim-tag' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
-              h('div', { className: 'rp-hp-edit', title: 'HP' },
+              pill != null ? h('span', { className: 'rp-heal-pill' }, 'Heal ' + fmt(pill)) : null,
+              h('div', { className: 'rp-hp-edit', title: 'HP', onClick: function (e) { e.stopPropagation(); } },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
                 h(HpStepper, { value: p.current_hp, max: p.max_hp, showMax: true, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
-              h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : ''), title: 'Shield' },
+              h('div', { className: 'rp-shield-edit' + (p.shield_value > 0 ? ' is-on' : ''), title: 'Shield', onClick: function (e) { e.stopPropagation(); } },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'shield'),
                 h(HpStepper, { value: p.shield_value, max: shieldMax, compact: true, disabled: props.locked, onChange: function (v) { props.onShield(p, v); } }))));
         })));
+  }
+
+  // ── Active skills modal (player-facing) ────────────────────────────────────
+  function SkillsModal(props) {
+    var effects = props.effects || [];
+    var bossEffects = props.bossEffects || [];
+    var expState = useState({}); var exp = expState[0], setExp = expState[1];
+    var passives = effects.filter(function (e) { return e.mode === 'always'; });
+    var actives = effects.filter(function (e) { return e.mode !== 'always'; });
+    useEffect(function () {
+      function onKey(e) { if (e.key === 'Escape' && props.onClose) props.onClose(); }
+      document.addEventListener('keydown', onKey);
+      var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+      return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    }, []);
+    function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
+    function row(e) {
+      var detail = describeActiveEffect(e);
+      return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
+        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
+          h('span', { className: 'rp-skill-text' },
+            h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
+            h('span', { className: 'rp-skill-sum' }, detail)),
+          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
+        exp[e.id] ? h('div', { className: 'rp-skill-body' },
+          e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
+          e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    }
+    function bossRow(e) {
+      var key = 'b' + e.id;
+      var detail = describeBossActiveEffect(e);
+      return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
+        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
+          h('span', { className: 'rp-skill-text' },
+            h('span', { className: 'rp-skill-name' }, h('strong', null, e.boss_name), ' · ', e.name),
+            h('span', { className: 'rp-skill-sum' }, detail)),
+          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[key] ? 'expand_less' : 'expand_more')),
+        exp[key] ? h('div', { className: 'rp-skill-body' },
+          e.description ? h('p', { className: 'rp-skill-desc' }, e.description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    }
+    function section(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(renderer)) : null; }
+    return h('div', { className: 'rp-modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
+      h('div', { className: 'rp-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
+        h('div', { className: 'rp-modal-head' },
+          h('h3', null, 'Active Skills'),
+          h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),
+        h('p', { className: 'rp-note rp-modal-help' }, 'Tap a skill to see its modifiers and description.'),
+        (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
+          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow))));
+  }
+
+  // ── Combat board (character view): enemies + tabbed composer + party + items ─
+  function Board(props) {
+    var data = props.data, ctx = props.ctx, rules = props.rules, c = ctx.character;
+    var party = props.party || [], bosses = props.bosses || [];
+    var isHealer = c.class_role === 'healer';
+
+    var tabState = useState('attack'); var tab = tabState[0], setTab = tabState[1];
+    // Attack state
+    var atkRollState = useState(''); var atkRoll = atkRollState[0], setAtkRoll = atkRollState[1];
+    var atkTargetState = useState(''); var atkTarget = atkTargetState[0], setAtkTarget = atkTargetState[1];
+    var atkBusyState = useState(false); var atkBusy = atkBusyState[0], setAtkBusy = atkBusyState[1];
+    var atkMsgState = useState(''); var atkMsg = atkMsgState[0], setAtkMsg = atkMsgState[1];
+    // Heal state
+    var healRollState = useState(''); var healRoll = healRollState[0], setHealRoll = healRollState[1];
+    var healModeState = useState('single'); var healMode = healModeState[0], setHealMode = healModeState[1];
+    var healSingleState = useState(String(c.member_id)); var healSingle = healSingleState[0], setHealSingle = healSingleState[1];
+    var healCountState = useState(''); var healCount = healCountState[0], setHealCount = healCountState[1];
+    var healAllocState = useState({}); var healAlloc = healAllocState[0], setHealAlloc = healAllocState[1];
+    var healBusyState = useState(false); var healBusy = healBusyState[0], setHealBusy = healBusyState[1];
+    var healMsgState = useState(''); var healMsg = healMsgState[0], setHealMsg = healMsgState[1];
+    // Defend state
+    var defRollState = useState(''); var defRoll = defRollState[0], setDefRoll = defRollState[1];
+
+    var locked = props.actionLocked || props.ko;
+
+    // ── Attack derived ──
+    var atkCalc = computeRoll('attack', atkRoll, ctx);
+    var atkDmg = damageFor(rules, atkCalc.total);
+    var atkPreMult = atkDmg + atkCalc.outputTotal;
+    var atkFinal = Math.max(0, Math.round(atkPreMult * atkCalc.mult));
+    var atkCapped = Math.min(atkFinal, rules.max_damage_per_attack);
+    var living = bosses.filter(function (b) { return !b.defeated; });
+    var atkSel = (atkTarget && living.some(function (b) { return String(b.id) === atkTarget; })) ? atkTarget : (living.length ? String(living[0].id) : '');
+    var atkBoss = living.filter(function (b) { return String(b.id) === atkSel; })[0];
+    var atkEff = atkBoss && atkBoss.damage_mult > 1 ? Math.max(1, Math.floor(atkCapped * atkBoss.damage_mult)) : atkCapped;
+    var atkCanApply = living.length > 0 && !locked && props.canAttack && atkRoll !== '' && atkCapped > 0 && !atkBusy;
+    function applyAttack() {
+      if (!atkSel) return;
+      setAtkBusy(true); setAtkMsg('');
+      Promise.resolve(props.onApplyDamage(atkSel, atkCapped, parseInt(atkRoll, 10) || 0))
+        .then(function () { setAtkBusy(false); setAtkRoll(''); setAtkMsg('Damage applied.'); setTimeout(function () { setAtkMsg(''); }, 2500); })
+        .catch(function (e) { setAtkBusy(false); setAtkMsg(e.message || 'Failed to apply.'); });
+    }
+
+    // ── Heal derived ──
+    var effHealMode = isHealer ? healMode : 'single';
+    var healCalc = computeRoll('heal', healRoll, ctx); var pool = healCalc.total + healCalc.outputTotal;
+    var healLiving = party.filter(function (p) { return !p.eliminated; });
+    var maxPeople = Math.max(1, parseInt(healCount, 10) || 1);
+    var allocIds = Object.keys(healAlloc).map(Number);
+    var allocated = allocIds.reduce(function (s, id) { return s + (Number(healAlloc[id]) || 0); }, 0);
+    var healCanApply = !locked && !healBusy && pool > 0 && props.canHeal;
+    function resetHeal() { setHealRoll(''); setHealCount(''); setHealAlloc({}); }
+    function flashHeal(m) { setHealMsg(m); setTimeout(function () { setHealMsg(''); }, 2500); }
+    function applyHeal(entries) {
+      var clean = entries.filter(function (e) { return e.amount > 0; });
+      if (!clean.length) return;
+      setHealBusy(true); setHealMsg('');
+      Promise.resolve(props.onApplyHeal(clean)).then(function () { setHealBusy(false); resetHeal(); flashHeal('Healing applied.'); })
+        .catch(function (e) { setHealBusy(false); setHealMsg(e.message || 'Failed to apply.'); });
+    }
+    function applyHealSingle() { var id = isHealer ? Number(healSingle) : c.member_id; applyHeal([{ member_id: id, amount: pool }]); }
+    function applyHealAoe() { applyHeal(allocIds.map(function (id) { return { member_id: id, amount: Number(healAlloc[id]) || 0 }; })); }
+    function toggleHealTarget(id) {
+      var ids = allocIds.slice();
+      if (Object.prototype.hasOwnProperty.call(healAlloc, id)) ids = ids.filter(function (x) { return x !== id; });
+      else { if (ids.length >= maxPeople) return; ids = ids.concat(id); }
+      setHealAlloc(evenSplit(ids, pool));
+    }
+    function setHealAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, healAlloc); next[id] = n; setHealAlloc(next); }
+    // Row / dropdown targeting share one selection (single = set; aoe = toggle).
+    function onHealRowTarget(id) { if (effHealMode === 'single') setHealSingle(String(id)); else toggleHealTarget(id); }
+    var healSingleMember = healLiving.filter(function (p) { return String(p.member_id) === String(healSingle); })[0]
+      || party.filter(function (p) { return String(p.member_id) === String(healSingle); })[0];
+
+    // ── Defend derived ──
+    var defCalc = computeRoll('defense', defRoll, ctx);
+
+    // Tab availability (for the muted "used" cue).
+    var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true };
+
+    // Composer bodies -------------------------------------------------------
+    function attackBody() {
+      var atkTerms = ['roll ' + atkCalc.base].concat(atkCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); }));
+      var hasDetail = atkCalc.outputRows.length || atkCalc.multRows.length;
+      var newHp = (atkBoss && atkBoss.current_hp != null) ? Math.max(0, atkBoss.current_hp - atkEff) : null;
+      return h('div', { className: 'rp-composer' },
+        props.blockAttack ? h('p', { className: 'rp-note rp-note-warn' }, props.blockAttack) : null,
+        h('div', { className: 'rp-roll-line' },
+          h(RollHero, { value: atkRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' roll',
+            disabled: locked, onChange: function (e) { setAtkRoll(clampNum(e.target.value, rules.attack_die)); } }),
+          h(ChipExpr, { terms: atkTerms, resultText: atkCalc.total + ' → ' + atkDmg + ' dmg', tone: 'damage' })),
+        hasDetail ? h(ChipExpr, { terms: [String(atkDmg) + ' base'].concat(
+            atkCalc.outputRows.map(function (r) { return r.label + ' ' + fmt(r.value); }),
+            atkCalc.multRows.map(function (r) { return '×' + r.value; })),
+          resultText: atkFinal + ' dmg', tone: 'damage' }) : null,
+        atkCapped < atkFinal ? h('p', { className: 'rp-note' }, 'Capped at ' + rules.max_damage_per_attack + ' damage per attack.') : null,
+        h('div', { className: 'rp-divider' }),
+        living.length ? h('div', { className: 'rp-target-block' },
+          h('h4', { className: 'rp-target-label' }, 'Target'),
+          h('div', { className: 'rp-target-row' },
+            living.length > 1
+              ? h('select', { className: 'rp-select rp-target-select', value: atkSel, disabled: locked || atkBusy, onChange: function (e) { setAtkTarget(e.target.value); } },
+                  living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))
+              : h('span', { className: 'rp-target-name' }, atkBoss ? atkBoss.name : '—'),
+            (atkBoss && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(atkBoss.current_hp), ' → ', h('span', { className: 'tone-damage' }, String(newHp))) : null),
+          h('button', { type: 'button', className: 'rp-commit', disabled: !atkCanApply, onClick: applyAttack },
+            atkBusy ? 'Applying…' : 'Deal ' + atkEff + ' damage to ' + (atkBoss ? atkBoss.name : 'target')),
+          (atkBoss && atkBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, atkBoss.name + ' is vulnerable, damage is multiplied ' + atkBoss.damage_mult + '×.') : null,
+          atkMsg ? h('p', { className: 'rp-note rp-note-ok' }, atkMsg) : null)
+          : h('p', { className: 'rp-note' }, 'No enemies on the field.'));
+    }
+
+    function healBody() {
+      var healTerms = ['roll ' + healCalc.base]
+        .concat(healCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); }))
+        .concat(healCalc.outputRows.map(function (r) { return r.label + ' ' + fmt(r.value); }));
+      var newHp = (healSingleMember) ? Math.min(healSingleMember.max_hp, healSingleMember.current_hp + pool) : null;
+      return h('div', { className: 'rp-composer' },
+        props.blockHeal ? h('p', { className: 'rp-note rp-note-warn' }, props.blockHeal) : null,
+        isHealer ? h('div', { className: 'rp-seg' },
+          h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'single' ? ' is-active' : ''), onClick: function () { setHealMode('single'); } }, 'Single'),
+          h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'aoe' ? ' is-active' : ''), onClick: function () { setHealMode('aoe'); } }, 'AOE')) : null,
+        h('div', { className: 'rp-roll-line' },
+          h(RollHero, { value: healRoll, max: rules.heal_die, caption: 'D' + rules.heal_die + ' ROLL', ariaLabel: 'Raw D' + rules.heal_die + ' heal roll',
+            disabled: locked, onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setHealRoll(v); var nc = computeRoll('heal', v, ctx); setHealAlloc(evenSplit(allocIds, nc.total + nc.outputTotal)); } }),
+          h(ChipExpr, { terms: healTerms, resultText: pool + ' heal', tone: 'heal' })),
+        effHealMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'D' + rules.heal_die + ' target count (max people)',
+          h('input', { className: 'rp-input', type: 'number', inputMode: 'numeric', min: 1, max: rules.aoe_max_targets, value: healCount, placeholder: 'e.g. 3', onChange: function (e) { setHealCount(clampNum(e.target.value, rules.aoe_max_targets)); } })) : null,
+        h('div', { className: 'rp-divider' }),
+        effHealMode === 'single' ? h('div', { className: 'rp-target-block' },
+          h('h4', { className: 'rp-target-label' }, 'Target'),
+          h('div', { className: 'rp-target-row' },
+            isHealer ? h('select', { className: 'rp-select rp-target-select', value: healSingle, disabled: locked, onChange: function (e) { setHealSingle(e.target.value); } },
+                healLiving.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); }))
+              : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
+            (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
+          !isHealer ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
+          h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
+            healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
+          healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
+          : h('div', { className: 'rp-target-block' },
+            h('h4', { className: 'rp-target-label' }, 'Distribute'),
+            h('p', { className: 'rp-note' }, 'Select up to ' + maxPeople + ' in the party list to split ' + pool + ' across.'),
+            allocIds.length ? h('div', { className: 'rp-heal-targets' }, allocIds.map(function (id) {
+              var p = party.filter(function (x) { return x.member_id === id; })[0]; if (!p) return null;
+              return h('div', { className: 'rp-heal-target is-on', key: id },
+                h('span', null, p.member_name + (p.member_id === c.member_id ? ' (you)' : '')),
+                h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(healAlloc[id]), disabled: locked, onChange: function (e) { setHealAmount(id, e.target.value); } }));
+            })) : h('p', { className: 'rp-note' }, 'No targets selected yet.'),
+            h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' targets'),
+            healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null));
+    }
+
+    function defendBody() {
+      return h('div', { className: 'rp-composer' },
+        h('div', { className: 'rp-roll-line' },
+          h(RollHero, { value: defRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' roll',
+            disabled: false, onChange: function (e) { setDefRoll(clampNum(e.target.value, rules.attack_die)); } }),
+          h(ChipExpr, { terms: ['roll ' + defCalc.base].concat(defCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); })), resultText: String(defCalc.total), tone: 'neutral' })),
+        h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
+    }
+
+    var bodies = {
+      attack: attackBody,
+      heal: healBody,
+      buff: function () { return h(BuffComposer, { character: c, buffs: props.buffs, locked: locked, canBuff: props.canBuff, blockReason: props.blockBuff, onSaveDraft: props.onSaveBuffDraft, onApplyBuff: props.onApplyBuff }); },
+      defend: defendBody
+    };
+
+    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
+
+    var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget };
+
+    return h('div', null,
+      h(BossBar, { bosses: bosses, isDM: props.isDM,
+        attackMode: tab === 'attack' && props.canAttack && !locked, targetId: atkSel, onTarget: setAtkTarget,
+        onBossVisible: props.onBossVisible, onBossDotRemove: props.onBossDotRemove }),
+      props.turnNotice ? h('div', { className: 'rp-turn-notice' + (props.actionLocked ? ' is-locked' : '') }, props.turnNotice) : null,
+      h('div', { className: 'rp-grid' },
+        h('div', { className: 'rp-col rp-action-col' },
+          h('div', { className: 'rp-tabs' }, tabs.map(function (t) {
+            return h('button', { type: 'button', key: t.id, className: 'rp-tab' + (tab === t.id ? ' is-active' : '') + (!avail[t.id] ? ' is-unavail' : ''), onClick: function () { setTab(t.id); } },
+              h('span', { className: 'material-symbols-outlined rp-tab-icon', 'aria-hidden': 'true' }, TAB_ICON[t.id]),
+              h('span', { className: 'rp-tab-label' }, t.label),
+              h('span', { className: 'rp-tab-sub' }, t.sub));
+          })),
+          h('div', { className: 'rp-composer-wrap' }, bodies[tab]())),
+        h('div', { className: 'rp-col rp-party-col' },
+          h(PartyPanel, { party: party, myId: c.member_id, locked: props.bookLocked, avatars: props.avatars, shieldMax: rules.shield_max,
+            heal: healShare, onHp: props.onHp, onShield: props.onShield,
+            showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }))),
+      h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
+        onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
   }
 
   // ── DM panel ──────────────────────────────────────────────────────────────
@@ -689,7 +863,9 @@
         h('strong', null, a.name),
         h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
           title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
-          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } }, a.revealed ? 'Shown' : 'Show')),
+          onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } },
+          h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, a.revealed ? 'visibility' : 'visibility_off'),
+          a.revealed ? 'Shown' : 'Show')),
       a.description ? h('p', { className: 'rp-boss-skill-desc' }, a.description) : null,
       effects.length
         ? effects.map(function (e) {
@@ -718,6 +894,33 @@
       h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
       active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSetVuln(b, 1, null); } }, 'Clear') : null);
   }
+  // One staged boss in the DM deck — collapsible so a long skill list doesn't
+  // bloat the panel. Collapsed by default; the head (name, HP, eye, remove)
+  // stays visible.
+  function DMBossManageRow(props) {
+    var b = props.boss;
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
+    var skillCount = (b.abilities || []).length;
+    return h('div', { className: 'rp-dm-boss' + (b.defeated ? ' is-down' : '') },
+      h('div', { className: 'rp-dm-boss-head' },
+        h('button', { type: 'button', className: 'rp-dm-boss-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
+          h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
+          h('strong', null, b.name),
+          h('span', { className: 'rp-dm-boss-count' }, skillCount + ' skill' + (skillCount === 1 ? '' : 's'))),
+        b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+        h('div', { className: 'rp-effect-ctl' },
+          h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
+            onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
+            h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
+          h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
+      open ? h('div', { className: 'rp-dm-boss-body' },
+        h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
+        (b.abilities || []).map(function (a) {
+          return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
+        }),
+        !skillCount ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null) : null);
+  }
   function DMBossesTab(props) {
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
     var library = props.library || [];
@@ -728,20 +931,9 @@
           library.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: !pick, onClick: function () { props.onBossAdd(pick); setPick(''); } }, 'Add')),
       (props.bosses || []).map(function (b) {
-        return h('div', { className: 'rp-dm-boss' + (b.defeated ? ' is-down' : ''), key: b.id },
-          h('div', { className: 'rp-dm-boss-head' },
-            h('strong', null, b.name), b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-            h('div', { className: 'rp-effect-ctl' },
-              h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
-              h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
-                onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
-                h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
-              h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
-          h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
-          (b.abilities || []).map(function (a) {
-            return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
-          }),
-          !(b.abilities || []).length ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null);
+        return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party,
+          onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
+          onSetVuln: props.onSetVuln, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
       }),
       !(props.bosses || []).length ? h('p', { className: 'rp-note' }, 'No bosses on the field.') : null,
 
@@ -815,117 +1007,71 @@
             h('span', { className: 'rp-effect-meta' }, 'not committed until End Turn')));
       }));
   }
-  function DMPanel(props) {
+  // The collapsible DM Control Deck. Turn controls live on the header bar and
+  // stay visible when collapsed; everything else lives in the body. Collapsed by
+  // default; players never see this.
+  function DMDeck(props) {
     var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || [];
+    var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var tabState = useState('turn'); var tab = tabState[0], setTab = tabState[1];
     var tabs = [{ id: 'turn', label: 'Turn & Effects' }, { id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'log', label: 'Log' }];
-    return h('div', { className: 'rp-card rp-dm' },
-      h('div', { className: 'rp-dm-head' },
-        h('h3', null, 'DM Tools'),
-        h('div', { className: 'rp-dm-turn' },
-          h('span', { className: 'rp-turn-badge' + (c.turn_locked ? ' is-locked' : '') }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : '')),
+    return h('div', { className: 'rp-deck' + (open ? ' is-open' : '') },
+      h('div', { className: 'rp-deck-head' },
+        h('button', { type: 'button', className: 'rp-deck-title', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
+          h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'tune'),
+          h('span', null, 'DM Control Deck'),
+          h('span', { className: 'rp-turn-badge' + (c.turn_locked ? ' is-locked' : '') }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
+        h('div', { className: 'rp-deck-head-ctl' },
           h('button', { type: 'button', className: 'rp-btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'))),
-      h('div', { className: 'rp-dm-session' },
-        h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
-        h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session')),
-      h('div', { className: 'rp-dm-tabs' },
-        tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
+          h('button', { type: 'button', className: 'rp-btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'),
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost rp-deck-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
+            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_less' : 'expand_more'),
+            open ? 'Hide' : 'Show'))),
+      open ? h('div', { className: 'rp-deck-body' },
+        h('div', { className: 'rp-dm-session' },
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
+          h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session')),
+        h('div', { className: 'rp-dm-tabs' },
+          tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
 
-      tab === 'turn' ? h('div', null,
-        h('div', { className: 'rp-dm-section' },
-        h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
-        !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
-          effects.map(function (e) {
-            return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
-              h('div', { className: 'rp-effect-info' },
-                h('strong', null, e.holder_name + ' — ' + e.item_name),
-                h('span', { className: 'rp-effect-meta' },
-                  (e.ability_name ? e.ability_name + ' · ' : '') + describeActiveEffect(e))),
-              h('div', { className: 'rp-effect-ctl' },
-                e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
-                h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
-                h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
-          })),
-        h(DMPersonalBuffs, { buffs: props.personalBuffs || [], drafts: props.buffDrafts || [], onBuffPatch: props.onBuffPatch, onBuffRemove: props.onBuffRemove })) : null,
+        tab === 'turn' ? h('div', null,
+          h('div', { className: 'rp-dm-section' },
+          h('h4', { className: 'rp-dm-sub' }, 'Active effects'),
+          !effects.length ? h('p', { className: 'rp-note' }, 'No active effects.') :
+            effects.map(function (e) {
+              return h('div', { className: 'rp-effect' + (e.enabled ? '' : ' is-off'), key: e.id },
+                h('div', { className: 'rp-effect-info' },
+                  h('strong', null, e.holder_name + ' — ' + e.item_name),
+                  h('span', { className: 'rp-effect-meta' },
+                    (e.ability_name ? e.ability_name + ' · ' : '') + describeActiveEffect(e))),
+                h('div', { className: 'rp-effect-ctl' },
+                  e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
+                  h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
+                  h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
+            })),
+          h(DMPersonalBuffs, { buffs: props.personalBuffs || [], drafts: props.buffDrafts || [], onBuffPatch: props.onBuffPatch, onBuffRemove: props.onBuffRemove })) : null,
 
-      tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
-        onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
-        onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
+        tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
+          onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
+          onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
 
-      tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction }) : null,
+        tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction }) : null,
 
-      tab === 'log' ? h('aside', { className: 'rp-dm-log' },
-        h('h4', { className: 'rp-dm-sub' }, 'Change log'),
-        !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
-          h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
-            var sameTarget = l.actor_member_id === l.target_member_id && l.actor_member_id != null;
-            var main = (l.note && sameTarget) ? (l.actor_name || 'Someone')
-              : (l.actor_name || 'Someone') + ' → ' + (l.target_name || (l.target_member_id != null ? 'Member ' + l.target_member_id : '—'));
-            // Note-only rows (buffs, skill uses) vs numeric rows; numeric rows
-            // may carry a note suffix like "rolled 14" on boss damage.
-            var noteOnly = l.note && !l.delta;
-            var right = noteOnly ? l.note
-              : (fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : l.field === 'boss' ? 'boss HP' : 'HP') + ' (now ' + l.new_value + ')' + (l.note ? ' · ' + l.note : ''));
-            var rightClass = noteOnly ? 'rp-log-delta rp-log-note' : ('rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down'));
-            return h('div', { className: 'rp-log', key: l.id },
-              h('span', { className: 'rp-log-main' }, main),
-              h('span', { className: rightClass }, right));
-          }))) : null);
-  }
-
-  // ── Active skills (player view): floating button + popup ──────────────────
-  function FloatingSkills(props) {
-    var effects = props.effects || [];
-    var bossEffects = props.bossEffects || [];
-    var openState = useState(false); var open = openState[0], setOpen = openState[1];
-    var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
-    var expState = useState({}); var exp = expState[0], setExp = expState[1];
-    var passives = effects.filter(function (e) { return e.mode === 'always'; });
-    var actives = effects.filter(function (e) { return e.mode !== 'always'; });
-    // "Unseen" = skills used (non-passive) + revealed boss effects the player
-    // hasn't opened the panel to view yet.
-    var unseen = actives.filter(function (e) { return !seen[e.id]; }).length +
-      bossEffects.filter(function (e) { return !seen['b' + e.id]; }).length;
-    function openPop() { var s = Object.assign({}, seen); effects.forEach(function (e) { s[e.id] = true; }); bossEffects.forEach(function (e) { s['b' + e.id] = true; }); setSeen(s); setOpen(true); }
-    function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
-    function row(e) {
-      var detail = describeActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
-        exp[e.id] ? h('div', { className: 'rp-skill-body' },
-          e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
-          e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
-    }
-    function bossRow(e) {
-      var key = 'b' + e.id;
-      var detail = describeBossActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.boss_name), ' · ', e.name),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[key] ? 'expand_less' : 'expand_more')),
-        exp[key] ? h('div', { className: 'rp-skill-body' },
-          e.description ? h('p', { className: 'rp-skill-desc' }, e.description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
-    }
-    function section(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(renderer)) : null; }
-    return h('div', null,
-      open ? h('div', { className: 'rp-fab-backdrop', onClick: function () { setOpen(false); } }) : null,
-      open ? h('div', { className: 'rp-fab-pop', role: 'dialog', 'aria-label': 'Active skills' },
-        h('div', { className: 'rp-fab-pop-head' }, h('h3', null, 'Active Skills'),
-          h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: function () { setOpen(false); } }, '✕')),
-        (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
-          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow)),
-        h('p', { className: 'rp-note' }, 'Tap a skill to see its modifiers and description.')) : null,
-      h('button', { type: 'button', className: 'rp-fab', title: 'Active skills', 'aria-label': 'Active skills',
-        onClick: function () { open ? setOpen(false) : openPop(); } },
-        h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'auto_awesome'),
-        (!open && unseen > 0) ? h('span', { className: 'rp-fab-badge' }, String(unseen)) : null));
+        tab === 'log' ? h('aside', { className: 'rp-dm-log' },
+          h('h4', { className: 'rp-dm-sub' }, 'Change log'),
+          !hpLog.length ? h('p', { className: 'rp-note' }, 'No changes yet this session.') :
+            h('div', { className: 'rp-log-list' }, hpLog.map(function (l) {
+              var sameTarget = l.actor_member_id === l.target_member_id && l.actor_member_id != null;
+              var main = (l.note && sameTarget) ? (l.actor_name || 'Someone')
+                : (l.actor_name || 'Someone') + ' → ' + (l.target_name || (l.target_member_id != null ? 'Member ' + l.target_member_id : '—'));
+              var noteOnly = l.note && !l.delta;
+              var right = noteOnly ? l.note
+                : (fmt(l.delta) + ' ' + (l.field === 'shield' ? 'shield' : l.field === 'boss' ? 'boss HP' : 'HP') + ' (now ' + l.new_value + ')' + (l.note ? ' · ' + l.note : ''));
+              var rightClass = noteOnly ? 'rp-log-delta rp-log-note' : ('rp-log-delta' + (l.delta >= 0 ? ' is-up' : ' is-down'));
+              return h('div', { className: 'rp-log', key: l.id },
+                h('span', { className: 'rp-log-main' }, main),
+                h('span', { className: rightClass }, right));
+            }))) : null) : null);
   }
 
   // ── App ───────────────────────────────────────────────────────────────────
@@ -936,6 +1082,9 @@
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var avatarsState = useState({}); var avatars = avatarsState[0], setAvatars = avatarsState[1];
     var libraryState = useState(null); var library = libraryState[0], setLibrary = libraryState[1];
+    // Active-skills modal + "unseen" indicator (was the floating FAB in v6).
+    var skillsOpenState = useState(false); var skillsOpen = skillsOpenState[0], setSkillsOpen = skillsOpenState[1];
+    var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
     var dataRef = useRef(null); dataRef.current = data;
 
     async function bootstrap() {
@@ -1083,6 +1232,19 @@
       ? (isDM ? 'Boss turn — Player actions locked.' : 'Turn is locked — the DM is acting.')
       : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
 
+    // Active-skills "unseen" indicator: used (non-passive) effects + revealed boss
+    // effects the player hasn't opened the modal to view yet.
+    var effectsList = data.active_effects || [];
+    var bossEffectsList = data.boss_effects || [];
+    var skillsUnseen = effectsList.filter(function (e) { return e.mode !== 'always' && !seen[e.id]; }).length
+      + bossEffectsList.filter(function (e) { return !seen['b' + e.id]; }).length;
+    function openSkills() {
+      var s = Object.assign({}, seen);
+      effectsList.forEach(function (e) { s[e.id] = true; });
+      bossEffectsList.forEach(function (e) { s['b' + e.id] = true; });
+      setSeen(s); setSkillsOpen(true);
+    }
+
     return h('div', { className: 'rp-tool' },
       h('header', { className: 'rp-header' },
         h('div', null, h('h1', null, 'Roll Calculator'), h('p', { className: 'rp-sub' }, camp.name + ' · Turn ' + camp.turn_number + (camp.turn_locked ? ' (locked)' : ''))),
@@ -1095,30 +1257,28 @@
       err ? h('div', { className: 'rp-flash error' }, err) : null,
       ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
 
-      h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),
-
-      isDM ? null : h(FloatingSkills, { effects: data.active_effects || [], bossEffects: data.boss_effects || [] }),
-
-      isDM ? h(DMPanel, { campaign: camp, effects: data.active_effects || [], hpLog: data.hp_log || [],
-        bosses: data.bosses || [], bossEffects: data.boss_effects || [], library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
+      isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
+        bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
         onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
         onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
-      (c && turnNotice) ? h('div', { className: 'rp-turn-notice' + (actionLocked ? ' is-locked' : '') }, turnNotice) : null,
+      c ? h(Board, { data: data, ctx: ctx, rules: rules, party: data.party || [], bosses: data.bosses || [], items: data.items || [], avatars: avatars,
+          isDM: isDM, actionLocked: actionLocked, ko: ko, bookLocked: bookLocked, turnNotice: turnNotice,
+          canAttack: canAct(data, 'attack'), canHeal: canAct(data, 'heal'), canBuff: canAct(data, 'buff'),
+          blockAttack: actionBlockReason(data, 'attack'), blockHeal: actionBlockReason(data, 'heal'), blockBuff: actionBlockReason(data, 'buff'),
+          buffs: data.my_personal_buffs || [],
+          skillsUnseen: skillsUnseen, onOpenSkills: openSkills,
+          onApplyDamage: onApplyDamage, onApplyHeal: onApplyHeal, onSaveBuffDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff,
+          onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll,
+          onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove })
+        : h('div', null,
+          h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),
+          h(PartyPanel, { party: data.party || [], myId: null, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, heal: null, onHp: onHp, onShield: onShield, showSkills: false })),
 
-      c ? h('div', { className: 'rp-grid' },
-        h('div', { className: 'rp-col' },
-          h(AttackPanel, { ctx: ctx, bosses: data.bosses || [], locked: actionLocked || ko, canAttack: canAct(data, 'attack'), blockReason: '', onApplyDamage: onApplyDamage }),
-          h(DefensePanel, { ctx: ctx }),
-          h(HealPanel, { ctx: ctx, party: data.party || [], locked: actionLocked || ko, canHeal: canAct(data, 'heal'), blockReason: '', onApplyHeal: onApplyHeal }),
-          h(BuffPanel, { character: c, buffs: data.my_personal_buffs || [], locked: actionLocked || ko, canBuff: canAct(data, 'buff'), blockReason: '', onSaveDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff })),
-        h('div', { className: 'rp-col' },
-          h(PartyPanel, { party: data.party || [], myId: c.member_id, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }),
-          h(ItemsPanel, { items: data.items || [], party: data.party || [], bosses: data.bosses || [], locked: actionLocked || ko, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll }))
-      ) : h(PartyPanel, { party: data.party || [], myId: null, locked: bookLocked, avatars: avatars, shieldMax: rules.shield_max, onHp: onHp, onShield: onShield }));
+      skillsOpen ? h(SkillsModal, { effects: effectsList, bossEffects: bossEffectsList, onClose: function () { setSkillsOpen(false); } }) : null);
   }
 
   window.RollCalculator = App;
