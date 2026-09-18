@@ -723,7 +723,7 @@
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
           : h('div', { className: 'rp-target-block' },
             h('h4', { className: 'rp-target-label' }, 'Distribute'),
-            h('p', { className: 'rp-note' }, 'Select up to ' + maxPeople + ' in the party list to split ' + pool + ' across (even by default — adjust below). Allocated ' + allocated + ' / ' + pool + '.'),
+            h('p', { className: 'rp-note' }, 'Select up to ' + maxPeople + ' in the party list to split ' + pool + ' across.'),
             allocIds.length ? h('div', { className: 'rp-heal-targets' }, allocIds.map(function (id) {
               var p = party.filter(function (x) { return x.member_id === id; })[0]; if (!p) return null;
               return h('div', { className: 'rp-heal-target is-on', key: id },
@@ -731,6 +731,7 @@
                 h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(healAlloc[id]), disabled: locked, onChange: function (e) { setHealAmount(id, e.target.value); } }));
             })) : h('p', { className: 'rp-note' }, 'No targets selected yet.'),
             h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' target(s)'),
+            h('p', { className: 'rp-note' }, 'Allocated ' + allocated + ' / ' + pool + '.'),
             healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null));
     }
 
