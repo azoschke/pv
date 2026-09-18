@@ -253,10 +253,10 @@
         revealed.length ? h('div', { className: 'rp-boss-skills' },
           h('button', { type: 'button', className: 'rp-boss-skills-toggle', onClick: function (e) { e.stopPropagation(); setOpen(!open); } },
             (open ? '▾ ' : '▸ ') + revealed.length + ' skill' + (revealed.length === 1 ? '' : 's')),
-          open ? revealed.map(function (s) {
+          open ? h('div', { className: 'rp-boss-skills-pop' }, revealed.map(function (s) {
             return h('div', { className: 'rp-boss-tele', key: s.id },
               h('strong', null, s.name), s.description ? ' — ' + s.description : null);
-          }) : null) : null));
+          })) : null) : null));
   }
   function BossBar(props) {
     var bosses = props.bosses || [];

@@ -163,6 +163,11 @@
     .rp-boss-skills { margin-top: 0.4rem; }
     .rp-boss-skills-toggle { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.75rem;
       text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    /* Expanded revealed skills float as a popover so they don't grow the card
+       (and, with the stretch grid, its neighbours) — the row keeps the tallest
+       closed card's height. */
+    .rp-boss-skills-pop { position: absolute; left: 0; right: 0; top: 100%; margin-top: 0.3rem; z-index: 5;
+      background: var(--bg-card); border-radius: 0.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.4); padding: 0.5rem 0.7rem; }
     .rp-boss-tele { font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0; line-height: 1.35; }
     .rp-boss-tele strong { font-family: 'Stoke', serif; color: var(--text-secondary); }
     .rp-boss-eye { flex: 0 0 auto; display: inline-flex; background: none; border: 0; cursor: pointer; color: var(--text-secondary); padding: 0.1rem; }
