@@ -224,7 +224,6 @@
         'aria-pressed': clickable ? (props.isTarget ? 'true' : 'false') : null,
         onClick: clickable ? pick : null,
         onKeyDown: clickable ? function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } } : null },
-      props.isTarget ? h('span', { className: 'rp-target-tag' }, 'Target') : null,
       b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
       h('div', { className: 'rp-boss-info' },
         h('div', { className: 'rp-boss-name' }, b.name,
@@ -232,6 +231,7 @@
           props.isDM && !b.hp_visible ? h('span', { className: 'rp-boss-down-tag' }, 'HP hidden') : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
         h(BossHpBar, { boss: b }),
+        props.isTarget ? h('div', { className: 'rp-boss-target-note' }, 'Target') : null,
         (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
           b.dots.map(function (dt) {
             return h('span', { className: 'rp-boss-dot', key: dt.id },
@@ -309,7 +309,7 @@
       h('span', { className: 'rp-item-thumb' },
         it.image_url
           ? h('img', { className: 'rp-item-thumb-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
-          : h('span', { className: 'material-symbols-outlined rp-item-thumb-icon', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } }, 'inventory_2')),
+          : h('span', { className: 'rp-item-thumb-fallback', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } })),
       h('span', { className: 'rp-item-tile-name' }, it.name));
   }
   function ItemDetail(props) {
@@ -498,7 +498,7 @@
             : Object.prototype.hasOwnProperty.call(heal.alloc, p.member_id));
           var pill = null;
           if (heal && heal.active && !ko) {
-            if (heal.mode === 'single') pill = heal.pool;
+            if (heal.mode === 'single') { if (String(p.member_id) === String(heal.targetId)) pill = heal.pool; }
             else if (Object.prototype.hasOwnProperty.call(heal.alloc, p.member_id)) pill = heal.alloc[p.member_id];
           }
           var rowClickable = heal && heal.active && !ko && !props.locked;
@@ -671,12 +671,12 @@
         h('div', { className: 'rp-divider' }),
         living.length ? h('div', { className: 'rp-target-block' },
           h('h4', { className: 'rp-target-label' }, 'Target'),
-          atkBoss ? h('div', { className: 'rp-target-pill' },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'gps_fixed'),
-            h('span', null, atkBoss.name),
-            newHp != null ? h('span', { className: 'rp-target-delta' }, ' · ', String(atkBoss.current_hp), ' ', h('span', { className: 'material-icons rp-arrow', 'aria-hidden': 'true' }, 'arrow_forward'), ' ', h('span', { className: 'tone-damage' }, String(newHp))) : null) : null,
-          living.length > 1 ? h('select', { className: 'rp-select rp-target-select', value: atkSel, disabled: locked || atkBusy, onChange: function (e) { setAtkTarget(e.target.value); } },
-            living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+          h('div', { className: 'rp-target-row' },
+            living.length > 1
+              ? h('select', { className: 'rp-select rp-target-select', value: atkSel, disabled: locked || atkBusy, onChange: function (e) { setAtkTarget(e.target.value); } },
+                  living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))
+              : h('span', { className: 'rp-target-name' }, atkBoss ? atkBoss.name : '—'),
+            (atkBoss && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(atkBoss.current_hp), ' → ', h('span', { className: 'tone-damage' }, String(newHp))) : null),
           h('button', { type: 'button', className: 'rp-commit', disabled: !atkCanApply, onClick: applyAttack },
             atkBusy ? 'Applying…' : 'Deal ' + atkEff + ' damage to ' + (atkBoss ? atkBoss.name : 'target')),
           (atkBoss && atkBoss.damage_mult > 1) ? h('p', { className: 'rp-note' }, atkBoss.name + ' is vulnerable, damage is multiplied ' + atkBoss.damage_mult + '×.') : null,
@@ -703,13 +703,12 @@
         h('div', { className: 'rp-divider' }),
         effHealMode === 'single' ? h('div', { className: 'rp-target-block' },
           h('h4', { className: 'rp-target-label' }, 'Target'),
-          healSingleMember ? h('div', { className: 'rp-target-pill' },
-            h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'gps_fixed'),
-            h('span', null, healSingleMember.member_name + (healSingleMember.member_id === c.member_id ? ' (you)' : '')),
-            newHp != null ? h('span', { className: 'rp-target-delta' }, ' · ', String(healSingleMember.current_hp), ' ', h('span', { className: 'material-icons rp-arrow', 'aria-hidden': 'true' }, 'arrow_forward'), ' ', h('span', { className: 'tone-heal' }, String(newHp))) : null) : null,
-          isHealer ? h('select', { className: 'rp-select rp-target-select', value: healSingle, disabled: locked, onChange: function (e) { setHealSingle(e.target.value); } },
-            healLiving.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name + (p.member_id === c.member_id ? ' (you)' : '')); }))
-            : h('p', { className: 'rp-note' }, 'Self-heal only — applies to you.'),
+          h('div', { className: 'rp-target-row' },
+            isHealer ? h('select', { className: 'rp-select rp-target-select', value: healSingle, disabled: locked, onChange: function (e) { setHealSingle(e.target.value); } },
+                healLiving.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); }))
+              : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
+            (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
+          !isHealer ? h('p', { className: 'rp-note' }, 'Self-heal only — applies to you.') : null,
           h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
             healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)

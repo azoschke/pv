@@ -113,12 +113,10 @@
     /* Target read-out + selector. */
     .rp-target-block { display: flex; flex-direction: column; gap: 0.55rem; }
     .rp-target-label { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
-    .rp-target-pill { display: inline-flex; align-items: center; gap: 0.4rem; align-self: flex-start; background: var(--bg-card-light);
-      border-radius: 1.5rem; padding: 0.35rem 0.75rem; }
-    .rp-target-pill .material-icons { font-size: 1.05rem; color: var(--accent-brown); }
-    .rp-target-delta { color: var(--text-secondary); display: inline-flex; align-items: center; gap: 0.2rem; }
-    .rp-arrow { font-size: 0.95rem; vertical-align: middle; }
-    .rp-target-select { align-self: flex-start; min-width: 12rem; max-width: 100%; }
+    .rp-target-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .rp-target-name { font-weight: 600; }
+    .rp-target-newhp { background: var(--bg-card-light); border-radius: 1rem; padding: 0.3rem 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
+    .rp-target-select { min-width: 12rem; max-width: 100%; }
 
     /* Single / AOE segmented control. */
     .rp-seg { display: inline-flex; background: var(--bg-darker); border-radius: 0.5rem; padding: 0.15rem; align-self: flex-start; gap: 0.15rem; }
@@ -140,7 +138,7 @@
     .rp-boss-card.is-pickable:hover { background: var(--bg-card-light); }
     .rp-boss-card.is-target { background: var(--bg-card-light); box-shadow: var(--rp-ring); }
     .rp-boss-card.is-down { opacity: 0.5; }
-    .rp-target-tag { position: absolute; top: 0.6rem; right: 0.7rem; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-brown); }
+    .rp-boss-target-note { margin-top: 0.3rem; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-brown); }
     .rp-boss-img { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
     .rp-boss-info { flex: 1 1 auto; min-width: 0; }
     .rp-boss-name { font-family: 'Stoke', serif; display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
@@ -198,7 +196,9 @@
 
     /* Steppers — filled neutral wells; ± glyphs tinted by context. */
     .rp-stepper { display: inline-flex; align-items: center; gap: 0.3rem; }
-    .rp-step-btn { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-card-light); border: 0;
+    /* Translucent lighten so the step buttons keep contrast on any row shade,
+       including the raised (is-me) highlight where a flat fill would vanish. */
+    .rp-step-btn { display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text-secondary) 16%, transparent); border: 0;
       border-radius: 0.4rem; padding: 0.15rem 0.3rem; cursor: pointer; color: var(--text-secondary); }
     .rp-step-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
     .rp-step-btn .material-symbols-outlined { font-size: 1rem; font-variation-settings: 'wght' 600; }
@@ -209,6 +209,9 @@
     .rp-hp-input.is-compact { width: 2.3rem; }
     .rp-hp-input::-webkit-outer-spin-button, .rp-hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .rp-hp-max { color: var(--text-secondary); font-size: 0.78rem; white-space: nowrap; }
+    /* Party number fields use the same translucent fill as the steppers so they
+       stay legible on the raised (is-me) row too. */
+    .rp-party .rp-hp-input { background: color-mix(in srgb, var(--text-secondary) 16%, transparent); }
     /* Narrow screens: portrait + name on top, stats on a full-width line beneath. */
     @media (max-width: 600px) {
       .rp-party-row { flex-wrap: wrap; row-gap: 0.35rem; }
@@ -225,7 +228,7 @@
     .rp-item-thumb { width: 4.4rem; height: 4.4rem; border-radius: 0.5rem; overflow: hidden; background: var(--bg-darker);
       display: flex; align-items: center; justify-content: center; }
     .rp-item-thumb-img { width: 100%; height: 100%; object-fit: cover; }
-    .rp-item-thumb-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: var(--text-secondary); }
+    .rp-item-thumb-fallback { width: 100%; height: 100%; }
     .rp-item-tile-name { font-size: 0.82rem; text-align: center; line-height: 1.15; overflow-wrap: anywhere; }
     .rp-item-detail { margin-top: 1rem; background: var(--bg-card); border-radius: 0.6rem; padding: 1rem 1.1rem; }
     .rp-item-detail-name { font-family: 'Stoke', serif; margin: 0 0 0.3rem; }
@@ -304,7 +307,8 @@
     .rp-effect-meta { font-size: 0.78rem; color: var(--text-secondary); }
     .rp-effect-ctl { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
     .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
-    .rp-boss-add .rp-select { flex: 1 1 14rem; }
+    /* Selects sitting directly on the deck's lighter band need a darker fill to read. */
+    .rp-boss-add .rp-select { flex: 1 1 14rem; background: var(--bg-card); }
     .rp-dm-boss.is-down { opacity: 0.55; }
     .rp-dm-boss-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .rp-dm-boss-head strong { font-family: 'Stoke', serif; }
@@ -315,7 +319,7 @@
     .rp-boss-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
     .rp-boss-skill-head strong { font-family: 'Stoke', serif; }
     .rp-boss-skill-desc { margin: 0.15rem 0 0.3rem; font-size: 0.82rem; color: var(--text-secondary); white-space: pre-wrap; }
-    .rp-boss-skill .rp-mod { padding: 0.35rem 0.55rem; background: var(--bg-darker); border-radius: 0.4rem; margin-top: 0.3rem; }
+    .rp-boss-skill .rp-mod { padding: 0.35rem 0.55rem; background: var(--bg-card); border-radius: 0.4rem; margin-top: 0.3rem; }
     .rp-skill-picks { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; margin: 0.25rem 0 0.35rem; }
     .rp-skill-picks label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; cursor: pointer; }
     .rp-hits { display: inline-flex; align-items: center; gap: 0.15rem; color: var(--text-secondary); font-size: 0.9rem; }
