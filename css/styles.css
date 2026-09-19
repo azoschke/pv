@@ -4450,3 +4450,49 @@ body.nav-sidebar-open {
   }
   .menu-item-body { width: 100%; }
 }
+
+/* ── FC Members: shared character block (Discord / Joined / linked alts) ──── */
+.member-shared-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+}
+.member-shared-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: 0.92rem;
+}
+.member-shared-label {
+  flex: 0 0 5.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.member-shared-value { color: var(--text-primary); }
+.member-shared-tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.member-alt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.member-alt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: 0.35rem;
+  font-size: 0.92rem;
+}

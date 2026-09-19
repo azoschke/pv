@@ -33,6 +33,7 @@
     { slug: 'pirate',      label: 'Pirate' },
     { slug: 'house_staff', label: 'House Staff' },
     { slug: 'recon',       label: 'Recon' },
+    { slug: 'dm',          label: 'Dungeon Master' },
     { slug: 'officer',     label: 'Officer' },
     { slug: 'admin',       label: 'Admin' }
   ];

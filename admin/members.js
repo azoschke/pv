@@ -74,6 +74,69 @@
   var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data',];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
+  // Alt linking (stub — display + data only; no account/login wiring yet).
+  // A "main" is any character whose OOC rank is NOT Cinders; it heads a group.
+  // Alts (Cinders only) point at their main via primary_member_id. Discord tag
+  // and Date Joined are shared across the group and stored on the main (head).
+  var ALT_RANK = 'Cinders';
+
+  // Resolve a member's group: the head (main) plus every alt linked to it.
+  function groupFor(member, all) {
+    if (!member) return { head: null, alts: [], members: [] };
+    var headId = member.primary_member_id || member.id;
+    var head = null;
+    for (var i = 0; i < all.length; i++) { if (all[i].id === headId) { head = all[i]; break; } }
+    if (!head) head = member;
+    var alts = all.filter(function (m) { return m.primary_member_id === head.id; });
+    return { head: head, alts: alts, members: [head].concat(alts) };
+  }
+
+  function isAlt(member) { return !!(member && member.primary_member_id); }
+
+  function fmtJoined(v) {
+    if (!v) return '';
+    // Stored as YYYY-MM-DD; render without shifting across time zones.
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v));
+    if (!m) return String(v);
+    var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    if (isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // Styled read-only "shared block" — Discord tag, Date Joined, and the linked
+  // characters in this group. Rendered in the notes popup and (as a summary) in
+  // the edit modal so this info reads as one shared block across the group.
+  function SharedBlock(props) {
+    var g = groupFor(props.member, props.allMembers || []);
+    var head = g.head || props.member;
+    var hasAny = (head && (head.discord_tag || head.date_joined)) || g.alts.length;
+    if (!hasAny) return null;
+    return h('div', { className: 'member-shared-block' },
+      (head && head.discord_tag)
+        ? h('div', { className: 'member-shared-row' },
+            h('span', { className: 'member-shared-label' }, 'Discord'),
+            h('span', { className: 'member-shared-value' }, head.discord_tag))
+        : null,
+      (head && head.date_joined)
+        ? h('div', { className: 'member-shared-row' },
+            h('span', { className: 'member-shared-label' }, 'Joined'),
+            h('span', { className: 'member-shared-value' }, fmtJoined(head.date_joined)))
+        : null,
+      g.members.length > 1
+        ? h('div', { className: 'member-shared-row' },
+            h('span', { className: 'member-shared-label' }, 'Characters'),
+            h('span', { className: 'member-shared-value' },
+              g.members.map(function (mm, i) {
+                return h('span', { key: mm.id },
+                  i ? ', ' : '',
+                  mm.name,
+                  mm.id === head.id ? h('span', { className: 'member-shared-tag' }, ' (main)') : null
+                );
+              })))
+        : null
+    );
+  }
+
   function memberSortKey(m) {
     // Members with an unrecognised rank fall at the end, preserving
     // existing data while surfacing it for cleanup.
@@ -108,10 +171,18 @@
   function NoteCell(props) {
     var value = props.value || '';
     var label = props.label || 'Notes';
+    var member = props.member;
+    var allMembers = props.allMembers || [];
     var openState = useState(false);
     var open = openState[0], setOpen = openState[1];
 
-    if (!value) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
+    // The shared block (Discord / Joined / linked characters) shows alongside
+    // the freeform notes, so this info reads as one shared block per group.
+    var g = member ? groupFor(member, allMembers) : null;
+    var head = g ? (g.head || member) : null;
+    var hasShared = !!(head && (head.discord_tag || head.date_joined || (g && g.members.length > 1)));
+
+    if (!value && !hasShared) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
 
     return h(React.Fragment, null,
       h('button', {
@@ -120,13 +191,16 @@
         onClick: function () { setOpen(true); }
       },
         h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '18px' } }, 'sticky_note_2'),
-        h('span', null, 'Read notes')
+        h('span', null, value ? 'Read notes' : 'View info')
       ),
       open ? h(window.PVAdminModal, {
         title: label,
         onClose: function () { setOpen(false); }
       },
-        h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem' } }, value)
+        hasShared ? h(SharedBlock, { member: member, allMembers: allMembers }) : null,
+        value
+          ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
+          : null
       ) : null
     );
   }
@@ -138,8 +212,19 @@
     var onCancel = props.onCancel;
     var onDelete = props.onDelete;
     var allowDelete = props.allowDelete;
+    var allMembers = props.allMembers || [];
+    var onSetPrimary = props.onSetPrimary;
 
     var isNew = !member.id;
+
+    // Group context for the member being edited (empty for brand-new members).
+    var group = groupFor(member, allMembers);
+    var memberIsAlt = isAlt(member);
+    var head = group.head || member;
+
+    // Alt-add picker state (only meaningful on a main).
+    var altPickState = useState('');
+    var altPick = altPickState[0], setAltPick = altPickState[1];
 
     var draftState = useState({
       name: member.name || '',
@@ -150,7 +235,10 @@
       interview: member.interview || INTERVIEWS[0],
       activity:  member.activity  || ACTIVITIES[0],
       talked_to: !!member.talked_to,
-      notes: member.notes || ''
+      notes: member.notes || '',
+      // Shared (group) fields — edited on the main, shown read-only on an alt.
+      discord_tag: (memberIsAlt ? (head.discord_tag || '') : (member.discord_tag || '')),
+      date_joined: (memberIsAlt ? (head.date_joined || '') : (member.date_joined || ''))
     });
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
@@ -174,7 +262,14 @@
         return;
       }
       setSaving(true); setErr('');
-      try { await onSave(draft); }
+      try {
+        var payload = Object.assign({}, draft);
+        // Discord tag / Date Joined are shared and live on the main. When
+        // editing an alt, leave them untouched so the alt's save can't clobber
+        // the group's shared values.
+        if (memberIsAlt) { delete payload.discord_tag; delete payload.date_joined; }
+        await onSave(payload);
+      }
       catch (e2) { setErr(e2.message || 'Save failed.'); }
       finally { setSaving(false); }
     }
@@ -275,6 +370,110 @@
           })
         )
       ),
+
+      // ── Shared block: Discord tag, Date Joined, and alt links ──────────────
+      // Discord tag + Date Joined are shared across the character group and live
+      // on the main. Alt linking is a stub: it records the connection only, with
+      // no account/login wiring yet.
+      h('div', { className: 'portal-form-section', style: { marginTop: '0.5rem' } },
+        h('h3', { className: 'portal-form-section-title' }, 'Shared character info'),
+
+        h('div', { className: 'portal-field-row' },
+          h('div', { className: 'portal-field' },
+            h('label', null, 'Discord tag'),
+            memberIsAlt
+              ? h('input', { type: 'text', value: draft.discord_tag, readOnly: true, disabled: true })
+              : h('input', {
+                  type: 'text',
+                  value: draft.discord_tag,
+                  placeholder: 'e.g. username or Name#0000',
+                  onChange: function (e) { setField('discord_tag', e.target.value); }
+                })
+          ),
+          h('div', { className: 'portal-field' },
+            h('label', null, 'Date joined'),
+            memberIsAlt
+              ? h('input', { type: 'text', value: fmtJoined(draft.date_joined), readOnly: true, disabled: true })
+              : h('input', {
+                  type: 'date',
+                  value: draft.date_joined || '',
+                  onChange: function (e) { setField('date_joined', e.target.value); }
+                })
+          )
+        ),
+        memberIsAlt
+          ? h('p', { className: 'portal-field-help' },
+              'Discord tag and Date joined are shared and managed on the main character (' +
+              (head.name || 'main') + ').')
+          : h('p', { className: 'portal-field-help' },
+              'Plain text tag (not linked to Discord) and a manual join date. Both are shared across this character’s linked alts.'),
+
+        // Alt links
+        h('div', { className: 'portal-field', style: { gridColumn: '1 / -1', marginTop: '0.4rem' } },
+          h('label', null, 'Linked characters'),
+          isNew
+            ? h('p', { className: 'portal-field-help' }, 'Save this member first, then reopen to link alts.')
+            : memberIsAlt
+              // Editing an alt: show its main + let it be unlinked.
+              ? h('div', { className: 'member-alt-list' },
+                  h('div', { className: 'member-alt-row' },
+                    h('span', null, 'Alt of ', h('strong', null, head.name || '—')),
+                    onSetPrimary ? h('button', {
+                      type: 'button', className: 'portal-btn is-small is-ghost',
+                      onClick: function () { onSetPrimary(member.id, null); }
+                    }, 'Unlink') : null
+                  )
+                )
+              : draft.ooc_rank === ALT_RANK
+                // A Cinders character cannot be a main; it can only be linked as an alt.
+                ? h('p', { className: 'portal-field-help' },
+                    'Cinders characters are alts. Link this one from a main character’s page.')
+                // A main: list current alts + a picker of unlinked Cinders characters.
+                : h('div', { className: 'member-alt-list' },
+                    group.alts.length
+                      ? group.alts.map(function (a) {
+                          return h('div', { key: a.id, className: 'member-alt-row' },
+                            h('span', null, a.name,
+                              h('span', { className: 'member-shared-tag' }, ' · Cinders')),
+                            onSetPrimary ? h('button', {
+                              type: 'button', className: 'portal-btn is-small is-ghost',
+                              onClick: function () { onSetPrimary(a.id, null); }
+                            }, 'Remove') : null
+                          );
+                        })
+                      : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No alts linked yet.'),
+                    (function () {
+                      var available = allMembers.filter(function (m) {
+                        return m.ooc_rank === ALT_RANK && !m.primary_member_id && m.id !== member.id;
+                      });
+                      return h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
+                        h('select', {
+                          className: 'portal-filter-select',
+                          value: altPick,
+                          style: { flex: '1 1 12rem' },
+                          onChange: function (e) { setAltPick(e.target.value); }
+                        },
+                          h('option', { value: '' },
+                            available.length ? '— link a Cinders character —' : 'No unlinked Cinders characters'),
+                          available.map(function (m) {
+                            return h('option', { key: m.id, value: String(m.id) }, m.name);
+                          })
+                        ),
+                        h('button', {
+                          type: 'button', className: 'portal-btn is-small',
+                          disabled: !altPick,
+                          onClick: function () {
+                            if (!altPick || !onSetPrimary) return;
+                            onSetPrimary(Number(altPick), member.id);
+                            setAltPick('');
+                          }
+                        }, 'Add alt')
+                      );
+                    })()
+                )
+        )
+      ),
+
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
@@ -339,7 +538,7 @@
             : null
         )
       ),
-      h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || '') })),
+      h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || ''), member: m, allMembers: props.allMembers })),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
         h('button', {
           type: 'button',
@@ -429,6 +628,20 @@
       } catch (e) {
         setErr(e.message || 'Failed to update Talked-To.');
         await reload();
+      }
+    }
+
+    // Link (mainId) or unlink (null) an alt by setting its primary_member_id.
+    // Alt-linking is a stub: it records the connection only. Reloads so the open
+    // modal reflects the new group immediately.
+    async function handleSetPrimary(altId, mainId) {
+      setErr('');
+      try {
+        await PVAdminAPI.request('PATCH', '/members/' + altId,
+          { primary_member_id: mainId == null ? null : Number(mainId) }, true);
+        await reload();
+      } catch (e) {
+        setErr(e.message || 'Failed to update character link.');
       }
     }
 
@@ -572,6 +785,7 @@
                           return h(ReadRow, {
                             key: m.id,
                             member: m,
+                            allMembers: members,
                             onEdit: function (member) { setModalMember(member); },
                             onToggleTalkedTo: handleToggleTalkedTo
                           });
@@ -594,6 +808,8 @@
       },
         h(MemberForm, {
           member: modalMember,
+          allMembers: members,
+          onSetPrimary: handleSetPrimary,
           onSave: function (draft) {
             return modalIsNew ? handleCreate(draft) : handleUpdate(modalMember.id, draft);
           },
