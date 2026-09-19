@@ -370,13 +370,14 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the skill)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Description'),
+        h('span', { className: 'portal-field-help', style: { display: 'block', margin: '0.1rem 0 0.35rem', lineHeight: 1.2 } }, 'Visible to players on toggle'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Add effects after creating the skill — the DM fires each effect on its own, with its own uses. Skills fire only while the turn is locked and stay hidden from players until the DM reveals them.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')),
+      h('p', { className: 'portal-field-help', style: { margin: '0.4rem 0 0' } },
+        'Add ', h('strong', null, 'Skill Effects'), ' after clicking ', h('strong', null, 'Add Skill'), '.'));
   }
 
   function BossEffectForm(props) {
@@ -413,8 +414,6 @@
           h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
         h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
           h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
-      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. The DM fires this effect on its own, with its own uses/session.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -441,7 +440,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (admin notes)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Admin Notes'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
@@ -899,11 +898,22 @@
     // Officer/admin-only endpoint; non-fatal if it 401s — roster just shows the
     // fallback tiles instead of portraits.
     async function loadProfileImages() {
+      function toMap(rows) {
+        var map = {}; (rows || []).forEach(function (r) { if (r && r.image_url && r.member_id != null) map[r.member_id] = r.image_url; });
+        return map;
+      }
+      // Staff can read every profile (incl. drafts) via the admin endpoint.
+      // DMs/non-staff fall back to the public roster (published profiles only) —
+      // the same source the roll-calculator page uses for portraits.
       try {
         var rows = await PVAdminAPI.request('GET', '/member-profiles/admin', undefined, true) || [];
-        var map = {}; rows.forEach(function (r) { if (r && r.image_url) map[r.member_id] = r.image_url; });
-        setProfileImages(map);
-      } catch (e) { /* no portraits */ }
+        setProfileImages(toMap(rows));
+      } catch (e) {
+        try {
+          var res = await fetch(PVAdminAPI.API_BASE + '/roster', { headers: { 'Accept': 'application/json' } });
+          setProfileImages(toMap(res.ok ? await res.json() : []));
+        } catch (_e) { /* no portraits */ }
+      }
     }
     // Boss library — 404 means the worker predates v9.5; hide boss UI quietly.
     async function loadBossLib() {
@@ -970,7 +980,9 @@
     }
 
     function selectCampaign(c) {
-      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults(); loadDisabledItems(c.id);
+      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
+      // Per-campaign item enable/disable is an admin-only panel.
+      if (isAdmin) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
         PVAdminAPI.request('GET', '/members', undefined, true)
@@ -1071,6 +1083,14 @@
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
+    // Resolve the current DM's display name (for the read-only, non-admin view).
+    function dmNameFor(c) {
+      if (c.dm_member_id == null) return 'None assigned';
+      var byId = (members || []).filter(function (m) { return String(m.id) === String(c.dm_member_id); })[0];
+      if (byId) return byId.name;
+      var byRoster = (roster || []).filter(function (r) { return String(r.member_id) === String(c.dm_member_id); })[0];
+      return byRoster ? byRoster.member_name : 'Assigned';
+    }
 
     // available members = roster-eligible not already in this campaign
     var inCampaign = {}; roster.forEach(function (r) { inCampaign[r.member_id] = true; });
@@ -1126,17 +1146,21 @@
                     ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html' }, 'Public rolls page')
                     : null,
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, isSel ? 'Close' : 'Manage'),
-                  isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
+                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
                 )
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
-                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
-                  h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
-                    members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
-                      h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
-                        h('option', { value: '' }, '— none —'),
-                        (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); })))),
+                isAdmin
+                  ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                      h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
+                        members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
+                          h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
+                            h('option', { value: '' }, '— none —'),
+                            (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))))
+                  : h('div', { className: 'portal-field', style: { marginBottom: '0.5rem' } },
+                      h('label', null, 'Dungeon Master'),
+                      h('p', { style: { margin: 0 } }, dmNameFor(c))),
 
                 // Add a member — kept at the top of the panel, right under the DM.
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
@@ -1164,6 +1188,8 @@
                 // on/off by default, with an Advanced view for per-item control.
                 (function () {
                   if (!disabledSupported) return null;
+                  // Item control stays with admins; DMs manage rosters/bosses only.
+                  if (!isAdmin) return null;
                   var camp = campaignItemList();
                   if (!camp.length) return null;
                   var loading = disabledItems === null;

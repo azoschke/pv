@@ -581,7 +581,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .activity-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.3rem;
 }
 .activity-cell .talked-to-cell {
@@ -667,6 +667,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-size: 0.75rem;
   white-space: nowrap;
   line-height: 1;
+}
+.portal-faction-tag.is-nodata {
+  color: var(--accent-red);
+  border-color: var(--accent-red);
 }
 
 /* --------------- Checkbox group (multi-select form field) --------------- */

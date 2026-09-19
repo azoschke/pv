@@ -81,7 +81,7 @@
     bounties:         ['officer', 'admin'],
     'event-assets':   '*',
     campaigns:        ['officer', 'admin'],
-    'rp-rolls':       ['officer', 'admin'],
+    'rp-rolls':       ['officer', 'admin', 'dm'],
     cosmic:           ['officer', 'admin'],
     announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
     admin:            ['admin']
