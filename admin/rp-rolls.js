@@ -440,7 +440,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description (admin notes)'),
+      h('div', { className: 'portal-field' }, h('label', null, 'Admin Notes'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
