@@ -75,10 +75,11 @@
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
   // Alt linking (stub — display + data only; no account/login wiring yet).
-  // A "main" is any character whose OOC rank is NOT Cinders; it heads a group.
-  // Alts (Cinders only) point at their main via primary_member_id. Discord tag
-  // and Date Joined are shared across the group and stored on the main (head).
-  var ALT_RANK = 'Cinders';
+  // A "main" is any character whose OOC rank is NOT an alt rank; it heads a
+  // group. Alts (Embers or Cinders) point at their main via primary_member_id.
+  // Discord tag and Date Joined are shared across the group, stored on the main.
+  var ALT_RANKS = ['Embers', 'Cinders'];
+  function isAltRank(rank) { return ALT_RANKS.indexOf(rank) !== -1; }
 
   // Resolve a member's group: the head (main) plus every alt linked to it.
   function groupFor(member, all) {
@@ -422,17 +423,17 @@
                     }, 'Unlink') : null
                   )
                 )
-              : draft.ooc_rank === ALT_RANK
-                // A Cinders character cannot be a main; it can only be linked as an alt.
+              : isAltRank(draft.ooc_rank)
+                // An Embers/Cinders character cannot be a main; only an alt.
                 ? h('p', { className: 'portal-field-help' },
-                    'Cinders characters are alts. Link this one from a main character’s page.')
-                // A main: list current alts + a picker of unlinked Cinders characters.
+                    'Embers and Cinders characters are alts. Link this one from a main character’s page.')
+                // A main: list current alts + a picker of unlinked Embers/Cinders characters.
                 : h('div', { className: 'member-alt-list' },
                     group.alts.length
                       ? group.alts.map(function (a) {
                           return h('div', { key: a.id, className: 'member-alt-row' },
                             h('span', null, a.name,
-                              h('span', { className: 'member-shared-tag' }, ' · Cinders')),
+                              h('span', { className: 'member-shared-tag' }, ' · ' + (a.ooc_rank || 'Alt'))),
                             onSetPrimary ? h('button', {
                               type: 'button', className: 'portal-btn is-small is-ghost',
                               onClick: function () { onSetPrimary(a.id, null); }
@@ -442,7 +443,7 @@
                       : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No alts linked yet.'),
                     (function () {
                       var available = allMembers.filter(function (m) {
-                        return m.ooc_rank === ALT_RANK && !m.primary_member_id && m.id !== member.id;
+                        return isAltRank(m.ooc_rank) && !m.primary_member_id && m.id !== member.id;
                       });
                       return h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
                         h('select', {
@@ -452,7 +453,7 @@
                           onChange: function (e) { setAltPick(e.target.value); }
                         },
                           h('option', { value: '' },
-                            available.length ? '— link a Cinders character —' : 'No unlinked Cinders characters'),
+                            available.length ? '— link an Embers/Cinders character —' : 'No unlinked Embers/Cinders characters'),
                           available.map(function (m) {
                             return h('option', { key: m.id, value: String(m.id) }, m.name);
                           })

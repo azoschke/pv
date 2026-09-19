@@ -371,13 +371,13 @@
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
-        h('span', { className: 'portal-field-help' }, 'Visible to players on toggle'),
+        h('span', { className: 'portal-field-help', style: { display: 'block', margin: '0.1rem 0 0.35rem', lineHeight: 1.2 } }, 'Visible to players on toggle'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Program skill effects after clicking add skill.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')),
+      h('p', { className: 'portal-field-help', style: { margin: '0.4rem 0 0' } },
+        'Add ', h('strong', null, 'Skill Effects'), ' after clicking ', h('strong', null, 'Add Skill'), '.'));
   }
 
   function BossEffectForm(props) {
