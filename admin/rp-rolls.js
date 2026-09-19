@@ -970,7 +970,9 @@
     }
 
     function selectCampaign(c) {
-      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults(); loadDisabledItems(c.id);
+      setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
+      // Per-campaign item enable/disable is an admin-only panel.
+      if (isAdmin) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
         PVAdminAPI.request('GET', '/members', undefined, true)
@@ -1164,6 +1166,8 @@
                 // on/off by default, with an Advanced view for per-item control.
                 (function () {
                   if (!disabledSupported) return null;
+                  // Item control stays with admins; DMs manage rosters/bosses only.
+                  if (!isAdmin) return null;
                   var camp = campaignItemList();
                   if (!camp.length) return null;
                   var loading = disabledItems === null;
