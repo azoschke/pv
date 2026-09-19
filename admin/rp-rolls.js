@@ -898,11 +898,22 @@
     // Officer/admin-only endpoint; non-fatal if it 401s — roster just shows the
     // fallback tiles instead of portraits.
     async function loadProfileImages() {
+      function toMap(rows) {
+        var map = {}; (rows || []).forEach(function (r) { if (r && r.image_url && r.member_id != null) map[r.member_id] = r.image_url; });
+        return map;
+      }
+      // Staff can read every profile (incl. drafts) via the admin endpoint.
+      // DMs/non-staff fall back to the public roster (published profiles only) —
+      // the same source the roll-calculator page uses for portraits.
       try {
         var rows = await PVAdminAPI.request('GET', '/member-profiles/admin', undefined, true) || [];
-        var map = {}; rows.forEach(function (r) { if (r && r.image_url) map[r.member_id] = r.image_url; });
-        setProfileImages(map);
-      } catch (e) { /* no portraits */ }
+        setProfileImages(toMap(rows));
+      } catch (e) {
+        try {
+          var res = await fetch(PVAdminAPI.API_BASE + '/roster', { headers: { 'Accept': 'application/json' } });
+          setProfileImages(toMap(res.ok ? await res.json() : []));
+        } catch (_e) { /* no portraits */ }
+      }
     }
     // Boss library — 404 means the worker predates v9.5; hide boss UI quietly.
     async function loadBossLib() {
@@ -1072,6 +1083,14 @@
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
+    // Resolve the current DM's display name (for the read-only, non-admin view).
+    function dmNameFor(c) {
+      if (c.dm_member_id == null) return 'None assigned';
+      var byId = (members || []).filter(function (m) { return String(m.id) === String(c.dm_member_id); })[0];
+      if (byId) return byId.name;
+      var byRoster = (roster || []).filter(function (r) { return String(r.member_id) === String(c.dm_member_id); })[0];
+      return byRoster ? byRoster.member_name : 'Assigned';
+    }
 
     // available members = roster-eligible not already in this campaign
     var inCampaign = {}; roster.forEach(function (r) { inCampaign[r.member_id] = true; });
@@ -1132,12 +1151,16 @@
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
-                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
-                  h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
-                    members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
-                      h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
-                        h('option', { value: '' }, '— none —'),
-                        (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); })))),
+                isAdmin
+                  ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                      h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
+                        members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
+                          h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
+                            h('option', { value: '' }, '— none —'),
+                            (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))))
+                  : h('div', { className: 'portal-field', style: { marginBottom: '0.5rem' } },
+                      h('label', null, 'Dungeon Master'),
+                      h('p', { style: { margin: 0 } }, dmNameFor(c))),
 
                 // Add a member — kept at the top of the panel, right under the DM.
                 h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
