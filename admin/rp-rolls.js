@@ -370,10 +370,11 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Description (shown to players if the DM reveals the skill)'),
-        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Description'),
+        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } }),
+        h('span', { className: 'portal-field-help' }, 'Visible to players on toggle')),
       h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Add effects after creating the skill — the DM fires each effect on its own, with its own uses. Skills fire only while the turn is locked and stay hidden from players until the DM reveals them.'),
+        'Program skill effects after clicking add skill.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -413,8 +414,6 @@
           h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
         h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
           h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
-      h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Boss damage always hits shields first, then HP. DoTs tick when used and again on every Next Turn. The DM fires this effect on its own, with its own uses/session.'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -1128,7 +1127,7 @@
                     ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html' }, 'Public rolls page')
                     : null,
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, isSel ? 'Close' : 'Manage'),
-                  isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
+                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
                 )
               ),
 
