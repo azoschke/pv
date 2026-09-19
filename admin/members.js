@@ -191,7 +191,7 @@
         onClick: function () { setOpen(true); }
       },
         h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '18px' } }, 'sticky_note_2'),
-        h('span', null, value ? 'Read notes' : 'View info')
+        h('span', null, 'Notes')
       ),
       open ? h(window.PVAdminModal, {
         title: label,
@@ -291,8 +291,7 @@
             type: 'text',
             value: draft.nickname,
             onChange: function (e) { setField('nickname', e.target.value); }
-          }),
-          h('span', { className: 'portal-field-help' }, 'Optional.')
+          })
         ),
         h('div', { className: 'portal-field' },
           h('label', null, 'OOC Rank *'),
@@ -405,8 +404,7 @@
           ? h('p', { className: 'portal-field-help' },
               'Discord tag and Date joined are shared and managed on the main character (' +
               (head.name || 'main') + ').')
-          : h('p', { className: 'portal-field-help' },
-              'Plain text tag (not linked to Discord) and a manual join date. Both are shared across this character’s linked alts.'),
+          : null,
 
         // Alt links
         h('div', { className: 'portal-field', style: { gridColumn: '1 / -1', marginTop: '0.4rem' } },
@@ -768,7 +766,8 @@
                     h('th', null, 'IC Rank'),
                     h('th', null, 'Faction'),
                     h('th', null, 'IC Interview'),
-                    h('th', null, 'Activity'),
+                    h('th', { title: 'Activity', 'aria-label': 'Activity' },
+                      h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '20px', verticalAlign: 'middle' } }, 'search_activity')),
                     h('th', null, 'Notes'),
                     h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
                   )
