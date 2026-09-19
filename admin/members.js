@@ -521,8 +521,8 @@
             )
           : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
       ),
-      h('td', null, m.interview),
-      h('td', null,
+      h('td', { style: { textAlign: 'center' } }, m.interview),
+      h('td', { style: { textAlign: 'center' } },
         h('div', { className: 'activity-cell' },
           h('span', null, m.activity),
           showTalkedTo
@@ -766,8 +766,8 @@
                     h('th', null, 'Name'),
                     h('th', null, 'IC Rank'),
                     h('th', null, 'Faction'),
-                    h('th', null, 'IC Interview'),
-                    h('th', { title: 'Activity', 'aria-label': 'Activity' },
+                    h('th', { style: { textAlign: 'center' } }, 'IC Interview'),
+                    h('th', { title: 'Activity', 'aria-label': 'Activity', style: { textAlign: 'center' } },
                       h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '20px', verticalAlign: 'middle' } }, 'search_activity')),
                     h('th', null, 'Notes'),
                     h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')

@@ -581,7 +581,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .activity-cell {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.3rem;
 }
 .activity-cell .talked-to-cell {
