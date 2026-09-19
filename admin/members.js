@@ -512,16 +512,26 @@
     return h('tr', null,
       h('td', null, m.name),
       h('td', null, m.ic_rank || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null,
-        factions.length
-          ? h('div', { className: 'portal-faction-tags' },
-              factions.map(function (f) {
-                return h('span', { key: f, className: 'portal-faction-tag' }, f);
-              })
-            )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
-      ),
-      h('td', { style: { textAlign: 'center' } }, m.interview),
+      (function () {
+        // "NA - No RP" reads as a null field in the grid (the form keeps it).
+        var shown = factions.filter(function (f) { return f !== 'NA - No RP'; });
+        return h('td', null,
+          shown.length
+            ? h('div', { className: 'portal-faction-tags' },
+                shown.map(function (f) {
+                  return h('span', {
+                    key: f,
+                    className: 'portal-faction-tag' + (f === 'No Data' ? ' is-nodata' : '')
+                  }, f);
+                })
+              )
+            : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+        );
+      })(),
+      h('td', { style: { textAlign: 'center' } },
+        m.interview === 'NA - No RP'
+          ? h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : m.interview),
       h('td', { style: { textAlign: 'center' } },
         h('div', { className: 'activity-cell' },
           h('span', null, m.activity),
