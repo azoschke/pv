@@ -330,6 +330,7 @@
     var sCountState = useState(String(initSummon.count || 1)); var sCount = sCountState[0], setSCount = sCountState[1];
     var sHpState = useState(String(initSummon.hp || 1)); var sHp = sHpState[0], setSHp = sHpState[1];
     var sAtkState = useState(String(initSummon.attack != null ? initSummon.attack : 1)); var sAtk = sAtkState[0], setSAtk = sAtkState[1];
+    var sModeState = useState(initSummon.attack_mode === 'd20' ? 'd20' : 'fixed'); var sMode = sModeState[0], setSMode = sModeState[1];
     var sTurnsState = useState(initSummon.turns ? String(initSummon.turns) : ''); var sTurns = sTurnsState[0], setSTurns = sTurnsState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
@@ -397,7 +398,9 @@
     function resolvedSummon() {
       if (!isSummon) return null;
       return { name: sName.trim() || 'Minion', count: Math.max(1, parseInt(sCount, 10) || 1),
-        hp: Math.max(1, parseInt(sHp, 10) || 1), attack: Math.max(0, parseInt(sAtk, 10) || 0),
+        hp: Math.max(1, parseInt(sHp, 10) || 1),
+        attack_mode: sMode === 'd20' ? 'd20' : 'fixed',
+        attack: sMode === 'd20' ? 0 : Math.max(0, parseInt(sAtk, 10) || 0),
         turns: Math.max(0, parseInt(sTurns, 10) || 0) };
     }
     function resolvedUses() { return (showUses && limitUses) ? Math.max(1, parseInt(uses, 10) || 1) : 0; }
@@ -479,9 +482,14 @@
       isSummon ? fieldGrid([
         h('div', { className: 'portal-field', key: 'shp' }, h('label', null, 'HP each'),
           h('input', { type: 'number', min: 1, value: sHp, onChange: function (e) { setSHp(e.target.value); } })),
-        h('div', { className: 'portal-field', key: 'satk' }, h('label', null, 'Attack (0 = no attack)'),
-          h('input', { type: 'number', min: 0, value: sAtk, onChange: function (e) { setSAtk(e.target.value); } }))
+        h('div', { className: 'portal-field', key: 'satkmode' }, h('label', null, 'Attack style'),
+          h('select', { value: sMode, onChange: function (e) { setSMode(e.target.value); } },
+            h('option', { value: 'fixed' }, 'Fixed damage'),
+            h('option', { value: 'd20' }, 'D20 roll'))),
+        sMode === 'fixed' ? h('div', { className: 'portal-field', key: 'satk' }, h('label', null, 'Attack (0 = no attack)'),
+          h('input', { type: 'number', min: 0, value: sAtk, onChange: function (e) { setSAtk(e.target.value); } })) : null
       ]) : null,
+      (isSummon && sMode === 'd20') ? h('p', { className: 'portal-field-help', style: { margin: '0.1rem 0 0' } }, 'The summoner rolls a d20 on attack; damage uses the normal damage tiers, no bonuses.') : null,
       isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Blank = until they’re defeated or the session ends.')) : null,
@@ -574,7 +582,8 @@
     if (m.type === 'summon') {
       var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
       var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + (s.attack || 0) + ' atk' + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su;
+      var atk = s.attack_mode === 'd20' ? 'D20 atk' : (s.attack || 0) + ' atk';
+      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su;
     }
     var t;
     switch (m.target_kind) {
