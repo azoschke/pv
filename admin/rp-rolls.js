@@ -258,11 +258,23 @@
     { value: 'holder_item', label: 'Holder of an item' },
     { value: 'party_member', label: 'A chosen ally' }
   ];
-  var MODE_OPTIONS = [
-    { value: 'always', label: 'Always on' },
-    { value: 'toggle', label: 'Toggle on/off' },
-    { value: 'activated', label: 'Press to use' }
-  ];
+  // "How it works" options are phrased per effect so timing reads naturally and
+  // never contradicts itself (an "always on" choice never carries a turn limit;
+  // over-time is a named option, not a hidden toggle). Each maps to mode +
+  // duration under the hood.
+  function timingOptions(effect) {
+    if (effect === 'damage') return [{ value: 'once', label: 'Hit once' }, { value: 'over', label: 'Damage each turn for a while' }];
+    if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'passive', label: 'Heal each turn (always on)' }];
+    return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Temporary (lasts a while)' }];
+  }
+  function initTiming(effect, m) {
+    var mode = m.mode || 'always';
+    if (effect === 'damage') return m.type === 'dot' ? 'over' : 'once';
+    if (effect === 'heal') return mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
+    if (mode === 'toggle') return 'toggle';
+    if (mode === 'activated') return 'temp';
+    return 'passive';
+  }
   function effectOfType(type) {
     if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
@@ -272,9 +284,10 @@
   function ModifierForm(props) {
     var m = props.initial || {};
     var initType = m.type || 'attack_roll';
+    var initEffect = effectOfType(initType);
     var labelState = useState(m.label || ''); var label = labelState[0], setLabel = labelState[1];
     var valState = useState(String(m.value != null ? m.value : 1)); var val = valState[0], setVal = valState[1];
-    var effectState = useState(effectOfType(initType)); var effect = effectState[0], setEffect = effectState[1];
+    var effectState = useState(initEffect); var effect = effectState[0], setEffect = effectState[1];
     // Roll bonus can boost several rolls at once (tick all = boost every roll);
     // stored as one roll_bonus modifier with a `rolls` array.
     var initRolls = initType === 'roll_bonus'
@@ -282,43 +295,51 @@
       : ((initType === 'attack_roll' || initType === 'defense_roll' || initType === 'heal_roll') ? [initType] : ['attack_roll']);
     var rollsState = useState(initRolls); var rolls = rollsState[0], setRolls = rollsState[1];
     function toggleRoll(rk) { setRolls(function (cur) { return cur.indexOf(rk) !== -1 ? cur.filter(function (x) { return x !== rk; }) : cur.concat([rk]); }); }
-    var otState = useState(initType === 'dot' || (initType === 'heal' && m.duration_turns !== 1)); var overTime = otState[0], setOverTime = otState[1];
+    // One "How it works" choice (per effect) drives mode + duration together, so
+    // "always on" can never carry a turn limit and over-time is a named option.
+    var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
     var tkState = useState(m.target_kind && m.target_kind !== 'boss' ? m.target_kind : 'self'); var tk = tkState[0], setTk = tkState[1];
     var refState = useState(m.target_ref || ''); var ref = refState[0], setRef = refState[1];
-    var modeState = useState(m.mode || 'always'); var mode = modeState[0], setMode = modeState[1];
-    // Uses and duration are opt-in: a checkbox reveals the number, so simple
-    // items never see a stray "0 = unlimited" box.
+    // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
-    var wearsOffState = useState((m.duration_turns || 0) > 0 && !(initType === 'heal' && m.duration_turns === 1)); var wearsOff = wearsOffState[0], setWearsOff = wearsOffState[1];
-    var durState = useState(String(m.duration_turns && m.duration_turns > 1 ? m.duration_turns : 2)); var dur = durState[0], setDur = durState[1];
+    var durState = useState(m.duration_turns && m.duration_turns > 1 ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    // Switching effect may invalidate the current timing choice — snap to a valid one.
+    function changeEffect(next) {
+      setEffect(next);
+      var opts = timingOptions(next).map(function (o) { return o.value; });
+      if (opts.indexOf(timing) === -1) setTiming(opts[0]);
+    }
 
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
     var isNone = effect === 'none';
-    var showWhen = effect === 'damage' || effect === 'heal';
+    var isOver = timing === 'over';
+    var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
     var showValue = !isNone;
     var showTarget = !isNone && !isStrike;
-    var showMode = !isNone && !isStrike;
-    var effMode = isStrike ? 'activated' : mode;
-    var showUses = effMode === 'activated' && !isNone;
-    // Duration is only meaningful for lasting effects: buffs, shield, and an
-    // over-time strike/heal. Instant strike/heal happen once.
-    var showDuration = !isNone && (
-      (effect === 'damage' && overTime) ||
-      (effect === 'heal' && overTime) ||
-      (effect === 'roll' || effect === 'shield' || effect === 'attack_output' || effect === 'attack_mult' || effect === 'heal_output'));
+    var showTiming = !isNone;
+    var showUses = isActivated && !isNone;
+    var showTurns = timing === 'temp' || timing === 'over'; // only "…for a while" needs turns
 
+    function resolvedMode() {
+      if (isStrike) return 'activated';
+      if (timing === 'passive') return 'always';
+      if (timing === 'toggle') return 'toggle';
+      return 'activated'; // temp / once / over
+    }
     function resolvedType() {
       if (effect === 'roll') return 'roll_bonus';
-      if (effect === 'damage') return overTime ? 'dot' : 'damage';
+      if (effect === 'damage') return isOver ? 'dot' : 'damage';
       return effect; // heal, shield, attack_output, attack_mult, heal_output, none
     }
     function resolvedDuration() {
-      if (effect === 'heal' && !overTime) return 1;   // instant heal = one application
-      if (effect === 'damage' && !overTime) return 0; // single hit
-      if (!showDuration) return 0;
-      return wearsOff ? Math.max(1, parseInt(dur, 10) || 1) : 0; // 0 = until removed
+      if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
+      if (effect === 'heal' && timing === 'passive') return 0; // re-heals every turn, forever
+      if (effect === 'damage' && timing === 'once') return 0;  // single hit
+      if (!showTurns) return 0;
+      return parseInt(dur, 10) || 0; // blank / 0 = until removed
     }
     function resolvedUses() { return (showUses && limitUses) ? Math.max(1, parseInt(uses, 10) || 1) : 0; }
     function valueLabel() {
@@ -328,8 +349,8 @@
         case 'heal_output': return 'Extra healing';
         case 'attack_mult': return 'Times damage (×)';
         case 'shield': return 'Shield amount';
-        case 'heal': return overTime ? 'HP each turn' : 'HP restored';
-        case 'damage': return overTime ? 'Damage each turn' : 'Damage';
+        case 'heal': return isOver ? 'HP each turn' : 'HP restored';
+        case 'damage': return isOver ? 'Damage each turn' : 'Damage';
       }
       return 'Amount';
     }
@@ -339,7 +360,7 @@
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
-        target_kind: isStrike ? 'boss' : tk, mode: effMode,
+        target_kind: isStrike ? 'boss' : tk, mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
       if (isStrike) payload.target_ref = null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
@@ -360,21 +381,17 @@
         h('div', { className: 'portal-field', key: 'label' }, h('label', null, 'Name (optional)'),
           h('input', { type: 'text', value: label, placeholder: 'e.g. Vanguard’s Blessing', onChange: function (e) { setLabel(e.target.value); } })),
         h('div', { className: 'portal-field', key: 'effect' }, h('label', null, 'Effect'),
-          h('select', { value: effect, onChange: function (e) { setEffect(e.target.value); } },
+          h('select', { value: effect, onChange: function (e) { changeEffect(e.target.value); } },
             EFFECT_GROUPS.map(function (g) {
               return h('optgroup', { key: g.label, label: g.label },
                 g.options.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }));
             })))
       ]),
       h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, EFFECT_HELP[effect] || ''),
-      fieldGrid([
-        showWhen ? h('div', { className: 'portal-field', key: 'when' }, h('label', null, 'When'),
-          h('select', { value: overTime ? 'over' : 'instant', onChange: function (e) { setOverTime(e.target.value === 'over'); } },
-            h('option', { value: 'instant' }, 'Instant (once)'),
-            h('option', { value: 'over' }, 'Over time (each turn)'))) : null,
-        showValue ? h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
-          h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } })) : null
-      ]),
+      showValue ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
+          h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
+      ]) : null,
       effect === 'roll' ? h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'Which rolls (tick all for every roll)'),
         h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap', paddingTop: '0.2rem' } },
           ROLL_KINDS.map(function (o) {
@@ -399,12 +416,12 @@
             (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null
       ]) : null,
 
-      // ── How it's used ─────────────────────────────────────────────────────
-      (showMode || showUses || showDuration || isStrike) ? secHead('How it’s used') : null,
-      showMode ? fieldGrid([
-        h('div', { className: 'portal-field', key: 'mode' }, h('label', null, 'How it works'),
-          h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
-            MODE_OPTIONS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+      // ── How it works ──────────────────────────────────────────────────────
+      showTiming ? secHead('How it works') : null,
+      showTiming ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
+          h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
+            timingOptions(effect).map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
       ]) : null,
       showUses ? h('div', { style: { marginTop: '0.5rem' } },
         h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
@@ -412,13 +429,9 @@
           'Limit how many times per session'),
         limitUses ? h('div', { className: 'portal-field', style: { maxWidth: '9rem', marginTop: '0.3rem' } }, h('label', null, 'Times per session'),
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
-      showDuration ? h('div', { style: { marginTop: '0.5rem' } },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
-          h('input', { type: 'checkbox', checked: wearsOff, onChange: function (e) { setWearsOff(e.target.checked); } }),
-          'Wears off after a set number of turns'),
-        wearsOff ? h('div', { className: 'portal-field', style: { maxWidth: '9rem', marginTop: '0.3rem' } }, h('label', null, 'Turns'),
-          h('input', { type: 'number', min: 1, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
-        !wearsOff ? h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Stays until the DM removes it.') : null) : null,
+      showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
+        h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
+        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the DM removes it.')) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.8rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save' : 'Add'),
