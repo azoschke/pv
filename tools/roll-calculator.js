@@ -19,7 +19,21 @@
   // Material Symbols glyphs per buff type (crossed swords / reinforced shield / heart).
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
   // Tab glyphs.
-  var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield' };
+  var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield', skill: 'target' };
+  // Character skill checks (d20 + item skill bonuses). Kept in sync with the
+  // admin item editor's skill list.
+  var SKILLS = [
+    { value: 'perception', label: 'Perception' },
+    { value: 'investigation', label: 'Investigation' },
+    { value: 'stealth', label: 'Stealth' },
+    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
+    { value: 'athletics', label: 'Athletics' },
+    { value: 'animal_handling', label: 'Animal Handling' },
+    { value: 'deception', label: 'Deception' },
+    { value: 'persuasion', label: 'Persuasion' }
+  ];
+  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
+  function skillPhrase(skill, value) { return (value >= 0 ? '+' : '') + value + ' to ' + skillLabel(skill) + ' checks'; }
 
   var FALLBACK_RULES = {
     role_base_hp: { tank: 25, dps: 20, healer: 15 },
@@ -109,7 +123,7 @@
   function describeModifier(m) {
     if (m.type === 'none') return m.label || 'Special effect — see the item text.';
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : typePhrase(m.type, m.value);
+    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
     var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     return when + ', ' + core + to + dur + '.';
@@ -117,7 +131,7 @@
   // For an active effect (already resolved target_label + remaining turns).
   function describeActiveEffect(e) {
     if (e.type === 'none') return e.label || 'Special effect';
-    var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : typePhrase(e.type, e.value);
+    var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : e.type === 'skill_roll' ? skillPhrase(e.skill, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
     if (e.target_kind === 'party_member' || e.target_kind === 'party_members') tp = e.target_label || tp;
     if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
@@ -171,6 +185,16 @@
     var mult = 1, multRows = [];
     if (kind === 'attack') ctx.myModifiers.forEach(function (m) { if (m.type === 'attack_mult' && m.value >= 1) { mult *= m.value; multRows.push({ label: modLabel(m), value: m.value }); } });
     return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal, mult: mult, multRows: multRows };
+  }
+
+  // Skill check: raw d20 + any item "skill bonus" modifiers for that skill.
+  // Conditional bonuses are just skill modifiers on a toggle/press ability, so
+  // whatever the player has active counts here.
+  function computeSkill(skill, raw, myModifiers) {
+    var base = parseInt(raw, 10); if (isNaN(base)) base = 0;
+    var rows = []; var total = base;
+    (myModifiers || []).forEach(function (m) { if (m.type === 'skill_roll' && m.skill === skill) { rows.push({ label: modLabel(m), value: m.value }); total += m.value; } });
+    return { base: base, rows: rows, total: total };
   }
 
   // ── Presentational building blocks ─────────────────────────────────────────
@@ -649,6 +673,9 @@
     var healMsgState = useState(''); var healMsg = healMsgState[0], setHealMsg = healMsgState[1];
     // Defend state
     var defRollState = useState(''); var defRoll = defRollState[0], setDefRoll = defRollState[1];
+    // Skills state
+    var skillSelState = useState('perception'); var skillSel = skillSelState[0], setSkillSel = skillSelState[1];
+    var skillRollState = useState(''); var skillRoll = skillRollState[0], setSkillRoll = skillRollState[1];
 
     var locked = props.actionLocked || props.ko;
 
@@ -706,9 +733,11 @@
 
     // ── Defend derived ──
     var defCalc = computeRoll('defense', defRoll, ctx);
+    // ── Skills derived ──
+    var skillCalc = computeSkill(skillSel, skillRoll, ctx.myModifiers);
 
-    // Tab availability (for the muted "used" cue).
-    var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true };
+    // Tab availability (for the muted "used" cue). Skill checks aren't turn-gated.
+    var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true, skill: true };
 
     // Composer bodies -------------------------------------------------------
     function attackBody() {
@@ -792,14 +821,27 @@
         h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
     }
 
+    function skillBody() {
+      return h('div', { className: 'rp-composer' },
+        h('label', { className: 'rp-input-label' }, 'Skill',
+          h('select', { className: 'rp-select', value: skillSel, onChange: function (e) { setSkillSel(e.target.value); } },
+            SKILLS.map(function (s) { return h('option', { key: s.value, value: s.value }, s.label); }))),
+        h('div', { className: 'rp-roll-line' },
+          h(RollHero, { value: skillRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' skill roll',
+            disabled: false, onChange: function (e) { setSkillRoll(clampNum(e.target.value, rules.attack_die)); } }),
+          h(ChipExpr, { terms: ['roll ' + skillCalc.base].concat(skillCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); })), resultText: String(skillCalc.total), tone: 'neutral' })),
+        h('p', { className: 'rp-note' }, 'Give your ' + skillLabel(skillSel) + ' total to the DM.'));
+    }
+
     var bodies = {
       attack: attackBody,
       heal: healBody,
       buff: function () { return h(BuffComposer, { character: c, buffs: props.buffs, locked: locked, canBuff: props.canBuff, blockReason: props.blockBuff, onSaveDraft: props.onSaveBuffDraft, onApplyBuff: props.onApplyBuff }); },
-      defend: defendBody
+      defend: defendBody,
+      skill: skillBody
     };
 
-    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
+    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }, { id: 'skill', label: 'Skills', sub: 'CHECK' }];
 
     var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget, canRetarget: isHealer };
 

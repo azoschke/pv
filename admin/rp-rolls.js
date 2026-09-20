@@ -230,7 +230,8 @@
       { value: 'attack_output', label: 'Add attack damage' },
       { value: 'attack_mult', label: 'Multiply attack damage' },
       { value: 'heal_output', label: 'Boost healing done' },
-      { value: 'damage_reduction', label: 'Reduce damage taken' }
+      { value: 'damage_reduction', label: 'Reduce damage taken' },
+      { value: 'skill', label: 'Add to a skill check' }
     ] },
     { label: 'Other', options: [
       { value: 'none', label: 'Narrative only' }
@@ -246,6 +247,7 @@
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
     damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
+    skill: 'Adds to the holder’s rolls for one skill.',
     none: ''
   };
   var ROLL_KINDS = [
@@ -253,6 +255,18 @@
     { value: 'defense_roll', label: 'Defense roll' },
     { value: 'heal_roll', label: 'Healing roll' }
   ];
+  // Character skill checks — kept in sync with the roll calculator's list.
+  var SKILLS = [
+    { value: 'perception', label: 'Perception' },
+    { value: 'investigation', label: 'Investigation' },
+    { value: 'stealth', label: 'Stealth' },
+    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
+    { value: 'athletics', label: 'Athletics' },
+    { value: 'animal_handling', label: 'Animal Handling' },
+    { value: 'deception', label: 'Deception' },
+    { value: 'persuasion', label: 'Persuasion' }
+  ];
+  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   var TARGET_OPTIONS = [
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Everyone' },
@@ -284,7 +298,8 @@
   function effectOfType(type) {
     if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
-    return type || 'roll'; // attack_output, attack_mult, heal_output, shield, heal, none
+    if (type === 'skill_roll') return 'skill';
+    return type || 'roll'; // attack_output, attack_mult, heal_output, damage_reduction, shield, heal, none
   }
 
   function ModifierForm(props) {
@@ -303,6 +318,7 @@
       : ((initType === 'attack_roll' || initType === 'defense_roll' || initType === 'heal_roll') ? [initType] : ['attack_roll']);
     var rollsState = useState(initRolls); var rolls = rollsState[0], setRolls = rollsState[1];
     function toggleRoll(rk) { setRolls(function (cur) { return cur.indexOf(rk) !== -1 ? cur.filter(function (x) { return x !== rk; }) : cur.concat([rk]); }); }
+    var skillPickState = useState(initType === 'skill_roll' ? (m.skill || 'perception') : 'perception'); var skillPick = skillPickState[0], setSkillPick = skillPickState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
     var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
@@ -354,8 +370,9 @@
     }
     function resolvedType() {
       if (effect === 'roll') return 'roll_bonus';
+      if (effect === 'skill') return 'skill_roll';
       if (effect === 'damage') return isOver ? 'dot' : 'damage';
-      return effect; // heal, shield, attack_output, attack_mult, heal_output, none
+      return effect; // heal, shield, attack_output, attack_mult, heal_output, damage_reduction, none
     }
     function resolvedDuration() {
       if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
@@ -368,6 +385,7 @@
     function valueLabel() {
       switch (effect) {
         case 'roll': return 'Amount to add';
+        case 'skill': return 'Amount to add';
         case 'attack_output': return 'Extra attack damage';
         case 'heal_output': return 'Extra healing';
         case 'attack_mult': return 'Times damage (×)';
@@ -385,6 +403,7 @@
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
+        skill: effect === 'skill' ? skillPick : null,
         target_kind: isStrike ? enemyScope : tk, mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
@@ -425,6 +444,11 @@
               h('input', { type: 'checkbox', checked: rolls.indexOf(o.value) !== -1, onChange: function () { toggleRoll(o.value); } }),
               o.label);
           }))) : null,
+      effect === 'skill' ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'skill' }, h('label', null, 'Which skill'),
+          h('select', { value: skillPick, onChange: function (e) { setSkillPick(e.target.value); } },
+            SKILLS.map(function (s) { return h('option', { key: s.value, value: s.value }, s.label); })))
+      ]) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
       isStrike ? secHead('Who it affects') : null,
@@ -528,7 +552,9 @@
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
     var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : typePhrase(m.type, m.value);
+    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
+      : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')
+      : typePhrase(m.type, m.value);
     return when + ', ' + core + ' to ' + t + dur + '.' + uses;
   }
 
