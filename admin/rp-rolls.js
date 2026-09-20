@@ -323,11 +323,14 @@
     var durState = useState(m.duration_turns && m.duration_turns > 1 ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
-    // Switching effect may invalidate the current timing choice — snap to a valid one.
+    // On first pick (from no effect) default the timing to the effect's first
+    // option so a new Heal/Shield doesn't silently start as "always on". When
+    // switching between real effects, keep the current timing if it's still valid.
     function changeEffect(next) {
+      var wasEmpty = !effect;
       setEffect(next);
       var opts = timingOptions(next).map(function (o) { return o.value; });
-      if (opts.indexOf(timing) === -1) setTiming(opts[0]);
+      if (wasEmpty || opts.indexOf(timing) === -1) setTiming(opts[0]);
     }
 
     var hasEffect = !!effect;
