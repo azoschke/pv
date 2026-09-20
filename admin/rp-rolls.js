@@ -229,7 +229,8 @@
       { value: 'roll', label: 'Add to a roll' },
       { value: 'attack_output', label: 'Add attack damage' },
       { value: 'attack_mult', label: 'Multiply attack damage' },
-      { value: 'heal_output', label: 'Boost healing done' }
+      { value: 'heal_output', label: 'Boost healing done' },
+      { value: 'damage_reduction', label: 'Reduce damage taken' }
     ] },
     { label: 'Other', options: [
       { value: 'none', label: 'Narrative only' }
@@ -244,6 +245,7 @@
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
+    damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
     none: ''
   };
   var ROLL_KINDS = [
@@ -369,6 +371,7 @@
         case 'attack_output': return 'Extra attack damage';
         case 'heal_output': return 'Extra healing';
         case 'attack_mult': return 'Times damage (×)';
+        case 'damage_reduction': return 'Damage reduced';
         case 'shield': return 'Shield amount';
         case 'heal': return isOver ? 'HP each turn' : 'HP restored';
         case 'damage': return isOver ? 'Damage each turn' : 'Damage';
@@ -498,6 +501,7 @@
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
       case 'attack_mult': return '×' + value + ' attack damage';
+      case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
       case 'damage': return 'deals ' + value + ' damage';

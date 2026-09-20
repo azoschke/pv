@@ -82,6 +82,7 @@
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
       case 'attack_mult': return '×' + value + ' attack damage';
+      case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
       case 'damage': return 'deals ' + value + ' damage';
