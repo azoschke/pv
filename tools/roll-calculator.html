@@ -212,7 +212,7 @@
       font-family: 'Stoke', serif; font-size: 0.82rem; }
     .rp-me-id .rp-avatar { width: 2rem; height: 2rem; }
     .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-    .rp-party-name { font-size: 0.95rem; overflow-wrap: anywhere; }
+    .rp-party-name { font-size: 0.7rem; font-family: 'Stoke', serif; overflow-wrap: anywhere; }
     .rp-party-role { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
     .rp-elim-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); }
     .rp-party-stats { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
@@ -278,6 +278,17 @@
     .rp-mod-info { display: flex; flex-direction: column; min-width: 0; }
     .rp-mod-meta { font-size: 0.8rem; color: var(--text-secondary); }
     .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+    /* Sliding on/off switch for toggle skills: both states shown, lit knob slides. */
+    .rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;
+      border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-card); cursor: pointer; font: inherit; overflow: hidden; }
+    .rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    .rp-switch:not(.is-on) .rp-switch-off { color: var(--rp-btn-ink, #1a1410); font-weight: 600; }
+    .rp-switch.is-on .rp-switch-on { color: var(--rp-btn-ink, #1a1410); font-weight: 600; }
+    .rp-switch-knob { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px); border-radius: 999px; z-index: 0;
+      background: var(--accent-brown, #7a5c3e); transition: left 0.16s ease, background 0.16s ease; }
+    .rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-gold, #c9a24b); }
+    .rp-switch:disabled { opacity: 0.5; cursor: default; }
     /* Multi-ally picker: tappable chips for "several chosen allies" targets. */
     .rp-pick-multi { display: flex; flex-wrap: wrap; gap: 0.3rem; }
     .rp-pick-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border: 1px solid var(--border-color); border-radius: 999px; font-size: 0.85rem; cursor: pointer; }
@@ -317,6 +328,24 @@
     .rp-skill-sub-title { margin: 0 0 0.3rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
     .rp-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: start; }
     .rp-skill-grid .rp-skill { margin-bottom: 0; }
+    /* Effects grouped by holder, equal-height rows, details in a popover. */
+    .rp-eff-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 0.75rem; align-items: start; }
+    .rp-eff-holder { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+    .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.9rem; color: var(--text-primary); }
+    .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
+    .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
+    .rp-eff:hover, .rp-eff:focus-visible { border-color: var(--accent-gold, #c9a24b); }
+    .rp-eff-sum { font-size: 0.85rem; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .rp-eff-src { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .rp-eff-pop-scrim { position: fixed; inset: 0; z-index: 90; }
+    .rp-eff-pop { position: fixed; z-index: 91; max-height: 50vh; overflow-y: auto;
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.45); padding: 0.6rem 0.7rem; }
+    .rp-eff-pop-title { font-family: 'Stoke', serif; font-size: 0.9rem; margin-bottom: 0.15rem; }
+    .rp-eff-pop-sum { font-size: 0.82rem; color: var(--text-secondary); text-transform: capitalize; margin-bottom: 0.3rem; }
+    .rp-eff-pop-label { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+    .rp-eff-pop-desc { margin: 0; font-size: 0.85rem; white-space: pre-wrap; }
+    .rp-eff-pop-desc.rp-muted { color: var(--text-secondary); font-style: italic; }
     /* Prominent section headings in the header font, per request. */
     .rp-skill-group-title { margin: 0 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.9rem; color: var(--text-primary); }
     /* Each entry is a boxed card, like the DM boss rows, for clearer separation. */

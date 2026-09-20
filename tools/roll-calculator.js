@@ -375,8 +375,13 @@
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: disabled,
           onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, bossIds: needBosses ? bossPicks.slice() : null, allBosses: allBosses }); } }, spent ? 'Spent' : 'Activate'));
     } else {
-      control = h('button', { type: 'button', className: 'rp-btn is-small' + (m.active ? ' is-active' : ''), disabled: props.locked,
-        onClick: function () { props.onToggle(m, !m.active); } }, m.active ? 'On' : 'Off');
+      // Sliding switch: both states visible, the lit side shows the current state.
+      control = h('button', { type: 'button', className: 'rp-switch' + (m.active ? ' is-on' : ''), role: 'switch',
+        'aria-checked': m.active ? 'true' : 'false', disabled: props.locked,
+        onClick: function () { props.onToggle(m, !m.active); } },
+        h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+        h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+        h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' }));
     }
     return h('div', { className: 'rp-mod' },
       h('div', { className: 'rp-mod-info' },
@@ -610,49 +615,50 @@
   function SkillsModal(props) {
     var effects = props.effects || [];
     var bossEffects = props.bossEffects || [];
-    var expState = useState({}); var exp = expState[0], setExp = expState[1];
+    var detState = useState(null); var det = detState[0], setDet = detState[1]; // popover payload | null
     var passives = effects.filter(function (e) { return e.mode === 'always'; });
     var actives = effects.filter(function (e) { return e.mode !== 'always'; });
     useEffect(function () {
-      function onKey(e) { if (e.key === 'Escape' && props.onClose) props.onClose(); }
+      function onKey(e) { if (e.key === 'Escape') { if (det) setDet(null); else if (props.onClose) props.onClose(); } }
       document.addEventListener('keydown', onKey);
       var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
       return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-    }, []);
-    function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
-    function row(e) {
-      var detail = describeActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
-        exp[e.id] ? h('div', { className: 'rp-skill-body' },
-          e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
-          e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    }, [det]);
+    function effectGroup(e) { if (e.type === 'skill_roll') return 'skills'; if (e.type === 'none') return 'narrative'; return 'battle'; }
+    // Group a list by holder/boss name, preserving first-seen order.
+    function byName(list, nameOf) {
+      var order = [], map = {};
+      list.forEach(function (e) { var k = nameOf(e); if (!map[k]) { map[k] = []; order.push(k); } map[k].push(e); });
+      return order.map(function (k) { return { name: k, items: map[k] }; });
     }
-    function bossRow(e) {
-      var key = 'b' + e.id;
-      var detail = describeBossActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.boss_name), ' · ', e.name),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[key] ? 'expand_less' : 'expand_more')),
-        exp[key] ? h('div', { className: 'rp-skill-body' },
-          e.description ? h('p', { className: 'rp-skill-desc' }, e.description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    function openPop(payload, ev) {
+      var r = ev.currentTarget.getBoundingClientRect(); var w = 300;
+      setDet(Object.assign({ x: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), y: Math.min(r.bottom + 4, window.innerHeight - 160), w: w }, payload));
     }
-    // Sub-grouping shared by both top groups: skill checks, narrative-only, and
-    // everything else (battle effects — damage/heal/shield/roll & other buffs).
-    function effectGroup(e) {
-      if (e.type === 'skill_roll') return 'skills';
-      if (e.type === 'none') return 'narrative';
-      return 'battle';
+    function effRow(e) {
+      var sum = describeActiveEffect(e); var src = e.item_name + (e.ability_name ? ' — ' + e.ability_name : '');
+      return h('button', { key: e.id, type: 'button', className: 'rp-eff',
+        onClick: function (ev) { openPop({ title: src, sum: sum, label: e.label, desc: e.ability_description }, ev); } },
+        h('span', { className: 'rp-eff-sum' }, sum),
+        h('span', { className: 'rp-eff-src' }, src));
     }
-    function grid(list, renderer) { return h('div', { className: 'rp-skill-grid' }, list.map(renderer)); }
-    function sub(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), grid(list, renderer)) : null; }
+    function bossEffRow(e) {
+      var sum = describeBossActiveEffect(e);
+      return h('button', { key: 'b' + e.id, type: 'button', className: 'rp-eff',
+        onClick: function (ev) { openPop({ title: e.name, sum: sum, label: null, desc: e.description }, ev); } },
+        h('span', { className: 'rp-eff-sum' }, sum),
+        h('span', { className: 'rp-eff-src' }, e.name));
+    }
+    function holderBlock(g, renderer) {
+      return h('div', { className: 'rp-eff-holder', key: g.name },
+        h('div', { className: 'rp-eff-holder-name' }, g.name),
+        h('div', { className: 'rp-eff-list' }, g.items.map(renderer)));
+    }
+    function cols(list, nameOf, renderer) { return h('div', { className: 'rp-eff-cols' }, byName(list, nameOf).map(function (g) { return holderBlock(g, renderer); })); }
+    function holderName(e) { return e.holder_name || ('Member ' + e.holder_member_id); }
+    function sub(title, list) {
+      return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), cols(list, holderName, effRow)) : null;
+    }
     function topGroup(title, list) {
       var b = list.filter(function (e) { return effectGroup(e) === 'battle'; });
       var n = list.filter(function (e) { return effectGroup(e) === 'narrative'; });
@@ -660,19 +666,25 @@
       if (!b.length && !n.length && !s.length) return null;
       return h('div', { className: 'rp-skill-top' },
         h('h4', { className: 'rp-skill-group-title' }, title),
-        sub('Battle Effects', b, row), sub('Narrative', n, row), sub('Skills', s, row));
+        sub('Battle Effects', b), sub('Narrative', n), sub('Skills', s));
     }
     return h('div', { className: 'rp-modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
       h('div', { className: 'rp-modal rp-modal-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
         h('div', { className: 'rp-modal-head' },
           h('h3', null, 'Active Skills'),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),
-        h('p', { className: 'rp-note rp-modal-help' }, 'Tap a skill to see its modifiers and description.'),
+        h('p', { className: 'rp-note rp-modal-help' }, 'Tap an effect for its details.'),
         (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
           : h('div', null,
               topGroup('Active & Ongoing', actives),
               topGroup('Passives (Always On)', passives),
-              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), grid(bossEffects, bossRow)) : null)));
+              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), cols(bossEffects, function (e) { return e.boss_name; }, bossEffRow)) : null)),
+      det ? h('div', { className: 'rp-eff-pop-scrim', onMouseDown: function () { setDet(null); } },
+        h('div', { className: 'rp-eff-pop', style: { left: det.x + 'px', top: det.y + 'px', width: det.w + 'px' }, onMouseDown: function (ev) { ev.stopPropagation(); } },
+          h('div', { className: 'rp-eff-pop-title' }, det.title),
+          h('div', { className: 'rp-eff-pop-sum' }, det.sum),
+          det.label ? h('div', { className: 'rp-eff-pop-label' }, det.label) : null,
+          det.desc ? h('p', { className: 'rp-eff-pop-desc' }, det.desc) : h('p', { className: 'rp-eff-pop-desc rp-muted' }, 'No description.'))) : null);
   }
 
   // ── Summons (temporary minions) — shown below the party for everyone ────────
