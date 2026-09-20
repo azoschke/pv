@@ -329,9 +329,14 @@
     .rp-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: start; }
     .rp-skill-grid .rp-skill { margin-bottom: 0; }
     /* Effects grouped by holder, equal-height rows, details in a popover. */
-    .rp-eff-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 0.75rem; align-items: start; }
-    .rp-eff-holder { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
-    .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.9rem; color: var(--text-primary); }
+    /* Masonry-style columns so uneven-length holder blocks pack tightly
+       (a short block doesn't leave a gap waiting for its row neighbour). */
+    .rp-eff-cols { column-count: 2; column-gap: 0.9rem; }
+    @media (max-width: 560px) { .rp-eff-cols { column-count: 1; } }
+    .rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; }
+    .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.2rem; }
+    .rp-eff-item { margin-bottom: 0.4rem; }
+    .rp-eff-item-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0.2rem 0 0.2rem; }
     .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
       background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }

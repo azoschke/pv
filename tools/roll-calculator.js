@@ -636,28 +636,38 @@
       setDet(Object.assign({ x: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), y: Math.min(r.bottom + 4, window.innerHeight - 160), w: w }, payload));
     }
     function effRow(e) {
-      var sum = describeActiveEffect(e); var src = e.item_name + (e.ability_name ? ' — ' + e.ability_name : '');
+      var sum = describeActiveEffect(e); var title = e.item_name + (e.ability_name ? ' — ' + e.ability_name : '');
       return h('button', { key: e.id, type: 'button', className: 'rp-eff',
-        onClick: function (ev) { openPop({ title: src, sum: sum, label: e.label, desc: e.ability_description }, ev); } },
+        onClick: function (ev) { openPop({ title: title, sum: sum, label: e.label, desc: e.ability_description }, ev); } },
         h('span', { className: 'rp-eff-sum' }, sum),
-        h('span', { className: 'rp-eff-src' }, src));
+        e.ability_name ? h('span', { className: 'rp-eff-src' }, e.ability_name) : null);
     }
     function bossEffRow(e) {
       var sum = describeBossActiveEffect(e);
       return h('button', { key: 'b' + e.id, type: 'button', className: 'rp-eff',
         onClick: function (ev) { openPop({ title: e.name, sum: sum, label: null, desc: e.description }, ev); } },
-        h('span', { className: 'rp-eff-sum' }, sum),
-        h('span', { className: 'rp-eff-src' }, e.name));
+        h('span', { className: 'rp-eff-sum' }, sum));
     }
-    function holderBlock(g, renderer) {
+    // A holder block: the person's name, then their effects grouped by item.
+    function holderBlock(g) {
       return h('div', { className: 'rp-eff-holder', key: g.name },
         h('div', { className: 'rp-eff-holder-name' }, g.name),
-        h('div', { className: 'rp-eff-list' }, g.items.map(renderer)));
+        byName(g.items, function (e) { return e.item_name || 'Item'; }).map(function (ig) {
+          return h('div', { className: 'rp-eff-item', key: ig.name },
+            h('div', { className: 'rp-eff-item-name' }, ig.name),
+            h('div', { className: 'rp-eff-list' }, ig.items.map(effRow)));
+        }));
     }
-    function cols(list, nameOf, renderer) { return h('div', { className: 'rp-eff-cols' }, byName(list, nameOf).map(function (g) { return holderBlock(g, renderer); })); }
+    // A boss block: the boss name, then its effects (no item level).
+    function bossBlock(g) {
+      return h('div', { className: 'rp-eff-holder', key: g.name },
+        h('div', { className: 'rp-eff-holder-name' }, g.name),
+        h('div', { className: 'rp-eff-list' }, g.items.map(bossEffRow)));
+    }
+    function cols(groups, blockRenderer) { return h('div', { className: 'rp-eff-cols' }, groups.map(blockRenderer)); }
     function holderName(e) { return e.holder_name || ('Member ' + e.holder_member_id); }
     function sub(title, list) {
-      return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), cols(list, holderName, effRow)) : null;
+      return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), cols(byName(list, holderName), holderBlock)) : null;
     }
     function topGroup(title, list) {
       var b = list.filter(function (e) { return effectGroup(e) === 'battle'; });
@@ -678,7 +688,7 @@
           : h('div', null,
               topGroup('Active & Ongoing', actives),
               topGroup('Passives (Always On)', passives),
-              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), cols(bossEffects, function (e) { return e.boss_name; }, bossEffRow)) : null)),
+              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), cols(byName(bossEffects, function (e) { return e.boss_name; }), bossBlock)) : null)),
       det ? h('div', { className: 'rp-eff-pop-scrim', onMouseDown: function () { setDet(null); } },
         h('div', { className: 'rp-eff-pop', style: { left: det.x + 'px', top: det.y + 'px', width: det.w + 'px' }, onMouseDown: function (ev) { ev.stopPropagation(); } },
           h('div', { className: 'rp-eff-pop-title' }, det.title),
