@@ -261,10 +261,12 @@
     { value: 'investigation', label: 'Investigation' },
     { value: 'stealth', label: 'Stealth' },
     { value: 'sleight_of_hand', label: 'Sleight of Hand' },
+    { value: 'disarm_traps', label: 'Disarm Traps' },
     { value: 'athletics', label: 'Athletics' },
     { value: 'animal_handling', label: 'Animal Handling' },
     { value: 'deception', label: 'Deception' },
-    { value: 'persuasion', label: 'Persuasion' }
+    { value: 'persuasion', label: 'Persuasion' },
+    { value: 'rapport', label: 'Rapport' }
   ];
   function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   var TARGET_OPTIONS = [
@@ -296,7 +298,7 @@
     return 'passive';
   }
   function effectOfType(type) {
-    if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll') return 'roll';
+    if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll' || type === 'roll_bonus') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
     if (type === 'skill_roll') return 'skill';
     return type || 'roll'; // attack_output, attack_mult, heal_output, damage_reduction, shield, heal, none

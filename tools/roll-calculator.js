@@ -27,10 +27,12 @@
     { value: 'investigation', label: 'Investigation' },
     { value: 'stealth', label: 'Stealth' },
     { value: 'sleight_of_hand', label: 'Sleight of Hand' },
+    { value: 'disarm_traps', label: 'Disarm Traps' },
     { value: 'athletics', label: 'Athletics' },
     { value: 'animal_handling', label: 'Animal Handling' },
     { value: 'deception', label: 'Deception' },
-    { value: 'persuasion', label: 'Persuasion' }
+    { value: 'persuasion', label: 'Persuasion' },
+    { value: 'rapport', label: 'Rapport' }
   ];
   function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   function skillPhrase(skill, value) { return (value >= 0 ? '+' : '') + value + ' to ' + skillLabel(skill) + ' checks'; }
