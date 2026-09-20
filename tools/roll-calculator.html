@@ -292,6 +292,15 @@
     .rp-modal-head h3 { margin: 0; font-family: 'Stoke', serif; }
     .rp-modal-help { margin: 0.1rem 0 0.6rem; }
     .rp-skill-group { margin-top: 0.9rem; }
+    /* Active Skills modal: wider two-column layout with Active/Passive top groups,
+       each split into Battle Effects / Narrative / Skills. */
+    .rp-modal-wide { width: min(760px, 100%); }
+    .rp-skill-top { margin-top: 1rem; }
+    .rp-skill-top:first-child { margin-top: 0.2rem; }
+    .rp-skill-sub { margin-top: 0.5rem; }
+    .rp-skill-sub-title { margin: 0 0 0.3rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
+    .rp-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: start; }
+    .rp-skill-grid .rp-skill { margin-bottom: 0; }
     /* Prominent section headings in the header font, per request. */
     .rp-skill-group-title { margin: 0 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.9rem; color: var(--text-primary); }
     /* Each entry is a boxed card, like the DM boss rows, for clearer separation. */

@@ -642,15 +642,35 @@
         exp[key] ? h('div', { className: 'rp-skill-body' },
           e.description ? h('p', { className: 'rp-skill-desc' }, e.description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
     }
-    function section(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(renderer)) : null; }
+    // Sub-grouping shared by both top groups: skill checks, narrative-only, and
+    // everything else (battle effects — damage/heal/shield/roll & other buffs).
+    function effectGroup(e) {
+      if (e.type === 'skill_roll') return 'skills';
+      if (e.type === 'none') return 'narrative';
+      return 'battle';
+    }
+    function grid(list, renderer) { return h('div', { className: 'rp-skill-grid' }, list.map(renderer)); }
+    function sub(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), grid(list, renderer)) : null; }
+    function topGroup(title, list) {
+      var b = list.filter(function (e) { return effectGroup(e) === 'battle'; });
+      var n = list.filter(function (e) { return effectGroup(e) === 'narrative'; });
+      var s = list.filter(function (e) { return effectGroup(e) === 'skills'; });
+      if (!b.length && !n.length && !s.length) return null;
+      return h('div', { className: 'rp-skill-top' },
+        h('h4', { className: 'rp-skill-group-title' }, title),
+        sub('Battle Effects', b, row), sub('Narrative', n, row), sub('Skills', s, row));
+    }
     return h('div', { className: 'rp-modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
-      h('div', { className: 'rp-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
+      h('div', { className: 'rp-modal rp-modal-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
         h('div', { className: 'rp-modal-head' },
           h('h3', null, 'Active Skills'),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),
         h('p', { className: 'rp-note rp-modal-help' }, 'Tap a skill to see its modifiers and description.'),
         (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
-          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow))));
+          : h('div', null,
+              topGroup('Active & Ongoing', actives),
+              topGroup('Passives (Always On)', passives),
+              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), grid(bossEffects, bossRow)) : null)));
   }
 
   // ── Combat board (character view): enemies + tabbed composer + party + items ─
