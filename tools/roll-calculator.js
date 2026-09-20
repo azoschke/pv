@@ -19,7 +19,24 @@
   // Material Symbols glyphs per buff type (crossed swords / reinforced shield / heart).
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
   // Tab glyphs.
-  var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield' };
+  var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield', skill: 'target' };
+  // Character skill checks (d20 + item skill bonuses). Kept in sync with the
+  // admin item editor's skill list.
+  var SKILLS = [
+    { value: 'perception', label: 'Perception' },
+    { value: 'investigation', label: 'Investigation' },
+    { value: 'stealth', label: 'Stealth' },
+    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
+    { value: 'disarm_traps', label: 'Disarm Traps' },
+    { value: 'athletics', label: 'Athletics' },
+    { value: 'animal_handling', label: 'Animal Handling' },
+    { value: 'deception', label: 'Deception' },
+    { value: 'persuasion', label: 'Persuasion' },
+    { value: 'diplomacy', label: 'Diplomacy' }
+  ];
+  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
+  function skillPhrase(skill, value) { return (value >= 0 ? '+' : '') + value + ' to ' + skillLabel(skill) + ' checks'; }
+  function summonPhrase(s) { s = s || {}; var atk = s.attack_mode === 'd20' ? ', D20 atk' : (s.attack ? ', ' + s.attack + ' atk' : ''); return 'summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ')'; }
 
   var FALLBACK_RULES = {
     role_base_hp: { tank: 25, dps: 20, healer: 15 },
@@ -55,13 +72,24 @@
     switch (m.target_kind) {
       case 'self': return 'self'; case 'group': return 'group';
       case 'class': return String(m.target_ref || '').toUpperCase();
-      case 'holder_item': return 'item holder'; case 'party_member': return 'chosen target';
+      case 'holder_item': case 'holder_items': return 'item holders';
+      case 'party_member': return 'chosen target'; case 'party_members': return 'chosen targets';
+      case 'some_bosses': return 'chosen enemies'; case 'all_bosses': return 'all enemies';
     }
     return '';
   }
 
   // ── Plain-language descriptions ────────────────────────────────────────────
   var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
+  // A roll_bonus modifier boosts one or more rolls with a single value.
+  function rollsPhrase(rolls, value) {
+    var v = (value >= 0 ? '+' : '') + value;
+    var set = Array.isArray(rolls) ? rolls : [];
+    if (set.length >= 3) return v + ' to all rolls';
+    if (!set.length) return v + ' roll bonus';
+    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
+    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
+  }
   function typePhrase(type, value) {
     var v = (value >= 0 ? '+' : '') + value;
     switch (type) {
@@ -71,6 +99,7 @@
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
       case 'attack_mult': return '×' + value + ' attack damage';
+      case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
       case 'damage': return 'deals ' + value + ' damage';
@@ -84,8 +113,12 @@
       case 'group': return 'the whole party';
       case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
       case 'holder_item': return 'the item’s holder';
+      case 'holder_items': return 'the items’ holders';
       case 'party_member': return 'a chosen ally';
+      case 'party_members': return 'several chosen allies';
       case 'boss': return 'a chosen enemy';
+      case 'some_bosses': return 'several chosen enemies';
+      case 'all_bosses': return 'all enemies';
     }
     return '';
   }
@@ -93,7 +126,8 @@
   function describeModifier(m) {
     if (m.type === 'none') return m.label || 'Special effect — see the item text.';
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    var core = typePhrase(m.type, m.value);
+    if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.';
+    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
     var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     return when + ', ' + core + to + dur + '.';
@@ -101,10 +135,10 @@
   // For an active effect (already resolved target_label + remaining turns).
   function describeActiveEffect(e) {
     if (e.type === 'none') return e.label || 'Special effect';
-    var core = typePhrase(e.type, e.value);
+    var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : e.type === 'skill_roll' ? skillPhrase(e.skill, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
-    if (e.target_kind === 'party_member') tp = e.target_label || 'a chosen ally';
-    if (e.target_kind === 'holder_item') tp = e.target_label || 'the item’s holder';
+    if (e.target_kind === 'party_member' || e.target_kind === 'party_members') tp = e.target_label || tp;
+    if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
     var to = tp ? ' to ' + tp : '';
     var dur = e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
     return core + to + dur;
@@ -155,6 +189,16 @@
     var mult = 1, multRows = [];
     if (kind === 'attack') ctx.myModifiers.forEach(function (m) { if (m.type === 'attack_mult' && m.value >= 1) { mult *= m.value; multRows.push({ label: modLabel(m), value: m.value }); } });
     return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal, mult: mult, multRows: multRows };
+  }
+
+  // Skill check: raw d20 + any item "skill bonus" modifiers for that skill.
+  // Conditional bonuses are just skill modifiers on a toggle/press ability, so
+  // whatever the player has active counts here.
+  function computeSkill(skill, raw, myModifiers) {
+    var base = parseInt(raw, 10); if (isNaN(base)) base = 0;
+    var rows = []; var total = base;
+    (myModifiers || []).forEach(function (m) { if (m.type === 'skill_roll' && m.skill === skill) { rows.push({ label: modLabel(m), value: m.value }); total += m.value; } });
+    return { base: base, rows: rows, total: total };
   }
 
   // ── Presentational building blocks ─────────────────────────────────────────
@@ -285,7 +329,11 @@
   function ModifierRow(props) {
     var m = props.modifier;
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
+    var targetsState = useState([]); var pickTargets = targetsState[0], setPickTargets = targetsState[1];
+    function togglePick(id) { setPickTargets(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
     var bossPickState = useState(''); var bossPick = bossPickState[0], setBossPick = bossPickState[1];
+    var bossPicksState = useState([]); var bossPicks = bossPicksState[0], setBossPicks = bossPicksState[1];
+    function toggleBoss(id, cap) { setBossPicks(function (cur) { if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; }); if (cap && cur.length >= cap) return cur; return cur.concat([id]); }); }
     var plain = describeModifier(m);
     var extras = [];
     if (m.mode === 'activated' && m.uses_per_session > 0) extras.push((m.uses_per_session - (m.uses_this_session || 0)) + ' of ' + m.uses_per_session + ' uses left');
@@ -296,20 +344,49 @@
     var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var control;
     if (m.mode === 'activated') {
-      var needTarget = m.target_kind === 'party_member';
-      var needBoss = m.target_kind === 'boss';  // damage / dot to an enemy
+      var needTarget = m.target_kind === 'party_member';    // one ally
+      var needTargets = m.target_kind === 'party_members';  // several allies
+      var needBoss = m.target_kind === 'boss';              // one enemy
+      var needBosses = m.target_kind === 'some_bosses';     // several enemies (cap in target_ref)
+      var allBosses = m.target_kind === 'all_bosses';       // every enemy
+      var bossCap = needBosses ? (parseInt(m.target_ref, 10) || 0) : 0; // 0 = no cap
       var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
-      control = h('div', { className: 'rp-mod-control' },
+      var disabled = props.locked || spent || (needTarget && !pickTarget) || (needTargets && !pickTargets.length) || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
+      // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
+      // (no session uses left). Instant effects skip "Active" (no remaining turns).
+      var isRunning = m.active && m.remaining_turns != null;
+      if (isRunning) control = h('button', { type: 'button', className: 'rp-btn is-small is-active', disabled: true }, 'Active');
+      else if (spent) control = h('button', { type: 'button', className: 'rp-btn is-small', disabled: true }, 'Used');
+      else control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           props.party.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+        needTargets ? h('div', { className: 'rp-pick-multi' },
+          props.party.map(function (p) {
+            return h('label', { key: p.member_id, className: 'rp-pick-chip' + (pickTargets.indexOf(p.member_id) !== -1 ? ' is-on' : '') },
+              h('input', { type: 'checkbox', checked: pickTargets.indexOf(p.member_id) !== -1, disabled: props.locked, onChange: function () { togglePick(p.member_id); } }),
+              p.member_name);
+          })) : null,
+        needBosses ? h('div', { className: 'rp-pick-multi' },
+          (bossCap ? [h('span', { key: 'cap', className: 'rp-pick-cap' }, 'pick up to ' + bossCap)] : []).concat(
+          liveBosses.map(function (b) {
+            var on = bossPicks.indexOf(String(b.id)) !== -1;
+            return h('label', { key: b.id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
+              h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && bossCap && bossPicks.length >= bossCap), onChange: function () { toggleBoss(String(b.id), bossCap); } }),
+              b.name);
+          }))) : null,
         (needBoss && liveBosses.length > 1) ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setBossPick(e.target.value); } },
           liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || spent || (needTarget && !pickTarget) || (needBoss && !bossSel),
-          onClick: function () { props.onActivate(m, needTarget ? Number(pickTarget) : null, needBoss ? bossSel : null); } }, spent ? 'Spent' : 'Activate'));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: disabled,
+          onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, bossIds: needBosses ? bossPicks.slice() : null, allBosses: allBosses }); } }, 'Activate'));
     } else {
-      control = h('button', { type: 'button', className: 'rp-btn is-small' + (m.active ? ' is-active' : ''), disabled: props.locked,
-        onClick: function () { props.onToggle(m, !m.active); } }, m.active ? 'On' : 'Off');
+      // Sliding switch: both states visible, the lit side shows the current state.
+      control = h('button', { type: 'button', className: 'rp-switch' + (m.active ? ' is-on' : ''), role: 'switch',
+        'aria-checked': m.active ? 'true' : 'false', disabled: props.locked,
+        onClick: function () { props.onToggle(m, !m.active); } },
+        h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+        h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+        h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' }));
     }
     return h('div', { className: 'rp-mod' },
       h('div', { className: 'rp-mod-info' },
@@ -543,49 +620,161 @@
   function SkillsModal(props) {
     var effects = props.effects || [];
     var bossEffects = props.bossEffects || [];
-    var expState = useState({}); var exp = expState[0], setExp = expState[1];
+    var detState = useState(null); var det = detState[0], setDet = detState[1]; // popover payload | null
     var passives = effects.filter(function (e) { return e.mode === 'always'; });
     var actives = effects.filter(function (e) { return e.mode !== 'always'; });
     useEffect(function () {
-      function onKey(e) { if (e.key === 'Escape' && props.onClose) props.onClose(); }
+      function onKey(e) { if (e.key === 'Escape') { if (det) setDet(null); else if (props.onClose) props.onClose(); } }
       document.addEventListener('keydown', onKey);
       var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
       return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-    }, []);
-    function toggle(id) { var n = Object.assign({}, exp); n[id] = !n[id]; setExp(n); }
-    function row(e) {
-      var detail = describeActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[e.id] ? ' is-open' : ''), key: e.id },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(e.id); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.holder_name), ' · ', e.item_name + (e.ability_name ? ' — ' + e.ability_name : '')),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[e.id] ? 'expand_less' : 'expand_more')),
-        exp[e.id] ? h('div', { className: 'rp-skill-body' },
-          e.label ? h('div', { className: 'rp-skill-label' }, e.label) : null,
-          e.ability_description ? h('p', { className: 'rp-skill-desc' }, e.ability_description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    }, [det]);
+    function effectGroup(e) { if (e.type === 'skill_roll') return 'skills'; if (e.type === 'none') return 'narrative'; return 'battle'; }
+    // Group a list by holder/boss name, preserving first-seen order.
+    function byName(list, nameOf) {
+      var order = [], map = {};
+      list.forEach(function (e) { var k = nameOf(e); if (!map[k]) { map[k] = []; order.push(k); } map[k].push(e); });
+      return order.map(function (k) { return { name: k, items: map[k] }; });
     }
-    function bossRow(e) {
-      var key = 'b' + e.id;
-      var detail = describeBossActiveEffect(e);
-      return h('div', { className: 'rp-skill' + (exp[key] ? ' is-open' : ''), key: key },
-        h('button', { type: 'button', className: 'rp-skill-head', onClick: function () { toggle(key); } },
-          h('span', { className: 'rp-skill-text' },
-            h('span', { className: 'rp-skill-name' }, h('strong', null, e.boss_name), ' · ', e.name),
-            h('span', { className: 'rp-skill-sum' }, detail)),
-          h('span', { className: 'material-icons rp-skill-caret', 'aria-hidden': 'true' }, exp[key] ? 'expand_less' : 'expand_more')),
-        exp[key] ? h('div', { className: 'rp-skill-body' },
-          e.description ? h('p', { className: 'rp-skill-desc' }, e.description) : h('p', { className: 'rp-skill-desc rp-muted' }, 'No description.')) : null);
+    function openPop(payload, ev) {
+      var r = ev.currentTarget.getBoundingClientRect(); var w = 300;
+      setDet(Object.assign({ x: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), y: Math.min(r.bottom + 4, window.innerHeight - 160), w: w }, payload));
     }
-    function section(title, list, renderer) { return list.length ? h('div', { className: 'rp-skill-group' }, h('h4', { className: 'rp-skill-group-title' }, title), list.map(renderer)) : null; }
+    function effRow(e) {
+      var sum = describeActiveEffect(e); var title = e.item_name + (e.ability_name ? ' — ' + e.ability_name : '');
+      return h('button', { key: e.id, type: 'button', className: 'rp-eff',
+        onClick: function (ev) { openPop({ title: title, sum: sum, label: e.label, desc: e.ability_description }, ev); } },
+        h('span', { className: 'rp-eff-sum' }, sum),
+        e.ability_name ? h('span', { className: 'rp-eff-src' }, e.ability_name) : null);
+    }
+    function bossEffRow(e) {
+      var sum = describeBossActiveEffect(e);
+      return h('button', { key: 'b' + e.id, type: 'button', className: 'rp-eff',
+        onClick: function (ev) { openPop({ title: e.name, sum: sum, label: null, desc: e.description }, ev); } },
+        h('span', { className: 'rp-eff-sum' }, sum));
+    }
+    // A holder block: the person's name, then their effects grouped by item.
+    function holderBlock(g) {
+      return h('div', { className: 'rp-eff-holder', key: g.name },
+        h('div', { className: 'rp-eff-holder-name' }, g.name),
+        byName(g.items, function (e) { return e.item_name || 'Item'; }).map(function (ig) {
+          return h('div', { className: 'rp-eff-item', key: ig.name },
+            h('div', { className: 'rp-eff-item-name' }, ig.name),
+            h('div', { className: 'rp-eff-list' }, ig.items.map(effRow)));
+        }));
+    }
+    // A boss block: the boss name, then its effects (no item level).
+    function bossBlock(g) {
+      return h('div', { className: 'rp-eff-holder', key: g.name },
+        h('div', { className: 'rp-eff-holder-name' }, g.name),
+        h('div', { className: 'rp-eff-list' }, g.items.map(bossEffRow)));
+    }
+    function cols(groups, blockRenderer) { return h('div', { className: 'rp-eff-cols' }, groups.map(blockRenderer)); }
+    function holderName(e) { return e.holder_name || ('Member ' + e.holder_member_id); }
+    function sub(title, list) {
+      return list.length ? h('div', { className: 'rp-skill-sub' }, h('h5', { className: 'rp-skill-sub-title' }, title), cols(byName(list, holderName), holderBlock)) : null;
+    }
+    function topGroup(title, list) {
+      var b = list.filter(function (e) { return effectGroup(e) === 'battle'; });
+      var n = list.filter(function (e) { return effectGroup(e) === 'narrative'; });
+      var s = list.filter(function (e) { return effectGroup(e) === 'skills'; });
+      if (!b.length && !n.length && !s.length) return null;
+      return h('div', { className: 'rp-skill-top' },
+        h('h4', { className: 'rp-skill-group-title' }, title),
+        sub('Battle Effects', b), sub('Narrative', n), sub('Skills', s));
+    }
     return h('div', { className: 'rp-modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
-      h('div', { className: 'rp-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
+      h('div', { className: 'rp-modal rp-modal-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
         h('div', { className: 'rp-modal-head' },
           h('h3', null, 'Active Skills'),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),
-        h('p', { className: 'rp-note rp-modal-help' }, 'Tap a skill to see its modifiers and description.'),
+        h('p', { className: 'rp-note rp-modal-help' }, 'Tap an effect for its details.'),
         (!effects.length && !bossEffects.length) ? h('p', { className: 'rp-note' }, 'No active skills right now.')
-          : h('div', null, section('Passives (always on)', passives, row), section('Active & ongoing', actives, row), section('Boss effects', bossEffects, bossRow))));
+          : h('div', null,
+              topGroup('Active & Ongoing', actives),
+              topGroup('Passives (Always On)', passives),
+              bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), cols(byName(bossEffects, function (e) { return e.boss_name; }), bossBlock)) : null)),
+      det ? h('div', { className: 'rp-eff-pop-scrim', onMouseDown: function () { setDet(null); } },
+        h('div', { className: 'rp-eff-pop', style: { left: det.x + 'px', top: det.y + 'px', width: det.w + 'px' }, onMouseDown: function (ev) { ev.stopPropagation(); } },
+          h('div', { className: 'rp-eff-pop-title' }, det.title),
+          h('div', { className: 'rp-eff-pop-sum' }, det.sum),
+          det.label ? h('div', { className: 'rp-eff-pop-label' }, det.label) : null,
+          det.desc ? h('p', { className: 'rp-eff-pop-desc' }, det.desc) : h('p', { className: 'rp-eff-pop-desc rp-muted' }, 'No description.'))) : null);
+  }
+
+  // ── Summons (temporary minions) — shown below the party for everyone ────────
+  function MinionRow(props) {
+    var mn = props.minion;
+    var rules = props.rules || {};
+    var owner = props.myId != null && Number(mn.owner_member_id) === Number(props.myId);
+    var live = props.liveBosses || [];
+    var isD20 = mn.attack_mode === 'd20';
+    var scope = mn.attack_scope || 'boss';   // boss | some_bosses | all_bosses
+    var cap = mn.attack_cap || 0;
+    var acted = !!mn.acted;                   // one attack per round
+    var atkDie = props.attackDie || rules.attack_die || 20;
+    var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
+    var picksState = useState([]); var picks = picksState[0], setPicks = picksState[1];
+    function togglePick(id) { setPicks(function (cur) { if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; }); if (cap && cur.length >= cap) return cur; return cur.concat([id]); }); }
+    var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
+    var bossSel = pick && live.some(function (b) { return String(b.id) === pick; }) ? pick : (live.length ? String(live[0].id) : '');
+    var d20dmg = (isD20 && roll !== '') ? Math.min(rules.max_damage_per_attack || 999, damageFor(rules, parseInt(roll, 10) || 0)) : null;
+    var atkLabel = isD20 ? 'D20 atk' : (mn.attack > 0 ? mn.attack + ' atk' : 'no attack');
+    var scopeLabel = scope === 'all_bosses' ? ' · all enemies' : scope === 'some_bosses' ? (' · up to ' + (cap || '∞') + ' enemies') : '';
+    var meta = mn.current_hp + '/' + mn.max_hp + ' HP · ' + atkLabel + scopeLabel
+      + (mn.remaining_turns != null ? ' · ' + mn.remaining_turns + ' turn' + (mn.remaining_turns === 1 ? '' : 's') + ' left' : '')
+      + ' · ' + (mn.owner_name || ('Member ' + mn.owner_member_id));
+    var hasAttack = isD20 || mn.attack > 0;
+    var canAtk = owner && hasAttack && live.length && !acted;
+    var targetReady = scope === 'all_bosses' ? live.length > 0 : scope === 'some_bosses' ? picks.length > 0 : !!bossSel;
+    var btnDisabled = props.locked || !targetReady || (isD20 && roll === '');
+    var btnLabel = isD20 ? (d20dmg != null ? 'Attack ' + d20dmg : 'Attack') : 'Attack ' + mn.attack;
+    function fire() {
+      var opts = { roll: isD20 ? (parseInt(roll, 10) || 0) : null };
+      if (scope === 'all_bosses') opts.all = true;
+      else if (scope === 'some_bosses') opts.bossIds = picks.slice();
+      else opts.bossId = bossSel;
+      props.onAttack(mn, opts); setRoll(''); setPicks([]);
+    }
+    var rollInput = isD20 ? h('input', { type: 'number', className: 'rp-hp-input', min: 1, max: atkDie, value: roll, placeholder: 'd' + atkDie,
+      'aria-label': 'Attack roll', disabled: props.locked, onChange: function (e) { setRoll(e.target.value); } }) : null;
+    var atkControls;
+    if (!canAtk) atkControls = (acted && owner) ? h('span', { className: 'rp-summon-used' }, 'Attacked this round') : null;
+    else if (scope === 'all_bosses') atkControls = h('span', { className: 'rp-summon-atk' }, rollInput,
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel + ' · all'));
+    else if (scope === 'some_bosses') atkControls = h('span', { className: 'rp-summon-atk' },
+      h('div', { className: 'rp-pick-multi' }, live.map(function (b) { var on = picks.indexOf(String(b.id)) !== -1;
+        return h('label', { key: b.id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
+          h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && cap && picks.length >= cap), onChange: function () { togglePick(String(b.id)); } }), b.name); })),
+      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
+    else atkControls = h('span', { className: 'rp-summon-atk' },
+      live.length > 1 ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setPick(e.target.value); } },
+        live.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
+    return h('div', { className: 'rp-summon' },
+      h('div', { className: 'rp-summon-top' },
+        h('div', { className: 'rp-summon-info' },
+          h('strong', { className: 'rp-summon-name' }, mn.name),
+          h('span', { className: 'rp-summon-meta' }, meta)),
+        props.isDM ? h('button', { type: 'button', className: 'rp-chip-x rp-summon-x', title: 'Remove', 'aria-label': 'Remove ' + mn.name, onClick: function () { props.onRemove(mn); } }, '✕') : null),
+      (atkControls || props.isDM) ? h('div', { className: 'rp-summon-ctl' },
+        atkControls,
+        props.isDM ? h('span', { className: 'rp-summon-dm' },
+          h('span', { className: 'material-icons rp-summon-hp-icon', 'aria-hidden': 'true' }, 'favorite'),
+          h('input', { type: 'number', className: 'rp-hp-input', value: String(mn.current_hp), 'aria-label': 'Minion HP',
+            onChange: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) props.onHp(mn, v); } })) : null) : null);
+  }
+  function SummonsPanel(props) {
+    var minions = props.minions || [];
+    if (!minions.length) return null;
+    var live = (props.bosses || []).filter(function (b) { return !b.defeated; });
+    return h('div', { className: 'rp-card rp-party-card rp-summons-card' },
+      h('div', { className: 'rp-party-head' }, h('h3', { className: 'rp-section-label' }, 'Summons')),
+      h('div', { className: 'rp-summons' },
+        minions.map(function (mn) {
+          return h(MinionRow, { key: mn.id, minion: mn, liveBosses: live, myId: props.myId, isDM: props.isDM, locked: props.locked, attackDie: props.attackDie, rules: props.rules,
+            onAttack: props.onMinionAttack, onRemove: props.onMinionRemove, onHp: props.onMinionHp });
+        })));
   }
 
   // ── Combat board (character view): enemies + tabbed composer + party + items ─
@@ -610,6 +799,9 @@
     var healMsgState = useState(''); var healMsg = healMsgState[0], setHealMsg = healMsgState[1];
     // Defend state
     var defRollState = useState(''); var defRoll = defRollState[0], setDefRoll = defRollState[1];
+    // Skills state
+    var skillSelState = useState('perception'); var skillSel = skillSelState[0], setSkillSel = skillSelState[1];
+    var skillRollState = useState(''); var skillRoll = skillRollState[0], setSkillRoll = skillRollState[1];
 
     var locked = props.actionLocked || props.ko;
 
@@ -667,9 +859,11 @@
 
     // ── Defend derived ──
     var defCalc = computeRoll('defense', defRoll, ctx);
+    // ── Skills derived ──
+    var skillCalc = computeSkill(skillSel, skillRoll, ctx.myModifiers);
 
-    // Tab availability (for the muted "used" cue).
-    var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true };
+    // Tab availability (for the muted "used" cue). Skill checks aren't turn-gated.
+    var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true, skill: true };
 
     // Composer bodies -------------------------------------------------------
     function attackBody() {
@@ -753,14 +947,27 @@
         h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
     }
 
+    function skillBody() {
+      return h('div', { className: 'rp-composer' },
+        h('label', { className: 'rp-input-label' }, 'Skill',
+          h('select', { className: 'rp-select', value: skillSel, onChange: function (e) { setSkillSel(e.target.value); } },
+            SKILLS.map(function (s) { return h('option', { key: s.value, value: s.value }, s.label); }))),
+        h('div', { className: 'rp-roll-line' },
+          h(RollHero, { value: skillRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' skill roll',
+            disabled: false, onChange: function (e) { setSkillRoll(clampNum(e.target.value, rules.attack_die)); } }),
+          h(ChipExpr, { terms: ['roll ' + skillCalc.base].concat(skillCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); })), resultText: String(skillCalc.total), tone: 'neutral' })),
+        h('p', { className: 'rp-note' }, 'Give your ' + skillLabel(skillSel) + ' total to the DM.'));
+    }
+
     var bodies = {
       attack: attackBody,
       heal: healBody,
       buff: function () { return h(BuffComposer, { character: c, buffs: props.buffs, locked: locked, canBuff: props.canBuff, blockReason: props.blockBuff, onSaveDraft: props.onSaveBuffDraft, onApplyBuff: props.onApplyBuff }); },
-      defend: defendBody
+      defend: defendBody,
+      skill: skillBody
     };
 
-    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }];
+    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }, { id: 'skill', label: 'Skills', sub: 'CHECK' }];
 
     var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget, canRetarget: isHealer };
 
@@ -781,7 +988,9 @@
         h('div', { className: 'rp-col rp-party-col' },
           h(PartyPanel, { party: party, myId: c.member_id, locked: props.bookLocked, avatars: props.avatars, shieldMax: rules.shield_max,
             heal: healShare, onHp: props.onHp, onShield: props.onShield,
-            showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }))),
+            showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }),
+          h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked, attackDie: rules.attack_die, rules: rules,
+            onMinionAttack: props.onMinionAttack, onMinionRemove: props.onMinionRemove, onMinionHp: props.onMinionHp }))),
       h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
   }
@@ -853,7 +1062,7 @@
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Spent' : 'Use')));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Used' : 'Use')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.
@@ -1134,6 +1343,7 @@
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
+        minions: s.minions || [],
         character: me2 || cur.character, items: mergeItemState(cur.items, s.my_item_state)
       });
     }
@@ -1176,7 +1386,7 @@
     function onBuffPatch(b, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id, body); }); }
     function onBuffRemove(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id); }); }
     function onToggle(m, enabled) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled }); }); }
-    function onActivate(m, targetId, bossId) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: targetId, target_boss_id: bossId || null }); }); }
+    function onActivate(m, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.allBosses }); }); }
     function onActivateAll(ab) { act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid() }); }); }
     function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
     function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
@@ -1198,6 +1408,9 @@
     // DM boss controls
     function onBossAdd(libId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses', { boss_id: libId }); }); }
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
+    function onMinionAttack(mn, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/minions/' + mn.id + '/attack', { boss_id: opts.bossId || null, boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.all, roll: opts.roll != null ? opts.roll : null }); }); }
+    function onMinionRemove(mn) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/minions/' + mn.id); }); }
+    function onMinionHp(mn, hp) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/minions/' + mn.id, { current_hp: hp }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
@@ -1276,6 +1489,7 @@
           skillsUnseen: skillsUnseen, onOpenSkills: openSkills,
           onApplyDamage: onApplyDamage, onApplyHeal: onApplyHeal, onSaveBuffDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff,
           onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll,
+          minions: data.minions || [], onMinionAttack: onMinionAttack, onMinionRemove: onMinionRemove, onMinionHp: onMinionHp,
           onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove })
         : h('div', null,
           h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),

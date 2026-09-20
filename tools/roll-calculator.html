@@ -63,12 +63,14 @@
     .rp-divider { height: 1px; background: var(--border-color); margin: 0.3rem 0; }
 
     /* Buttons — filled brown with dark ink; ghost + danger variants. */
-    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 0; background: var(--accent-brown); color: var(--rp-btn-ink);
+    /* Actionable buttons = dark background + border; the bright gold
+       (--accent-brown) is reserved for the active/selected state. */
+    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary);
       padding: 0.5rem 0.9rem; border-radius: 0.4rem; cursor: pointer; text-decoration: none; font: inherit; }
     .rp-btn.is-small { padding: 0.25rem 0.6rem; font-size: 0.9rem; }
-    .rp-btn.is-active { background: var(--accent-brown); box-shadow: var(--rp-ring); }
-    .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); }
-    .rp-btn.is-danger { background: var(--accent-red); color: var(--rp-btn-ink); }
+    .rp-btn.is-active { background: var(--accent-brown); color: var(--rp-btn-ink); border-color: transparent; box-shadow: var(--rp-ring); }
+    .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); border-color: var(--border-color); }
+    .rp-btn.is-danger { background: var(--accent-red); color: var(--rp-btn-ink); border-color: transparent; }
     .rp-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
     .rp-chip-x { background: none; border: 0; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0.1rem 0.2rem; }
 
@@ -78,11 +80,11 @@
     .rp-commit[disabled] { opacity: 0.45; cursor: not-allowed; }
 
     /* ── Tabbed action card ── */
-    .rp-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 0; }
+    .rp-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; margin-bottom: 0; }
     .rp-tab { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; background: var(--bg-card); border: 0;
-      border-radius: 0.6rem; padding: 0.75rem 0.4rem; cursor: pointer; color: var(--text-primary); font: inherit; }
-    .rp-tab-icon { font-size: 1.5rem; color: var(--text-secondary); }
-    .rp-tab-label { font-family: 'Stoke', serif; font-size: 1.05rem; }
+      border-radius: 0.6rem; padding: 0.7rem 0.25rem; cursor: pointer; color: var(--text-primary); font: inherit; }
+    .rp-tab-icon { font-size: 1.4rem; color: var(--text-secondary); }
+    .rp-tab-label { font-family: 'Stoke', serif; font-size: 0.98rem; }
     .rp-tab-sub { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
     .rp-tab.is-active { background: var(--accent-brown); color: var(--rp-btn-ink); }
     .rp-tab.is-active .rp-tab-icon, .rp-tab.is-active .rp-tab-sub { color: var(--rp-btn-ink); }
@@ -191,12 +193,28 @@
     .rp-party-row.is-pickable { cursor: pointer; }
     .rp-party-row.is-pickable:hover { background: var(--bg-card-light); }
     .rp-party-row.is-elim { opacity: 0.5; }
+    /* Summons panel: temporary minions below the party. */
+    .rp-summons-card { margin-top: 0.75rem; }
+    .rp-summons { display: flex; flex-direction: column; gap: 0.4rem; }
+    .rp-summon { display: flex; flex-direction: column; gap: 0.4rem;
+      background: var(--bg-card-light); border-radius: 0.5rem; padding: 0.45rem 0.55rem; }
+    .rp-summon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .rp-summon-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+    .rp-summon-name { font-family: 'Stoke', serif; }
+    .rp-summon-meta { color: var(--text-secondary); font-size: 0.8rem; }
+    .rp-summon-x { flex: 0 0 auto; }
+    .rp-summon-ctl { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem 0.75rem; flex-wrap: wrap; }
+    .rp-summon-atk { display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .rp-summon-dm { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+    .rp-summon-hp-icon { font-size: 1.05rem; color: var(--accent-red, #b5443b); }
+    .rp-summon-dm .rp-hp-input { width: 3.5rem; }
+    .rp-summon-used { color: var(--text-secondary); font-size: 0.82rem; font-style: italic; }
     .rp-avatar { width: 1.9rem; height: 1.9rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
     .rp-avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-brown); color: var(--rp-btn-ink);
       font-family: 'Stoke', serif; font-size: 0.82rem; }
     .rp-me-id .rp-avatar { width: 2rem; height: 2rem; }
     .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-    .rp-party-name { font-size: 0.95rem; overflow-wrap: anywhere; }
+    .rp-party-name { font-size: 0.7rem; font-family: 'Stoke', serif; overflow-wrap: anywhere; }
     .rp-party-role { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
     .rp-elim-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); }
     .rp-party-stats { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
@@ -262,6 +280,23 @@
     .rp-mod-info { display: flex; flex-direction: column; min-width: 0; }
     .rp-mod-meta { font-size: 0.8rem; color: var(--text-secondary); }
     .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+    /* Sliding on/off switch for toggle skills: both states shown, lit knob slides. */
+    .rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;
+      border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-card); cursor: pointer; font: inherit; overflow: hidden; }
+    .rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    .rp-switch:not(.is-on) .rp-switch-off { color: var(--text-primary); font-weight: 600; }
+    .rp-switch.is-on .rp-switch-on { color: var(--rp-btn-ink); font-weight: 600; }
+    .rp-switch-knob { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px); border-radius: 999px; z-index: 0;
+      background: var(--border-color); transition: left 0.16s ease, background 0.16s ease; }
+    .rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-brown); }
+    .rp-switch:disabled { opacity: 0.5; cursor: default; }
+    /* Multi-ally picker: tappable chips for "several chosen allies" targets. */
+    .rp-pick-multi { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .rp-pick-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border: 1px solid var(--border-color); border-radius: 999px; font-size: 0.85rem; cursor: pointer; }
+    .rp-pick-chip.is-on { border-color: var(--accent-gold, #c9a24b); background: rgba(201,162,75,0.15); }
+    .rp-pick-chip input { margin: 0; }
+    .rp-pick-cap { align-self: center; font-size: 0.78rem; color: var(--text-secondary, #9a9088); }
 
     /* ── Personal buffs ── */
     .rp-buff-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
@@ -286,6 +321,40 @@
     .rp-modal-head h3 { margin: 0; font-family: 'Stoke', serif; }
     .rp-modal-help { margin: 0.1rem 0 0.6rem; }
     .rp-skill-group { margin-top: 0.9rem; }
+    /* Active Skills modal: wider two-column layout with Active/Passive top groups,
+       each split into Battle Effects / Narrative / Skills. */
+    .rp-modal-wide { width: min(760px, 100%); }
+    .rp-skill-top { margin-top: 1rem; }
+    .rp-skill-top:first-child { margin-top: 0.2rem; }
+    .rp-skill-sub { margin-top: 0.5rem; }
+    .rp-skill-sub-title { margin: 0 0 0.3rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
+    .rp-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: start; }
+    .rp-skill-grid .rp-skill { margin-bottom: 0; }
+    /* Effects grouped by holder, equal-height rows, details in a popover. */
+    /* Masonry-style columns so uneven-length holder blocks pack tightly
+       (a short block doesn't leave a gap waiting for its row neighbour). */
+    .rp-eff-cols { column-count: 2; column-gap: 0.9rem; }
+    @media (max-width: 560px) { .rp-eff-cols { column-count: 1; } }
+    /* Person = the lighter card; each ability inside sits on the darker background. */
+    .rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; background: var(--bg-card-light);
+      border: 1px solid var(--border-color); border-radius: 0.55rem; padding: 0.55rem 0.65rem; }
+    .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.2rem; }
+    .rp-eff-item { margin-bottom: 0.4rem; }
+    .rp-eff-item-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0.2rem 0 0.2rem; }
+    .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
+    .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
+    .rp-eff:hover, .rp-eff:focus-visible { border-color: var(--accent-brown); }
+    .rp-eff-sum { font-size: 0.85rem; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .rp-eff-src { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .rp-eff-pop-scrim { position: fixed; inset: 0; z-index: 90; }
+    .rp-eff-pop { position: fixed; z-index: 91; max-height: 50vh; overflow-y: auto;
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.45); padding: 0.6rem 0.7rem; }
+    .rp-eff-pop-title { font-family: 'Stoke', serif; font-size: 0.9rem; margin-bottom: 0.15rem; }
+    .rp-eff-pop-sum { font-size: 0.82rem; color: var(--text-secondary); text-transform: capitalize; margin-bottom: 0.3rem; }
+    .rp-eff-pop-label { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+    .rp-eff-pop-desc { margin: 0; font-size: 0.85rem; white-space: pre-wrap; }
+    .rp-eff-pop-desc.rp-muted { color: var(--text-secondary); font-style: italic; }
     /* Prominent section headings in the header font, per request. */
     .rp-skill-group-title { margin: 0 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.9rem; color: var(--text-primary); }
     /* Each entry is a boxed card, like the DM boss rows, for clearer separation. */
