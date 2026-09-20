@@ -239,12 +239,12 @@
   var EFFECT_HELP = {
     damage: 'Hits an enemy you pick for damage.',
     heal: 'Restores HP to the target.',
-    shield: 'Gives the target a shield that blocks damage.',
+    shield: 'Gives a shield that blocks damage. It stays until broken.',
     roll: 'Adds to the holder’s dice rolls.',
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
-    none: 'Just text from the item. No numbers.'
+    none: ''
   };
   var ROLL_KINDS = [
     { value: 'attack_roll', label: 'Attack roll' },
@@ -266,12 +266,15 @@
   function timingOptions(effect) {
     if (effect === 'damage') return [{ value: 'once', label: 'Hit once' }, { value: 'over', label: 'Damage each turn for a while' }];
     if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'passive', label: 'Heal each turn (always on)' }];
+    // A shield is granted once and lasts until it's broken, so it has no turn timer.
+    if (effect === 'shield') return [{ value: 'once', label: 'Give once (press)' }, { value: 'passive', label: 'Refresh each turn (always on)' }];
     return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Temporary (lasts a while)' }];
   }
   function initTiming(effect, m) {
     var mode = m.mode || 'always';
     if (effect === 'damage') return m.type === 'dot' ? 'over' : 'once';
     if (effect === 'heal') return mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
+    if (effect === 'shield') return mode === 'always' ? 'passive' : 'once';
     if (mode === 'toggle') return 'toggle';
     if (mode === 'activated') return 'temp';
     return 'passive';
@@ -285,7 +288,9 @@
   function ModifierForm(props) {
     var m = props.initial || {};
     var initType = m.type || 'attack_roll';
-    var initEffect = effectOfType(initType);
+    // New modifiers start with no effect chosen, so the form isn't a wall of
+    // fields until the admin picks what it does.
+    var initEffect = props.initial ? effectOfType(initType) : '';
     var labelState = useState(m.label || ''); var label = labelState[0], setLabel = labelState[1];
     var valState = useState(String(m.value != null ? m.value : 1)); var val = valState[0], setVal = valState[1];
     var effectState = useState(initEffect); var effect = effectState[0], setEffect = effectState[1];
@@ -308,8 +313,10 @@
     var initRefs = m.target_kind === 'holder_items' ? parseRefs(m.target_ref) : (m.target_kind === 'holder_item' && m.target_ref ? [String(m.target_ref)] : []);
     var refsState = useState(initRefs); var refs = refsState[0], setRefs = refsState[1];
     function toggleRef(id) { setRefs(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
-    // Strike can hit one chosen enemy or all of them.
-    var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : 'boss'); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
+    // Strike can hit one chosen enemy, several chosen enemies, or all of them.
+    var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : (m.target_kind === 'some_bosses' ? 'some_bosses' : 'boss')); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
+    // "Several enemies" can cap how many are picked (blank = no cap); stored in target_ref.
+    var enemyCapState = useState(m.target_kind === 'some_bosses' && m.target_ref ? String(m.target_ref) : ''); var enemyCap = enemyCapState[0], setEnemyCap = enemyCapState[1];
     // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
@@ -323,15 +330,16 @@
       if (opts.indexOf(timing) === -1) setTiming(opts[0]);
     }
 
+    var hasEffect = !!effect;
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
     var isNone = effect === 'none';
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = !isNone;
-    var showTarget = !isNone && !isStrike;
-    var showTiming = !isNone;
-    var showUses = isActivated && !isNone;
-    var showTurns = timing === 'temp' || timing === 'over'; // only "…for a while" needs turns
+    var showValue = hasEffect && !isNone;
+    var showTarget = hasEffect && !isNone && !isStrike;
+    var showTiming = hasEffect && !isNone;
+    var showUses = hasEffect && isActivated && !isNone;
+    var showTurns = hasEffect && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
 
     function resolvedMode() {
       if (isStrike) return 'activated';
@@ -367,12 +375,13 @@
 
     async function submit(e) {
       e.preventDefault();
+      if (!effect) { setErr('Pick an effect.'); return; }
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         target_kind: isStrike ? enemyScope : tk, mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
-      if (isStrike) payload.target_ref = null;
+      if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
       else payload.target_ref = null;
@@ -392,12 +401,13 @@
           h('input', { type: 'text', value: label, placeholder: 'e.g. Vanguard’s Blessing', onChange: function (e) { setLabel(e.target.value); } })),
         h('div', { className: 'portal-field', key: 'effect' }, h('label', null, 'Effect'),
           h('select', { value: effect, onChange: function (e) { changeEffect(e.target.value); } },
+            h('option', { value: '' }, '— pick an effect —'),
             EFFECT_GROUPS.map(function (g) {
               return h('optgroup', { key: g.label, label: g.label },
                 g.options.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }));
             })))
       ]),
-      h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, EFFECT_HELP[effect] || ''),
+      (hasEffect && EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, EFFECT_HELP[effect]) : null,
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
@@ -416,7 +426,10 @@
         h('div', { className: 'portal-field', key: 'enemies' }, h('label', null, 'Enemies'),
           h('select', { value: enemyScope, onChange: function (e) { setEnemyScope(e.target.value); } },
             h('option', { value: 'boss' }, 'One enemy (chosen on use)'),
-            h('option', { value: 'all_bosses' }, 'All enemies')))
+            h('option', { value: 'some_bosses' }, 'Several enemies (chosen on use)'),
+            h('option', { value: 'all_bosses' }, 'All enemies'))),
+        enemyScope === 'some_bosses' ? h('div', { className: 'portal-field', key: 'cap' }, h('label', null, 'Up to how many? (blank = no limit)'),
+          h('input', { type: 'number', min: 1, value: enemyCap, placeholder: 'no limit', onChange: function (e) { setEnemyCap(e.target.value); } })) : null
       ]) : null,
       showTarget ? secHead('Who it affects') : null,
       showTarget ? fieldGrid([
@@ -453,7 +466,7 @@
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
       showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
-        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the DM removes it.')) : null,
+        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.8rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save' : 'Add'),
@@ -501,6 +514,7 @@
       case 'party_member': t = 'a chosen ally'; break;
       case 'party_members': t = 'several chosen allies'; break;
       case 'boss': t = 'a chosen enemy'; break;
+      case 'some_bosses': t = 'several chosen enemies' + (m.target_ref ? ' (up to ' + m.target_ref + ')' : ''); break;
       case 'all_bosses': t = 'all enemies'; break;
       default: t = '';
     }
