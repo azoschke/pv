@@ -243,7 +243,14 @@
     var labelState = useState(m.label || ''); var label = labelState[0], setLabel = labelState[1];
     var valState = useState(String(m.value != null ? m.value : 1)); var val = valState[0], setVal = valState[1];
     var effectState = useState(effectOfType(initType)); var effect = effectState[0], setEffect = effectState[1];
-    var rollState = useState(initType === 'defense_roll' || initType === 'heal_roll' ? initType : 'attack_roll'); var roll = rollState[0], setRoll = rollState[1];
+    // Roll bonus can boost several rolls at once (tick all = "boost every roll"),
+    // stored as one modifier of type roll_bonus with a `rolls` array. Legacy
+    // single-roll modifiers open as a one-item selection.
+    var initRolls = initType === 'roll_bonus'
+      ? (Array.isArray(m.rolls) && m.rolls.length ? m.rolls : ['attack_roll'])
+      : ((initType === 'attack_roll' || initType === 'defense_roll' || initType === 'heal_roll') ? [initType] : ['attack_roll']);
+    var rollsState = useState(initRolls); var rolls = rollsState[0], setRolls = rollsState[1];
+    function toggleRoll(rk) { setRolls(function (cur) { return cur.indexOf(rk) !== -1 ? cur.filter(function (x) { return x !== rk; }) : cur.concat([rk]); }); }
     // Over-time applies to Damage (dot) and Heal (duration > 1, or "until removed").
     var otState = useState(initType === 'dot' || (initType === 'heal' && m.duration_turns !== 1)); var overTime = otState[0], setOverTime = otState[1];
     var tkState = useState(m.target_kind && m.target_kind !== 'boss' ? m.target_kind : 'self'); var tk = tkState[0], setTk = tkState[1];
@@ -262,7 +269,7 @@
     var ticks = (effect === 'damage' || effect === 'heal') && overTime;
 
     function resolvedType() {
-      if (effect === 'roll') return roll;
+      if (effect === 'roll') return 'roll_bonus';
       if (effect === 'damage') return overTime ? 'dot' : 'damage';
       return effect; // heal, shield, attack_output, attack_mult, heal_output, none
     }
@@ -288,7 +295,9 @@
     async function submit(e) {
       e.preventDefault();
       var type = resolvedType();
+      if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll to boost.'); return; }
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: type,
+        rolls: effect === 'roll' ? rolls : null,
         target_kind: isBoss ? 'boss' : tk, mode: isBoss ? 'activated' : mode,
         uses_per_session: parseInt(uses, 10) || 0, duration_turns: resolvedDuration() };
       if (isBoss) payload.target_ref = null;
@@ -315,9 +324,13 @@
         h('div', { className: 'portal-field' }, h('label', null, 'Effect'),
           h('select', { value: effect, onChange: function (e) { setEffect(e.target.value); } },
             EFFECTS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-        effect === 'roll' ? h('div', { className: 'portal-field' }, h('label', null, 'Which roll'),
-          h('select', { value: roll, onChange: function (e) { setRoll(e.target.value); } },
-            ROLL_KINDS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
+        effect === 'roll' ? h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } }, h('label', null, 'Which rolls (tick all to boost every roll)'),
+          h('div', { style: { display: 'flex', gap: '0.9rem', flexWrap: 'wrap', paddingTop: '0.2rem' } },
+            ROLL_KINDS.map(function (o) {
+              return h('label', { key: o.value, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                h('input', { type: 'checkbox', checked: rolls.indexOf(o.value) !== -1, onChange: function () { toggleRoll(o.value); } }),
+                o.label);
+            }))) : null,
         (effect === 'damage' || effect === 'heal') ? h('div', { className: 'portal-field' }, h('label', null, 'When'),
           h('select', { value: overTime ? 'over' : 'instant', onChange: function (e) { setOverTime(e.target.value === 'over'); } },
             h('option', { value: 'instant' }, 'Instant (once)'),
@@ -361,6 +374,15 @@
   // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
   // holder, this turn. · 2 uses/session".
   var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
+  // "+2 to all rolls" / "+1 to attack & defense rolls" for a roll_bonus modifier.
+  function rollsPhrase(rolls, value) {
+    var v = (value >= 0 ? '+' : '') + value;
+    var set = Array.isArray(rolls) ? rolls : [];
+    if (set.length >= 3) return v + ' to all rolls';
+    if (!set.length) return v + ' roll bonus';
+    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
+    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
+  }
   function typePhrase(type, value) {
     var v = (value >= 0 ? '+' : '') + value;
     switch (type) {
@@ -392,7 +414,8 @@
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
     var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    return when + ', ' + typePhrase(m.type, m.value) + ' to ' + t + dur + '.' + uses;
+    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : typePhrase(m.type, m.value);
+    return when + ', ' + core + ' to ' + t + dur + '.' + uses;
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────

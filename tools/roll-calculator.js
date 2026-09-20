@@ -62,6 +62,15 @@
 
   // ── Plain-language descriptions ────────────────────────────────────────────
   var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
+  // A roll_bonus modifier boosts one or more rolls with a single value.
+  function rollsPhrase(rolls, value) {
+    var v = (value >= 0 ? '+' : '') + value;
+    var set = Array.isArray(rolls) ? rolls : [];
+    if (set.length >= 3) return v + ' to all rolls';
+    if (!set.length) return v + ' roll bonus';
+    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
+    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
+  }
   function typePhrase(type, value) {
     var v = (value >= 0 ? '+' : '') + value;
     switch (type) {
@@ -93,7 +102,7 @@
   function describeModifier(m) {
     if (m.type === 'none') return m.label || 'Special effect — see the item text.';
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    var core = typePhrase(m.type, m.value);
+    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : typePhrase(m.type, m.value);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
     var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     return when + ', ' + core + to + dur + '.';
@@ -101,7 +110,7 @@
   // For an active effect (already resolved target_label + remaining turns).
   function describeActiveEffect(e) {
     if (e.type === 'none') return e.label || 'Special effect';
-    var core = typePhrase(e.type, e.value);
+    var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
     if (e.target_kind === 'party_member') tp = e.target_label || 'a chosen ally';
     if (e.target_kind === 'holder_item') tp = e.target_label || 'the item’s holder';
