@@ -696,27 +696,24 @@
   // Image sits full-bleed on top (or the fallback signature tile), text is
   // padded below with the torn contrast border between — matching the roster
   // and public item cards. Editing happens in a modal so the grid never shifts.
+  // Resolve an item's owner id to a display label via the FC roster. An id that
+  // no longer resolves means the holder was deleted, so the item is "stuck"
+  // until reassigned from the item editor.
+  function ownerInfo(item, members) {
+    var ownerId = item.assigned_member_id;
+    var ownerRow = (ownerId != null && members) ? members.filter(function (m) { return String(m.id) === String(ownerId); })[0] : null;
+    return {
+      id: ownerId,
+      label: ownerId == null ? 'Unassigned'
+        : (members == null ? 'Owner #' + ownerId : (ownerRow ? ownerRow.name : 'Former member')),
+      isOrphan: ownerId != null && members != null && !ownerRow
+    };
+  }
+
   function ItemCard(props) {
     var it = props.item;
-    var members = props.members; // null while the FC roster is still loading
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
-    var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
-
-    // Ownership lives in the rolls DB (assigned_member_id). Resolve it to a name
-    // via the FC roster; an id that no longer resolves means the holder was
-    // deleted from the roster, so the item is stuck until reassigned here.
-    var ownerId = it.assigned_member_id;
-    var ownerRow = (ownerId != null && members) ? members.filter(function (m) { return String(m.id) === String(ownerId); })[0] : null;
-    var ownerLabel = ownerId == null ? 'Unassigned'
-      : (members == null ? 'Owner #' + ownerId : (ownerRow ? ownerRow.name : 'Former member'));
-    var isOrphan = ownerId != null && members != null && !ownerRow;
-
-    function onOwnerChange(e) {
-      var v = e.target.value;
-      var next = v === '' ? null : Number(v);
-      setBusy(true);
-      Promise.resolve(props.onAssign(it, next)).then(function () { setBusy(false); }, function () { setBusy(false); });
-    }
+    var owner = ownerInfo(it, props.members);
 
     return h('div', { className: 'portal-card rp-catalogue-card' },
       h('div', { className: 'rp-card-media sketch-wash' },
@@ -726,15 +723,10 @@
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, it.name),
       it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
-      h('div', { className: 'rp-catalogue-owner portal-field' },
-        h('label', null, 'Held by',
-          isOrphan ? h('span', { className: 'rp-owner-warn', title: 'The previous holder is no longer on the roster.' }, ' · former member') : null),
-        h('select', { value: ownerId == null ? '' : String(ownerId), disabled: busy || members == null, onChange: onOwnerChange },
-          h('option', { value: '' }, 'Unassigned'),
-          // Keep an orphaned id selectable so the dropdown reflects reality until
-          // the admin picks a real member (or Unassigned) to free the item.
-          isOrphan ? h('option', { value: String(ownerId) }, 'Former member (#' + ownerId + ')') : null,
-          (members || []).map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); }))),
+      // Read-only owner line; reassignment happens in the item editor.
+      h('div', { className: 'rp-catalogue-owner' },
+        h('span', { className: 'rp-owner-key' }, 'Owner: '),
+        h('span', { className: owner.isOrphan ? 'rp-owner-warn' : null }, owner.label)),
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(it); } }, 'Edit'),
         h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')));
@@ -748,12 +740,31 @@
     var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
+    // Owner picker (rolls DB). Local state so the select reflects the choice
+    // immediately; the grid underneath refreshes via props.onChanged.
+    var ownerState = useState(it.assigned_member_id == null ? '' : String(it.assigned_member_id));
+    var ownerVal = ownerState[0], setOwnerVal = ownerState[1];
+    var ownerBusyState = useState(false); var ownerBusy = ownerBusyState[0], setOwnerBusy = ownerBusyState[1];
+    var members = props.members;
+    var owner = ownerInfo(it, members);
 
     async function loadAbilities() {
       try { setAbilities(await PVRollAPI.request('GET', '/rp/items/' + it.id + '/abilities') || []); }
       catch (e) { setErr(e.message); }
     }
     useEffect(function () { loadAbilities(); /* eslint-disable-next-line */ }, [it.id]);
+
+    async function changeOwner(e) {
+      var v = e.target.value; setOwnerVal(v);
+      var next = v === '' ? null : Number(v);
+      setOwnerBusy(true); setErr('');
+      try {
+        await PVRollAPI.request('PATCH', '/rp/items/' + it.id + '/owner', { member_id: next });
+        setSaved('Owner updated.'); setTimeout(function () { setSaved(''); }, 2500);
+        if (props.onChanged) props.onChanged();
+      } catch (e2) { setErr(e2.message); }
+      setOwnerBusy(false);
+    }
 
     async function saveItem(payload) {
       await PVRollAPI.request('PATCH', '/rp/items/' + it.id, payload);
@@ -783,6 +794,19 @@
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
       // Item details — Cancel closes the modal.
       h(ItemForm, { initial: it, inModal: true, onSubmit: saveItem, onCancel: props.onClose }),
+
+      // Owner — assign to a member, or Unassigned to free the item. Frees it
+      // from any prior holder, so it also recovers an item whose old holder was
+      // deleted from the roster.
+      h('div', { className: 'rp-editor-section' },
+        h('div', { className: 'portal-field' },
+          h('label', null, 'Owner',
+            owner.isOrphan ? h('span', { className: 'rp-owner-warn', title: 'The previous holder is no longer on the roster.' }, ' · former member') : null),
+          h('select', { value: ownerVal, disabled: ownerBusy || members == null, onChange: changeOwner },
+            h('option', { value: '' }, 'Unassigned'),
+            owner.isOrphan ? h('option', { value: String(owner.id) }, 'Former member (#' + owner.id + ')') : null,
+            (members || []).map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
+          members == null ? h('p', { className: 'portal-field-help' }, 'Loading roster…') : null)),
 
       h('div', { className: 'rp-editor-section' },
         h('h4', null, 'Abilities'),
@@ -919,13 +943,6 @@
       if (members !== null) return;
       try { setMembers(await PVAdminAPI.request('GET', '/members', undefined, true) || []); }
       catch (e) { setErr('Could not load FC members: ' + e.message); }
-    }
-    // Set (memberId) or clear (null) an item's owner straight from the catalogue.
-    // The worker frees the item from any prior holder first, so this doubles as
-    // the "release a stuck item" path when the old holder was deleted.
-    async function assignOwner(it, memberId) {
-      try { await PVRollAPI.request('PATCH', '/rp/items/' + it.id + '/owner', { member_id: memberId }); await loadItems(); }
-      catch (e) { setErr(e.message); }
     }
     async function loadRoster(cid) {
       try { setRoster(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/characters') || []); }
@@ -1174,7 +1191,7 @@
             return h('div', { key: c.id, className: 'portal-card', style: { marginBottom: '0.6rem' } },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
                 h('div', null,
-                  h('strong', null, c.name),
+                  h('span', { className: 'rp-campaign-name' }, c.name),
                   c.active ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', background: 'var(--accent-red)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Live') : null,
                   c.paused ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-primary)', border: '1px solid var(--accent-gold)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Paused') : null
                 ),
@@ -1313,10 +1330,10 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No items match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (it) {
-              return h(ItemCard, { key: it.id, item: it, members: members, onAssign: assignOwner, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
+              return h(ItemCard, { key: it.id, item: it, members: members, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
             }));
         })(),
-        editItem ? h(ItemEditorModal, { item: editItem, catalogue: items,
+        editItem ? h(ItemEditorModal, { item: editItem, catalogue: items, members: members,
           onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null
       ) : null,
 
