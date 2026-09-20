@@ -55,7 +55,9 @@
     switch (m.target_kind) {
       case 'self': return 'self'; case 'group': return 'group';
       case 'class': return String(m.target_ref || '').toUpperCase();
-      case 'holder_item': return 'item holder'; case 'party_member': return 'chosen target';
+      case 'holder_item': case 'holder_items': return 'item holders';
+      case 'party_member': return 'chosen target'; case 'party_members': return 'chosen targets';
+      case 'all_bosses': return 'all enemies';
     }
     return '';
   }
@@ -93,8 +95,11 @@
       case 'group': return 'the whole party';
       case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
       case 'holder_item': return 'the item’s holder';
+      case 'holder_items': return 'the items’ holders';
       case 'party_member': return 'a chosen ally';
+      case 'party_members': return 'several chosen allies';
       case 'boss': return 'a chosen enemy';
+      case 'all_bosses': return 'all enemies';
     }
     return '';
   }
@@ -112,8 +117,8 @@
     if (e.type === 'none') return e.label || 'Special effect';
     var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
-    if (e.target_kind === 'party_member') tp = e.target_label || 'a chosen ally';
-    if (e.target_kind === 'holder_item') tp = e.target_label || 'the item’s holder';
+    if (e.target_kind === 'party_member' || e.target_kind === 'party_members') tp = e.target_label || tp;
+    if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
     var to = tp ? ' to ' + tp : '';
     var dur = e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
     return core + to + dur;
@@ -294,6 +299,8 @@
   function ModifierRow(props) {
     var m = props.modifier;
     var targetState = useState(''); var pickTarget = targetState[0], setPickTarget = targetState[1];
+    var targetsState = useState([]); var pickTargets = targetsState[0], setPickTargets = targetsState[1];
+    function togglePick(id) { setPickTargets(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
     var bossPickState = useState(''); var bossPick = bossPickState[0], setBossPick = bossPickState[1];
     var plain = describeModifier(m);
     var extras = [];
@@ -305,17 +312,26 @@
     var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var control;
     if (m.mode === 'activated') {
-      var needTarget = m.target_kind === 'party_member';
-      var needBoss = m.target_kind === 'boss';  // damage / dot to an enemy
+      var needTarget = m.target_kind === 'party_member';    // one ally
+      var needTargets = m.target_kind === 'party_members';  // several allies
+      var needBoss = m.target_kind === 'boss';              // one enemy
+      var allBosses = m.target_kind === 'all_bosses';       // every enemy
       var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
+      var disabled = props.locked || spent || (needTarget && !pickTarget) || (needTargets && !pickTargets.length) || (needBoss && !bossSel) || (allBosses && !liveBosses.length);
       control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           props.party.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+        needTargets ? h('div', { className: 'rp-pick-multi' },
+          props.party.map(function (p) {
+            return h('label', { key: p.member_id, className: 'rp-pick-chip' + (pickTargets.indexOf(p.member_id) !== -1 ? ' is-on' : '') },
+              h('input', { type: 'checkbox', checked: pickTargets.indexOf(p.member_id) !== -1, disabled: props.locked, onChange: function () { togglePick(p.member_id); } }),
+              p.member_name);
+          })) : null,
         (needBoss && liveBosses.length > 1) ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setBossPick(e.target.value); } },
           liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || spent || (needTarget && !pickTarget) || (needBoss && !bossSel),
-          onClick: function () { props.onActivate(m, needTarget ? Number(pickTarget) : null, needBoss ? bossSel : null); } }, spent ? 'Spent' : 'Activate'));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: disabled,
+          onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, allBosses: allBosses }); } }, spent ? 'Spent' : 'Activate'));
     } else {
       control = h('button', { type: 'button', className: 'rp-btn is-small' + (m.active ? ' is-active' : ''), disabled: props.locked,
         onClick: function () { props.onToggle(m, !m.active); } }, m.active ? 'On' : 'Off');
@@ -1185,7 +1201,7 @@
     function onBuffPatch(b, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id, body); }); }
     function onBuffRemove(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id); }); }
     function onToggle(m, enabled) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled }); }); }
-    function onActivate(m, targetId, bossId) { act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: targetId, target_boss_id: bossId || null }); }); }
+    function onActivate(m, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, all_bosses: !!opts.allBosses }); }); }
     function onActivateAll(ab) { act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid() }); }); }
     function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
     function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }

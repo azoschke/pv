@@ -262,6 +262,11 @@
     .rp-mod-info { display: flex; flex-direction: column; min-width: 0; }
     .rp-mod-meta { font-size: 0.8rem; color: var(--text-secondary); }
     .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+    /* Multi-ally picker: tappable chips for "several chosen allies" targets. */
+    .rp-pick-multi { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .rp-pick-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border: 1px solid var(--border-color); border-radius: 999px; font-size: 0.85rem; cursor: pointer; }
+    .rp-pick-chip.is-on { border-color: var(--accent-gold, #c9a24b); background: rgba(201,162,75,0.15); }
+    .rp-pick-chip input { margin: 0; }
 
     /* ── Personal buffs ── */
     .rp-buff-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }

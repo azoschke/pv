@@ -255,8 +255,9 @@
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Everyone' },
     { value: 'class', label: 'A class' },
-    { value: 'holder_item', label: 'Holder of an item' },
-    { value: 'party_member', label: 'A chosen ally' }
+    { value: 'party_member', label: 'A chosen ally' },
+    { value: 'party_members', label: 'Several chosen allies' },
+    { value: 'holder_items', label: 'Holder of item(s)' }
   ];
   // "How it works" options are phrased per effect so timing reads naturally and
   // never contradicts itself (an "always on" choice never carries a turn limit;
@@ -298,8 +299,17 @@
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
     var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
-    var tkState = useState(m.target_kind && m.target_kind !== 'boss' ? m.target_kind : 'self'); var tk = tkState[0], setTk = tkState[1];
-    var refState = useState(m.target_ref || ''); var ref = refState[0], setRef = refState[1];
+    var initTk = (m.target_kind && m.target_kind !== 'boss' && m.target_kind !== 'all_bosses')
+      ? (m.target_kind === 'holder_item' ? 'holder_items' : m.target_kind) : 'self';
+    var tkState = useState(initTk); var tk = tkState[0], setTk = tkState[1];
+    var refState = useState(m.target_kind === 'class' ? (m.target_ref || 'tank') : ''); var ref = refState[0], setRef = refState[1]; // class role
+    // "Holder of item(s)" targets store an array of item ids in target_ref (JSON).
+    function parseRefs(s) { if (Array.isArray(s)) return s.map(String); try { var a = JSON.parse(s); return Array.isArray(a) ? a.map(String) : []; } catch (_) { return s ? [String(s)] : []; } }
+    var initRefs = m.target_kind === 'holder_items' ? parseRefs(m.target_ref) : (m.target_kind === 'holder_item' && m.target_ref ? [String(m.target_ref)] : []);
+    var refsState = useState(initRefs); var refs = refsState[0], setRefs = refsState[1];
+    function toggleRef(id) { setRefs(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
+    // Strike can hit one chosen enemy or all of them.
+    var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : 'boss'); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
     // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
@@ -360,11 +370,11 @@
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
-        target_kind: isStrike ? 'boss' : tk, mode: resolvedMode(),
+        target_kind: isStrike ? enemyScope : tk, mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
       if (isStrike) payload.target_ref = null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
-      else if (tk === 'holder_item') { if (!ref) { setErr('Pick which item’s holder is targeted.'); return; } payload.target_ref = ref; }
+      else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -401,7 +411,13 @@
           }))) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
-      isStrike ? h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } }, 'Hits an enemy chosen when it’s used.') : null,
+      isStrike ? secHead('Who it affects') : null,
+      isStrike ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'enemies' }, h('label', null, 'Enemies'),
+          h('select', { value: enemyScope, onChange: function (e) { setEnemyScope(e.target.value); } },
+            h('option', { value: 'boss' }, 'One enemy (chosen on use)'),
+            h('option', { value: 'all_bosses' }, 'All enemies')))
+      ]) : null,
       showTarget ? secHead('Who it affects') : null,
       showTarget ? fieldGrid([
         h('div', { className: 'portal-field', key: 'tk' }, h('label', null, 'Target'),
@@ -409,12 +425,18 @@
             TARGET_OPTIONS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
         tk === 'class' ? h('div', { className: 'portal-field', key: 'cls' }, h('label', null, 'Which class'),
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
-            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
-        tk === 'holder_item' ? h('div', { className: 'portal-field', key: 'itm' }, h('label', null, 'Holder of which item'),
-          h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
-            h('option', { value: '' }, '— pick —'),
-            (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null
+            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null
       ]) : null,
+      (showTarget && tk === 'party_members') ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, 'The player picks the allies when it’s used.') : null,
+      (showTarget && tk === 'holder_items') ? h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'Whose holders (tick each item)'),
+        (props.catalogue || []).length
+          ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem 1rem', paddingTop: '0.2rem' } },
+              (props.catalogue || []).map(function (c) {
+                return h('label', { key: c.id, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                  h('input', { type: 'checkbox', checked: refs.indexOf(c.id) !== -1, onChange: function () { toggleRef(c.id); } }),
+                  c.name);
+              }))
+          : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No other items yet.')) : null,
 
       // ── How it works ──────────────────────────────────────────────────────
       showTiming ? secHead('How it works') : null,
@@ -475,8 +497,11 @@
       case 'group': t = 'the whole party'; break;
       case 'class': t = 'all ' + (CLASS_PLURAL[m.target_ref] || String(m.target_ref || '').toUpperCase()); break;
       case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'whoever holds ' + (it ? it.name : 'the item'); break; }
+      case 'holder_items': { var ids = []; try { ids = JSON.parse(m.target_ref) || []; } catch (_) { ids = m.target_ref ? [m.target_ref] : []; } var names = ids.map(function (id) { var c = (catalogue || []).filter(function (x) { return x.id === id; })[0]; return c ? c.name : null; }).filter(Boolean); t = names.length ? 'holders of ' + names.join(', ') : 'item holders'; break; }
       case 'party_member': t = 'a chosen ally'; break;
+      case 'party_members': t = 'several chosen allies'; break;
       case 'boss': t = 'a chosen enemy'; break;
+      case 'all_bosses': t = 'all enemies'; break;
       default: t = '';
     }
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
