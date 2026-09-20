@@ -223,7 +223,8 @@
     { label: 'The item acts', options: [
       { value: 'damage', label: 'Strike an enemy' },
       { value: 'heal', label: 'Heal HP' },
-      { value: 'shield', label: 'Grant shield' }
+      { value: 'shield', label: 'Grant shield' },
+      { value: 'summon', label: 'Summon minions' }
     ] },
     { label: 'Boosts the holder', options: [
       { value: 'roll', label: 'Add to a roll' },
@@ -242,6 +243,7 @@
     damage: 'Hits an enemy you pick for damage.',
     heal: 'Restores HP to the target.',
     shield: 'Gives a shield that blocks damage. It stays until broken.',
+    summon: 'Brings temporary minions onto the field that the holder controls.',
     roll: 'Adds to the holder’s dice rolls.',
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
@@ -321,6 +323,14 @@
     var rollsState = useState(initRolls); var rolls = rollsState[0], setRolls = rollsState[1];
     function toggleRoll(rk) { setRolls(function (cur) { return cur.indexOf(rk) !== -1 ? cur.filter(function (x) { return x !== rk; }) : cur.concat([rk]); }); }
     var skillPickState = useState(initType === 'skill_roll' ? (m.skill || 'perception') : 'perception'); var skillPick = skillPickState[0], setSkillPick = skillPickState[1];
+    // Summon parameters (stored as a JSON `summon` object on the modifier).
+    function parseSummon(s) { if (s && typeof s === 'object') return s; try { return JSON.parse(s) || {}; } catch (_) { return {}; } }
+    var initSummon = initType === 'summon' ? parseSummon(m.summon) : {};
+    var sNameState = useState(initSummon.name || ''); var sName = sNameState[0], setSName = sNameState[1];
+    var sCountState = useState(String(initSummon.count || 1)); var sCount = sCountState[0], setSCount = sCountState[1];
+    var sHpState = useState(String(initSummon.hp || 1)); var sHp = sHpState[0], setSHp = sHpState[1];
+    var sAtkState = useState(String(initSummon.attack != null ? initSummon.attack : 1)); var sAtk = sAtkState[0], setSAtk = sAtkState[1];
+    var sTurnsState = useState(initSummon.turns ? String(initSummon.turns) : ''); var sTurns = sTurnsState[0], setSTurns = sTurnsState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
     var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
@@ -355,17 +365,18 @@
 
     var hasEffect = !!effect;
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
+    var isSummon = effect === 'summon';   // spawns minions; always press-to-use
     var isNone = effect === 'none';
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = hasEffect && !isNone;
-    var showTarget = hasEffect && !isNone && !isStrike;
-    var showTiming = hasEffect && !isNone;
-    var showUses = hasEffect && isActivated && !isNone;
-    var showTurns = hasEffect && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
+    var showValue = hasEffect && !isNone && !isSummon;
+    var showTarget = hasEffect && !isNone && !isStrike && !isSummon;
+    var showTiming = hasEffect && !isNone && !isSummon;
+    var showUses = hasEffect && !isNone && (isSummon || isActivated);
+    var showTurns = hasEffect && !isSummon && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
 
     function resolvedMode() {
-      if (isStrike) return 'activated';
+      if (isStrike || isSummon) return 'activated';
       if (timing === 'passive') return 'always';
       if (timing === 'toggle') return 'toggle';
       return 'activated'; // temp / once / over
@@ -374,7 +385,7 @@
       if (effect === 'roll') return 'roll_bonus';
       if (effect === 'skill') return 'skill_roll';
       if (effect === 'damage') return isOver ? 'dot' : 'damage';
-      return effect; // heal, shield, attack_output, attack_mult, heal_output, damage_reduction, none
+      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, damage_reduction, none
     }
     function resolvedDuration() {
       if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
@@ -382,6 +393,12 @@
       if (effect === 'damage' && timing === 'once') return 0;  // single hit
       if (!showTurns) return 0;
       return parseInt(dur, 10) || 0; // blank / 0 = until removed
+    }
+    function resolvedSummon() {
+      if (!isSummon) return null;
+      return { name: sName.trim() || 'Minion', count: Math.max(1, parseInt(sCount, 10) || 1),
+        hp: Math.max(1, parseInt(sHp, 10) || 1), attack: Math.max(0, parseInt(sAtk, 10) || 0),
+        turns: Math.max(0, parseInt(sTurns, 10) || 0) };
     }
     function resolvedUses() { return (showUses && limitUses) ? Math.max(1, parseInt(uses, 10) || 1) : 0; }
     function valueLabel() {
@@ -403,10 +420,11 @@
       e.preventDefault();
       if (!effect) { setErr('Pick an effect.'); return; }
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
-      var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: resolvedType(),
+      var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
-        target_kind: isStrike ? enemyScope : tk, mode: resolvedMode(),
+        summon: resolvedSummon(),
+        target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
@@ -451,6 +469,22 @@
           h('select', { value: skillPick, onChange: function (e) { setSkillPick(e.target.value); } },
             SKILLS.map(function (s) { return h('option', { key: s.value, value: s.value }, s.label); })))
       ]) : null,
+      isSummon ? secHead('The minions') : null,
+      isSummon ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'sname' }, h('label', null, 'Minion name'),
+          h('input', { type: 'text', value: sName, placeholder: 'e.g. Undead Soldier', onChange: function (e) { setSName(e.target.value); } })),
+        h('div', { className: 'portal-field', key: 'scount' }, h('label', null, 'How many'),
+          h('input', { type: 'number', min: 1, value: sCount, onChange: function (e) { setSCount(e.target.value); } }))
+      ]) : null,
+      isSummon ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'shp' }, h('label', null, 'HP each'),
+          h('input', { type: 'number', min: 1, value: sHp, onChange: function (e) { setSHp(e.target.value); } })),
+        h('div', { className: 'portal-field', key: 'satk' }, h('label', null, 'Attack (0 = no attack)'),
+          h('input', { type: 'number', min: 0, value: sAtk, onChange: function (e) { setSAtk(e.target.value); } }))
+      ]) : null,
+      isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
+        h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } }),
+        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Blank = until they’re defeated or the session ends.')) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
       isStrike ? secHead('Who it affects') : null,
@@ -484,7 +518,7 @@
           : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No other items yet.')) : null,
 
       // ── How it works ──────────────────────────────────────────────────────
-      showTiming ? secHead('How it works') : null,
+      (showTiming || isSummon) ? secHead('How it works') : null,
       showTiming ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
@@ -537,6 +571,11 @@
   }
   function modifierSummary(m, catalogue) {
     if (m.type === 'none') return m.label ? m.label : 'Narrative effect (shown from the description).';
+    if (m.type === 'summon') {
+      var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
+      var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
+      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + (s.attack || 0) + ' atk' + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su;
+    }
     var t;
     switch (m.target_kind) {
       case 'self': t = 'the holder'; break;
