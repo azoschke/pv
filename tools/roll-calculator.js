@@ -355,8 +355,8 @@
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
       var isRunning = m.active && m.remaining_turns != null;
-      if (spent) control = h('button', { type: 'button', className: 'rp-btn is-small', disabled: true }, 'Used');
-      else if (isRunning) control = h('button', { type: 'button', className: 'rp-btn is-small is-active', disabled: true }, 'Active');
+      if (isRunning) control = h('button', { type: 'button', className: 'rp-btn is-small is-active', disabled: true }, 'Active');
+      else if (spent) control = h('button', { type: 'button', className: 'rp-btn is-small', disabled: true }, 'Used');
       else control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
