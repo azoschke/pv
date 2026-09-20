@@ -1,8 +1,5 @@
 // ============================================================================
-//  RollCalculator (v7) — player + DM roll calculator / party tracker.
-//  v7: borderless layout — one tabbed action composer, enemy/party targeting
-//  with live projections, item image strip, Active Skills modal, collapsible
-//  DM Control Deck. Data plumbing / handlers unchanged from v6.
+//  RollCalculator (v8)
 // ============================================================================
 
 (function () {
