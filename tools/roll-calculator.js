@@ -678,33 +678,64 @@
   // ── Summons (temporary minions) — shown below the party for everyone ────────
   function MinionRow(props) {
     var mn = props.minion;
+    var rules = props.rules || {};
     var owner = props.myId != null && Number(mn.owner_member_id) === Number(props.myId);
     var live = props.liveBosses || [];
     var isD20 = mn.attack_mode === 'd20';
-    var canAtk = owner && (isD20 || mn.attack > 0) && live.length;
+    var scope = mn.attack_scope || 'boss';   // boss | some_bosses | all_bosses
+    var cap = mn.attack_cap || 0;
+    var acted = !!mn.acted;                   // one attack per round
+    var atkDie = props.attackDie || rules.attack_die || 20;
     var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
+    var picksState = useState([]); var picks = picksState[0], setPicks = picksState[1];
+    function togglePick(id) { setPicks(function (cur) { if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; }); if (cap && cur.length >= cap) return cur; return cur.concat([id]); }); }
     var rollState = useState(''); var roll = rollState[0], setRoll = rollState[1];
     var bossSel = pick && live.some(function (b) { return String(b.id) === pick; }) ? pick : (live.length ? String(live[0].id) : '');
+    var d20dmg = (isD20 && roll !== '') ? Math.min(rules.max_damage_per_attack || 999, damageFor(rules, parseInt(roll, 10) || 0)) : null;
     var atkLabel = isD20 ? 'D20 atk' : (mn.attack > 0 ? mn.attack + ' atk' : 'no attack');
-    var meta = mn.current_hp + '/' + mn.max_hp + ' HP · ' + atkLabel
+    var scopeLabel = scope === 'all_bosses' ? ' · all enemies' : scope === 'some_bosses' ? (' · up to ' + (cap || '∞') + ' enemies') : '';
+    var meta = mn.current_hp + '/' + mn.max_hp + ' HP · ' + atkLabel + scopeLabel
       + (mn.remaining_turns != null ? ' · ' + mn.remaining_turns + ' turn' + (mn.remaining_turns === 1 ? '' : 's') + ' left' : '')
       + ' · ' + (mn.owner_name || ('Member ' + mn.owner_member_id));
+    var hasAttack = isD20 || mn.attack > 0;
+    var canAtk = owner && hasAttack && live.length && !acted;
+    var targetReady = scope === 'all_bosses' ? live.length > 0 : scope === 'some_bosses' ? picks.length > 0 : !!bossSel;
+    var btnDisabled = props.locked || !targetReady || (isD20 && roll === '');
+    var btnLabel = isD20 ? (d20dmg != null ? 'Attack ' + d20dmg : 'Attack') : 'Attack ' + mn.attack;
+    function fire() {
+      var opts = { roll: isD20 ? (parseInt(roll, 10) || 0) : null };
+      if (scope === 'all_bosses') opts.all = true;
+      else if (scope === 'some_bosses') opts.bossIds = picks.slice();
+      else opts.bossId = bossSel;
+      props.onAttack(mn, opts); setRoll(''); setPicks([]);
+    }
+    var rollInput = isD20 ? h('input', { type: 'number', className: 'rp-hp-input', min: 1, max: atkDie, value: roll, placeholder: 'd' + atkDie,
+      'aria-label': 'Attack roll', disabled: props.locked, onChange: function (e) { setRoll(e.target.value); } }) : null;
+    var atkControls;
+    if (!canAtk) atkControls = (acted && owner) ? h('span', { className: 'rp-summon-used' }, 'Attacked this round') : null;
+    else if (scope === 'all_bosses') atkControls = h('span', { className: 'rp-summon-atk' }, rollInput,
+      h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel + ' · all'));
+    else if (scope === 'some_bosses') atkControls = h('span', { className: 'rp-summon-atk' },
+      h('div', { className: 'rp-pick-multi' }, live.map(function (b) { var on = picks.indexOf(String(b.id)) !== -1;
+        return h('label', { key: b.id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
+          h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && cap && picks.length >= cap), onChange: function () { togglePick(String(b.id)); } }), b.name); })),
+      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
+    else atkControls = h('span', { className: 'rp-summon-atk' },
+      live.length > 1 ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setPick(e.target.value); } },
+        live.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
     return h('div', { className: 'rp-summon' },
-      h('div', { className: 'rp-summon-info' },
-        h('strong', { className: 'rp-summon-name' }, mn.name),
-        h('span', { className: 'rp-summon-meta' }, meta)),
-      h('div', { className: 'rp-summon-ctl' },
-        canAtk ? h('span', { className: 'rp-summon-atk' },
-          live.length > 1 ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setPick(e.target.value); } },
-            live.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
-          isD20 ? h('input', { type: 'number', className: 'rp-hp-input', min: 1, max: props.attackDie || 20, value: roll, placeholder: 'd' + (props.attackDie || 20),
-            'aria-label': 'Minion attack roll', disabled: props.locked, onChange: function (e) { setRoll(e.target.value); } }) : null,
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || !bossSel || (isD20 && roll === ''),
-            onClick: function () { props.onAttack(mn, bossSel, isD20 ? (parseInt(roll, 10) || 0) : null); setRoll(''); } }, isD20 ? 'Attack' : 'Attack ' + mn.attack)) : null,
+      h('div', { className: 'rp-summon-top' },
+        h('div', { className: 'rp-summon-info' },
+          h('strong', { className: 'rp-summon-name' }, mn.name),
+          h('span', { className: 'rp-summon-meta' }, meta)),
+        props.isDM ? h('button', { type: 'button', className: 'rp-chip-x rp-summon-x', title: 'Remove', 'aria-label': 'Remove ' + mn.name, onClick: function () { props.onRemove(mn); } }, '✕') : null),
+      (atkControls || props.isDM) ? h('div', { className: 'rp-summon-ctl' },
+        atkControls,
         props.isDM ? h('span', { className: 'rp-summon-dm' },
+          h('span', { className: 'material-icons rp-summon-hp-icon', 'aria-hidden': 'true' }, 'favorite'),
           h('input', { type: 'number', className: 'rp-hp-input', value: String(mn.current_hp), 'aria-label': 'Minion HP',
-            onChange: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) props.onHp(mn, v); } }),
-          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onRemove(mn); } }, 'Remove')) : null));
+            onChange: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) props.onHp(mn, v); } })) : null) : null);
   }
   function SummonsPanel(props) {
     var minions = props.minions || [];
@@ -714,7 +745,7 @@
       h('div', { className: 'rp-party-head' }, h('h3', { className: 'rp-section-label' }, 'Summons')),
       h('div', { className: 'rp-summons' },
         minions.map(function (mn) {
-          return h(MinionRow, { key: mn.id, minion: mn, liveBosses: live, myId: props.myId, isDM: props.isDM, locked: props.locked, attackDie: props.attackDie,
+          return h(MinionRow, { key: mn.id, minion: mn, liveBosses: live, myId: props.myId, isDM: props.isDM, locked: props.locked, attackDie: props.attackDie, rules: props.rules,
             onAttack: props.onMinionAttack, onRemove: props.onMinionRemove, onHp: props.onMinionHp });
         })));
   }
@@ -931,7 +962,7 @@
           h(PartyPanel, { party: party, myId: c.member_id, locked: props.bookLocked, avatars: props.avatars, shieldMax: rules.shield_max,
             heal: healShare, onHp: props.onHp, onShield: props.onShield,
             showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }),
-          h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked, attackDie: rules.attack_die,
+          h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked, attackDie: rules.attack_die, rules: rules,
             onMinionAttack: props.onMinionAttack, onMinionRemove: props.onMinionRemove, onMinionHp: props.onMinionHp }))),
       h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
@@ -1350,7 +1381,7 @@
     // DM boss controls
     function onBossAdd(libId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses', { boss_id: libId }); }); }
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
-    function onMinionAttack(mn, bossId, roll) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/minions/' + mn.id + '/attack', { boss_id: bossId, roll: roll != null ? roll : null }); }); }
+    function onMinionAttack(mn, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/minions/' + mn.id + '/attack', { boss_id: opts.bossId || null, boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.all, roll: opts.roll != null ? opts.roll : null }); }); }
     function onMinionRemove(mn) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/minions/' + mn.id); }); }
     function onMinionHp(mn, hp) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/minions/' + mn.id, { current_hp: hp }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }

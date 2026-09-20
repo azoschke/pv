@@ -331,6 +331,8 @@
     var sHpState = useState(String(initSummon.hp || 1)); var sHp = sHpState[0], setSHp = sHpState[1];
     var sAtkState = useState(String(initSummon.attack != null ? initSummon.attack : 1)); var sAtk = sAtkState[0], setSAtk = sAtkState[1];
     var sModeState = useState(initSummon.attack_mode === 'd20' ? 'd20' : 'fixed'); var sMode = sModeState[0], setSMode = sModeState[1];
+    var sScopeState = useState(initSummon.attack_scope === 'all_bosses' ? 'all_bosses' : (initSummon.attack_scope === 'some_bosses' ? 'some_bosses' : 'boss')); var sScope = sScopeState[0], setSScope = sScopeState[1];
+    var sCapState = useState(initSummon.attack_cap ? String(initSummon.attack_cap) : ''); var sCap = sCapState[0], setSCap = sCapState[1];
     var sTurnsState = useState(initSummon.turns ? String(initSummon.turns) : ''); var sTurns = sTurnsState[0], setSTurns = sTurnsState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
@@ -401,6 +403,8 @@
         hp: Math.max(1, parseInt(sHp, 10) || 1),
         attack_mode: sMode === 'd20' ? 'd20' : 'fixed',
         attack: sMode === 'd20' ? 0 : Math.max(0, parseInt(sAtk, 10) || 0),
+        attack_scope: sScope,
+        attack_cap: (sScope === 'some_bosses' && parseInt(sCap, 10) > 0) ? parseInt(sCap, 10) : 0,
         turns: Math.max(0, parseInt(sTurns, 10) || 0) };
     }
     function resolvedUses() { return (showUses && limitUses) ? Math.max(1, parseInt(uses, 10) || 1) : 0; }
@@ -490,6 +494,15 @@
           h('input', { type: 'number', min: 0, value: sAtk, onChange: function (e) { setSAtk(e.target.value); } })) : null
       ]) : null,
       (isSummon && sMode === 'd20') ? h('p', { className: 'portal-field-help', style: { margin: '0.1rem 0 0' } }, 'The summoner rolls a d20 on attack; damage uses the normal damage tiers, no bonuses.') : null,
+      isSummon ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'sscope' }, h('label', null, 'Attack targets'),
+          h('select', { value: sScope, onChange: function (e) { setSScope(e.target.value); } },
+            h('option', { value: 'boss' }, 'One enemy'),
+            h('option', { value: 'some_bosses' }, 'Several enemies'),
+            h('option', { value: 'all_bosses' }, 'All enemies'))),
+        sScope === 'some_bosses' ? h('div', { className: 'portal-field', key: 'scap' }, h('label', null, 'Up to how many? (blank = no limit)'),
+          h('input', { type: 'number', min: 1, value: sCap, placeholder: 'no limit', onChange: function (e) { setSCap(e.target.value); } })) : null
+      ]) : null,
       isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Blank = until they’re defeated or the session ends.')) : null,

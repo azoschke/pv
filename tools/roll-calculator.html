@@ -194,14 +194,19 @@
     /* Summons panel: temporary minions below the party. */
     .rp-summons-card { margin-top: 0.75rem; }
     .rp-summons { display: flex; flex-direction: column; gap: 0.4rem; }
-    .rp-summon { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
-      background: var(--bg-card-light); border-radius: 0.5rem; padding: 0.4rem 0.55rem; }
+    .rp-summon { display: flex; flex-direction: column; gap: 0.4rem;
+      background: var(--bg-card-light); border-radius: 0.5rem; padding: 0.45rem 0.55rem; }
+    .rp-summon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
     .rp-summon-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
     .rp-summon-name { font-family: 'Stoke', serif; }
     .rp-summon-meta { color: var(--text-secondary); font-size: 0.8rem; }
-    .rp-summon-ctl { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-    .rp-summon-atk, .rp-summon-dm { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .rp-summon-x { flex: 0 0 auto; }
+    .rp-summon-ctl { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem 0.75rem; flex-wrap: wrap; }
+    .rp-summon-atk { display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .rp-summon-dm { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+    .rp-summon-hp-icon { font-size: 1.05rem; color: var(--accent-red, #b5443b); }
     .rp-summon-dm .rp-hp-input { width: 3.5rem; }
+    .rp-summon-used { color: var(--text-secondary); font-size: 0.82rem; font-style: italic; }
     .rp-avatar { width: 1.9rem; height: 1.9rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
     .rp-avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-brown); color: var(--rp-btn-ink);
       font-family: 'Stoke', serif; font-size: 0.82rem; }
