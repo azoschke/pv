@@ -207,12 +207,46 @@
   }
 
   // ── Modifier form ─────────────────────────────────────────────────────────
+  // Effect-driven UI. The player never sees the stored `type` names; the admin
+  // picks an EFFECT, and Damage/Heal add an Instant-vs-Over-time toggle. This
+  // maps down onto the existing stored types (damage/dot, heal, the roll bonuses,
+  // …) so nothing about the data model changes:
+  //   • Damage · Instant   → type "damage"  (single hit to the chosen enemy)
+  //   • Damage · Over time  → type "dot"     (ticks each turn)
+  //   • Heal   · Instant   → type "heal", duration 1 (applies once)
+  //   • Heal   · Over time  → type "heal", duration N (re-heals each turn)
+  //   • Roll bonus          → attack_roll | defense_roll | heal_roll
+  var EFFECTS = [
+    { value: 'roll', label: 'Roll bonus' },
+    { value: 'damage', label: 'Damage (to an enemy)' },
+    { value: 'heal', label: 'Heal' },
+    { value: 'shield', label: 'Shield' },
+    { value: 'attack_output', label: 'Bonus attack damage' },
+    { value: 'attack_mult', label: 'Attack damage ×multiplier' },
+    { value: 'heal_output', label: 'Bonus healing' },
+    { value: 'none', label: 'Narrative only' }
+  ];
+  var ROLL_KINDS = [
+    { value: 'attack_roll', label: 'Attack roll' },
+    { value: 'defense_roll', label: 'Defense roll' },
+    { value: 'heal_roll', label: 'Healing roll' }
+  ];
+  function effectOfType(type) {
+    if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll') return 'roll';
+    if (type === 'damage' || type === 'dot') return 'damage';
+    return type || 'roll'; // attack_output, attack_mult, heal_output, shield, heal, none
+  }
+
   function ModifierForm(props) {
     var m = props.initial || {};
+    var initType = m.type || 'attack_roll';
     var labelState = useState(m.label || ''); var label = labelState[0], setLabel = labelState[1];
     var valState = useState(String(m.value != null ? m.value : 1)); var val = valState[0], setVal = valState[1];
-    var typeState = useState(m.type || 'attack_roll'); var type = typeState[0], setType = typeState[1];
-    var tkState = useState(m.target_kind || 'self'); var tk = tkState[0], setTk = tkState[1];
+    var effectState = useState(effectOfType(initType)); var effect = effectState[0], setEffect = effectState[1];
+    var rollState = useState(initType === 'defense_roll' || initType === 'heal_roll' ? initType : 'attack_roll'); var roll = rollState[0], setRoll = rollState[1];
+    // Over-time applies to Damage (dot) and Heal (duration > 1, or "until removed").
+    var otState = useState(initType === 'dot' || (initType === 'heal' && m.duration_turns !== 1)); var overTime = otState[0], setOverTime = otState[1];
+    var tkState = useState(m.target_kind && m.target_kind !== 'boss' ? m.target_kind : 'self'); var tk = tkState[0], setTk = tkState[1];
     var refState = useState(m.target_ref || ''); var ref = refState[0], setRef = refState[1];
     var modeState = useState(m.mode || 'always'); var mode = modeState[0], setMode = modeState[1];
     var usesState = useState(String(m.uses_per_session != null ? m.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
@@ -220,46 +254,85 @@
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var guideState = useState(false); var guide = guideState[0], setGuide = guideState[1];
 
-    var isBoss = BOSS_MOD_TYPES.indexOf(type) !== -1;  // damage / dot → a chosen enemy
+    var isBoss = effect === 'damage';            // damage/dot → a chosen enemy (activated)
+    var isNone = effect === 'none';
+    // A "lingering" effect stays active for a number of turns (roll buffs, shield,
+    // output bonuses, an over-time damage/heal). Instant damage/heal do not.
+    var lingers = !isNone && !(effect === 'damage' && !overTime) && !(effect === 'heal' && !overTime);
+    var ticks = (effect === 'damage' || effect === 'heal') && overTime;
+
+    function resolvedType() {
+      if (effect === 'roll') return roll;
+      if (effect === 'damage') return overTime ? 'dot' : 'damage';
+      return effect; // heal, shield, attack_output, attack_mult, heal_output, none
+    }
+    function resolvedDuration() {
+      if (effect === 'heal' && !overTime) return 1;      // instant heal = one application
+      if (effect === 'damage' && !overTime) return 0;    // single hit; duration unused
+      if (isNone) return 0;
+      return parseInt(dur, 10) || 0;
+    }
+    function valueLabel() {
+      switch (effect) {
+        case 'roll': return 'Bonus (+/−)';
+        case 'attack_output': return 'Bonus attack damage';
+        case 'heal_output': return 'Bonus healing';
+        case 'attack_mult': return 'Multiplier (×)';
+        case 'shield': return 'Shield amount';
+        case 'heal': return overTime ? 'HP / turn' : 'HP restored';
+        case 'damage': return overTime ? 'Damage / turn' : 'Damage';
+      }
+      return 'Value';
+    }
+
     async function submit(e) {
       e.preventDefault();
+      var type = resolvedType();
       var payload = { label: label.trim() || null, value: parseInt(val, 10) || 0, type: type,
         target_kind: isBoss ? 'boss' : tk, mode: isBoss ? 'activated' : mode,
-        uses_per_session: parseInt(uses, 10) || 0, duration_turns: parseInt(dur, 10) || 0 };
+        uses_per_session: parseInt(uses, 10) || 0, duration_turns: resolvedDuration() };
       if (isBoss) payload.target_ref = null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_item') { if (!ref) { setErr('Pick the item whose holder is targeted.'); return; } payload.target_ref = ref; }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
+
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { style: { display: 'flex', justifyContent: 'flex-end' } },
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setGuide(!guide); } },
           (guide ? '▾ ' : '▸ ') + 'Modifier guide')),
       guide ? h('div', { style: { fontSize: '0.8rem', lineHeight: 1.5, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '0.6rem 0.75rem', margin: '0.25rem 0 1.1rem' } },
-        h('div', null, h('strong', null, 'Type'), ' — roll/output types (attack, defense, heal_roll, …) feed the player’s roll math. ', h('strong', null, 'shield'), '/', h('strong', null, 'heal'), ' apply straight to shield / HP. ', h('strong', null, 'none'), ' is narrative text only.'),
-        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Target'), ' — self · group · a class · holder of another item · a party member chosen when used.'),
+        h('div', null, h('strong', null, 'Effect'), ' — what it does. ', h('strong', null, 'Damage'), '/', h('strong', null, 'Heal'), ' each pick ', h('strong', null, 'Instant'), ' (once) or ', h('strong', null, 'Over time'), ' (every turn). Roll bonuses and output/shield bonuses just stay on.'),
+        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Target'), ' — self · group · a class · holder of another item · a party member chosen when used. Damage always hits an enemy chosen on use.'),
         h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Mode'), ' — always on · toggle (manual on/off) · activated (a press; set Uses, 0 = unlimited).'),
-        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Turns'), ' — ', h('strong', null, '0 = infinite'), ' (shield/heal re-applies every round; a roll buff just stays on). ', h('strong', null, '1'), ' = this round only, used up when the DM hits Next Turn. ', h('strong', null, 'N'), ' = lasts N rounds; the activation round counts as the first.')
+        h('div', { style: { marginTop: '0.3rem' } }, h('strong', null, 'Turns'), ' — for over-time and lingering effects: ', h('strong', null, '0 = until removed'), ', ', h('strong', null, 'N'), ' = N turns (the activation turn counts as the first).')
       ) : null,
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'Label'),
           h('input', { type: 'text', value: label, placeholder: 'optional', onChange: function (e) { setLabel(e.target.value); } })),
-        h('div', { className: 'portal-field' }, h('label', null, type === 'attack_mult' ? 'Multiplier (×)' : type === 'damage' ? 'Damage' : type === 'dot' ? 'Damage / turn' : 'Value'),
+        h('div', { className: 'portal-field' }, h('label', null, 'Effect'),
+          h('select', { value: effect, onChange: function (e) { setEffect(e.target.value); } },
+            EFFECTS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+        effect === 'roll' ? h('div', { className: 'portal-field' }, h('label', null, 'Which roll'),
+          h('select', { value: roll, onChange: function (e) { setRoll(e.target.value); } },
+            ROLL_KINDS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
+        (effect === 'damage' || effect === 'heal') ? h('div', { className: 'portal-field' }, h('label', null, 'When'),
+          h('select', { value: overTime ? 'over' : 'instant', onChange: function (e) { setOverTime(e.target.value === 'over'); } },
+            h('option', { value: 'instant' }, 'Instant (once)'),
+            h('option', { value: 'over' }, 'Over time (each turn)'))) : null,
+        isNone ? null : h('div', { className: 'portal-field' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } })),
-        h('div', { className: 'portal-field' }, h('label', null, 'Type'),
-          h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
-            MOD_TYPES.map(function (t) { return h('option', { key: t, value: t }, MOD_TYPE_LABELS[t] || t.replace('_', ' ')); }))),
         isBoss ? h('div', { className: 'portal-field' }, h('label', null, 'Target'),
           h('input', { type: 'text', value: 'A chosen enemy (picked on use)', disabled: true }))
-          : h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+          : (isNone ? null : h('div', { className: 'portal-field' }, h('label', null, 'Target'),
             h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
-              TARGET_KINDS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
-        (!isBoss && tk === 'class') ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
+              TARGET_KINDS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })))),
+        (!isBoss && !isNone && tk === 'class') ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
-        (!isBoss && tk === 'holder_item') ? h('div', { className: 'portal-field' }, h('label', null, 'Of item'),
+        (!isBoss && !isNone && tk === 'holder_item') ? h('div', { className: 'portal-field' }, h('label', null, 'Of item'),
           h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
             h('option', { value: '' }, '— pick —'),
             (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null,
@@ -270,11 +343,15 @@
               MODES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
         (isBoss || mode === 'activated') ? h('div', { className: 'portal-field' }, h('label', null, 'Uses (0=∞)'),
           h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null,
-        h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
-          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } }))
+        lingers ? h('div', { className: 'portal-field' }, h('label', null, ticks ? 'Ticks for (0=until removed)' : 'Lasts turns (0=until removed)'),
+          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null
       ),
       h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-        'Turns: 0 = infinite (shield/heal ticks every round) · 1 = this round only · N = N rounds (activation counts as turn 1).'),
+        isNone ? 'Narrative only — shown from the ability description, no numbers applied.'
+          : (effect === 'heal' && !overTime) ? 'Instant heal — restores HP once when used.'
+          : (effect === 'damage' && !overTime) ? 'Instant damage — one hit to the chosen enemy.'
+          : ticks ? 'Over time — applies every turn until it runs out (0 = until removed; the activation turn counts as the first).'
+          : 'Lasts N turns (0 = until removed; the activation turn counts as the first).'),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save modifier' : 'Add modifier'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -722,11 +799,11 @@
           : h('span', { className: 'rp-card-sig' }, (it.name || '').toLowerCase()),
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, it.name),
-      it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
       // Read-only owner line; reassignment happens in the item editor.
       h('div', { className: 'rp-catalogue-owner' },
         h('span', { className: 'rp-owner-key' }, 'Owner: '),
-        h('span', { className: owner.isOrphan ? 'rp-owner-warn' : null }, owner.label)),
+        h('span', { className: owner.isOrphan ? 'rp-owner-warn' : 'rp-owner-val' }, owner.label)),
+      it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(it); } }, 'Edit'),
         h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')));

@@ -1324,7 +1324,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    Live/Paused badges keep flowing beside it. */
 .rp-campaign-name {
   font-family: 'Stoke', serif;
-  font-size: 1.3rem;
+  font-size: 1.17rem;
   font-weight: 400;
   line-height: 1.15;
   color: var(--text-primary);
@@ -1366,6 +1366,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 0.72rem;
+}
+.rp-owner-val {
+  color: var(--text-primary);
 }
 .rp-owner-warn {
   color: var(--danger, #c0392b);
