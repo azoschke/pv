@@ -63,12 +63,15 @@
     .rp-divider { height: 1px; background: var(--border-color); margin: 0.3rem 0; }
 
     /* Buttons — filled brown with dark ink; ghost + danger variants. */
-    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 0; background: var(--accent-brown); color: var(--rp-btn-ink);
+    /* Actionable buttons = the dark brown (outline in light mode, filled in dark);
+       the bright gold (--accent-brown) is reserved for active/selected states. */
+    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--accent-gold); background: transparent; color: var(--accent-gold);
       padding: 0.5rem 0.9rem; border-radius: 0.4rem; cursor: pointer; text-decoration: none; font: inherit; }
+    [data-theme="dark"] .rp-btn { background: var(--accent-gold); color: #f3ece2; border-color: transparent; }
     .rp-btn.is-small { padding: 0.25rem 0.6rem; font-size: 0.9rem; }
-    .rp-btn.is-active { background: var(--accent-brown); box-shadow: var(--rp-ring); }
-    .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); }
-    .rp-btn.is-danger { background: var(--accent-red); color: var(--rp-btn-ink); }
+    .rp-btn.is-active { background: var(--accent-brown); color: var(--rp-btn-ink); border-color: transparent; box-shadow: var(--rp-ring); }
+    .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); border-color: var(--border-color); }
+    .rp-btn.is-danger { background: var(--accent-red); color: var(--rp-btn-ink); border-color: transparent; }
     .rp-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
     .rp-chip-x { background: none; border: 0; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0.1rem 0.2rem; }
 
@@ -283,11 +286,11 @@
       border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-card); cursor: pointer; font: inherit; overflow: hidden; }
     .rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
       font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
-    .rp-switch:not(.is-on) .rp-switch-off { color: var(--rp-btn-ink, #1a1410); font-weight: 600; }
-    .rp-switch.is-on .rp-switch-on { color: var(--rp-btn-ink, #1a1410); font-weight: 600; }
+    .rp-switch:not(.is-on) .rp-switch-off { color: var(--text-primary); font-weight: 600; }
+    .rp-switch.is-on .rp-switch-on { color: var(--rp-btn-ink); font-weight: 600; }
     .rp-switch-knob { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px); border-radius: 999px; z-index: 0;
-      background: var(--accent-brown, #7a5c3e); transition: left 0.16s ease, background 0.16s ease; }
-    .rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-gold, #c9a24b); }
+      background: var(--border-color); transition: left 0.16s ease, background 0.16s ease; }
+    .rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-brown); }
     .rp-switch:disabled { opacity: 0.5; cursor: default; }
     /* Multi-ally picker: tappable chips for "several chosen allies" targets. */
     .rp-pick-multi { display: flex; flex-wrap: wrap; gap: 0.3rem; }
@@ -333,14 +336,16 @@
        (a short block doesn't leave a gap waiting for its row neighbour). */
     .rp-eff-cols { column-count: 2; column-gap: 0.9rem; }
     @media (max-width: 560px) { .rp-eff-cols { column-count: 1; } }
-    .rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; }
+    /* Person = the lighter card; each ability inside sits on the darker background. */
+    .rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; background: var(--bg-card-light);
+      border: 1px solid var(--border-color); border-radius: 0.55rem; padding: 0.55rem 0.65rem; }
     .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.2rem; }
     .rp-eff-item { margin-bottom: 0.4rem; }
     .rp-eff-item-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0.2rem 0 0.2rem; }
     .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
-      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
-    .rp-eff:hover, .rp-eff:focus-visible { border-color: var(--accent-gold, #c9a24b); }
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
+    .rp-eff:hover, .rp-eff:focus-visible { border-color: var(--accent-brown); }
     .rp-eff-sum { font-size: 0.85rem; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .rp-eff-src { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .rp-eff-pop-scrim { position: fixed; inset: 0; z-index: 90; }
