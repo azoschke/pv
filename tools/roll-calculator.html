@@ -191,6 +191,17 @@
     .rp-party-row.is-pickable { cursor: pointer; }
     .rp-party-row.is-pickable:hover { background: var(--bg-card-light); }
     .rp-party-row.is-elim { opacity: 0.5; }
+    /* Summons panel: temporary minions below the party. */
+    .rp-summons-card { margin-top: 0.75rem; }
+    .rp-summons { display: flex; flex-direction: column; gap: 0.4rem; }
+    .rp-summon { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
+      background: var(--bg-card-light); border-radius: 0.5rem; padding: 0.4rem 0.55rem; }
+    .rp-summon-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+    .rp-summon-name { font-family: 'Stoke', serif; }
+    .rp-summon-meta { color: var(--text-secondary); font-size: 0.8rem; }
+    .rp-summon-ctl { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .rp-summon-atk, .rp-summon-dm { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .rp-summon-dm .rp-hp-input { width: 3.5rem; }
     .rp-avatar { width: 1.9rem; height: 1.9rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
     .rp-avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--accent-brown); color: var(--rp-btn-ink);
       font-family: 'Stoke', serif; font-size: 0.82rem; }

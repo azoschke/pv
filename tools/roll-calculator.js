@@ -673,6 +673,43 @@
               bossEffects.length ? h('div', { className: 'rp-skill-top' }, h('h4', { className: 'rp-skill-group-title' }, 'Boss Effects'), grid(bossEffects, bossRow)) : null)));
   }
 
+  // ── Summons (temporary minions) — shown below the party for everyone ────────
+  function MinionRow(props) {
+    var mn = props.minion;
+    var owner = props.myId != null && Number(mn.owner_member_id) === Number(props.myId);
+    var live = props.liveBosses || [];
+    var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
+    var bossSel = pick && live.some(function (b) { return String(b.id) === pick; }) ? pick : (live.length ? String(live[0].id) : '');
+    var meta = mn.current_hp + '/' + mn.max_hp + ' HP · ' + (mn.attack > 0 ? mn.attack + ' atk' : 'no attack')
+      + (mn.remaining_turns != null ? ' · ' + mn.remaining_turns + ' turn' + (mn.remaining_turns === 1 ? '' : 's') + ' left' : '')
+      + ' · ' + (mn.owner_name || ('Member ' + mn.owner_member_id));
+    return h('div', { className: 'rp-summon' },
+      h('div', { className: 'rp-summon-info' },
+        h('strong', { className: 'rp-summon-name' }, mn.name),
+        h('span', { className: 'rp-summon-meta' }, meta)),
+      h('div', { className: 'rp-summon-ctl' },
+        (owner && mn.attack > 0 && live.length) ? h('span', { className: 'rp-summon-atk' },
+          live.length > 1 ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setPick(e.target.value); } },
+            live.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+          h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.locked || !bossSel, onClick: function () { props.onAttack(mn, bossSel); } }, 'Attack ' + mn.attack)) : null,
+        props.isDM ? h('span', { className: 'rp-summon-dm' },
+          h('input', { type: 'number', className: 'rp-hp-input', value: String(mn.current_hp), 'aria-label': 'Minion HP',
+            onChange: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) props.onHp(mn, v); } }),
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onRemove(mn); } }, 'Remove')) : null));
+  }
+  function SummonsPanel(props) {
+    var minions = props.minions || [];
+    if (!minions.length) return null;
+    var live = (props.bosses || []).filter(function (b) { return !b.defeated; });
+    return h('div', { className: 'rp-card rp-party-card rp-summons-card' },
+      h('div', { className: 'rp-party-head' }, h('h3', null, 'Summons')),
+      h('div', { className: 'rp-summons' },
+        minions.map(function (mn) {
+          return h(MinionRow, { key: mn.id, minion: mn, liveBosses: live, myId: props.myId, isDM: props.isDM, locked: props.locked,
+            onAttack: props.onMinionAttack, onRemove: props.onMinionRemove, onHp: props.onMinionHp });
+        })));
+  }
+
   // ── Combat board (character view): enemies + tabbed composer + party + items ─
   function Board(props) {
     var data = props.data, ctx = props.ctx, rules = props.rules, c = ctx.character;
@@ -884,7 +921,9 @@
         h('div', { className: 'rp-col rp-party-col' },
           h(PartyPanel, { party: party, myId: c.member_id, locked: props.bookLocked, avatars: props.avatars, shieldMax: rules.shield_max,
             heal: healShare, onHp: props.onHp, onShield: props.onShield,
-            showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }))),
+            showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }),
+          h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked,
+            onMinionAttack: props.onMinionAttack, onMinionRemove: props.onMinionRemove, onMinionHp: props.onMinionHp }))),
       h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
   }
@@ -1301,6 +1340,9 @@
     // DM boss controls
     function onBossAdd(libId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses', { boss_id: libId }); }); }
     function onBossHp(b, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { current_hp: Math.max(0, Math.min(v, b.max_hp)) }); }); }
+    function onMinionAttack(mn, bossId) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/minions/' + mn.id + '/attack', { boss_id: bossId }); }); }
+    function onMinionRemove(mn) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/minions/' + mn.id); }); }
+    function onMinionHp(mn, hp) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/minions/' + mn.id, { current_hp: hp }); }); }
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, mult, turns) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { damage_mult: mult, damage_mult_turns: turns }); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
@@ -1379,6 +1421,7 @@
           skillsUnseen: skillsUnseen, onOpenSkills: openSkills,
           onApplyDamage: onApplyDamage, onApplyHeal: onApplyHeal, onSaveBuffDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff,
           onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll,
+          minions: data.minions || [], onMinionAttack: onMinionAttack, onMinionRemove: onMinionRemove, onMinionHp: onMinionHp,
           onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove })
         : h('div', null,
           h(BossBar, { bosses: data.bosses || [], isDM: isDM, onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove }),
