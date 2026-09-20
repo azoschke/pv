@@ -352,7 +352,12 @@
       var bossCap = needBosses ? (parseInt(m.target_ref, 10) || 0) : 0; // 0 = no cap
       var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
       var disabled = props.locked || spent || (needTarget && !pickTarget) || (needTargets && !pickTargets.length) || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
-      control = h('div', { className: 'rp-mod-control' },
+      // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
+      // (no session uses left). Instant effects skip "Active" (no remaining turns).
+      var isRunning = m.active && m.remaining_turns != null;
+      if (spent) control = h('button', { type: 'button', className: 'rp-btn is-small', disabled: true }, 'Used');
+      else if (isRunning) control = h('button', { type: 'button', className: 'rp-btn is-small is-active', disabled: true }, 'Active');
+      else control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
           props.party.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
@@ -373,7 +378,7 @@
         (needBoss && liveBosses.length > 1) ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setBossPick(e.target.value); } },
           liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
         h('button', { type: 'button', className: 'rp-btn is-small', disabled: disabled,
-          onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, bossIds: needBosses ? bossPicks.slice() : null, allBosses: allBosses }); } }, spent ? 'Spent' : 'Activate'));
+          onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, bossIds: needBosses ? bossPicks.slice() : null, allBosses: allBosses }); } }, 'Activate'));
     } else {
       // Sliding switch: both states visible, the lit side shows the current state.
       control = h('button', { type: 'button', className: 'rp-switch' + (m.active ? ' is-on' : ''), role: 'switch',
@@ -1057,7 +1062,7 @@
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Spent' : 'Use')));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Used' : 'Use')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.

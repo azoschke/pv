@@ -63,11 +63,10 @@
     .rp-divider { height: 1px; background: var(--border-color); margin: 0.3rem 0; }
 
     /* Buttons — filled brown with dark ink; ghost + danger variants. */
-    /* Actionable buttons = the dark brown (outline in light mode, filled in dark);
-       the bright gold (--accent-brown) is reserved for active/selected states. */
-    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--accent-gold); background: transparent; color: var(--accent-gold);
+    /* Actionable buttons = dark background + border; the bright gold
+       (--accent-brown) is reserved for the active/selected state. */
+    .rp-btn { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid var(--border-color); background: var(--accent-gold); color: #f3ece2;
       padding: 0.5rem 0.9rem; border-radius: 0.4rem; cursor: pointer; text-decoration: none; font: inherit; }
-    [data-theme="dark"] .rp-btn { background: var(--accent-gold); color: #f3ece2; border-color: transparent; }
     .rp-btn.is-small { padding: 0.25rem 0.6rem; font-size: 0.9rem; }
     .rp-btn.is-active { background: var(--accent-brown); color: var(--rp-btn-ink); border-color: transparent; box-shadow: var(--rp-ring); }
     .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); border-color: var(--border-color); }
@@ -344,7 +343,7 @@
     .rp-eff-item-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0.2rem 0 0.2rem; }
     .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
     .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
+      background: var(--bg-card-light); border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
     .rp-eff:hover, .rp-eff:focus-visible { border-color: var(--accent-brown); }
     .rp-eff-sum { font-size: 0.85rem; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .rp-eff-src { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
