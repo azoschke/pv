@@ -698,7 +698,26 @@
   // and public item cards. Editing happens in a modal so the grid never shifts.
   function ItemCard(props) {
     var it = props.item;
+    var members = props.members; // null while the FC roster is still loading
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
+    var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
+
+    // Ownership lives in the rolls DB (assigned_member_id). Resolve it to a name
+    // via the FC roster; an id that no longer resolves means the holder was
+    // deleted from the roster, so the item is stuck until reassigned here.
+    var ownerId = it.assigned_member_id;
+    var ownerRow = (ownerId != null && members) ? members.filter(function (m) { return String(m.id) === String(ownerId); })[0] : null;
+    var ownerLabel = ownerId == null ? 'Unassigned'
+      : (members == null ? 'Owner #' + ownerId : (ownerRow ? ownerRow.name : 'Former member'));
+    var isOrphan = ownerId != null && members != null && !ownerRow;
+
+    function onOwnerChange(e) {
+      var v = e.target.value;
+      var next = v === '' ? null : Number(v);
+      setBusy(true);
+      Promise.resolve(props.onAssign(it, next)).then(function () { setBusy(false); }, function () { setBusy(false); });
+    }
+
     return h('div', { className: 'portal-card rp-catalogue-card' },
       h('div', { className: 'rp-card-media sketch-wash' },
         (it.image_url && !imgErr)
@@ -707,6 +726,15 @@
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, it.name),
       it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
+      h('div', { className: 'rp-catalogue-owner portal-field' },
+        h('label', null, 'Held by',
+          isOrphan ? h('span', { className: 'rp-owner-warn', title: 'The previous holder is no longer on the roster.' }, ' · former member') : null),
+        h('select', { value: ownerId == null ? '' : String(ownerId), disabled: busy || members == null, onChange: onOwnerChange },
+          h('option', { value: '' }, 'Unassigned'),
+          // Keep an orphaned id selectable so the dropdown reflects reality until
+          // the admin picks a real member (or Unassigned) to free the item.
+          isOrphan ? h('option', { value: String(ownerId) }, 'Former member (#' + ownerId + ')') : null,
+          (members || []).map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); }))),
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(it); } }, 'Edit'),
         h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')));
@@ -885,6 +913,20 @@
       try { setItems(await PVRollAPI.request('GET', '/rp/items') || []); }
       catch (e) { setErr(e.message); }
     }
+    // FC roster, used to resolve/set item owners in the catalogue and to name
+    // the DM. Loaded once; selectCampaign also fills it lazily for non-admins.
+    async function loadMembers() {
+      if (members !== null) return;
+      try { setMembers(await PVAdminAPI.request('GET', '/members', undefined, true) || []); }
+      catch (e) { setErr('Could not load FC members: ' + e.message); }
+    }
+    // Set (memberId) or clear (null) an item's owner straight from the catalogue.
+    // The worker frees the item from any prior holder first, so this doubles as
+    // the "release a stuck item" path when the old holder was deleted.
+    async function assignOwner(it, memberId) {
+      try { await PVRollAPI.request('PATCH', '/rp/items/' + it.id + '/owner', { member_id: memberId }); await loadItems(); }
+      catch (e) { setErr(e.message); }
+    }
     async function loadRoster(cid) {
       try { setRoster(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/characters') || []); }
       catch (e) { setErr(e.message); }
@@ -925,7 +967,7 @@
       try { setCampBosses(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/bosses') || []); }
       catch (e) { setCampBosses([]); }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); /* eslint-disable-next-line */ }, []);
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
 
     // When a member is chosen to add, swap class/armor to their saved defaults
     // (or back to neutral when they have none) so the controls always reflect
@@ -1271,7 +1313,7 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No items match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (it) {
-              return h(ItemCard, { key: it.id, item: it, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
+              return h(ItemCard, { key: it.id, item: it, members: members, onAssign: assignOwner, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
             }));
         })(),
         editItem ? h(ItemEditorModal, { item: editItem, catalogue: items,

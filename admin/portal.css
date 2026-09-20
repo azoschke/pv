@@ -1343,6 +1343,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   padding-top: 0.75rem;
 }
 
+/* Item catalogue: "Held by" owner picker on each card. Sits above the actions
+   (which keep their margin-top:auto bottom alignment). */
+.rp-catalogue-owner {
+  margin-top: 0.6rem;
+}
+.rp-catalogue-owner select {
+  width: 100%;
+}
+.rp-owner-warn {
+  color: var(--danger, #c0392b);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* Item catalogue toolbar: search + new-item button. */
 .rp-catalogue-toolbar {
   display: flex;

@@ -620,6 +620,17 @@
     async function handleDelete(member) {
       try {
         await PVAdminAPI.request('DELETE', '/members/' + member.id, undefined, true);
+        // Also purge this member's Combat Toolkit data, which lives in a separate
+        // worker (the rolls DB) that never hears about a member deletion on its
+        // own. Without this, their equipped items stay "owned" by a member who no
+        // longer exists and can't be reassigned, and ghost characters linger on
+        // campaign rosters. Best-effort: a failure here must not block the delete
+        // that already succeeded — the Item Catalogue's owner picker can free a
+        // stuck item manually if this call ever drops.
+        if (window.PVRollAPI) {
+          try { await PVRollAPI.request('DELETE', '/rp/members/' + member.id); }
+          catch (_e) { /* non-fatal; member is already deleted from the roster */ }
+        }
         setModalMember(null);
         await reload();
       } catch (e) {
