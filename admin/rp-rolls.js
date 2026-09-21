@@ -774,28 +774,29 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Admin Notes'),
-        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
-        h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
+      // Tier + stun immunity share one row.
       h('div', { className: 'portal-field' }, h('label', null, 'Tier'),
-        h('select', { value: tier, onChange: function (e) { changeTier(e.target.value); } },
-          BOSS_TIERS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })),
-        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Bosses are the main threats; Minions are enemy adds. Tier decides the default stun rule.')),
-      h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.4rem' } },
-        h('input', { type: 'checkbox', checked: stunImmune, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
-        'Immune to stun'),
-      h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, tierStunImmuneDefault(tier) ? 'On by default for the Boss tier. Uncheck to let this boss be stunned.' : 'Off by default for this tier. Check to make it immune to stun.'),
-      (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
-        ? h(PVAdminQuestUtils.ImageField, {
-            value: image,
-            onChange: function (v) { setImage(v); },
-            uploadPath: '/venues/images',
-            extraFields: { venue_name: name.trim() || 'boss' },
-            resize: { square: true, maxSize: 600 }
-          })
-        : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
-            h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' } },
+          h('select', { style: { flex: '1 1 12rem' }, value: tier, onChange: function (e) { changeTier(e.target.value); } },
+            BOSS_TIERS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })),
+          h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, whiteSpace: 'nowrap' } },
+            h('input', { type: 'checkbox', checked: stunImmune, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
+            'Immune to stun'))),
+      h('div', { className: 'portal-field' }, h('label', null, 'Health *'),
+        h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Notes'),
+        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      h('div', { style: { marginTop: '1.5rem' } },
+        (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
+          ? h(PVAdminQuestUtils.ImageField, {
+              value: image,
+              onChange: function (v) { setImage(v); },
+              uploadPath: '/venues/images',
+              extraFields: { venue_name: name.trim() || 'boss' },
+              resize: { square: true, maxSize: 600 }
+            })
+          : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
+              h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } }))),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
         h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save boss' : 'Create boss'),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -814,22 +815,32 @@
       h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '')),
       b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
-        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(b); } }, 'Edit'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(b); } }, 'Delete')));
+        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onSkills(b); } }, 'Skills'),
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only')),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only'))));
   }
 
+  // Boss fields only — skills live in their own modal (BossSkillsModal).
   function BossEditorModal(props) {
     var b = props.boss;
-    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
-    var fxFormState = useState(null); var fxForm = fxFormState[0], setFxForm = fxFormState[1]; // null | {abilityId, effect?}
-    var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
-
     async function saveBoss(payload) {
       await PVRollAPI.request('PATCH', '/rp/boss-library/' + b.id, payload);
       setSaved('Boss details saved.'); setTimeout(function () { setSaved(''); }, 2500);
       if (props.onChanged) await props.onChanged();
     }
+    return h(window.PVAdminModal, { title: 'Edit boss — ' + b.name, size: 'lg', onClose: props.onClose },
+      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      h(BossForm, { initial: b, inModal: true, onSubmit: saveBoss, onCancel: props.onClose }));
+  }
+
+  // Boss skills (abilities + their effects), split out of the boss-fields editor.
+  function BossSkillsModal(props) {
+    var b = props.boss;
+    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
+    var fxFormState = useState(null); var fxForm = fxFormState[0], setFxForm = fxFormState[1]; // null | {abilityId, effect?}
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
     async function submitAbility(payload) {
       if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/boss-abilities/' + abForm.ability.id, payload);
       else await PVRollAPI.request('POST', '/rp/boss-library/' + b.id + '/abilities', payload);
@@ -851,11 +862,8 @@
       catch (e) { setErr(e.message); }
     }
 
-    return h(window.PVAdminModal, { title: 'Edit boss — ' + b.name, size: 'lg', onClose: props.onClose },
-      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
-      h(BossForm, { initial: b, inModal: true, onSubmit: saveBoss, onCancel: props.onClose }),
+    return h(window.PVAdminModal, { title: 'Skills — ' + b.name, size: 'lg', onClose: props.onClose },
       h('div', { className: 'rp-editor-section' },
-        h('h4', null, 'Skills'),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
@@ -1070,8 +1078,8 @@
         h('span', { className: owner.isOrphan ? 'rp-owner-warn' : 'rp-owner-val' }, owner.label)),
       it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
-        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(it); } }, 'Edit'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { props.onDelete(it); } }, 'Delete')));
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit item', 'aria-label': 'Edit item', onClick: function () { props.onEdit(it); } }, mi('edit', 'only')),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete item', 'aria-label': 'Delete item', onClick: function () { props.onDelete(it); } }, mi('delete', 'only'))));
   }
 
   // ── Item editor modal (item fields + abilities → modifiers) ───────────────
@@ -1255,7 +1263,8 @@
     // boss library + per-campaign staged bosses
     var bossLibState = useState([]); var bossLib = bossLibState[0], setBossLib = bossLibState[1];
     var bossFormState = useState(false); var bossForm = bossFormState[0], setBossForm = bossFormState[1]; // new-boss form open
-    var editBossState = useState(null); var editBoss = editBossState[0], setEditBoss = editBossState[1]; // boss open in the editor modal
+    var editBossState = useState(null); var editBoss = editBossState[0], setEditBoss = editBossState[1]; // boss open in the fields editor
+    var skillsBossState = useState(null); var skillsBoss = skillsBossState[0], setSkillsBoss = skillsBossState[1]; // boss open in the skills editor
     var bossQueryState = useState(''); var bossQuery = bossQueryState[0], setBossQuery = bossQueryState[1];
     var campBossesState = useState(null); var campBosses = campBossesState[0], setCampBosses = campBossesState[1]; // instances in the selected campaign
     var campBossPickState = useState(''); var campBossPick = campBossPickState[0], setCampBossPick = campBossPickState[1];
@@ -1464,7 +1473,9 @@
     // Keep the open editor modal in sync after ability edits reload the library.
     async function refreshBossLib() {
       var rows = await loadBossLib();
-      setEditBoss(function (cur) { if (!cur) return cur; var nb = rows.filter(function (x) { return x.id === cur.id; })[0]; return nb || cur; });
+      function sync(cur) { if (!cur) return cur; var nb = rows.filter(function (x) { return x.id === cur.id; })[0]; return nb || cur; }
+      setEditBoss(sync);
+      setSkillsBoss(sync);
     }
     async function addCampBoss() {
       if (!campBossPick || !selected) return;
@@ -1700,11 +1711,13 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (b) {
-              return h(BossCard, { key: b.id, boss: b, onEdit: function (x) { setEditBoss(x); }, onDelete: deleteBoss });
+              return h(BossCard, { key: b.id, boss: b, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onDelete: deleteBoss });
             }));
         })(),
         editBoss ? h(BossEditorModal, { boss: editBoss,
-          onChanged: refreshBossLib, onClose: function () { setEditBoss(null); } }) : null
+          onChanged: refreshBossLib, onClose: function () { setEditBoss(null); } }) : null,
+        skillsBoss ? h(BossSkillsModal, { boss: skillsBoss,
+          onChanged: refreshBossLib, onClose: function () { setSkillsBoss(null); } }) : null
       ) : null,
 
       tab === 'rules' && isAdmin ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
