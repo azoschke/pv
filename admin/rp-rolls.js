@@ -817,17 +817,16 @@
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Notes'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('div', { style: { marginTop: '1.5rem' } },
-        (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
-          ? h(PVAdminQuestUtils.ImageField, {
-              value: image,
-              onChange: function (v) { setImage(v); },
-              uploadPath: '/venues/images',
-              extraFields: { venue_name: name.trim() || 'boss' },
-              resize: { square: true, maxSize: 600 }
-            })
-          : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
-              h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } }))),
+      (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
+        ? h(PVAdminQuestUtils.ImageField, {
+            value: image,
+            onChange: function (v) { setImage(v); },
+            uploadPath: '/venues/images',
+            extraFields: { venue_name: name.trim() || 'boss' },
+            resize: { square: true, maxSize: 600 }
+          })
+        : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
+            h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
         h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save boss' : 'Create boss'),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -860,7 +859,7 @@
       setSaved('Boss details saved.'); setTimeout(function () { setSaved(''); }, 2500);
       if (props.onChanged) await props.onChanged();
     }
-    return h(window.PVAdminModal, { title: 'Edit boss — ' + b.name, size: 'lg', onClose: props.onClose },
+    return h(window.PVAdminModal, { title: b.name, size: 'lg', onClose: props.onClose },
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
       h(BossForm, { initial: b, inModal: true, onSubmit: saveBoss, onCancel: props.onClose }));
   }
@@ -900,7 +899,7 @@
     }
 
     return h(window.PVAdminModal, { title: 'Skills — ' + b.name, size: 'lg', onClose: props.onClose },
-      h('div', { className: 'rp-editor-section' },
+      h('div', null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
@@ -1183,7 +1182,7 @@
       await loadAbilities();
     }
 
-    return h(window.PVAdminModal, { title: 'Edit item — ' + it.name, size: 'lg', onClose: props.onClose },
+    return h(window.PVAdminModal, { title: it.name, size: 'lg', onClose: props.onClose },
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
       // Item details — Cancel closes the modal.
       h(ItemForm, { initial: it, inModal: true, onSubmit: saveItem, onCancel: props.onClose }),
