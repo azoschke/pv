@@ -404,6 +404,9 @@
     // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
+    // "Wait a turn before it starts" — delays a DoT / vulnerability / stun so it
+    // does nothing this turn and begins next turn (still its full length).
+    var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
     var vSideState = useState((m.target_kind === 'boss' || m.target_kind === 'some_bosses' || m.target_kind === 'all_bosses' || m.target_kind === 'minions') ? 'enemy' : ((initType === 'vulnerability' || initType === 'stun') ? 'player' : 'enemy'));
     var vSide = vSideState[0], setVSide = vSideState[1];
@@ -487,7 +490,7 @@
         var mlt = Math.max(1, parseFloat(vMult) || 1);
         if (flat <= 0 && mlt <= 1) { setErr('Add extra damage, a multiplier above 1×, or both.'); return; }
         var vp = { label: label.trim() || null, value: flat, mult: mlt, type: 'vulnerability', rolls: null, skill: null, summon: null,
-          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: parseInt(dur, 10) || 0 };
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: parseInt(dur, 10) || 0, start_next_turn: startNext };
         if (vSide === 'enemy') vp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') vp.target_ref = ref || 'tank';
         else vp.target_ref = null;
@@ -496,7 +499,7 @@
       }
       if (isStun) {
         var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null,
-          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1) };
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: startNext };
         if (vSide === 'enemy') sp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') sp.target_ref = ref || 'tank';
         else sp.target_ref = null;
@@ -508,7 +511,8 @@
         skill: effect === 'skill' ? skillPick : null,
         summon: resolvedSummon(),
         target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
-        uses_per_session: resolvedUses(), duration_turns: resolvedDuration() };
+        uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
+        start_next_turn: (effect === 'damage' && isOver) ? startNext : false };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
@@ -518,6 +522,11 @@
 
     function secHead(t) { return h('div', { style: { fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } }, t); }
     function fieldGrid(children) { return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(11rem, 1fr))', gap: '0.5rem', alignItems: 'end' } }, children); }
+    function startNextField() {
+      return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+        h('input', { type: 'checkbox', checked: startNext, onChange: function (e) { setStartNext(e.target.checked); } }),
+        'Wait a turn before it starts');
+    }
 
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
@@ -576,6 +585,7 @@
       ]) : null,
       isVuln ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } })) : null,
+      isVuln ? startNextField() : null,
 
       // ── Stun (self-contained: who, how long; bosses may be immune) ────────
       isStun ? secHead('Who it affects') : null,
@@ -610,6 +620,7 @@
       isStun ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Bosses marked stun-immune are skipped. Minions are enemy adds.') : null,
       isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
         h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
+      isStun ? startNextField() : null,
 
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
@@ -705,6 +716,8 @@
       showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
+      // A DoT (damage over time) can start next turn instead of ticking now.
+      (effect === 'damage' && isOver) ? startNextField() : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.8rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save' : 'Add'),
