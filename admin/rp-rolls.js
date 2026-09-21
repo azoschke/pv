@@ -71,7 +71,7 @@
   // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
   // for activated/always; manual for targeted), 'none' is narrative-only text.
   // attack_mult multiplies a target's attack damage; damage / dot hit an enemy.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'none'];
+  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'vulnerability', 'none'];
   var MOD_TYPE_LABELS = {
     attack_roll: 'Attack roll bonus', defense_roll: 'Defense roll bonus', heal_roll: 'Healing roll bonus',
     attack_output: 'Bonus attack damage', attack_mult: 'Attack damage multiplier (×)', heal_output: 'Bonus healing',
@@ -275,6 +275,9 @@
       { value: 'damage_reduction', label: 'Reduce damage taken' },
       { value: 'skill', label: 'Add to a skill check' }
     ] },
+    { label: 'Debuffs a target', options: [
+      { value: 'vulnerability', label: 'Make a target take more damage' }
+    ] },
     { label: 'Other', options: [
       { value: 'none', label: 'Narrative only' }
     ] }
@@ -291,6 +294,7 @@
     heal_output: 'Makes the holder’s heals restore more HP.',
     damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
     skill: 'Adds to the holder’s rolls for one skill.',
+    vulnerability: 'Target takes extra damage for a while.',
     none: ''
   };
   var ROLL_KINDS = [
@@ -395,6 +399,12 @@
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
     var durState = useState(m.duration_turns && m.duration_turns > 1 ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
+    // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
+    // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
+    // the player side.
+    var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
+    var vSideState = useState((m.target_kind === 'boss' || m.target_kind === 'some_bosses' || m.target_kind === 'all_bosses') ? 'enemy' : (initType === 'vulnerability' ? 'player' : 'enemy'));
+    var vSide = vSideState[0], setVSide = vSideState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     // On first pick (from no effect) default the timing to the effect's first
@@ -410,14 +420,15 @@
     var hasEffect = !!effect;
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
     var isSummon = effect === 'summon';   // spawns minions; always press-to-use
+    var isVuln = effect === 'vulnerability'; // debuff; its own self-contained block
     var isNone = effect === 'none';
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = hasEffect && !isNone && !isSummon;
-    var showTarget = hasEffect && !isNone && !isStrike && !isSummon;
-    var showTiming = hasEffect && !isNone && !isSummon;
-    var showUses = hasEffect && !isNone && (isSummon || isActivated);
-    var showTurns = hasEffect && !isSummon && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
+    var showValue = hasEffect && !isNone && !isSummon && !isVuln;
+    var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln;
+    var showTiming = hasEffect && !isNone && !isSummon && !isVuln;
+    var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln);
+    var showTurns = hasEffect && !isSummon && !isVuln && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
 
     function resolvedMode() {
       if (isStrike || isSummon) return 'activated';
@@ -468,6 +479,18 @@
       e.preventDefault();
       if (!effect) { setErr('Pick an effect.'); return; }
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
+      if (isVuln) {
+        var flat = Math.max(0, parseInt(val, 10) || 0);
+        var mlt = Math.max(1, parseFloat(vMult) || 1);
+        if (flat <= 0 && mlt <= 1) { setErr('Add extra damage, a multiplier above 1×, or both.'); return; }
+        var vp = { label: label.trim() || null, value: flat, mult: mlt, type: 'vulnerability', rolls: null, skill: null, summon: null,
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: parseInt(dur, 10) || 0 };
+        if (vSide === 'enemy') vp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
+        else if (tk === 'class') vp.target_ref = ref || 'tank';
+        else vp.target_ref = null;
+        try { await props.onSubmit(vp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+        return;
+      }
       var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
@@ -501,6 +524,46 @@
             })))
       ]),
       (hasEffect && EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, EFFECT_HELP[effect]) : null,
+
+      // ── Vulnerability (self-contained: how much, who, how long) ───────────
+      isVuln ? secHead('How much extra') : null,
+      isVuln ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'vflat' }, h('label', null, 'Extra damage (flat)'),
+          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })),
+        h('div', { className: 'portal-field', key: 'vmult' }, h('label', null, 'Times damage (×)'),
+          h('input', { type: 'number', min: 1, step: '0.5', value: vMult, onChange: function (e) { setVMult(e.target.value); } }))
+      ]) : null,
+      isVuln ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Use either or both. Flat adds first, then the multiplier.') : null,
+      isVuln ? secHead('Who it affects') : null,
+      isVuln ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'vside' }, h('label', null, 'Side'),
+          h('select', { value: vSide, onChange: function (e) { setVSide(e.target.value); } },
+            h('option', { value: 'enemy' }, 'An enemy'),
+            h('option', { value: 'player' }, 'A player'))),
+        vSide === 'enemy'
+          ? h('div', { className: 'portal-field', key: 'venemy' }, h('label', null, 'Which enemies'),
+              h('select', { value: enemyScope, onChange: function (e) { setEnemyScope(e.target.value); } },
+                h('option', { value: 'boss' }, 'One enemy (chosen on use)'),
+                h('option', { value: 'some_bosses' }, 'Several enemies (chosen on use)'),
+                h('option', { value: 'all_bosses' }, 'All enemies')))
+          : h('div', { className: 'portal-field', key: 'vplayer' }, h('label', null, 'Which players'),
+              h('select', { value: tk, onChange: function (e) { setTk(e.target.value); } },
+                h('option', { value: 'party_member' }, 'A chosen player'),
+                h('option', { value: 'party_members' }, 'Several chosen players'),
+                h('option', { value: 'class' }, 'A class'),
+                h('option', { value: 'group' }, 'Everyone'))),
+        (isVuln && vSide === 'enemy' && enemyScope === 'some_bosses')
+          ? h('div', { className: 'portal-field', key: 'vcap' }, h('label', null, 'Up to how many? (blank = no limit)'),
+              h('input', { type: 'number', min: 1, value: enemyCap, placeholder: 'no limit', onChange: function (e) { setEnemyCap(e.target.value); } }))
+          : null,
+        (isVuln && vSide === 'player' && tk === 'class')
+          ? h('div', { className: 'portal-field', key: 'vclass' }, h('label', null, 'Which class'),
+              h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
+                CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+          : null
+      ]) : null,
+      isVuln ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
+        h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } })) : null,
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
@@ -658,6 +721,7 @@
     var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
       : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')
+      : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
       : typePhrase(m.type, m.value);
     return when + ', ' + core + ' to ' + t + dur + '.' + uses;
   }
