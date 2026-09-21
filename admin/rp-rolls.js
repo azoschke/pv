@@ -941,7 +941,7 @@
       setAbForm(null); if (props.onChanged) await props.onChanged();
     }
     async function deleteAbility(a) {
-      if (!confirm('Delete skill “' + a.name + '” and its effects?')) return;
+      if (!confirm('Delete skill “' + a.name + '”?')) return;
       try { await PVRollAPI.request('DELETE', '/rp/boss-abilities/' + a.id); if (props.onChanged) await props.onChanged(); }
       catch (e) { setErr(e.message); }
     }
@@ -1290,7 +1290,7 @@
               } }),
               (modForm && modForm.abilityId === ab.id)
                 ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
-                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add modifier'));
+                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add effect'));
           }))
       ));
   }
