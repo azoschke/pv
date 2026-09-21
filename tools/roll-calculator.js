@@ -301,6 +301,7 @@
       h('div', { className: 'rp-boss-info' },
         h('div', { className: 'rp-boss-name' }, b.name,
           b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+          b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
         h('div', { className: 'rp-boss-hp-line' },
           h(BossHpBar, { boss: b }),
@@ -1160,8 +1161,11 @@
           h('strong', null, b.name),
           h('span', { className: 'rp-dm-boss-count' }, skillCount + ' skill' + (skillCount === 1 ? '' : 's'))),
         b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
+        b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
         h('div', { className: 'rp-effect-ctl' },
           h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
+          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.stunned ? 'Stunned — click to clear' : (b.stun_immune ? 'Stun-immune (DM can still force)' : 'Stun this enemy'),
+            onClick: function () { props.onSetStun('boss', b.id, !b.stunned); } }, b.stunned ? 'Unstun' : 'Stun'),
           h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
             onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
             h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
@@ -1185,7 +1189,7 @@
       (props.bosses || []).map(function (b) {
         return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party,
           onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
-          onSetVuln: props.onSetVuln, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
+          onSetVuln: props.onSetVuln, onSetStun: props.onSetStun, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
       }),
       !(props.bosses || []).length ? h('p', { className: 'rp-note' }, 'No bosses on the field.') : null,
 
@@ -1211,6 +1215,7 @@
     (props.turnActions || []).forEach(function (t) { byMember[t.member_id] = t.actions; });
     var draftBy = {}; (props.buffDrafts || []).forEach(function (b) { draftBy[b.member_id] = b; });
     var vulns = props.playerVulns || {};
+    var stuns = props.playerStuns || {};
     return h('div', { className: 'rp-dm-section' },
       h('h4', { className: 'rp-dm-sub' }, 'Players'),
       (props.party || []).map(function (p) {
@@ -1218,15 +1223,19 @@
         var draft = draftBy[p.member_id];
         var vuln = vulns[p.member_id] || vulns[String(p.member_id)];
         var vtag = playerVulnText(vuln);
+        var stunned = !!(stuns[p.member_id] || stuns[String(p.member_id)]);
         var status = acts.length
           ? 'Action used: ' + acts.join(', ')
           : (draft ? 'Buff pending — ' + (BUFF_LABEL[draft.type] || draft.type) + ' ' + (draft.value >= 0 ? '+' : '') + draft.value : 'Action available');
         return h('div', { className: 'rp-effect', key: p.member_id },
           h('div', { className: 'rp-effect-info' },
             h('strong', null, p.member_name + (p.eliminated ? ' (KO)' : ''),
+              stunned ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, 'Stunned') : null,
               vtag ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, vtag) : null),
             h('span', { className: 'rp-effect-meta' }, status)),
           h('div', { className: 'rp-effect-ctl' },
+            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: stunned ? 'Stunned — click to clear' : 'Stun this player',
+              onClick: function () { props.onSetStun('player', p.member_id, !stunned); } }, stunned ? 'Unstun' : 'Stun'),
             h(DMPlayerVuln, { vuln: vuln, onSet: function (flat, mult, turns) { props.onSetPlayerVuln(p.member_id, flat, mult, turns); } }),
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !acts.length,
               onClick: function () { props.onResetAction(p.member_id); } }, 'Reset action')));
@@ -1315,10 +1324,10 @@
           h(DMPersonalBuffs, { buffs: props.personalBuffs || [], drafts: props.buffDrafts || [], onBuffPatch: props.onBuffPatch, onBuffRemove: props.onBuffRemove })) : null,
 
         tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
-          onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln,
+          onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln, onSetStun: props.onSetStun,
           onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
 
-        tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction, playerVulns: props.playerVulns, onSetPlayerVuln: props.onSetPlayerVuln }) : null,
+        tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction, playerVulns: props.playerVulns, onSetPlayerVuln: props.onSetPlayerVuln, playerStuns: props.playerStuns, onSetStun: props.onSetStun }) : null,
 
         tab === 'log' ? h('aside', { className: 'rp-dm-log' },
           h('h4', { className: 'rp-dm-sub' }, 'Change log'),
@@ -1465,6 +1474,7 @@
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, flat, mult, turns) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/vulns', { target_type: 'boss', target_id: String(b.id), flat: flat, mult: mult, duration_turns: turns }); }); }
     function onSetPlayerVuln(memberId, flat, mult, turns) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/vulns', { target_type: 'player', target_id: String(memberId), flat: flat, mult: mult, duration_turns: turns }); }); }
+    function onSetStun(targetType, targetId, stunned) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', { target_type: targetType, target_id: String(targetId), stunned: !!stunned }); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
     function onUseEffect(b, e, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
@@ -1529,6 +1539,8 @@
         var vt = playerVulnText(mv);
         return vt ? h('div', { className: 'rp-flash' }, 'You’re vulnerable — ' + vt + '.') : null;
       })(),
+      (c && data.player_stuns && (data.player_stuns[c.member_id] || data.player_stuns[String(c.member_id)]))
+        ? h('div', { className: 'rp-flash rp-ko' }, 'You’re stunned — you skip this turn.') : null,
 
       isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
@@ -1537,6 +1549,7 @@
         onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         playerVulns: data.player_vulns || {}, onSetPlayerVuln: onSetPlayerVuln,
+        playerStuns: data.player_stuns || {}, onSetStun: onSetStun,
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
       c ? h(Board, { data: data, ctx: ctx, rules: rules, party: data.party || [], bosses: data.bosses || [], items: data.items || [], avatars: avatars,

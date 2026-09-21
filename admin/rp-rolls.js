@@ -71,7 +71,7 @@
   // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
   // for activated/always; manual for targeted), 'none' is narrative-only text.
   // attack_mult multiplies a target's attack damage; damage / dot hit an enemy.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'vulnerability', 'none'];
+  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'vulnerability', 'stun', 'none'];
   var MOD_TYPE_LABELS = {
     attack_roll: 'Attack roll bonus', defense_roll: 'Defense roll bonus', heal_roll: 'Healing roll bonus',
     attack_output: 'Bonus attack damage', attack_mult: 'Attack damage multiplier (×)', heal_output: 'Bonus healing',
@@ -276,7 +276,8 @@
       { value: 'skill', label: 'Add to a skill check' }
     ] },
     { label: 'Debuffs a target', options: [
-      { value: 'vulnerability', label: 'Make a target take more damage' }
+      { value: 'vulnerability', label: 'Make a target take more damage' },
+      { value: 'stun', label: 'Stun a target (skip its next turn)' }
     ] },
     { label: 'Other', options: [
       { value: 'none', label: 'Narrative only' }
@@ -295,6 +296,7 @@
     damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
+    stun: 'Target skips its next turn. Bosses can be immune to stun.',
     none: ''
   };
   var ROLL_KINDS = [
@@ -392,7 +394,7 @@
     var refsState = useState(initRefs); var refs = refsState[0], setRefs = refsState[1];
     function toggleRef(id) { setRefs(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
     // Strike can hit one chosen enemy, several chosen enemies, or all of them.
-    var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : (m.target_kind === 'some_bosses' ? 'some_bosses' : 'boss')); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
+    var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : m.target_kind === 'some_bosses' ? 'some_bosses' : m.target_kind === 'minions' ? 'minions' : 'boss'); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
     // "Several enemies" can cap how many are picked (blank = no cap); stored in target_ref.
     var enemyCapState = useState(m.target_kind === 'some_bosses' && m.target_ref ? String(m.target_ref) : ''); var enemyCap = enemyCapState[0], setEnemyCap = enemyCapState[1];
     // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
@@ -403,7 +405,7 @@
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
-    var vSideState = useState((m.target_kind === 'boss' || m.target_kind === 'some_bosses' || m.target_kind === 'all_bosses') ? 'enemy' : (initType === 'vulnerability' ? 'player' : 'enemy'));
+    var vSideState = useState((m.target_kind === 'boss' || m.target_kind === 'some_bosses' || m.target_kind === 'all_bosses' || m.target_kind === 'minions') ? 'enemy' : ((initType === 'vulnerability' || initType === 'stun') ? 'player' : 'enemy'));
     var vSide = vSideState[0], setVSide = vSideState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
@@ -421,14 +423,15 @@
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
     var isSummon = effect === 'summon';   // spawns minions; always press-to-use
     var isVuln = effect === 'vulnerability'; // debuff; its own self-contained block
+    var isStun = effect === 'stun';           // debuff; its own self-contained block
     var isNone = effect === 'none';
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = hasEffect && !isNone && !isSummon && !isVuln;
-    var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln;
-    var showTiming = hasEffect && !isNone && !isSummon && !isVuln;
-    var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln);
-    var showTurns = hasEffect && !isSummon && !isVuln && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
+    var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
+    var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln && !isStun;
+    var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
+    var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
+    var showTurns = hasEffect && !isSummon && !isVuln && !isStun && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
 
     function resolvedMode() {
       if (isStrike || isSummon) return 'activated';
@@ -489,6 +492,15 @@
         else if (tk === 'class') vp.target_ref = ref || 'tank';
         else vp.target_ref = null;
         try { await props.onSubmit(vp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+        return;
+      }
+      if (isStun) {
+        var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null,
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1) };
+        if (vSide === 'enemy') sp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
+        else if (tk === 'class') sp.target_ref = ref || 'tank';
+        else sp.target_ref = null;
+        try { await props.onSubmit(sp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
         return;
       }
       var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
@@ -564,6 +576,41 @@
       ]) : null,
       isVuln ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } })) : null,
+
+      // ── Stun (self-contained: who, how long; bosses may be immune) ────────
+      isStun ? secHead('Who it affects') : null,
+      isStun ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'sside' }, h('label', null, 'Side'),
+          h('select', { value: vSide, onChange: function (e) { setVSide(e.target.value); } },
+            h('option', { value: 'enemy' }, 'An enemy'),
+            h('option', { value: 'player' }, 'A player'))),
+        vSide === 'enemy'
+          ? h('div', { className: 'portal-field', key: 'senemy' }, h('label', null, 'Which enemies'),
+              h('select', { value: enemyScope, onChange: function (e) { setEnemyScope(e.target.value); } },
+                h('option', { value: 'boss' }, 'One enemy (chosen on use)'),
+                h('option', { value: 'some_bosses' }, 'Several enemies (chosen on use)'),
+                h('option', { value: 'all_bosses' }, 'All enemies'),
+                h('option', { value: 'minions' }, 'All minions (enemy adds)')))
+          : h('div', { className: 'portal-field', key: 'splayer' }, h('label', null, 'Which players'),
+              h('select', { value: tk, onChange: function (e) { setTk(e.target.value); } },
+                h('option', { value: 'party_member' }, 'A chosen player'),
+                h('option', { value: 'party_members' }, 'Several chosen players'),
+                h('option', { value: 'class' }, 'A class'),
+                h('option', { value: 'group' }, 'Everyone'))),
+        (isStun && vSide === 'enemy' && enemyScope === 'some_bosses')
+          ? h('div', { className: 'portal-field', key: 'scap' }, h('label', null, 'Up to how many? (blank = no limit)'),
+              h('input', { type: 'number', min: 1, value: enemyCap, placeholder: 'no limit', onChange: function (e) { setEnemyCap(e.target.value); } }))
+          : null,
+        (isStun && vSide === 'player' && tk === 'class')
+          ? h('div', { className: 'portal-field', key: 'sclass' }, h('label', null, 'Which class'),
+              h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
+                CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+          : null
+      ]) : null,
+      isStun ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Bosses marked stun-immune are skipped. Minions are enemy adds.') : null,
+      isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
+        h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
+
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
@@ -714,6 +761,7 @@
       case 'boss': t = 'a chosen enemy'; break;
       case 'some_bosses': t = 'several chosen enemies' + (m.target_ref ? ' (up to ' + m.target_ref + ')' : ''); break;
       case 'all_bosses': t = 'all enemies'; break;
+      case 'minions': t = 'all minions'; break;
       default: t = '';
     }
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
@@ -722,6 +770,7 @@
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
       : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')
       : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
+      : m.type === 'stun' ? 'stuns'
       : typePhrase(m.type, m.value);
     return when + ', ' + core + ' to ' + t + dur + '.' + uses;
   }
