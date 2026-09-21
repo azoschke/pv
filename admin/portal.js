@@ -444,7 +444,9 @@
         PVAdminAPI.setSession(merged);
         setSession(merged);
         if (!canAccess(section, merged.roles)) {
-          setSection(defaultSectionFor(merged.roles));
+          var fallback = defaultSectionFor(merged.roles);
+          setSection(fallback);
+          syncSectionUrl(fallback, null);
         }
       }).catch(function (_err) { /* 401 handled in api.js */ });
       return function () { cancelled = true; };
@@ -459,10 +461,24 @@
       return function () { document.removeEventListener('keydown', onKey); };
     }, [drawerOpen]);
 
+    // Keep the URL in step with the active section so a refresh (or a copied
+    // link) lands back on the same section instead of the role default. `tab`
+    // rides along when a deep link seeds one; a manual nav clears it.
+    function syncSectionUrl(id, params) {
+      try {
+        var u = new URL(window.location.href);
+        u.searchParams.set('section', id);
+        if (params && params.tab) u.searchParams.set('tab', params.tab);
+        else u.searchParams.delete('tab');
+        window.history.replaceState(null, '', u);
+      } catch (_) { /* history/URL unavailable — non-fatal */ }
+    }
+
     function onSelect(nextId, params) {
       setSection(nextId);
       setNavParams(params || null);
       setDrawerOpen(false);
+      syncSectionUrl(nextId, params);
       var main = document.querySelector('[data-scroll-main]');
       if (main) main.scrollTo({ top: 0, behavior: 'instant' });
     }
