@@ -314,7 +314,7 @@
         (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
           b.dots.map(function (dt) {
             return h('span', { className: 'rp-boss-dot', key: dt.id },
-              '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + '/turn' + (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : ''),
+              '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + '/turn' + (dt.pending ? ' · next turn' : (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : '')),
               props.isDM ? h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear DoT', onClick: function (e) { e.stopPropagation(); props.onBossDotRemove(b, dt); } }, '✕') : null);
           })) : null,
         revealed.length ? h('div', { className: 'rp-boss-skills' },
