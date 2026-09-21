@@ -332,7 +332,7 @@
   // duration under the hood.
   function timingOptions(effect) {
     if (effect === 'damage') return [{ value: 'once', label: 'Hit once' }, { value: 'over', label: 'Damage each turn for a while' }];
-    if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'passive', label: 'Heal each turn (always on)' }];
+    if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'toggle', label: 'Heal each turn (toggle on/off)' }, { value: 'passive', label: 'Heal each turn (always on)' }];
     // A shield is granted once and lasts until it's broken, so it has no turn timer.
     if (effect === 'shield') return [{ value: 'once', label: 'Give once (press)' }, { value: 'passive', label: 'Refresh each turn (always on)' }];
     return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Temporary (lasts a while)' }];
@@ -340,7 +340,7 @@
   function initTiming(effect, m) {
     var mode = m.mode || 'always';
     if (effect === 'damage') return m.type === 'dot' ? 'over' : 'once';
-    if (effect === 'heal') return mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
+    if (effect === 'heal') return mode === 'toggle' ? 'toggle' : mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
     if (effect === 'shield') return mode === 'always' ? 'passive' : 'once';
     if (mode === 'toggle') return 'toggle';
     if (mode === 'activated') return 'temp';
@@ -1227,16 +1227,14 @@
         h('span', { className: owner.isOrphan ? 'rp-owner-warn' : 'rp-owner-val' }, owner.label)),
       it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
+        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onAbilities(it); } }, 'Abilities'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit item', 'aria-label': 'Edit item', onClick: function () { props.onEdit(it); } }, mi('edit', 'only')),
         h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete item', 'aria-label': 'Delete item', onClick: function () { props.onDelete(it); } }, mi('delete', 'only'))));
   }
 
-  // ── Item editor modal (item fields + abilities → modifiers) ───────────────
+  // ── Item editor modal (item fields + owner; abilities live in their own modal) ──
   function ItemEditorModal(props) {
     var it = props.item;
-    var abilitiesState = useState(null); var abilities = abilitiesState[0], setAbilities = abilitiesState[1];
-    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
-    var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
     // Owner picker (rolls DB). Local state so the select reflects the choice
@@ -1246,12 +1244,6 @@
     var ownerBusyState = useState(false); var ownerBusy = ownerBusyState[0], setOwnerBusy = ownerBusyState[1];
     var members = props.members;
     var owner = ownerInfo(it, members);
-
-    async function loadAbilities() {
-      try { setAbilities(await PVRollAPI.request('GET', '/rp/items/' + it.id + '/abilities') || []); }
-      catch (e) { setErr(e.message); }
-    }
-    useEffect(function () { loadAbilities(); /* eslint-disable-next-line */ }, [it.id]);
 
     async function changeOwner(e) {
       var v = e.target.value; setOwnerVal(v);
@@ -1270,33 +1262,10 @@
       setSaved('Item details saved.'); setTimeout(function () { setSaved(''); }, 2500);
       if (props.onChanged) props.onChanged();
     }
-    async function submitAbility(payload) {
-      if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + abForm.ability.id, payload);
-      else await PVRollAPI.request('POST', '/rp/items/' + it.id + '/abilities', payload);
-      setAbForm(null); await loadAbilities();
-    }
-    async function deleteAbility(ab) {
-      if (!confirm('Delete ability “' + ab.name + '” and its modifiers?')) return;
-      try { await PVRollAPI.request('DELETE', '/rp/abilities/' + ab.id); await loadAbilities(); } catch (e) { setErr(e.message); }
-    }
-    async function submitModifier(payload) {
-      if (modForm.modifier) await PVRollAPI.request('PATCH', '/rp/modifiers/' + modForm.modifier.id, payload);
-      else await PVRollAPI.request('POST', '/rp/abilities/' + modForm.abilityId + '/modifiers', payload);
-      setModForm(null); await loadAbilities();
-    }
-    async function deleteModifier(mod) {
-      if (!confirm('Delete this modifier?')) return;
-      try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
-    }
-    // Persist a new modifier order by stamping each row's sort with its index.
-    async function reorderModifiers(orderedIds) {
-      try { await Promise.all(orderedIds.map(function (id, i) { return PVRollAPI.request('PATCH', '/rp/modifiers/' + id, { sort: i }); })); }
-      catch (e) { setErr(e.message); }
-      await loadAbilities();
-    }
 
     return h(window.PVAdminModal, { title: it.name, size: 'lg', onClose: props.onClose },
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
       // Item details — Cancel closes the modal.
       h(ItemForm, { initial: it, inModal: true, onSubmit: saveItem, onCancel: props.onClose }),
 
@@ -1311,10 +1280,50 @@
             h('option', { value: '' }, 'Unassigned'),
             owner.isOrphan ? h('option', { value: String(owner.id) }, 'Former member (#' + owner.id + ')') : null,
             (members || []).map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
-          members == null ? h('p', { className: 'portal-field-help' }, 'Loading roster…') : null)),
+          members == null ? h('p', { className: 'portal-field-help' }, 'Loading roster…') : null)));
+  }
 
-      h('div', { className: 'rp-editor-section' },
-        h('h4', null, 'Abilities'),
+  // ── Item abilities modal (abilities → effects), split out of the item editor ──
+  function ItemAbilitiesModal(props) {
+    var it = props.item;
+    var abilitiesState = useState(null); var abilities = abilitiesState[0], setAbilities = abilitiesState[1];
+    var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
+    var modFormState = useState(null); var modForm = modFormState[0], setModForm = modFormState[1]; // null | {abilityId, modifier?}
+    var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    async function loadAbilities() {
+      try { setAbilities(await PVRollAPI.request('GET', '/rp/items/' + it.id + '/abilities') || []); }
+      catch (e) { setErr(e.message); }
+    }
+    useEffect(function () { loadAbilities(); /* eslint-disable-next-line */ }, [it.id]);
+
+    async function submitAbility(payload) {
+      if (abForm && abForm.ability) await PVRollAPI.request('PATCH', '/rp/abilities/' + abForm.ability.id, payload);
+      else await PVRollAPI.request('POST', '/rp/items/' + it.id + '/abilities', payload);
+      setAbForm(null); await loadAbilities();
+    }
+    async function deleteAbility(ab) {
+      if (!confirm('Delete ability “' + ab.name + '”?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/abilities/' + ab.id); await loadAbilities(); } catch (e) { setErr(e.message); }
+    }
+    async function submitModifier(payload) {
+      if (modForm.modifier) await PVRollAPI.request('PATCH', '/rp/modifiers/' + modForm.modifier.id, payload);
+      else await PVRollAPI.request('POST', '/rp/abilities/' + modForm.abilityId + '/modifiers', payload);
+      setModForm(null); await loadAbilities();
+    }
+    async function deleteModifier(mod) {
+      if (!confirm('Delete this effect?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
+    }
+    // Persist a new modifier order by stamping each row's sort with its index.
+    async function reorderModifiers(orderedIds) {
+      try { await Promise.all(orderedIds.map(function (id, i) { return PVRollAPI.request('PATCH', '/rp/modifiers/' + id, { sort: i }); })); }
+      catch (e) { setErr(e.message); }
+      await loadAbilities();
+    }
+
+    return h(window.PVAdminModal, { title: 'Abilities — ' + it.name, size: 'lg', onClose: props.onClose },
+      h('div', null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability'),
@@ -1412,7 +1421,8 @@
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
     var itemFormState = useState(null); var itemForm = itemFormState[0], setItemForm = itemFormState[1]; // new-item form only
-    var editItemState = useState(null); var editItem = editItemState[0], setEditItem = editItemState[1]; // item open in the editor modal
+    var editItemState = useState(null); var editItem = editItemState[0], setEditItem = editItemState[1]; // item open in the fields editor
+    var abilitiesItemState = useState(null); var abilitiesItem = abilitiesItemState[0], setAbilitiesItem = abilitiesItemState[1]; // item open in the abilities editor
     var itemQueryState = useState(''); var itemQuery = itemQueryState[0], setItemQuery = itemQueryState[1];
 
     // boss library + per-campaign staged bosses
@@ -1844,11 +1854,13 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No items match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (it) {
-              return h(ItemCard, { key: it.id, item: it, members: members, onEdit: function (x) { setEditItem(x); }, onDelete: deleteItem });
+              return h(ItemCard, { key: it.id, item: it, members: members, onEdit: function (x) { setEditItem(x); }, onAbilities: function (x) { setAbilitiesItem(x); }, onDelete: deleteItem });
             }));
         })(),
         editItem ? h(ItemEditorModal, { item: editItem, catalogue: items, members: members,
-          onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null
+          onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null,
+        abilitiesItem ? h(ItemAbilitiesModal, { item: abilitiesItem, catalogue: items,
+          onClose: function () { setAbilitiesItem(null); } }) : null
       ) : null,
 
       tab === 'bosses' && bossesSupported ? h('div', null,
