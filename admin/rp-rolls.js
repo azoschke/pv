@@ -21,7 +21,7 @@
   // that sits before button text, 'trail' for one after it, 'only' for an
   // icon-only button. Always aria-hidden — the button carries its own label/title.
   function mi(name, pos) {
-    var style = { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em' };
+    var style = { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', fontVariationSettings: "'FILL' 1" };
     if (pos === 'lead') style.marginRight = '0.28rem';
     else if (pos === 'trail') style.marginLeft = '0.28rem';
     return h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: style }, name);
@@ -1375,7 +1375,7 @@
       catch (e) { setErr(e.message); }
     }
     async function endSession(c) {
-      if (!confirm('End the live session for “' + c.name + '”? Buffs and shields clear.')) return;
+      if (!confirm('End the live session for “' + c.name + '”?')) return;
       try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/end'); flash[1]('Session ended.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
@@ -1525,7 +1525,7 @@
                 c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
-                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html' }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
+                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html', style: { textDecoration: 'none' } }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },

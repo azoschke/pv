@@ -1242,8 +1242,8 @@
           h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session'),
           // Jump straight to the Combat Toolkit admin page (portal RP section).
           h('a', { className: 'rp-btn is-small is-ghost', href: '/pv/admin/portal.html?section=rp-rolls',
-            title: 'Open the Combat Toolkit admin page' },
-            h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', marginRight: '0.28rem' } }, 'casino'),
+            title: 'Open the Combat Toolkit admin page', style: { textDecoration: 'none' } },
+            h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', marginRight: '0.28rem', fontVariationSettings: "'FILL' 1" } }, 'casino'),
             'Combat Toolkit')),
         h('div', { className: 'rp-dm-tabs' },
           tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
