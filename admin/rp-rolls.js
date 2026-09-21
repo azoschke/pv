@@ -17,6 +17,16 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
+  // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
+  // that sits before button text, 'trail' for one after it, 'only' for an
+  // icon-only button. Always aria-hidden — the button carries its own label/title.
+  function mi(name, pos) {
+    var style = { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em' };
+    if (pos === 'lead') style.marginRight = '0.28rem';
+    else if (pos === 'trail') style.marginLeft = '0.28rem';
+    return h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: style }, name);
+  }
+
   var CLASS_ROLES = [
     { value: 'tank', label: 'Tank' },
     { value: 'dps', label: 'DPS' },
@@ -1492,24 +1502,30 @@
           campaigns.map(function (c) {
             var isSel = selected && selected.id === c.id;
             return h('div', { key: c.id, className: 'portal-card', style: { marginBottom: '0.6rem' } },
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
+              // Header: title + status on the left; edit (manage) and delete pinned
+              // to the top-right corner as icon buttons.
+              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
                 h('div', null,
                   h('span', { className: 'rp-campaign-name' }, c.name),
                   c.active ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', background: 'var(--accent-red)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Live') : null,
                   c.paused ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-primary)', border: '1px solid var(--accent-gold)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Paused') : null
                 ),
-                h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap' } },
-                  // Lifecycle: fresh → Start; live → Pause + End; paused → Resume + End.
-                  c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause session') : null,
-                  c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume session') : null,
-                  (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End session') : null,
-                  (!c.active && !c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { startSession(c); } }, 'Start session') : null,
-                  c.active
-                    ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html' }, 'Public rolls page')
-                    : null,
-                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, isSel ? 'Close' : 'Manage'),
-                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteCampaign(c); } }, 'Delete') : null
+                h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
+                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
+                    title: isSel ? 'Close manager' : 'Manage', 'aria-label': isSel ? 'Close manager' : 'Manage', 'aria-expanded': isSel ? 'true' : 'false',
+                    onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, mi(isSel ? 'close' : 'edit', 'only')),
+                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
+                    title: 'Delete', 'aria-label': 'Delete campaign', onClick: function () { deleteCampaign(c); } }, mi('delete', 'only')) : null
                 )
+              ),
+              // Lifecycle actions sit beneath the title, where "Start" lives when
+              // fresh. Live → Pause + End + Roll Calculator; paused → Resume + End.
+              h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' } },
+                (!c.active && !c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { startSession(c); } }, 'Start', mi('play_arrow', 'trail')) : null,
+                c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
+                c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
+                (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
+                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html' }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
