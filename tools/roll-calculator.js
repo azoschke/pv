@@ -1396,7 +1396,7 @@
     function onSetTurns(e, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { remaining_turns: Math.max(0, v) }); }); }
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
     function onPauseSession() { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/pause', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to pause.'); }); }
-    function onEndSession() { if (!confirm('End the session? Buffs and shields clear.')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
+    function onEndSession() { if (!confirm('End the session? Buffs and shields clear.')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/admin/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
     // Heal apply: one atomic request — additive server-side (no lost heals when two
     // land together) and unable to revive KO'd targets. Then refresh.
     function onApplyHeal(entries) {
