@@ -27,6 +27,37 @@
     return h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: style }, name);
   }
 
+  // A vertical drag-to-reorder list (HTML5 DnD). `items` is the ordered array;
+  // `renderRow(item, i)` draws a row's content; `onReorder(orderedIds)` fires
+  // after a drop with the new id order. Each row gets a grab handle; the whole
+  // row is the drag target so the handle is just an affordance. Rows keep their
+  // own Edit/Delete buttons working — a click isn't a drag.
+  function DragReorder(props) {
+    var items = props.items || [];
+    var keyOf = props.keyOf || function (x) { return x.id; };
+    var dragState = useState(null); var dragIdx = dragState[0], setDragIdx = dragState[1];
+    var overState = useState(null); var overIdx = overState[0], setOverIdx = overState[1];
+    function drop(toIdx) {
+      var from = dragIdx; setDragIdx(null); setOverIdx(null);
+      if (from == null || from === toIdx) return;
+      var order = items.map(keyOf);
+      var moved = order.splice(from, 1)[0]; order.splice(toIdx, 0, moved);
+      if (props.onReorder) props.onReorder(order);
+    }
+    return h('div', null, items.map(function (it, i) {
+      return h('div', {
+        key: keyOf(it), draggable: true,
+        onDragStart: function (e) { setDragIdx(i); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)); } catch (_) {} },
+        onDragOver: function (e) { e.preventDefault(); if (overIdx !== i) setOverIdx(i); },
+        onDrop: function (e) { e.preventDefault(); drop(i); },
+        onDragEnd: function () { setDragIdx(null); setOverIdx(null); },
+        style: { opacity: dragIdx === i ? 0.45 : 1, borderTop: (overIdx === i && dragIdx !== i) ? '2px solid var(--accent-gold)' : '2px solid transparent' }
+      }, h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.3rem' } },
+        h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', title: 'Drag to reorder', style: { fontSize: '1.05em', color: 'var(--text-secondary)', cursor: 'grab', flexShrink: 0 } }, 'drag_indicator'),
+        h('div', { style: { flex: 1, minWidth: 0 } }, props.renderRow(it, i))));
+    }));
+  }
+
   var CLASS_ROLES = [
     { value: 'tank', label: 'Tank' },
     { value: 'dps', label: 'DPS' },
@@ -861,6 +892,12 @@
       try { await PVRollAPI.request('DELETE', '/rp/boss-ability-effects/' + x.id); if (props.onChanged) await props.onChanged(); }
       catch (e) { setErr(e.message); }
     }
+    // Persist a new effect order by stamping each effect's sort with its index.
+    async function reorderEffects(orderedIds) {
+      try { await Promise.all(orderedIds.map(function (id, i) { return PVRollAPI.request('PATCH', '/rp/boss-ability-effects/' + id, { sort: i }); })); }
+      catch (e) { setErr(e.message); }
+      if (props.onChanged) await props.onChanged();
+    }
 
     return h(window.PVAdminModal, { title: 'Skills — ' + b.name, size: 'lg', onClose: props.onClose },
       h('div', { className: 'rp-editor-section' },
@@ -877,13 +914,13 @@
                 h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕'))),
-              (a.effects || []).map(function (x) {
-                return h('div', { key: x.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
+              h(DragReorder, { items: a.effects || [], onReorder: reorderEffects, renderRow: function (x) {
+                return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
                   h('span', { style: { fontSize: '0.8rem' } }, bossEffectSummary(x)),
                   h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
                     h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
                     h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteEffect(x); } }, '✕')));
-              }),
+              } }),
               (fxForm && fxForm.abilityId === a.id)
                 ? h(BossEffectForm, { initial: fxForm.effect, onSubmit: submitEffect, onCancel: function () { setFxForm(null); } })
                 : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: null }); } }, '+ Add effect'));
@@ -1139,6 +1176,12 @@
       if (!confirm('Delete this modifier?')) return;
       try { await PVRollAPI.request('DELETE', '/rp/modifiers/' + mod.id); await loadAbilities(); } catch (e) { setErr(e.message); }
     }
+    // Persist a new modifier order by stamping each row's sort with its index.
+    async function reorderModifiers(orderedIds) {
+      try { await Promise.all(orderedIds.map(function (id, i) { return PVRollAPI.request('PATCH', '/rp/modifiers/' + id, { sort: i }); })); }
+      catch (e) { setErr(e.message); }
+      await loadAbilities();
+    }
 
     return h(window.PVAdminModal, { title: 'Edit item — ' + it.name, size: 'lg', onClose: props.onClose },
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
@@ -1175,13 +1218,13 @@
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕'))),
-              (ab.modifiers || []).map(function (mod) {
-                return h('div', { key: mod.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
+              h(DragReorder, { items: ab.modifiers || [], onReorder: reorderModifiers, renderRow: function (mod) {
+                return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
                   h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue)),
                   h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
                     h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
                     h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteModifier(mod); } }, '✕')));
-              }),
+              } }),
               (modForm && modForm.abilityId === ab.id)
                 ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
                 : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add modifier'));
