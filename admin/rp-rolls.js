@@ -635,6 +635,17 @@
   // Bosses are reusable library entries; DMs spawn instances into a campaign
   // from the calculator (or staff pre-stage them in the campaign panel below).
   // Skills are single-level effects: damage (instant), dot (per turn), none.
+  // Tier ladder (biggest → smallest). "Minion" here means an enemy add, not a
+  // player summon. Boss tier is stun-immune by default; the rest are stunnable.
+  // The stun-immune box just seeds from the tier and can be overridden per boss.
+  var BOSS_TIERS = [
+    { value: 'boss', label: 'Boss' },
+    { value: 'elite', label: 'Elite' },
+    { value: 'monster', label: 'Monster' },
+    { value: 'minion', label: 'Minion' }
+  ];
+  function tierStunImmuneDefault(tier) { return tier === 'boss'; }
+  function tierLabel(v) { for (var i = 0; i < BOSS_TIERS.length; i++) if (BOSS_TIERS[i].value === v) return BOSS_TIERS[i].label; return 'Monster'; }
   var BOSS_TYPES = [
     { value: 'damage', label: 'Damage (instant)' },
     { value: 'dot', label: 'DoT (damage per turn)' },
@@ -738,14 +749,24 @@
     var descState = useState(b.description || ''); var desc = descState[0], setDesc = descState[1];
     var imageState = useState(b.image_url || ''); var image = imageState[0], setImage = imageState[1];
     var hpState = useState(String(b.max_hp != null ? b.max_hp : 30)); var maxHp = hpState[0], setMaxHp = hpState[1];
+    // Tier defaults to Monster (the neutral general tier) for entries saved before
+    // tiers existed. stun_immune seeds from the tier unless it was set explicitly.
+    var initTier = BOSS_TIERS.some(function (t) { return t.value === b.boss_tier; }) ? b.boss_tier : 'monster';
+    var tierState = useState(initTier); var tier = tierState[0], setTier = tierState[1];
+    var initImmune = b.stun_immune != null ? !!b.stun_immune : tierStunImmuneDefault(initTier);
+    var immuneState = useState(initImmune); var stunImmune = immuneState[0], setStunImmune = immuneState[1];
+    // Once the DM toggles the box themselves, changing the tier won't stomp it.
+    var immuneTouchedState = useState(b.stun_immune != null); var immuneTouched = immuneTouchedState[0], setImmuneTouched = immuneTouchedState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    function changeTier(v) { setTier(v); if (!immuneTouched) setStunImmune(tierStunImmuneDefault(v)); }
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
       var hp = parseInt(maxHp, 10);
       if (!hp || hp < 1) { setErr('Max HP must be a positive number.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp, boss_tier: tier, stun_immune: !!stunImmune }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
@@ -757,6 +778,14 @@
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Default max HP *'),
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
+      h('div', { className: 'portal-field' }, h('label', null, 'Tier'),
+        h('select', { value: tier, onChange: function (e) { changeTier(e.target.value); } },
+          BOSS_TIERS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })),
+        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Bosses are the main threats; Minions are enemy adds. Tier decides the default stun rule.')),
+      h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.4rem' } },
+        h('input', { type: 'checkbox', checked: stunImmune, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
+        'Immune to stun'),
+      h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, tierStunImmuneDefault(tier) ? 'On by default for the Boss tier. Uncheck to let this boss be stunned.' : 'Off by default for this tier. Check to make it immune to stun.'),
       (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
         ? h(PVAdminQuestUtils.ImageField, {
             value: image,
@@ -782,7 +811,7 @@
           : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
-      h('p', { className: 'rp-catalogue-desc' }, b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's')),
+      h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '')),
       b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onEdit(b); } }, 'Edit'),
