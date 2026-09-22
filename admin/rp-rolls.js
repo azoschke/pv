@@ -652,7 +652,6 @@
           : h('div', { className: 'portal-field', key: 'vmult' }, h('label', null, 'Times damage (×)'),
               h('input', { type: 'number', min: 1, step: '0.5', value: vMult, onChange: function (e) { setVMult(e.target.value); } }))
       ]) : null,
-      isVuln ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'A single effect is one or the other — a flat add or a multiplier.') : null,
       isVuln ? secHead('Who it affects') : null,
       isVuln ? fieldGrid([
         h('div', { className: 'portal-field', key: 'vside' }, h('label', null, 'Side'),
