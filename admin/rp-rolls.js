@@ -2044,7 +2044,7 @@
           bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
         (function () {
-          if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one, give it skills, and the DM can field it in any campaign.');
+          if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one and give it skills.');
           var q = bossQuery.trim().toLowerCase();
           var shown = q ? bossLib.filter(function (b) { return (b.name || '').toLowerCase().indexOf(q) !== -1; }) : bossLib;
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
