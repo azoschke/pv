@@ -49,6 +49,11 @@
   };
   function rulesOf(data) { return (data && data.rules) || FALLBACK_RULES; }
 
+  // Scene state (location / time of day) the DM sets from the Control Deck. Fixed
+  // lists shared with the admin Combat Toolkit and the worker — keep in lockstep.
+  var RP_LOCATIONS = ['Arctic', 'Cave', 'Coastal', 'Desert', 'Forest', 'Jungle', 'Grassland', 'Mountain', 'Swamp', 'Town'];
+  var RP_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
+
   function damageFor(rules, r) {
     var tiers = (rules.damage_tiers || []).slice().sort(function (a, b) { return b.min - a.min; });
     for (var i = 0; i < tiers.length; i++) { if (r >= tiers[i].min) return tiers[i].damage; }
@@ -1303,6 +1308,18 @@
             title: 'Open the Combat Toolkit admin page', style: { textDecoration: 'none' } },
             h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', marginRight: '0.28rem', fontVariationSettings: "'FILL' 1" } }, 'casino'),
             'Combat Toolkit')),
+
+        // Scene — location + time of day. Session-scoped; drives scene-gated
+        // effects, which the worker re-checks the moment this is saved.
+        h('div', { className: 'rp-dm-scene' },
+          h('span', { className: 'rp-dm-scene-label' }, 'Scene'),
+          h('select', { className: 'rp-scene-select', value: c.location || '', onChange: function (e) { props.onSetScene({ location: e.target.value || null }); } },
+            h('option', { value: '' }, 'Location — none'),
+            RP_LOCATIONS.map(function (loc) { return h('option', { key: loc, value: loc }, loc); })),
+          h('select', { className: 'rp-scene-select', value: c.time_of_day || '', onChange: function (e) { props.onSetScene({ time_of_day: e.target.value || null }); } },
+            h('option', { value: '' }, 'Time — none'),
+            RP_TIMES.map(function (tod) { return h('option', { key: tod, value: tod }, tod); }))),
+
         h('div', { className: 'rp-dm-tabs' },
           tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
 
@@ -1399,7 +1416,7 @@
     function mergeSync(cur, s) {
       var me2 = (s.party || []).filter(function (p) { return cur.character && p.member_id === cur.character.member_id; })[0];
       return Object.assign({}, cur, {
-        campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm }),
+        campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm, location: s.location || null, time_of_day: s.time_of_day || null }),
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
@@ -1450,6 +1467,9 @@
     function onActivateAll(ab) { act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid() }); }); }
     function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
     function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
+    // Scene (location / time of day). Empty string clears back to unset. The
+    // worker re-checks scene-gated effects immediately, so they fire on save.
+    function onSetScene(patch) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/scene', patch); }); }
     function onToggleEffect(e, enabled) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { enabled: enabled }); }); }
     function onSetTurns(e, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { remaining_turns: Math.max(0, v) }); }); }
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
@@ -1525,7 +1545,13 @@
 
     return h('div', { className: 'rp-tool' },
       h('header', { className: 'rp-header' },
-        h('div', null, h('h1', null, 'Roll Calculator'), h('p', { className: 'rp-sub' }, camp.name + ' · Turn ' + camp.turn_number + (camp.turn_locked ? ' (locked)' : ''))),
+        h('div', null, h('h1', null, 'Roll Calculator'),
+          h('p', { className: 'rp-sub' }, camp.name + ' · Turn ' + camp.turn_number + (camp.turn_locked ? ' (locked)' : '')),
+          (camp.location || camp.time_of_day)
+            ? h('p', { className: 'rp-scene-chip' },
+                h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'landscape'),
+                [camp.location, camp.time_of_day].filter(Boolean).join(' · '))
+            : null),
         h('div', { className: 'rp-me' },
           h('div', { className: 'rp-me-id' },
             c ? h(Avatar, { url: avatars[c.member_id], name: c.member_name }) : null,
@@ -1544,7 +1570,7 @@
 
       isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
-        onEndTurn: onEndTurn, onNextTurn: onNextTurn, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
+        onEndTurn: onEndTurn, onNextTurn: onNextTurn, onSetScene: onSetScene, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
         onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,

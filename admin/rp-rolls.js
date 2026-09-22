@@ -287,13 +287,13 @@
   var EFFECT_HELP = {
     damage: 'Hits an enemy you pick for damage.',
     heal: 'Restores HP to the target.',
-    shield: 'Gives a shield that blocks damage. It stays until broken.',
-    summon: 'Brings temporary minions onto the field that the holder controls.',
+    shield: 'Gives a shield that blocks damage.',
+    summon: '',
     roll: 'Adds to the holder’s dice rolls.',
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
-    damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
+    damage_reduction: 'Lowers damage the target takes.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
@@ -326,6 +326,48 @@
     { value: 'party_members', label: 'Several chosen allies' },
     { value: 'holder_items', label: 'Holder of item(s)' }
   ];
+  // ── Conditional activation (Advanced) ───────────────────────────────────────
+  // An optional gate on any effect: the holder's HP, or the campaign's scene
+  // (location / time of day). Untouched = the effect always applies. These fixed
+  // lists are shared with the roll calculator's DM Control Deck AND the worker's
+  // validation — keep all three in lockstep if they ever change.
+  var RP_LOCATIONS = ['Arctic', 'Cave', 'Coastal', 'Desert', 'Forest', 'Jungle', 'Grassland', 'Mountain', 'Swamp', 'Town'];
+  var RP_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
+  // HP comparison operators. '=' is only valid with a flat HP value — a percent
+  // rarely lands on an exact integer — enforced on submit and in the worker.
+  var HP_OPS = [
+    { value: '<', label: 'below' },
+    { value: '<=', label: 'at or below' },
+    { value: '=', label: 'exactly' },
+    { value: '>=', label: 'at or above' },
+    { value: '>', label: 'above' }
+  ];
+  function parseConditions(c) {
+    if (!c) return null;
+    if (typeof c === 'object') return c;
+    try { return JSON.parse(c) || null; } catch (_) { return null; }
+  }
+  // A short plain-language note for the catalogue summary, e.g.
+  // "Only while the holder is below 50% HP" / "Only in Forest, Jungle at Night".
+  function conditionPhrase(c) {
+    c = parseConditions(c);
+    if (!c) return '';
+    if (c.kind === 'hp') {
+      var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
+      function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
+      var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
+      var s = 'Only while ' + whose + ' is ' + pt(c.start);
+      if (c.stop) s += ' (until ' + pt(c.stop) + ')';
+      return s;
+    }
+    if (c.kind === 'scene') {
+      var parts = [];
+      if (Array.isArray(c.locations) && c.locations.length) parts.push('in ' + c.locations.join(', '));
+      if (Array.isArray(c.times) && c.times.length) parts.push('at ' + c.times.join(', '));
+      return parts.length ? 'Only ' + parts.join(' ') : '';
+    }
+    return '';
+  }
   // "How it works" options are phrased per effect so timing reads naturally and
   // never contradicts itself (an "always on" choice never carries a turn limit;
   // over-time is a named option, not a hidden toggle). Each maps to mode +
@@ -412,6 +454,50 @@
     var vSide = vSideState[0], setVSide = vSideState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
+    // ── Conditional activation (Advanced) ─────────────────────────────────────
+    // HP and Scene are mutually exclusive per effect. Untouched (condKind '') =
+    // the effect always applies, exactly as before.
+    var initConds = props.initial ? parseConditions(m.conditions) : null;
+    var condKindState = useState(initConds ? (initConds.kind || '') : ''); var condKind = condKindState[0], setCondKind = condKindState[1];
+    var initHp = (initConds && initConds.kind === 'hp') ? initConds : null;
+    var condSubjectState = useState(initHp && initHp.subject === 'item_holder' ? 'item_holder' : 'holder'); var condSubject = condSubjectState[0], setCondSubject = condSubjectState[1];
+    var condItemState = useState(initHp && initHp.item_id ? String(initHp.item_id) : ''); var condItem = condItemState[0], setCondItem = condItemState[1];
+    var startOpState = useState(initHp && initHp.start ? (initHp.start.op || '<') : '<'); var startOp = startOpState[0], setStartOp = startOpState[1];
+    var startValState = useState(initHp && initHp.start ? String(initHp.start.value) : '50'); var startVal = startValState[0], setStartVal = startValState[1];
+    var startUnitState = useState(initHp && initHp.start && initHp.start.unit === 'flat' ? 'flat' : 'pct'); var startUnit = startUnitState[0], setStartUnit = startUnitState[1];
+    var useStopState = useState(!!(initHp && initHp.stop)); var useStop = useStopState[0], setUseStop = useStopState[1];
+    var stopOpState = useState(initHp && initHp.stop ? (initHp.stop.op || '>=') : '>='); var stopOp = stopOpState[0], setStopOp = stopOpState[1];
+    var stopValState = useState(initHp && initHp.stop ? String(initHp.stop.value) : '50'); var stopVal = stopValState[0], setStopVal = stopValState[1];
+    var stopUnitState = useState(initHp && initHp.stop && initHp.stop.unit === 'flat' ? 'flat' : 'pct'); var stopUnit = stopUnitState[0], setStopUnit = stopUnitState[1];
+    var initScene = (initConds && initConds.kind === 'scene') ? initConds : null;
+    var condLocsState = useState(initScene && Array.isArray(initScene.locations) ? initScene.locations.slice() : []); var condLocs = condLocsState[0], setCondLocs = condLocsState[1];
+    var condTimesState = useState(initScene && Array.isArray(initScene.times) ? initScene.times.slice() : []); var condTimes = condTimesState[0], setCondTimes = condTimesState[1];
+    function toggleLoc(x) { setCondLocs(function (cur) { return cur.indexOf(x) !== -1 ? cur.filter(function (y) { return y !== x; }) : cur.concat([x]); }); }
+    function toggleTime(x) { setCondTimes(function (cur) { return cur.indexOf(x) !== -1 ? cur.filter(function (y) { return y !== x; }) : cur.concat([x]); }); }
+    // Advanced Settings is collapsed by default; auto-open when editing an effect
+    // that already carries a condition so it isn't hidden.
+    var advOpenState = useState(!!initConds); var advOpen = advOpenState[0], setAdvOpen = advOpenState[1];
+    function resolvedConditions() {
+      if (condKind === 'hp') {
+        var start = { op: startOp, value: Math.max(0, parseInt(startVal, 10) || 0), unit: startUnit === 'flat' ? 'flat' : 'pct' };
+        var stop = useStop ? { op: stopOp, value: Math.max(0, parseInt(stopVal, 10) || 0), unit: stopUnit === 'flat' ? 'flat' : 'pct' } : null;
+        return { kind: 'hp', subject: condSubject === 'item_holder' ? 'item_holder' : 'holder', item_id: condSubject === 'item_holder' ? (condItem || null) : null, start: start, stop: stop };
+      }
+      if (condKind === 'scene') return { kind: 'scene', locations: condLocs.slice(), times: condTimes.slice() };
+      return null;
+    }
+    function conditionError() {
+      if (condKind === 'hp') {
+        if (condSubject === 'item_holder' && !condItem) return 'Pick the item whose holder’s HP this watches.';
+        if (startUnit === 'pct' && startOp === '=') return 'Use HP (not %) for an “exactly” condition.';
+        if (useStop && stopUnit === 'pct' && stopOp === '=') return 'Use HP (not %) for an “exactly” stop condition.';
+        if (startUnit === 'pct' && (parseInt(startVal, 10) || 0) > 100) return 'A percent start can’t be above 100.';
+        if (useStop && stopUnit === 'pct' && (parseInt(stopVal, 10) || 0) > 100) return 'A percent stop can’t be above 100.';
+      }
+      if (condKind === 'scene' && !condLocs.length && !condTimes.length) return 'Pick at least one location or time of day.';
+      return null;
+    }
+
     // On first pick (from no effect) default the timing to the effect's first
     // option so a new Heal/Shield doesn't silently start as "always on". When
     // switching between real effects, keep the current timing if it's still valid.
@@ -484,12 +570,14 @@
     async function submit(e) {
       e.preventDefault();
       if (!effect) { setErr('Pick an effect.'); return; }
+      var condErr = conditionError(); if (condErr) { setErr(condErr); return; }
+      var conditions = resolvedConditions();
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       if (isVuln) {
         var flat = Math.max(0, parseInt(val, 10) || 0);
         var mlt = Math.max(1, parseFloat(vMult) || 1);
         if (flat <= 0 && mlt <= 1) { setErr('Add extra damage, a multiplier above 1×, or both.'); return; }
-        var vp = { label: label.trim() || null, value: flat, mult: mlt, type: 'vulnerability', rolls: null, skill: null, summon: null,
+        var vp = { label: label.trim() || null, value: flat, mult: mlt, type: 'vulnerability', rolls: null, skill: null, summon: null, conditions: conditions,
           target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: parseInt(dur, 10) || 0, start_next_turn: startNext };
         if (vSide === 'enemy') vp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') vp.target_ref = ref || 'tank';
@@ -498,7 +586,7 @@
         return;
       }
       if (isStun) {
-        var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null,
+        var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null, conditions: conditions,
           target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: startNext };
         if (vSide === 'enemy') sp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') sp.target_ref = ref || 'tank';
@@ -509,7 +597,7 @@
       var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
-        summon: resolvedSummon(),
+        summon: resolvedSummon(), conditions: conditions,
         target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
         start_next_turn: (effect === 'damage' && isOver) ? startNext : false };
@@ -666,8 +754,7 @@
           h('input', { type: 'number', min: 1, value: sCap, placeholder: 'no limit', onChange: function (e) { setSCap(e.target.value); } })) : null
       ]) : null,
       isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
-        h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } }),
-        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Blank = until they’re defeated or the session ends.')) : null,
+        h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } })) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
       isStrike ? secHead('Who it affects') : null,
@@ -719,6 +806,68 @@
       // A DoT (damage over time) can start next turn instead of ticking now.
       (effect === 'damage' && isOver) ? startNextField() : null,
 
+      // ── Advanced Settings (collapsible) ───────────────────────────────────
+      hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
+        style: { display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 0, padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } },
+        h('span', { 'aria-hidden': 'true', style: { fontSize: '0.9em' } }, advOpen ? '▾' : '▸'),
+        'Advanced Settings') : null,
+      (hasEffect && advOpen) ? h('div', { className: 'portal-field', style: { maxWidth: '20rem' } }, h('label', null, 'Only active when…'),
+        h('select', { value: condKind, onChange: function (e) { setCondKind(e.target.value); } },
+          h('option', { value: '' }, 'Always (no condition)'),
+          h('option', { value: 'hp' }, 'The holder’s HP is in range'),
+          h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
+
+      (hasEffect && advOpen && condKind === 'hp') ? h('div', { style: { marginTop: '0.4rem' } },
+        fieldGrid([
+          h('div', { className: 'portal-field', key: 'csub' }, h('label', null, 'Whose HP'),
+            h('select', { value: condSubject, onChange: function (e) { setCondSubject(e.target.value); } },
+              h('option', { value: 'holder' }, 'The holder of this item'),
+              h('option', { value: 'item_holder' }, 'The holder of another item'))),
+          condSubject === 'item_holder' ? h('div', { className: 'portal-field', key: 'citem' }, h('label', null, 'Which item'),
+            h('select', { value: condItem, onChange: function (e) { setCondItem(e.target.value); } },
+              h('option', { value: '' }, '— pick an item —'),
+              (props.catalogue || []).map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); }))) : null
+        ]),
+        h('div', { style: { display: 'flex', gap: '0.4rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.35rem' } },
+          h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'Turns on when HP is'),
+            h('select', { value: startOp, onChange: function (e) { setStartOp(e.target.value); } },
+              HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Amount'),
+            h('input', { type: 'number', min: 0, value: startVal, onChange: function (e) { setStartVal(e.target.value); } })),
+          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Unit'),
+            h('select', { value: startUnit, onChange: function (e) { setStartUnit(e.target.value); } },
+              h('option', { value: 'pct' }, '%'),
+              h('option', { value: 'flat' }, 'HP')))),
+        h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+          h('input', { type: 'checkbox', checked: useStop, onChange: function (e) { setUseStop(e.target.checked); } }),
+          'Keep it on until a separate turn-off point'),
+        useStop ? h('div', { style: { display: 'flex', gap: '0.4rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.3rem' } },
+          h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'Turns off when HP is'),
+            h('select', { value: stopOp, onChange: function (e) { setStopOp(e.target.value); } },
+              HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Amount'),
+            h('input', { type: 'number', min: 0, value: stopVal, onChange: function (e) { setStopVal(e.target.value); } })),
+          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Unit'),
+            h('select', { value: stopUnit, onChange: function (e) { setStopUnit(e.target.value); } },
+              h('option', { value: 'pct' }, '%'),
+              h('option', { value: 'flat' }, 'HP')))) : null
+      ) : null,
+
+      (hasEffect && advOpen && condKind === 'scene') ? h('div', { style: { marginTop: '0.4rem' } },
+        h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_LOCATIONS.map(function (loc) {
+              return h('label', { key: loc, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                h('input', { type: 'checkbox', checked: condLocs.indexOf(loc) !== -1, onChange: function () { toggleLoc(loc); } }), loc);
+            }))),
+        h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'And these times of day (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_TIMES.map(function (tod) {
+              return h('label', { key: tod, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                h('input', { type: 'checkbox', checked: condTimes.indexOf(tod) !== -1, onChange: function () { toggleTime(tod); } }), tod);
+            }))),
+      ) : null,
+
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.8rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save' : 'Add'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
@@ -755,12 +904,13 @@
     return v + ' ' + String(type || '').replace(/_/g, ' ');
   }
   function modifierSummary(m, catalogue) {
-    if (m.type === 'none') return m.label ? m.label : 'Narrative effect (shown from the description).';
+    var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
+    if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
     if (m.type === 'summon') {
       var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
       var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
       var atk = s.attack_mode === 'd20' ? 'D20 atk' : (s.attack || 0) + ' atk';
-      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su;
+      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su + cndSuffix;
     }
     var t;
     switch (m.target_kind) {
@@ -785,7 +935,7 @@
       : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
       : m.type === 'stun' ? 'stuns'
       : typePhrase(m.type, m.value);
-    return when + ', ' + core + ' to ' + t + dur + '.' + uses;
+    return when + ', ' + core + ' to ' + t + dur + '.' + uses + cndSuffix;
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────
