@@ -845,9 +845,8 @@
           h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Unit'),
             h('select', { value: stopUnit, onChange: function (e) { setStopUnit(e.target.value); } },
               h('option', { value: 'pct' }, '%'),
-              h('option', { value: 'flat' }, 'HP')))) : null,
-        h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-          'Lasting effects (bonuses, heal-over-time) stay on while this holds. One-shot effects (summons, strikes, damage-over-time) fire once when it turns on, then re-arm after it turns off. A knocked-out holder is always off. The turn-off point only affects lasting effects.')) : null,
+              h('option', { value: 'flat' }, 'HP')))) : null
+      ) : null,
 
       (hasEffect && condKind === 'scene') ? h('div', { style: { marginTop: '0.4rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
