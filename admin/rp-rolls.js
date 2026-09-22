@@ -287,13 +287,13 @@
   var EFFECT_HELP = {
     damage: 'Hits an enemy you pick for damage.',
     heal: 'Restores HP to the target.',
-    shield: 'Gives a shield that blocks damage. It stays until broken.',
-    summon: 'Brings temporary minions onto the field that the holder controls.',
+    shield: 'Gives a shield that blocks damage.',
+    summon: '',
     roll: 'Adds to the holder’s dice rolls.',
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
-    damage_reduction: 'Lowers damage the target takes. A hit still deals at least 1.',
+    damage_reduction: 'Lowers damage the target takes.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
@@ -754,8 +754,7 @@
           h('input', { type: 'number', min: 1, value: sCap, placeholder: 'no limit', onChange: function (e) { setSCap(e.target.value); } })) : null
       ]) : null,
       isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
-        h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } }),
-        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Blank = until they’re defeated or the session ends.')) : null,
+        h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } })) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
       isStrike ? secHead('Who it affects') : null,
