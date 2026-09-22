@@ -124,6 +124,33 @@
     }
     return '';
   }
+  // Conditional-activation gate (HP / scene). The worker sends `conditions` as a
+  // parsed object already, but tolerate a JSON string too. Mirrors the admin
+  // authoring copy so the wording matches what the DM set.
+  function parseConditions(c) {
+    if (!c) return null;
+    if (typeof c === 'object') return c;
+    try { return JSON.parse(c) || null; } catch (_) { return null; }
+  }
+  function conditionPhrase(c) {
+    c = parseConditions(c);
+    if (!c) return '';
+    if (c.kind === 'hp') {
+      var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
+      function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
+      var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
+      var s = 'Only while ' + whose + ' is ' + pt(c.start);
+      if (c.stop) s += ' (until ' + pt(c.stop) + ')';
+      return s;
+    }
+    if (c.kind === 'scene') {
+      var parts = [];
+      if (Array.isArray(c.locations) && c.locations.length) parts.push('in ' + c.locations.join(', '));
+      if (Array.isArray(c.times) && c.times.length) parts.push('at ' + c.times.join(', '));
+      return parts.length ? 'Only ' + parts.join(' ') : '';
+    }
+    return '';
+  }
   // For a catalogue modifier (My Items / admin): full "when → what → to whom" sentence.
   function describeModifier(m) {
     if (m.type === 'none') return m.label || 'Special effect — see the item text.';
@@ -354,10 +381,16 @@
     var bossPicksState = useState([]); var bossPicks = bossPicksState[0], setBossPicks = bossPicksState[1];
     function toggleBoss(id, cap) { setBossPicks(function (cur) { if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; }); if (cap && cur.length >= cap) return cur; return cur.concat([id]); }); }
     var plain = describeModifier(m);
+    // A conditional-activation gate (HP / scene). When the worker reports the gate
+    // is currently unmet (cond_latched === false) the effect isn't applying, so the
+    // row greys out and says so — its bonus is already excluded server-side.
+    var cond = m.conditions ? parseConditions(m.conditions) : null;
+    var gateClosed = !!(cond && m.cond_latched === false);
     var extras = [];
     if (m.mode === 'activated' && m.uses_per_session > 0) extras.push((m.uses_per_session - (m.uses_this_session || 0)) + ' of ' + m.uses_per_session + ' uses left');
+    if (cond) extras.push(conditionPhrase(cond));
     if (m.active && m.remaining_turns != null) extras.push('active — ' + m.remaining_turns + (m.duration_turns ? ' of ' + m.duration_turns : '') + ' turns left');
-    else if (m.active) extras.push('active now');
+    else if (m.active && !gateClosed) extras.push('active now');
 
     var spent = m.mode === 'activated' && m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session;
     var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
@@ -407,9 +440,10 @@
         h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
         h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' }));
     }
-    return h('div', { className: 'rp-mod' },
+    return h('div', { className: 'rp-mod' + (gateClosed ? ' is-gated' : '') },
       h('div', { className: 'rp-mod-info' },
-        h('span', null, h('strong', null, m.label || (m.type === 'none' ? 'Effect' : typePhrase(m.type, m.value)))),
+        h('span', null, h('strong', null, m.label || (m.type === 'none' ? 'Effect' : typePhrase(m.type, m.value))),
+          gateClosed ? h('span', { className: 'rp-mod-flag' }, 'Condition not met') : null),
         h('span', { className: 'rp-mod-meta' }, plain + (extras.length ? ' · ' + extras.join(' · ') : ''))),
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
@@ -1408,7 +1442,7 @@
       return (items || []).map(function (it) {
         return Object.assign({}, it, { abilities: (it.abilities || []).map(function (ab) {
           return Object.assign({}, ab, { modifiers: (ab.modifiers || []).map(function (m) {
-            var s = byMod[m.id]; return s ? Object.assign({}, m, { active: s.active, remaining_turns: s.remaining_turns, runtime_target_member_id: s.runtime_target_member_id, uses_this_session: s.uses_this_session }) : m;
+            var s = byMod[m.id]; return s ? Object.assign({}, m, { active: s.active, remaining_turns: s.remaining_turns, runtime_target_member_id: s.runtime_target_member_id, uses_this_session: s.uses_this_session, cond_latched: s.cond_latched }) : m;
           }) });
         }) });
       });
@@ -1418,6 +1452,7 @@
       return Object.assign({}, cur, {
         campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm, location: s.location || null, time_of_day: s.time_of_day || null }),
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
+        player_stuns: s.player_stuns, player_vulns: s.player_vulns,
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
         minions: s.minions || [],
@@ -1474,7 +1509,7 @@
     function onSetTurns(e, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { remaining_turns: Math.max(0, v) }); }); }
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
     function onPauseSession() { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/pause', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to pause.'); }); }
-    function onEndSession() { if (!confirm('End the session? Buffs and shields clear.')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/admin/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
+    function onEndSession() { if (!confirm('End the session?')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/admin/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
     // Heal apply: one atomic request — additive server-side (no lost heals when two
     // land together) and unable to revive KO'd targets. Then refresh.
     function onApplyHeal(entries) {

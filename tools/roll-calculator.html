@@ -274,6 +274,9 @@
     .rp-mod { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; }
     .rp-mod-info { display: flex; flex-direction: column; min-width: 0; }
     .rp-mod-meta { font-size: 0.8rem; color: var(--text-secondary); }
+    /* Conditional skill whose gate is currently unmet: dimmed, with a red flag. */
+    .rp-mod.is-gated { opacity: 0.5; }
+    .rp-mod-flag { margin-left: 0.4rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); font-weight: 700; }
     .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
     /* Sliding on/off switch for toggle skills: both states shown, lit knob slides. */
     .rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;

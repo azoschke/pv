@@ -450,6 +450,9 @@
     // does nothing this turn and begins next turn (still its full length).
     var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
+    // Vulnerability is one-or-the-other: a flat add OR a multiplier, never both.
+    // Seed from whichever the stored effect used (multiplier only when there's no flat).
+    var vKindState = useState((m.type === 'vulnerability' && m.mult != null && m.mult > 1 && !(m.value > 0)) ? 'mult' : 'flat'); var vKind = vKindState[0], setVKind = vKindState[1];
     var vSideState = useState((m.target_kind === 'boss' || m.target_kind === 'some_bosses' || m.target_kind === 'all_bosses' || m.target_kind === 'minions') ? 'enemy' : ((initType === 'vulnerability' || initType === 'stun') ? 'player' : 'enemy'));
     var vSide = vSideState[0], setVSide = vSideState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -574,9 +577,11 @@
       var conditions = resolvedConditions();
       if (effect === 'roll' && !rolls.length) { setErr('Pick at least one roll.'); return; }
       if (isVuln) {
-        var flat = Math.max(0, parseInt(val, 10) || 0);
-        var mlt = Math.max(1, parseFloat(vMult) || 1);
-        if (flat <= 0 && mlt <= 1) { setErr('Add extra damage, a multiplier above 1×, or both.'); return; }
+        // One-or-the-other: the unused side is sent at its no-op value (flat 0 / ×1).
+        var flat = vKind === 'flat' ? Math.max(0, parseInt(val, 10) || 0) : 0;
+        var mlt = vKind === 'mult' ? Math.max(1, parseFloat(vMult) || 1) : 1;
+        if (vKind === 'flat' && flat <= 0) { setErr('Add some flat extra damage.'); return; }
+        if (vKind === 'mult' && mlt <= 1) { setErr('Use a multiplier above 1×.'); return; }
         var vp = { label: label.trim() || null, value: flat, mult: mlt, type: 'vulnerability', rolls: null, skill: null, summon: null, conditions: conditions,
           target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: parseInt(dur, 10) || 0, start_next_turn: startNext };
         if (vSide === 'enemy') vp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
@@ -637,12 +642,17 @@
       // ── Vulnerability (self-contained: how much, who, how long) ───────────
       isVuln ? secHead('How much extra') : null,
       isVuln ? fieldGrid([
-        h('div', { className: 'portal-field', key: 'vflat' }, h('label', null, 'Extra damage (flat)'),
-          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })),
-        h('div', { className: 'portal-field', key: 'vmult' }, h('label', null, 'Times damage (×)'),
-          h('input', { type: 'number', min: 1, step: '0.5', value: vMult, onChange: function (e) { setVMult(e.target.value); } }))
+        h('div', { className: 'portal-field', key: 'vkind' }, h('label', null, 'Kind'),
+          h('select', { value: vKind, onChange: function (e) { setVKind(e.target.value); } },
+            h('option', { value: 'flat' }, 'Flat extra damage'),
+            h('option', { value: 'mult' }, 'Multiply damage (×)'))),
+        vKind === 'flat'
+          ? h('div', { className: 'portal-field', key: 'vflat' }, h('label', null, 'Extra damage (flat)'),
+              h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } }))
+          : h('div', { className: 'portal-field', key: 'vmult' }, h('label', null, 'Times damage (×)'),
+              h('input', { type: 'number', min: 1, step: '0.5', value: vMult, onChange: function (e) { setVMult(e.target.value); } }))
       ]) : null,
-      isVuln ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Use either or both. Flat adds first, then the multiplier.') : null,
+      isVuln ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'A single effect is one or the other — a flat add or a multiplier.') : null,
       isVuln ? secHead('Who it affects') : null,
       isVuln ? fieldGrid([
         h('div', { className: 'portal-field', key: 'vside' }, h('label', null, 'Side'),
