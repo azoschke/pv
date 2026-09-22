@@ -474,6 +474,9 @@
     var condTimesState = useState(initScene && Array.isArray(initScene.times) ? initScene.times.slice() : []); var condTimes = condTimesState[0], setCondTimes = condTimesState[1];
     function toggleLoc(x) { setCondLocs(function (cur) { return cur.indexOf(x) !== -1 ? cur.filter(function (y) { return y !== x; }) : cur.concat([x]); }); }
     function toggleTime(x) { setCondTimes(function (cur) { return cur.indexOf(x) !== -1 ? cur.filter(function (y) { return y !== x; }) : cur.concat([x]); }); }
+    // Advanced Settings is collapsed by default; auto-open when editing an effect
+    // that already carries a condition so it isn't hidden.
+    var advOpenState = useState(!!initConds); var advOpen = advOpenState[0], setAdvOpen = advOpenState[1];
     function resolvedConditions() {
       if (condKind === 'hp') {
         var start = { op: startOp, value: Math.max(0, parseInt(startVal, 10) || 0), unit: startUnit === 'flat' ? 'flat' : 'pct' };
@@ -804,15 +807,18 @@
       // A DoT (damage over time) can start next turn instead of ticking now.
       (effect === 'damage' && isOver) ? startNextField() : null,
 
-      // ── Advanced — conditional activation ─────────────────────────────────
-      hasEffect ? secHead('Advanced — activate on a condition') : null,
-      hasEffect ? h('div', { className: 'portal-field', style: { maxWidth: '20rem' } }, h('label', null, 'Only active when…'),
+      // ── Advanced Settings (collapsible) ───────────────────────────────────
+      hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
+        style: { display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 0, padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } },
+        h('span', { 'aria-hidden': 'true', style: { fontSize: '0.9em' } }, advOpen ? '▾' : '▸'),
+        'Advanced Settings') : null,
+      (hasEffect && advOpen) ? h('div', { className: 'portal-field', style: { maxWidth: '20rem' } }, h('label', null, 'Only active when…'),
         h('select', { value: condKind, onChange: function (e) { setCondKind(e.target.value); } },
           h('option', { value: '' }, 'Always (no condition)'),
           h('option', { value: 'hp' }, 'The holder’s HP is in range'),
           h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
 
-      (hasEffect && condKind === 'hp') ? h('div', { style: { marginTop: '0.4rem' } },
+      (hasEffect && advOpen && condKind === 'hp') ? h('div', { style: { marginTop: '0.4rem' } },
         fieldGrid([
           h('div', { className: 'portal-field', key: 'csub' }, h('label', null, 'Whose HP'),
             h('select', { value: condSubject, onChange: function (e) { setCondSubject(e.target.value); } },
@@ -848,7 +854,7 @@
               h('option', { value: 'flat' }, 'HP')))) : null
       ) : null,
 
-      (hasEffect && condKind === 'scene') ? h('div', { style: { marginTop: '0.4rem' } },
+      (hasEffect && advOpen && condKind === 'scene') ? h('div', { style: { marginTop: '0.4rem' } },
         h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
             RP_LOCATIONS.map(function (loc) {
@@ -861,8 +867,7 @@
               return h('label', { key: tod, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
                 h('input', { type: 'checkbox', checked: condTimes.indexOf(tod) !== -1, onChange: function () { toggleTime(tod); } }), tod);
             }))),
-        h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } },
-          'Leave a list empty to ignore it. The DM sets the scene from the Control Deck; when it’s unset, scene-locked effects stay off.')) : null,
+      ) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.8rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save' : 'Add'),
