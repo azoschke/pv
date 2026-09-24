@@ -364,6 +364,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 4px;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
   min-width: 16rem;
 }
 
@@ -378,12 +380,51 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: var(--form-input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 0.4rem 0.55rem;
+  /* Same box as .portal-search so dropdowns line up with inputs. */
+  padding: 0.5rem 0.55rem;
   border-radius: 4px;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
   min-width: 11rem;
 }
+
+/* On/Off switch (button role="switch"). */
+.portal-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-primary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.portal-switch-track {
+  position: relative;
+  width: 2.3rem;
+  height: 1.3rem;
+  border-radius: 1rem;
+  background: var(--border-color);
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.portal-switch-knob {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s;
+}
+.portal-switch.is-on .portal-switch-track { background: var(--accent-brown); }
+.portal-switch.is-on .portal-switch-knob { left: 1.15rem; }
+.portal-switch-state { color: var(--text-secondary); font-size: 0.9rem; }
 
 /* --------------- Tables --------------- */
 .portal-table-wrap { overflow-x: auto; }

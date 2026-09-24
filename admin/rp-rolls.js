@@ -2074,11 +2074,15 @@
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));
           })(),
-          isAdmin ? h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
-            h('input', { type: 'checkbox', checked: bossPrivate, onChange: function (e) { toggleBossPrivacy(e.target.checked); } }),
-            'Hide my bosses') : null,
           bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
+        isAdmin ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
+          h('button', { type: 'button', role: 'switch', 'aria-checked': bossPrivate,
+            className: 'portal-switch' + (bossPrivate ? ' is-on' : ''),
+            onClick: function () { toggleBossPrivacy(!bossPrivate); } },
+            h('span', { className: 'portal-switch-track' }, h('span', { className: 'portal-switch-knob' })),
+            'Hide My Bosses',
+            h('span', { className: 'portal-switch-state' }, bossPrivate ? 'On' : 'Off'))) : null,
         (function () {
           if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one and give it skills.');
           var q = bossQuery.trim().toLowerCase();
