@@ -178,7 +178,7 @@
                     filtered.map(function (p) {
                       var factionTags = orderedFactionsOf(p);
                       return h('tr', { key: p.member_id },
-                        h('td', { style: { fontWeight: 600 } }, p.name),
+                        h('td', { style: { fontWeight: 600, fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, p.name),
                         h('td', null,
                           factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },

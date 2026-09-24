@@ -333,7 +333,7 @@
             filtered.length
               ? filtered.map(function (p) {
                   return h('tr', { key: p.patient_id },
-                    h('td', null,
+                    h('td', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } },
                       p.patient_name,
                       p.member_id
                         ? h('span', {

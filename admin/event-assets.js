@@ -542,7 +542,7 @@
         ) : h('div', { style: { padding: '0.6rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary)' } }, '—')
       ),
       // Event (click anywhere in the cell to copy)
-      h('td', { style: { padding: 0, verticalAlign: 'middle' } },
+      h('td', { style: { padding: 0, verticalAlign: 'middle', fontFamily: 'Stoke, serif', fontSize: '0.9rem' } },
         h(ClickToCopy, { value: a.event_topic || 'Untitled', bold: true })
       ),
       // Location (click to copy)

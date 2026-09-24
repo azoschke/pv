@@ -709,7 +709,7 @@
           }, (v.name || '').toLowerCase())
         )
       ),
-      h('td', null,
+      h('td', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
           v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
           h('span', { style: { fontWeight: 600 } }, v.name)

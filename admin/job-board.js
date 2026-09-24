@@ -390,7 +390,7 @@
     var typeCls = 'portal-pill ' + (j.job_type === 'secondary' ? 'is-muted' : 'is-gold');
 
     return h('tr', null,
-      h('td', null,
+      h('td', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } },
         h('span', { style: { fontWeight: 600 } }, j.title)
       ),
       h('td', null,

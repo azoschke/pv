@@ -1334,9 +1334,9 @@
               h('input', { type: 'text', value: p.label || '', onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].label = v; }); } }))),
             h('div', { className: 'portal-field' },
               h('label', { 'aria-hidden': 'true' }, '\u00a0'),
-              h('button', { type: 'button', className: 'portal-btn is-small is-danger', 'aria-label': 'Remove passive', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕')));
+              h('button', { type: 'button', className: 'portal-btn is-danger', 'aria-label': 'Remove passive', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕')));
         }),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.class_passives.push({ class: 'dps', type: 'attack_roll', value: 1, label: '' }); }); } }, '+ Add passive')),
+        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { upd(function (d) { d.class_passives.push({ class: 'dps', type: 'attack_roll', value: 1, label: '' }); }); } }, '+ Add passive')),
 
       // Damage tiers
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
@@ -1349,9 +1349,9 @@
               h('input', { type: 'number', min: 0, value: String(t.damage), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].damage = v; }); } })),
             h('div', { className: 'portal-field' },
               h('label', { 'aria-hidden': 'true' }, '\u00a0'),
-              h('button', { type: 'button', className: 'portal-btn is-small is-danger', 'aria-label': 'Remove tier', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕')));
+              h('button', { type: 'button', className: 'portal-btn is-danger', 'aria-label': 'Remove tier', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕')));
         }),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
+        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
 
       // Save / defaults / history
       h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' } },
@@ -1364,7 +1364,7 @@
             history.map(function (e2) {
               return h('div', { key: e2.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', borderTop: '1px solid var(--border-color)' } },
                 h('span', { style: { fontSize: '0.85rem' } }, (e2.updated_by || 'unknown') + ' · ' + new Date(e2.updated_at * 1000).toLocaleString()),
-                h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { restore(e2); } }, 'Restore'));
+                h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { restore(e2); } }, 'Restore'));
             }))) : null);
   }
 
@@ -1829,7 +1829,7 @@
       setBossForm(false); await loadBossLib();
     }
     async function deleteBoss(b) {
-      if (!confirm('Delete boss “' + b.name + '” and its skills? Bosses already on a battlefield keep their snapshot.')) return;
+      if (!confirm('Delete boss? If a boss has been added to a campaign, it will keep a snapshot until removed.')) return;
       try { await PVRollAPI.request('DELETE', '/rp/boss-library/' + b.id); await loadBossLib(); }
       catch (e) { setErr(e.message); }
     }
