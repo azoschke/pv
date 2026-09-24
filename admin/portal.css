@@ -532,6 +532,26 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
 }
+/* One fixed height for single-line fields so inputs, dropdowns and the
+   buttons beside them line up. Safari's native select ignores padding and
+   height, so drop it and draw the chevron as .portal-filter-select does. */
+.portal-field input[type="text"],
+.portal-field input[type="date"],
+.portal-field input[type="number"],
+.portal-field select, .portal-select {
+  box-sizing: border-box;
+  height: 2.5rem;
+  line-height: 1.25;
+}
+.portal-field select, .portal-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%236b4423' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  padding-right: 2rem;
+}
 /* Standalone section-title style (Stoke, uppercase) — used only on the specific
    campaign-panel titles, never grouped with the form inputs above. */
 .portal-block-label {
@@ -602,6 +622,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Vertically center row content against the tallest cell (e.g. the Activity
    status + inline talked-to line). */
 .members-table tbody td { vertical-align: middle; }
+/* Member name (first column) and IC rank (second). Group/empty rows span all
+   columns and keep their own style. */
+.members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.9rem; }
+.members-table tbody td:nth-child(2) { font-style: italic; }
 
 /* --------------- Activity cell (status + inline talked-to) --------------- */
 .activity-cell {

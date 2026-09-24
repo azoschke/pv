@@ -1320,7 +1320,8 @@
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
         h('h3', { style: { marginTop: 0 } }, 'Class passives'),
         (doc.class_passives || []).map(function (p, i) {
-          return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr)) 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
+          return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
             h('div', { className: 'portal-field' }, h('label', null, 'Class'),
               h('select', { value: p.class, onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].class = v; }); } },
                 CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
@@ -1330,8 +1331,8 @@
             h('div', { className: 'portal-field' }, h('label', null, 'Value'),
               h('input', { type: 'number', value: String(p.value), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.class_passives[i].value = v; }); } })),
             h('div', { className: 'portal-field' }, h('label', null, 'Label'),
-              h('input', { type: 'text', value: p.label || '', onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].label = v; }); } })),
-            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { marginBottom: '0.15rem' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕'));
+              h('input', { type: 'text', value: p.label || '', onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].label = v; }); } }))),
+            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { height: '2.5rem', justifyContent: 'center' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕'));
         }),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.class_passives.push({ class: 'dps', type: 'attack_roll', value: 1, label: '' }); }); } }, '+ Add passive')),
 
@@ -1344,7 +1345,7 @@
               h('input', { type: 'number', min: 0, value: String(t.min), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].min = v; }); } })),
             h('div', { className: 'portal-field' }, h('label', null, 'Damage'),
               h('input', { type: 'number', min: 0, value: String(t.damage), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].damage = v; }); } })),
-            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { marginBottom: '0.15rem' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕'));
+            h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { height: '2.5rem', justifyContent: 'center' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕'));
         }),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
 
