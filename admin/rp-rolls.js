@@ -446,7 +446,10 @@
     // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
-    var durState = useState(m.duration_turns && (m.duration_turns > 1 || (m.type === 'heal' && m.start_next_turn)) ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
+    // Pre-fill the saved turns, including 1. The only saved 1 to hide is "Heal once",
+    // which stores duration 1 internally but has no turns field.
+    var healOnce = m.type === 'heal' && m.duration_turns === 1 && !m.start_next_turn;
+    var durState = useState(m.duration_turns > 0 && !healOnce ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
