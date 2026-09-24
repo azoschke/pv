@@ -309,9 +309,9 @@
       var past = U.isPastQuest(q);
       var signupCount = (q.signups || []).length;
       return h('tr', null,
-        h('td', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } },
+        h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
-            h('span', { style: { fontWeight: 600 } }, q.title),
+            h('span', { style: { fontWeight: 600, fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, q.title),
             past ? h('span', { className: 'portal-pill is-red' }, 'Past date') : null
           ),
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
