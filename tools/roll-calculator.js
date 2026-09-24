@@ -1061,14 +1061,21 @@
   }
   // Plain-language boss-effect wording, mirroring the item describer.
   function bossEffectText(e) {
+    var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     if (e.type === 'none') return 'Narrative effect.';
+    if (e.type === 'heal') return (e.duration_turns === 1 ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.';
+    if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.';
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.';
-    return e.value + ' damage per turn to ' + to + (e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed') + '.';
+    if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.'; }
+    return e.value + ' damage per turn to ' + to + span + '.';
   }
   // Active (in-play) boss effect — target already resolved to names.
   function describeBossActiveEffect(e) {
     if (e.type === 'none') return 'Narrative effect';
+    var left = e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '';
+    if (e.type === 'heal') return 'Healing ' + e.value + ' HP per turn' + left;
+    if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage' + left;
     var to = e.target_label || bossTargetPhrase(e.target_kind, e.target_ref);
     var core = e.type === 'dot' ? e.value + ' damage per turn' : 'Effect';
     return core + ' to ' + to + (e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '');

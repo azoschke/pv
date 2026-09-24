@@ -395,6 +395,10 @@
     return type || 'roll'; // attack_output, attack_mult, heal_output, damage_reduction, shield, heal, none
   }
 
+  // Shared by the item modifier form and the boss effect form.
+  function secHead(t) { return h('div', { style: { fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } }, t); }
+  function fieldGrid(children) { return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(11rem, 1fr))', gap: '0.5rem', alignItems: 'end' } }, children); }
+
   function ModifierForm(props) {
     var m = props.initial || {};
     var initType = m.type || 'attack_roll';
@@ -446,8 +450,9 @@
     // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
-    // "Wait a turn before it starts" — delays a DoT / vulnerability / stun so it
-    // does nothing this turn and begins next turn (still its full length).
+    // "Wait a turn before it starts" — delays a vulnerability so it does nothing
+    // this turn and begins next turn (still its full length). DoTs and heals over
+    // time always start next turn; stuns always land now.
     var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
     // Vulnerability is one-or-the-other: a flat add OR a multiplier, never both.
@@ -592,7 +597,7 @@
       }
       if (isStun) {
         var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null, conditions: conditions,
-          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: startNext };
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: false };
         if (vSide === 'enemy') sp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') sp.target_ref = ref || 'tank';
         else sp.target_ref = null;
@@ -605,7 +610,7 @@
         summon: resolvedSummon(), conditions: conditions,
         target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
-        start_next_turn: (effect === 'damage' && isOver) ? startNext : false };
+        start_next_turn: false };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
@@ -613,8 +618,6 @@
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
 
-    function secHead(t) { return h('div', { style: { fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } }, t); }
-    function fieldGrid(children) { return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(11rem, 1fr))', gap: '0.5rem', alignItems: 'end' } }, children); }
     function startNextField() {
       return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
         h('input', { type: 'checkbox', checked: startNext, onChange: function (e) { setStartNext(e.target.checked); } }),
@@ -717,7 +720,6 @@
       isStun ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Bosses marked stun-immune are skipped. Minions are enemy adds.') : null,
       isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
         h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
-      isStun ? startNextField() : null,
 
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
@@ -812,8 +814,6 @@
       showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      // A DoT (damage over time) can start next turn instead of ticking now.
-      (effect === 'damage' && isOver) ? startNextField() : null,
 
       // ── Advanced Settings (collapsible) ───────────────────────────────────
       hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
@@ -962,17 +962,29 @@
   ];
   function tierStunImmuneDefault(tier) { return tier === 'boss'; }
   function tierLabel(v) { for (var i = 0; i < BOSS_TIERS.length; i++) if (BOSS_TIERS[i].value === v) return BOSS_TIERS[i].label; return 'Monster'; }
-  var BOSS_TYPES = [
-    { value: 'damage', label: 'Damage (instant)' },
-    { value: 'dot', label: 'DoT (damage per turn)' },
-    { value: 'none', label: 'Narrative (no numbers)' }
+  // Boss effect picker, laid out like the item form: pick what it does, then
+  // who it hits, then how it plays out. Damage and Heal pick their timing on a
+  // separate line (once vs. each turn), same as items.
+  var BOSS_EFFECT_GROUPS = [
+    { label: 'Attack Players', options: [
+      { value: 'damage', label: 'Damage' },
+      { value: 'stun', label: 'Stun' }
+    ] },
+    { label: 'Buff Itself', options: [
+      { value: 'heal', label: 'Heal' },
+      { value: 'damage_reduction', label: 'Mitigate Damage' }
+    ] },
+    { label: 'Narrative', options: [
+      { value: 'none', label: 'Narrative only' }
+    ] }
   ];
-  var BOSS_TARGETS = [
-    { value: 'party_member', label: 'Chosen player (picked on use)' },
-    { value: 'party_members', label: 'Chosen players (AOE, picked on use)' },
-    { value: 'class', label: 'Class' },
-    { value: 'group', label: 'Whole party' }
-  ];
+  var BOSS_EFFECT_HELP = {
+    damage: 'Hits players for damage.',
+    stun: 'Targets skip their next turn.',
+    heal: 'Restores the boss’s HP, up to its max.',
+    damage_reduction: 'Lowers damage the boss takes from each hit.',
+    none: ''
+  };
 
   function bossTargetPhrase(tk, ref) {
     switch (tk) {
@@ -986,10 +998,14 @@
   // Plain-language boss-effect wording, mirroring the item modifier summary.
   function bossEffectSummary(e) {
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
+    var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     if (e.type === 'none') return 'Narrative effect.' + uses;
+    if (e.type === 'heal') return (e.duration_turns === 1 ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
+    if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.' + uses;
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.' + uses;
-    return e.value + ' damage per turn to ' + to + (e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed') + '.' + uses;
+    if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.' + uses; }
+    return e.value + ' damage per turn to ' + to + span + '.' + uses;
   }
 
   // Skill container: name + description. Numbers and uses live on its effects,
@@ -1022,39 +1038,101 @@
 
   function BossEffectForm(props) {
     var x = props.initial || {};
-    var typeState = useState(x.type || 'damage'); var type = typeState[0], setType = typeState[1];
+    // Stored type → form effect + timing. dot is Damage "each turn"; a heal
+    // with duration 1 is "once", anything else heals each turn.
+    var initEffect = !props.initial ? '' : (x.type === 'dot' ? 'damage' : (x.type || 'damage'));
+    var initTiming = x.type === 'dot' ? 'over' : (x.type === 'heal' && x.duration_turns !== 1 ? 'over' : 'once');
+    var effectState = useState(initEffect); var effect = effectState[0], setEffect = effectState[1];
+    var timingState = useState(initTiming); var timing = timingState[0], setTiming = timingState[1];
     var valState = useState(String(x.value != null ? x.value : 2)); var val = valState[0], setVal = valState[1];
-    var tkState = useState(x.target_kind || 'party_member'); var tk = tkState[0], setTk = tkState[1];
+    var tkState = useState(x.target_kind && x.target_kind !== 'self' ? x.target_kind : 'party_member'); var tk = tkState[0], setTk = tkState[1];
     var refState = useState(x.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
-    var durState = useState(String(x.duration_turns != null ? x.duration_turns : 0)); var dur = durState[0], setDur = durState[1];
-    var usesState = useState(String(x.uses_per_session != null ? x.uses_per_session : 0)); var uses = usesState[0], setUses = usesState[1];
+    var durState = useState(x.duration_turns > (x.type === 'heal' ? 1 : 0) ? String(x.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
+    var limitUsesState = useState((x.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
+    var usesState = useState(String(x.uses_per_session > 0 ? x.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+
+    var isDamage = effect === 'damage', isStun = effect === 'stun', isHeal = effect === 'heal', isMitigate = effect === 'damage_reduction';
+    var isOver = timing === 'over';
+    var hitsPlayers = isDamage || isStun;
+    var showValue = isDamage || isHeal || isMitigate;
+    var showTurns = ((isDamage || isHeal) && isOver) || isMitigate;
+
+    function changeEffect(next) { setEffect(next); if (next !== effect) setTiming('once'); }
+    function valueLabel() {
+      if (isDamage) return isOver ? 'Damage each turn' : 'Damage';
+      if (isHeal) return isOver ? 'HP each turn' : 'HP restored';
+      return 'Damage reduced';
+    }
+    function timingOpts() {
+      return isDamage
+        ? [{ value: 'once', label: 'Hit once' }, { value: 'over', label: 'Damage each turn for a while' }]
+        : [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }];
+    }
 
     async function submit(e) {
       e.preventDefault();
-      var payload = { type: type, value: parseInt(val, 10) || 0, target_kind: tk,
-        target_ref: tk === 'class' ? ref : null, duration_turns: parseInt(dur, 10) || 0, uses_per_session: parseInt(uses, 10) || 0 };
+      if (!effect) { setErr('Pick an effect.'); return; }
+      var turns = parseInt(dur, 10) || 0;   // blank / 0 = until removed
+      var payload = {
+        type: isDamage ? (isOver ? 'dot' : 'damage') : effect,
+        value: showValue ? (parseInt(val, 10) || 0) : 0,
+        target_kind: hitsPlayers ? tk : 'self',
+        target_ref: hitsPlayers && tk === 'class' ? ref : null,
+        duration_turns: isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
+        uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0
+      };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' } },
-        h('div', { className: 'portal-field' }, h('label', null, 'Type'),
-          h('select', { value: type, onChange: function (e) { setType(e.target.value); } },
-            BOSS_TYPES.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
-        type !== 'none' ? h('div', { className: 'portal-field' }, h('label', null, type === 'dot' ? 'Damage / turn' : 'Damage'),
-          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null,
-        type !== 'none' ? h('div', { className: 'portal-field' }, h('label', null, 'Target'),
+
+      secHead('What it does'),
+      fieldGrid([
+        h('div', { className: 'portal-field', key: 'effect' }, h('label', null, 'Effect'),
+          h('select', { value: effect, onChange: function (e) { changeEffect(e.target.value); } },
+            h('option', { value: '' }, '— pick an effect —'),
+            BOSS_EFFECT_GROUPS.map(function (g) {
+              return h('optgroup', { key: g.label, label: g.label },
+                g.options.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }));
+            }))),
+        showValue ? h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
+          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null
+      ]),
+      (effect && BOSS_EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, BOSS_EFFECT_HELP[effect]) : null,
+
+      hitsPlayers ? secHead('Who it affects') : null,
+      hitsPlayers ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'tk' }, h('label', null, 'Which players'),
           h('select', { value: tk, onChange: function (e) { setTk(e.target.value); } },
-            BOSS_TARGETS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))) : null,
-        type !== 'none' && tk === 'class' ? h('div', { className: 'portal-field' }, h('label', null, 'Class'),
-          h('select', { value: ref, onChange: function (e) { setRef(e.target.value); } },
-            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null,
-        type === 'dot' ? h('div', { className: 'portal-field' }, h('label', null, 'Turns (0=∞)'),
-          h('input', { type: 'number', min: 0, value: dur, onChange: function (e) { setDur(e.target.value); } })) : null,
-        h('div', { className: 'portal-field' }, h('label', null, 'Uses / session (0=∞)'),
-          h('input', { type: 'number', min: 0, value: uses, onChange: function (e) { setUses(e.target.value); } }))),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
+            h('option', { value: 'party_member' }, 'A chosen player'),
+            h('option', { value: 'party_members' }, 'Several chosen players'),
+            h('option', { value: 'class' }, 'A class'),
+            h('option', { value: 'group' }, 'Everyone'))),
+        tk === 'class' ? h('div', { className: 'portal-field', key: 'cls' }, h('label', null, 'Which class'),
+          h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
+            CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null
+      ]) : null,
+
+      (effect && effect !== 'none') ? secHead('How it works') : null,
+      (isDamage || isHeal) ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
+          h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
+            timingOpts().map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+      ]) : null,
+      isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
+        h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
+      showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
+        h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
+        h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
+      effect ? h('div', { style: { marginTop: '0.5rem' } },
+        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
+          h('input', { type: 'checkbox', checked: limitUses, onChange: function (e) { setLimitUses(e.target.checked); } }),
+          'Limit how many times per session'),
+        limitUses ? h('div', { className: 'portal-field', style: { maxWidth: '9rem', marginTop: '0.3rem' } }, h('label', null, 'Times per session'),
+          h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
+
+      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem' } },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
