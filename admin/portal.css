@@ -624,6 +624,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Vertically center row content against the tallest cell (e.g. the Activity
    status + inline talked-to line). */
 .members-table tbody td { vertical-align: middle; }
+.bounties-table tbody td,
+.job-board-table tbody td,
+.member-profiles-table tbody td { vertical-align: middle; }
 /* Member name (first column) and IC rank (second). Group/empty rows span all
    columns and keep their own style. */
 .members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.9rem; }

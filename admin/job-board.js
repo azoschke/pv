@@ -390,7 +390,7 @@
     var typeCls = 'portal-pill ' + (j.job_type === 'secondary' ? 'is-muted' : 'is-gold');
 
     return h('tr', null,
-      h('td', { style: { verticalAlign: 'middle' } },
+      h('td', null,
         h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
       ),
       h('td', null,
@@ -534,7 +534,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table job-board-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),

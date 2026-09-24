@@ -309,7 +309,7 @@
       var past = U.isPastQuest(q);
       var signupCount = (q.signups || []).length;
       return h('tr', null,
-        h('td', { style: { verticalAlign: 'middle' } },
+        h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
             h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, q.title),
             past ? h('span', { className: 'portal-pill is-red' }, 'Past date') : null
@@ -447,7 +447,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table bounties-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),
