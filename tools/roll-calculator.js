@@ -1325,7 +1325,7 @@
   function DMDeck(props) {
     var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || [];
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
-    var tabState = useState('turn'); var tab = tabState[0], setTab = tabState[1];
+    var tabState = useState('bosses'); var tab = tabState[0], setTab = tabState[1];
     var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }];
     return h('div', { className: 'rp-deck' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
