@@ -515,6 +515,9 @@
     function changeEffect(next) {
       var wasEmpty = !effect;
       setEffect(next);
+      // Heal over time stores a hidden start_next_turn flag; don't carry it into
+      // another effect's "Wait a turn before it starts" box.
+      if (next !== effect) setStartNext(false);
       var opts = timingOptions(next).map(function (o) { return o.value; });
       if (wasEmpty || opts.indexOf(timing) === -1) setTiming(opts[0]);
     }
@@ -1659,6 +1662,7 @@
   function PVAdminRpRolls(props) {
     var roles = (props.session && props.session.roles) || [];
     var isAdmin = roles.indexOf('admin') !== -1;
+    var isStaff = isAdmin || roles.indexOf('officer') !== -1;
 
     var tabState = useState('campaigns'); var tab = tabState[0], setTab = tabState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1766,7 +1770,7 @@
     useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
     // The boss library's 'Added By' filter names creators from the FC roster.
     useEffect(function () {
-      if (tab !== 'bosses' || members !== null) return;
+      if (!isStaff || tab !== 'bosses' || members !== null) return;
       PVAdminAPI.request('GET', '/members', undefined, true)
         .then(function (rows) { setMembers(rows || []); })
         .catch(function () { /* creators fall back to 'Former member' */ });
@@ -2151,7 +2155,7 @@
           h('input', { type: 'search', className: 'portal-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
-          (function () {
+          isStaff ? (function () {
             var ids = [];
             bossLib.forEach(function (b) { if (b.created_by != null && ids.indexOf(String(b.created_by)) === -1) ids.push(String(b.created_by)); });
             var opts = ids.map(function (id) {
@@ -2162,7 +2166,7 @@
               onChange: function (e) { setBossCreator(e.target.value); } },
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));
-          })(),
+          })() : null,
           bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
         isAdmin ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
