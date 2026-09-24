@@ -1603,6 +1603,8 @@
     var editBossState = useState(null); var editBoss = editBossState[0], setEditBoss = editBossState[1]; // boss open in the fields editor
     var skillsBossState = useState(null); var skillsBoss = skillsBossState[0], setSkillsBoss = skillsBossState[1]; // boss open in the skills editor
     var bossQueryState = useState(''); var bossQuery = bossQueryState[0], setBossQuery = bossQueryState[1];
+    var bossCreatorState = useState(''); var bossCreator = bossCreatorState[0], setBossCreator = bossCreatorState[1]; // 'Added By' filter (created_by)
+    var bossPrivDraftState = useState(false); var bossPrivDraft = bossPrivDraftState[0], setBossPrivDraft = bossPrivDraftState[1]; // admin privacy when they have no bosses yet
     var campBossesState = useState(null); var campBosses = campBossesState[0], setCampBosses = campBossesState[1]; // instances in the selected campaign
     var campBossPickState = useState(''); var campBossPick = campBossPickState[0], setCampBossPick = campBossPickState[1];
     var bossesSupportedState = useState(true); var bossesSupported = bossesSupportedState[0], setBossesSupported = bossesSupportedState[1];
@@ -1673,6 +1675,14 @@
       catch (e) { setCampBosses([]); }
     }
     useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
+    // The boss library's 'Added By' filter names creators from the FC roster.
+    useEffect(function () {
+      if (tab !== 'bosses' || members !== null) return;
+      PVAdminAPI.request('GET', '/members', undefined, true)
+        .then(function (rows) { setMembers(rows || []); })
+        .catch(function () { /* creators fall back to 'Former member' */ });
+      /* eslint-disable-next-line */
+    }, [tab]);
 
     // When a member is chosen to add, swap class/armor to their saved defaults
     // (or back to neutral when they have none) so the controls always reflect
@@ -1798,7 +1808,18 @@
       try { await PVRollAPI.request('DELETE', '/rp/items/' + it.id); await loadItems(); }
       catch (e) { setErr(e.message); }
     }
+    // Admin-only privacy: hides the admin's own bosses from everyone else's
+    // library. State reads off their bosses; with none yet, a local draft
+    // decides whether the next one is created private.
+    var myBosses = bossLib.filter(function (b) { return b.mine; });
+    var bossPrivate = myBosses.length ? myBosses.every(function (b) { return !!b.private; }) : bossPrivDraft;
+    async function toggleBossPrivacy(next) {
+      if (!myBosses.length) { setBossPrivDraft(next); return; }
+      try { await PVRollAPI.request('PUT', '/rp/boss-library/privacy', { private: next }); setBossPrivDraft(next); await loadBossLib(); }
+      catch (e) { setErr(e.message); }
+    }
     async function createBoss(payload) {
+      if (isAdmin) payload = Object.assign({}, payload, { private: bossPrivate });
       await PVRollAPI.request('POST', '/rp/boss-library', payload);
       setBossForm(false); await loadBossLib();
     }
@@ -2041,12 +2062,31 @@
           h('input', { type: 'search', className: 'portal-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
+          (function () {
+            var ids = [];
+            bossLib.forEach(function (b) { if (b.created_by != null && ids.indexOf(String(b.created_by)) === -1) ids.push(String(b.created_by)); });
+            var opts = ids.map(function (id) {
+              var row = members ? members.filter(function (m) { return String(m.id) === id; })[0] : null;
+              return { id: id, label: row ? row.name : (members == null ? 'Member #' + id : 'Former member') };
+            }).sort(function (a, b) { return a.label.localeCompare(b.label); });
+            return h('select', { className: 'portal-filter-select', value: bossCreator,
+              onChange: function (e) { setBossCreator(e.target.value); } },
+              h('option', { value: '' }, 'Added By: Anyone'),
+              opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));
+          })(),
+          isAdmin ? h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+            h('input', { type: 'checkbox', checked: bossPrivate, onChange: function (e) { toggleBossPrivacy(e.target.checked); } }),
+            'Hide my bosses') : null,
           bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
         (function () {
           if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one and give it skills.');
           var q = bossQuery.trim().toLowerCase();
-          var shown = q ? bossLib.filter(function (b) { return (b.name || '').toLowerCase().indexOf(q) !== -1; }) : bossLib;
+          var shown = bossLib.filter(function (b) {
+            if (q && (b.name || '').toLowerCase().indexOf(q) === -1) return false;
+            if (bossCreator && String(b.created_by) !== bossCreator) return false;
+            return true;
+          });
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (b) {
