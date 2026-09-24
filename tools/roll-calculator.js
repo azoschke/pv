@@ -1073,7 +1073,7 @@
   // Active (in-play) boss effect — target already resolved to names.
   function describeBossActiveEffect(e) {
     if (e.type === 'none') return 'Narrative effect';
-    var left = e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '';
+    var left = e.remaining_turns != null ? ', ' + e.remaining_turns + ' turns left' : '';
     if (e.type === 'heal') return 'Healing ' + e.value + ' HP per turn' + left;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage' + left;
     var to = e.target_label || bossTargetPhrase(e.target_kind, e.target_ref);
