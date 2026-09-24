@@ -2077,12 +2077,14 @@
           bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
         isAdmin ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
-          h('button', { type: 'button', role: 'switch', 'aria-checked': bossPrivate,
-            className: 'portal-switch' + (bossPrivate ? ' is-on' : ''),
-            onClick: function () { toggleBossPrivacy(!bossPrivate); } },
-            h('span', { className: 'portal-switch-track' }, h('span', { className: 'portal-switch-knob' })),
-            'Hide My Bosses',
-            h('span', { className: 'portal-switch-state' }, bossPrivate ? 'On' : 'Off'))) : null,
+          h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.6rem' } },
+            h('span', null, 'Hide My Bosses'),
+            h('button', { type: 'button', className: 'rp-switch' + (bossPrivate ? ' is-on' : ''), role: 'switch',
+              'aria-checked': bossPrivate ? 'true' : 'false', 'aria-label': 'Hide My Bosses',
+              onClick: function () { toggleBossPrivacy(!bossPrivate); } },
+              h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+              h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+              h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' })))) : null,
         (function () {
           if (!bossLib.length) return h('div', { className: 'portal-card' }, 'No bosses yet. Create one and give it skills.');
           var q = bossQuery.trim().toLowerCase();
