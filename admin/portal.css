@@ -532,15 +532,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
 }
-/* One fixed height for single-line fields so inputs, dropdowns and the
-   buttons beside them line up. Safari's native select ignores padding and
-   height, so drop it and draw the chevron as .portal-filter-select does. */
+/* Same line-height on inputs and dropdowns so equal padding gives equal
+   heights. Safari's native select ignores padding, so drop it and draw the
+   chevron as .portal-filter-select does. */
 .portal-field input[type="text"],
 .portal-field input[type="date"],
 .portal-field input[type="number"],
 .portal-field select, .portal-select {
-  box-sizing: border-box;
-  height: 2.5rem;
   line-height: 1.25;
 }
 .portal-field select, .portal-select {
