@@ -544,7 +544,7 @@
       ),
       // Event (click anywhere in the cell to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle' } },
-        h(ClickToCopy, { value: a.event_topic || 'Untitled', bold: true, textStyle: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } })
+        h(ClickToCopy, { value: a.event_topic || 'Untitled', textStyle: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } })
       ),
       // Location (click to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle' } },

@@ -390,8 +390,8 @@
     var typeCls = 'portal-pill ' + (j.job_type === 'secondary' ? 'is-muted' : 'is-gold');
 
     return h('tr', null,
-      h('td', null,
-        h('span', { style: { fontWeight: 600, fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
+      h('td', { style: { verticalAlign: 'middle' } },
+        h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))

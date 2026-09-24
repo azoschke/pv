@@ -712,7 +712,7 @@
       h('td', null,
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
           v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
-          h('span', { style: { fontWeight: 600, fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, v.name)
+          h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, v.name)
         )
       ),
       h('td', null, labelFor(SIZES, v.size)),
