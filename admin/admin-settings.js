@@ -407,7 +407,7 @@
     return h('div', null,
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
-          h('h2', { className: 'portal-card-title' }, 'Admin Settings — Users & Roles'),
+          h('h2', { className: 'portal-card-title' }, 'Users & Roles'),
           h('div', { className: 'portal-card-actions' },
             h('input', {
               type: 'search',

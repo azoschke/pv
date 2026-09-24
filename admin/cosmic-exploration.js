@@ -557,13 +557,7 @@
           h('select', {
             value: filterJob,
             onChange: function (e) { setFilterJob(e.target.value); },
-            style: {
-              padding: '0.4rem 0.6rem',
-              background: 'var(--bg-darker)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '0.3rem'
-            }
+            className: 'portal-filter-select'
           },
             h('option', { value: 'all' }, 'All jobs'),
             jobs.map(function (j) { return h('option', { key: j.name, value: j.name }, j.name); })
@@ -571,13 +565,7 @@
           h('select', {
             value: filterLoc,
             onChange: function (e) { setFilterLoc(e.target.value); },
-            style: {
-              padding: '0.4rem 0.6rem',
-              background: 'var(--bg-darker)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '0.3rem'
-            }
+            className: 'portal-filter-select'
           },
             h('option', { value: 'all' }, 'All locations'),
             locations.map(function (l) { return h('option', { key: l.name, value: l.name }, l.name); })
@@ -585,13 +573,7 @@
           h('select', {
             value: filterCat,
             onChange: function (e) { setFilterCat(e.target.value); },
-            style: {
-              padding: '0.4rem 0.6rem',
-              background: 'var(--bg-darker)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '0.3rem'
-            }
+            className: 'portal-filter-select'
           },
             h('option', { value: 'all' }, 'All classes'),
             categories.map(function (c) { return h('option', { key: c.name, value: c.name }, c.name); })

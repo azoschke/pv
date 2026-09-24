@@ -391,7 +391,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('span', { style: { fontWeight: 600 } }, j.title)
+        h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))
@@ -534,7 +534,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table job-board-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Title'),

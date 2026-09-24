@@ -364,6 +364,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 4px;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
   min-width: 16rem;
 }
 
@@ -374,16 +376,44 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   margin: 0.35rem 0 0.85rem;
 }
+/* Dropdown chevron in the text colour (--text-primary per theme); a data-URI
+   SVG can't read CSS variables, so each theme sets its own. */
+:root { --portal-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%233E3832' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); }
+[data-theme="dark"] { --portal-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23ebe3d0' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); }
 .portal-filter-select {
   background: var(--form-input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 0.4rem 0.55rem;
+  /* Same box as .portal-search so dropdowns line up with inputs. Safari's
+     native select ignores padding/height, so drop it and draw the chevron
+     the way .form-group select does (css/styles.css). */
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: var(--portal-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  padding: 0.5rem 2rem 0.5rem 0.55rem;
   border-radius: 4px;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
   min-width: 11rem;
 }
+
+/* Sliding on/off switch, same as the Roll Calculator's toggle skills
+   (tools/roll-calculator.html): both states shown, lit knob slides. */
+.rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;
+  border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-card); cursor: pointer; font: inherit; overflow: hidden; }
+.rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.rp-switch:not(.is-on) .rp-switch-off { color: var(--text-primary); font-weight: 600; }
+.rp-switch.is-on .rp-switch-on { color: #fff; font-weight: 600; }
+.rp-switch-knob { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px); border-radius: 999px; z-index: 0;
+  background: var(--border-color); transition: left 0.16s ease, background 0.16s ease; }
+.rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-brown); }
+.rp-switch:disabled { opacity: 0.5; cursor: default; }
 
 /* --------------- Tables --------------- */
 .portal-table-wrap { overflow-x: auto; }
@@ -506,6 +536,24 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
 }
+/* Same line-height on inputs and dropdowns so equal padding gives equal
+   heights. Safari's native select ignores padding, so drop it and draw the
+   chevron as .portal-filter-select does. */
+.portal-field input[type="text"],
+.portal-field input[type="date"],
+.portal-field input[type="number"],
+.portal-field select, .portal-select {
+  line-height: 1.25;
+}
+.portal-field select, .portal-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: var(--portal-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  padding-right: 2rem;
+}
 /* Standalone section-title style (Stoke, uppercase) — used only on the specific
    campaign-panel titles, never grouped with the form inputs above. */
 .portal-block-label {
@@ -576,6 +624,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Vertically center row content against the tallest cell (e.g. the Activity
    status + inline talked-to line). */
 .members-table tbody td { vertical-align: middle; }
+.bounties-table tbody td,
+.job-board-table tbody td,
+.member-profiles-table tbody td { vertical-align: middle; }
+/* Member name (first column) and IC rank (second). Group/empty rows span all
+   columns and keep their own style. */
+.members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.9rem; }
+.members-table tbody td:nth-child(2) { font-style: italic; }
 
 /* --------------- Activity cell (status + inline talked-to) --------------- */
 .activity-cell {

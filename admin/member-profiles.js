@@ -164,7 +164,7 @@
             )
           : h('div', { className: 'portal-card' },
               h('div', { className: 'portal-table-wrap' },
-                h('table', { className: 'portal-table' },
+                h('table', { className: 'portal-table member-profiles-table' },
                   h('thead', null,
                     h('tr', null,
                       h('th', null, 'Name'),
@@ -178,7 +178,7 @@
                     filtered.map(function (p) {
                       var factionTags = orderedFactionsOf(p);
                       return h('tr', { key: p.member_id },
-                        h('td', { style: { fontWeight: 600 } }, p.name),
+                        h('td', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, p.name),
                         h('td', null,
                           factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },

@@ -66,7 +66,7 @@
     .rp-btn.is-active { background: var(--accent-brown); color: var(--rp-btn-ink); border-color: transparent; box-shadow: var(--rp-ring); }
     .rp-btn.is-ghost { background: var(--bg-card-light); color: var(--text-primary); border-color: var(--border-color); }
     .rp-btn.is-danger { background: var(--accent-red); color: var(--rp-btn-ink); border-color: transparent; }
-    .rp-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+    .rp-btn[disabled], .rp-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
     .rp-chip-x { background: none; border: 0; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0.1rem 0.2rem; }
 
     /* Full-width commit button — the composer's primary action. */
