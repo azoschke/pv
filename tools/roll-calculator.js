@@ -158,7 +158,9 @@
     if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.';
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
-    var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
+    // A heal over time flagged start_next_turn heals from next turn, so 1 turn isn't "this turn".
+    var hot1 = m.type === 'heal' && m.start_next_turn && m.duration_turns === 1;
+    var dur = hot1 ? ', for 1 turn' : m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     return when + ', ' + core + to + dur + '.';
   }
   // For an active effect (already resolved target_label + remaining turns).
@@ -295,7 +297,7 @@
     var flat = b.vuln_flat != null ? b.vuln_flat : 0;
     var mult = b.vuln_mult != null ? b.vuln_mult : (b.damage_mult != null ? b.damage_mult : 1);
     var turns = b.vuln_turns != null ? b.vuln_turns : (b.damage_mult_turns != null ? b.damage_mult_turns : null);
-    return { flat: flat, mult: mult, turns: turns };
+    return { flat: flat, mult: mult, turns: turns, red: b.vuln_red || 0 };
   }
   function vulnLabel(flat, mult, turns) {
     var parts = [];
@@ -868,7 +870,8 @@
     var atkSel = (atkTarget && living.some(function (b) { return String(b.id) === atkTarget; })) ? atkTarget : (living.length ? String(living[0].id) : '');
     var atkBoss = living.filter(function (b) { return String(b.id) === atkSel; })[0];
     var atkV = bossVulnParts(atkBoss);
-    var atkEff = atkBoss && (atkV.flat > 0 || atkV.mult > 1) ? Math.max(1, Math.floor((atkCapped + atkV.flat) * atkV.mult)) : atkCapped;
+    // Vulnerability first, then the boss's Mitigate Damage (min 1), matching the worker.
+    var atkEff = atkBoss && (atkV.flat > 0 || atkV.mult > 1 || atkV.red > 0) ? Math.max(1, Math.floor((atkCapped + atkV.flat) * atkV.mult) - atkV.red) : atkCapped;
     var atkCanApply = living.length > 0 && !locked && props.canAttack && atkRoll !== '' && atkCapped > 0 && !atkBusy;
     function applyAttack() {
       if (!atkSel) return;
@@ -1063,7 +1066,7 @@
   function bossEffectText(e) {
     var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     if (e.type === 'none') return 'Narrative effect.';
-    if (e.type === 'heal') return (e.duration_turns === 1 ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.';
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.';
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.';
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.';
@@ -1080,12 +1083,6 @@
     var core = e.type === 'dot' ? e.value + ' damage per turn' : 'Effect';
     return core + ' to ' + to + (e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '');
   }
-  function bossSkillSummary(a) {
-    var fx = (a.effects || []).map(bossEffectText);
-    var bits = fx.length ? [fx.join(' + ')] : ['no effects configured'];
-    if (a.uses_per_session > 0) bits.push((a.uses_per_session - (a.uses_this_session || 0)) + '/' + a.uses_per_session + ' uses');
-    return bits.join(' · ');
-  }
   // One effect of a boss skill — its own targeting, hits, and Use button, plus
   // its own session-use count. Mirrors an item's modifier row.
   function DMBossEffectRow(props) {
@@ -1100,11 +1097,13 @@
     var pickedIds = Object.keys(picks).filter(function (k) { return picks[k]; }).map(Number);
     var canUse = props.turnLocked && !boss.defeated && !spent &&
       (needMulti ? pickedIds.length > 0 : needSingle ? !!single : true);
+    var stunned = !!boss.stunned;
     var summary = bossEffectText(e) + (e.uses_per_session > 0 ? ' · ' + (e.uses_per_session - (e.uses_this_session || 0)) + '/' + e.uses_per_session + ' uses' : '');
     function toggle(id) { var n = Object.assign({}, picks); n[id] = !n[id]; setPicks(n); }
     function use() {
+      if (stunned && !confirm('I want to use this skill even though the boss is stunned')) return;
       var ids = needMulti ? pickedIds : (needSingle && single ? [Number(single)] : []);
-      props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1));
+      props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1), stunned);
       setSingle(''); setPicks({}); setHits('1');
     }
     return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
@@ -1123,7 +1122,7 @@
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, onClick: use }, spent ? 'Used' : 'Use')));
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.
@@ -1459,7 +1458,7 @@
       return Object.assign({}, cur, {
         campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm, location: s.location || null, time_of_day: s.time_of_day || null }),
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
-        player_stuns: s.player_stuns, player_vulns: s.player_vulns,
+        player_stuns: s.player_stuns, player_stuns_next: s.player_stuns_next, player_vulns: s.player_vulns,
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
         minions: s.minions || [],
@@ -1539,7 +1538,7 @@
     function onSetStun(targetType, targetId, stunned) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', { target_type: targetType, target_id: String(targetId), stunned: !!stunned }); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseEffect(b, e, targetIds, hits) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1 }); }); }
+    function onUseEffect(b, e, targetIds, hits, overrideStun) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
@@ -1617,7 +1616,7 @@
         onBossAdd: onBossAdd, onBossHp: onBossHp, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         playerVulns: data.player_vulns || {}, onSetPlayerVuln: onSetPlayerVuln,
-        playerStuns: data.player_stuns || {}, onSetStun: onSetStun,
+        playerStuns: Object.assign({}, data.player_stuns_next || {}, data.player_stuns || {}), onSetStun: onSetStun,
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
       c ? h(Board, { data: data, ctx: ctx, rules: rules, party: data.party || [], bosses: data.bosses || [], items: data.items || [], avatars: avatars,

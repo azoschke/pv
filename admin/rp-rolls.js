@@ -382,7 +382,7 @@
   function initTiming(effect, m) {
     var mode = m.mode || 'always';
     if (effect === 'damage') return m.type === 'dot' ? 'over' : 'once';
-    if (effect === 'heal') return mode === 'toggle' ? 'toggle' : mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
+    if (effect === 'heal') return mode === 'toggle' ? 'toggle' : mode === 'always' ? 'passive' : (m.duration_turns === 1 && !m.start_next_turn ? 'once' : 'over');
     if (effect === 'shield') return mode === 'always' ? 'passive' : 'once';
     if (mode === 'toggle') return 'toggle';
     if (mode === 'activated') return 'temp';
@@ -446,7 +446,7 @@
     // Uses is opt-in via a checkbox so simple items never see a "0 = unlimited" box.
     var limitUsesState = useState((m.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
-    var durState = useState(m.duration_turns && m.duration_turns > 1 ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
+    var durState = useState(m.duration_turns && (m.duration_turns > 1 || (m.type === 'heal' && m.start_next_turn)) ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
@@ -610,7 +610,7 @@
         summon: resolvedSummon(), conditions: conditions,
         target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
-        start_next_turn: false };
+        start_next_turn: effect === 'heal' && isOver };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
@@ -937,7 +937,9 @@
       default: t = '';
     }
     var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    var dur = m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
+    // A heal over time flagged start_next_turn heals from next turn, so 1 turn isn't "this turn".
+    var hot1 = m.type === 'heal' && m.start_next_turn && m.duration_turns === 1;
+    var dur = hot1 ? ', for 1 turn' : m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
     var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
       : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')
@@ -1000,7 +1002,7 @@
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
     var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     if (e.type === 'none') return 'Narrative effect.' + uses;
-    if (e.type === 'heal') return (e.duration_turns === 1 ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.' + uses;
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.' + uses;
@@ -1041,13 +1043,13 @@
     // Stored type → form effect + timing. dot is Damage "each turn"; a heal
     // with duration 1 is "once", anything else heals each turn.
     var initEffect = !props.initial ? '' : (x.type === 'dot' ? 'damage' : (x.type || 'damage'));
-    var initTiming = x.type === 'dot' ? 'over' : (x.type === 'heal' && x.duration_turns !== 1 ? 'over' : 'once');
+    var initTiming = x.type === 'dot' ? 'over' : (x.type === 'heal' && (x.duration_turns !== 1 || x.start_next_turn) ? 'over' : 'once');
     var effectState = useState(initEffect); var effect = effectState[0], setEffect = effectState[1];
     var timingState = useState(initTiming); var timing = timingState[0], setTiming = timingState[1];
     var valState = useState(String(x.value != null ? x.value : 2)); var val = valState[0], setVal = valState[1];
     var tkState = useState(x.target_kind && x.target_kind !== 'self' ? x.target_kind : 'party_member'); var tk = tkState[0], setTk = tkState[1];
     var refState = useState(x.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
-    var durState = useState(x.duration_turns > (x.type === 'heal' ? 1 : 0) ? String(x.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
+    var durState = useState(x.duration_turns > (x.type === 'heal' && !x.start_next_turn ? 1 : 0) ? String(x.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     var limitUsesState = useState((x.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(x.uses_per_session > 0 ? x.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1080,7 +1082,8 @@
         target_kind: hitsPlayers ? tk : 'self',
         target_ref: hitsPlayers && tk === 'class' ? ref : null,
         duration_turns: isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
-        uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0
+        uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0,
+        start_next_turn: isHeal && isOver
       };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -1907,8 +1910,8 @@
       setBossForm(false); await loadBossLib();
     }
     async function deleteBoss(b) {
-      if (!confirm('Delete boss? If a boss has been added to a campaign, it will keep a snapshot until removed.')) return;
-      try { await PVRollAPI.request('DELETE', '/rp/boss-library/' + b.id); await loadBossLib(); }
+      if (!confirm('Delete boss?')) return;
+      try { await PVRollAPI.request('DELETE', '/rp/boss-library/' + b.id); await loadBossLib(); if (selected) loadCampBosses(selected.id); }
       catch (e) { setErr(e.message); }
     }
     // Keep the open editor modal in sync after ability edits reload the library.
