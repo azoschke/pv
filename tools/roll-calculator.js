@@ -1287,7 +1287,7 @@
       }));
   }
   // Committed personal buffs, DM-controllable (edit bonus / adjust turns / pause /
-  // remove), plus a read-out of any not-yet-committed drafts. Sits in Turn & Effects.
+  // remove), plus a read-out of any not-yet-committed drafts. Sits in Effects.
   function DMPersonalBuffs(props) {
     var buffs = props.buffs || []; var drafts = props.drafts || [];
     if (!buffs.length && !drafts.length) return null;
@@ -1326,7 +1326,7 @@
     var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || [];
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var tabState = useState('turn'); var tab = tabState[0], setTab = tabState[1];
-    var tabs = [{ id: 'turn', label: 'Turn & Effects' }, { id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'log', label: 'Log' }];
+    var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }];
     return h('div', { className: 'rp-deck' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
         h('button', { type: 'button', className: 'rp-deck-title', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
@@ -1537,7 +1537,7 @@
     function onSetPlayerVuln(memberId, flat, mult, turns) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/vulns', { target_type: 'player', target_id: String(memberId), flat: flat, mult: mult, duration_turns: turns }); }); }
     function onSetStun(targetType, targetId, stunned) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', { target_type: targetType, target_id: String(targetId), stunned: !!stunned }); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
-    function onBossRemove(b) { if (!confirm('Remove ' + b.name + ' from the field?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
+    function onBossRemove(b) { if (!confirm('Remove ' + b.name + '?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
     function onUseEffect(b, e, targetIds, hits, overrideStun) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
