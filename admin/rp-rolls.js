@@ -1884,7 +1884,7 @@
       catch (e) { setErr(e.message); }
     }
     async function deleteCampaign(c) {
-      if (!confirm('Delete campaign “' + c.name + '” and all its characters? This cannot be undone.')) return;
+      if (!confirm('Delete campaign “' + c.name + '”? This cannot be undone.')) return;
       try { await PVRollAPI.request('DELETE', '/rp/campaigns/' + c.id); if (selected && selected.id === c.id) setSelected(null); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
