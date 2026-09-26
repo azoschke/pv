@@ -114,6 +114,15 @@
 
     var dirty = role !== ch.class_role || armor !== ch.armor_type || String(ch.max_hp) !== maxHp;
 
+    // A class change resets Max HP to that class's base HP (still editable before
+    // Save); switching back to the saved class restores the saved Max HP.
+    function changeRole(v) {
+      setRole(v);
+      var base = (props.baseHp || {})[v];
+      if (v === ch.class_role) setMaxHp(String(ch.max_hp));
+      else if (base) setMaxHp(String(base));
+    }
+
     async function loadItems() {
       try {
         var rows = await PVRollAPI.request('GET', '/rp/campaigns/' + props.campaignId + '/characters/' + ch.member_id + '/items');
@@ -169,7 +178,7 @@
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', marginTop: '0.5rem' } },
         h('div', { className: 'portal-field' },
           h('label', null, 'Class'),
-          h('select', { value: role, onChange: function (e) { setRole(e.target.value); } },
+          h('select', { value: role, onChange: function (e) { changeRole(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))
         ),
         h('div', { className: 'portal-field' },
@@ -1682,6 +1691,9 @@
     var pickRoleState = useState('dps'); var pickRole = pickRoleState[0], setPickRole = pickRoleState[1];
     var pickArmorState = useState('medium'); var pickArmor = pickArmorState[0], setPickArmor = pickArmorState[1];
     var defaultsState = useState({}); var defaults = defaultsState[0], setDefaults = defaultsState[1]; // member_id -> {class_role, armor_type, max_hp}
+    // Base HP per class from System Rules (code defaults until loaded), so a
+    // roster card's Max HP follows a class change.
+    var baseHpState = useState({ tank: 25, dps: 20, healer: 15 }); var baseHp = baseHpState[0], setBaseHp = baseHpState[1];
 
     // items
     var itemsState = useState([]); var items = itemsState[0], setItems = itemsState[1];
@@ -1737,6 +1749,12 @@
         var map = {}; rows.forEach(function (r) { map[r.member_id] = r; }); setDefaults(map);
       } catch (e) { /* non-fatal */ }
     }
+    async function loadBaseHp() {
+      try {
+        var r = await PVRollAPI.request('GET', '/rp/rules');
+        if (r && r.rules && r.rules.role_base_hp) setBaseHp(r.rules.role_base_hp);
+      } catch (e) { /* non-fatal: code defaults stay */ }
+    }
     // Officer/admin-only endpoint; non-fatal if it 401s — roster just shows the
     // fallback tiles instead of portraits.
     async function loadProfileImages() {
@@ -1767,7 +1785,7 @@
       try { setCampBosses(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/bosses') || []); }
       catch (e) { setCampBosses([]); }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadBaseHp(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
     // The boss library's 'Added By' filter names creators from the FC roster.
     useEffect(function () {
       if (!isStaff || tab !== 'bosses' || members !== null) return;
@@ -2113,7 +2131,7 @@
                 h('label', { className: 'portal-block-label' }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
                   roster.map(function (ch) {
-                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin,
+                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin, baseHp: baseHp,
                       campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
                       onSave: saveCharacter, onRemove: removeCharacter,
                       imageUrl: profileImages[ch.member_id] || profileImages[Number(ch.member_id)] || profileImages[String(ch.member_id)] });
