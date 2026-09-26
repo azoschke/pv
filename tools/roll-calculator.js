@@ -1568,7 +1568,7 @@
     // player has spent their action for the turn.
     var actionUsed = !!(data.my_turn && data.my_turn.limit > 0 && data.my_turn.used >= data.my_turn.limit);
     var turnNotice = actionLocked
-      ? 'Boss turn — Player actions locked.'
+      ? 'Boss turn, player actions are locked.'
       : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
 
     // Active-skills "unseen" indicator: used (non-passive) effects + revealed boss
