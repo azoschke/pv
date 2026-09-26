@@ -1331,7 +1331,7 @@
       try {
         var r = await PVRollAPI.request('GET', '/rp/rules');
         setDoc(clone(r.rules)); setDefaults(r.defaults || null); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
-      } catch (e) { setErr(e.status === 404 ? 'The worker doesn’t support editable rules yet — deploy v9.5 first.' : (e.message || 'Failed to load rules.')); }
+      } catch (e) { setErr(e.status === 404 ? 'The worker doesn’t support editable rules yet.' : (e.message || 'Failed to load rules.')); }
     }
     useEffect(function () { load(); /* eslint-disable-next-line */ }, []);
 
@@ -1342,7 +1342,7 @@
       setSaving(true); setErr(''); setSaved('');
       try {
         var r = await PVRollAPI.request('PUT', '/rp/rules', doc);
-        setDoc(clone(r.rules)); setSaved('Rules saved — live sessions pick them up within a few seconds.');
+        setDoc(clone(r.rules)); setSaved('Rules saved.');
         setTimeout(function () { setSaved(''); }, 4000);
         setHistory(null);
       } catch (e) { setErr(e.message || 'Failed to save.'); }
@@ -1362,7 +1362,7 @@
 
     var fieldGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' };
     return h('div', null,
-      props.anyLive ? h('div', { className: 'portal-flash error' }, 'A session is live right now — saved changes apply to it immediately.') : null,
+      props.anyLive ? h('div', { className: 'portal-flash error' }, 'A session is live right now, saved changes apply to it immediately.') : null,
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
       meta && meta.updated_at ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem', margin: '0 0 0.75rem' } },
@@ -1876,7 +1876,7 @@
       catch (e) { setErr(e.message); }
     }
     async function pauseSession(c) {
-      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/pause'); flash[1]('Session paused — values kept.'); await loadCampaigns(); }
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/pause'); flash[1]('Session paused.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
     }
     async function resumeSession(c) {
