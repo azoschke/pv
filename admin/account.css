@@ -53,9 +53,6 @@
 }
 
 /* ── Create Account (register.html) ─────────────────────────────────────── */
-/* A little wider than sign-in, with slightly larger messages. */
-.admin-login-wrap.is-register { max-width: 460px; }
-.is-register .flash { font-size: 0.95rem; }
 .help-text {
   font-family: 'Crimson Pro', serif;
   font-size: 0.9rem;
