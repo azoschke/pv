@@ -96,7 +96,8 @@
   function ImageField(props) {
     var value = props.value;
     var onChange = props.onChange;
-    var disabled = props.disabled;
+    // readOnly: show the image without letting it change (URL box and upload off).
+    var disabled = props.disabled || props.readOnly;
     var uploadPath = props.uploadPath;
     var extraFields = props.extraFields;
     var resize = props.resize;
@@ -131,6 +132,7 @@
         h('input', {
           type: 'text',
           value: value,
+          disabled: !!props.readOnly,
           onChange: function (e) { onChange(e.target.value); },
           placeholder: 'https://…',
           style: { flex: 1 }
