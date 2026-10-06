@@ -149,7 +149,7 @@
         document.getElementById('login-password').value = '';
         window.location.replace(redirectTarget);
       } catch (err) {
-        showFlash('error', err.message || 'Login failed.');
+        showFlash('error', err.status === 401 ? 'Incorrect Password' : (err.message || 'Login failed.'));
         btn.disabled = false;
         btn.textContent = 'Sign In';
       }

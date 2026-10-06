@@ -22,8 +22,11 @@
   var UPLOAD_TARGET_WIDTH = 1400;
   var UPLOAD_QUALITY = 0.8;
 
+  // Signed-in requests send the token, and a 401 means the session has expired
+  // (back to the login page). Public routes report their own 401s, such as a
+  // wrong password on /auth/login.
   async function request(method, path, body, authed) {
-    return Session.request(API_BASE, method, path, body, { auth: !!authed, loginOn401: true });
+    return Session.request(API_BASE, method, path, body, { auth: !!authed, loginOn401: !!authed });
   }
 
   async function me() {
