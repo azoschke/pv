@@ -1120,6 +1120,8 @@
     var immuneState = useState(initImmune); var stunImmune = immuneState[0], setStunImmune = immuneState[1];
     // Once the DM toggles the box themselves, changing the tier won't stomp it.
     var immuneTouchedState = useState(b.stun_immune != null); var immuneTouched = immuneTouchedState[0], setImmuneTouched = immuneTouchedState[1];
+    // Public bosses show in everyone's Boss Library; anyone can add or copy them.
+    var publicState = useState(!!b.public); var isPublic = publicState[0], setPublic = publicState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     function changeTier(v) { setTier(v); if (!immuneTouched) setStunImmune(tierStunImmuneDefault(v)); }
@@ -1129,7 +1131,7 @@
       if (!name.trim()) { setErr('Name is required.'); return; }
       var hp = parseInt(maxHp, 10);
       if (!hp || hp < 1) { setErr('Max HP must be a positive number.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp, boss_tier: tier, stun_immune: !!stunImmune }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp, boss_tier: tier, stun_immune: !!stunImmune, public: !!isPublic }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
@@ -1144,7 +1146,10 @@
             BOSS_TIERS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })),
           h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, whiteSpace: 'nowrap' } },
             h('input', { type: 'checkbox', checked: stunImmune, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
-            'Immune to stun'))),
+            'Immune to stun'),
+          h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, whiteSpace: 'nowrap' } },
+            h('input', { type: 'checkbox', checked: isPublic, onChange: function (e) { setPublic(e.target.checked); } }),
+            'Public'))),
       h('div', { className: 'portal-field' }, h('label', null, 'Health *'),
         h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Notes'),
@@ -1166,6 +1171,8 @@
 
   function BossCard(props) {
     var b = props.boss;
+    var editable = props.canEdit && b.can_edit !== false;
+    var copyable = props.canCopy && !b.mine;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
       h('div', { className: 'rp-card-media sketch-wash' },
@@ -1174,12 +1181,15 @@
           : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
-      h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '')),
+      h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '') + (b.public ? ' · public' : '')),
       b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
-      props.canEdit ? h('div', { className: 'rp-catalogue-actions' },
-        h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onSkills(b); } }, 'Skills'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only')),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only'))) : null);
+      // Someone else's public boss is read-only (unless you can edit any boss);
+      // it can still be copied into your own library.
+      (editable || copyable) ? h('div', { className: 'rp-catalogue-actions' },
+        editable ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onSkills(b); } }, 'Skills') : null,
+        editable ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only')) : null,
+        copyable ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Copy boss', 'aria-label': 'Copy boss', onClick: function () { props.onCopy(b); } }, mi('content_copy', 'only')) : null,
+        editable ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only')) : null) : null);
   }
 
   // Boss fields only — skills live in their own modal (BossSkillsModal).
@@ -1890,6 +1900,13 @@
       await PVRollAPI.request('POST', '/rp/boss-library', payload);
       setBossForm(false); await loadBossLib();
     }
+    // A copy lands in your own library (not public), skills and all.
+    async function copyBoss(b) {
+      try {
+        await PVRollAPI.request('POST', '/rp/boss-library/' + b.id + '/copy', canPrivate ? { private: bossPrivate } : {});
+        await loadBossLib();
+      } catch (e) { setErr(e.message); }
+    }
     async function deleteBoss(b) {
       if (!confirm('Delete boss?')) return;
       try { await PVRollAPI.request('DELETE', '/rp/boss-library/' + b.id); await loadBossLib(); if (selected) loadCampBosses(selected.id); }
@@ -2167,7 +2184,7 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (b) {
-              return h(BossCard, { key: b.id, boss: b, canEdit: canAddBosses || canEditAllBosses, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onDelete: deleteBoss });
+              return h(BossCard, { key: b.id, boss: b, canEdit: canAddBosses || canEditAllBosses, canCopy: canAddBosses, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onCopy: copyBoss, onDelete: deleteBoss });
             }));
         })(),
         editBoss ? h(BossEditorModal, { boss: editBoss,
