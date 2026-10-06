@@ -26,8 +26,6 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
   // Menu thumbnails render at 64px, so 512 leaves headroom for retina without
   // paying the venue-image cost on a menu with forty items.
   var MENU_IMAGE_SIZE = 512;
@@ -84,10 +82,7 @@
   //  Menu images are square by design: the resize centre-crops to the shorter
   //  edge before scaling, so a wide photo loses its sides rather than being
   //  letterboxed into the thumbnail.
-  async function uploadMenuImage(file, venueName) {
-    return PVAdminAPI.uploadImage('/menus/images', file, { venue_name: venueName },
-      { square: true, maxSize: MENU_IMAGE_SIZE, quality: 0.82 });
-  }
+  var MENU_IMAGE_RESIZE = { square: true, maxSize: MENU_IMAGE_SIZE, quality: 0.82 };
 
   function formatCost(cost) {
     if (cost == null || cost === '') return '—';
@@ -202,10 +197,6 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     function setField(k, v) {
       setDraft(function (d) {
@@ -215,22 +206,13 @@
       });
     }
 
-    async function handleUpload(file) {
-      if (!file) return;
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr(''); setUploading(true);
-      try {
-        var url = await uploadMenuImage(file, props.venueName);
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
+    var up = PVAdminImageUpload.useImageUpload({
+      path: '/menus/images',
+      fields: { venue_name: props.venueName },
+      resize: MENU_IMAGE_RESIZE,
+      onUploaded: function (url) { setField('image_url', url); }
+    });
+    var uploading = up.uploading;
 
     async function submit(e) {
       e.preventDefault();
@@ -315,23 +297,7 @@
                   color: 'var(--text-secondary)'
                 }
               }, h(Icon, { name: props.categoryIcon, size: 26 })),
-          h('label', {
-            className: 'portal-btn is-ghost is-small portal-upload-btn',
-            style: { opacity: uploading || saving ? 0.55 : 1, cursor: uploading || saving ? 'not-allowed' : 'pointer' }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploading || saving,
-              className: 'portal-file-input',
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleUpload(f);
-              }
-            })
-          ),
+          h(PVAdminImageUpload.UploadButton, { busy: uploading, disabled: saving, title: null, onFile: up.upload }),
           draft.image_url ? h('button', {
             type: 'button',
             className: 'portal-btn is-ghost is-small',
@@ -339,9 +305,9 @@
             disabled: uploading || saving
           }, 'Remove') : null
         ),
-        uploadErr ? h('p', {
+        up.error ? h('p', {
           style: { margin: '0.4rem 0 0', color: 'var(--accent-red)', fontSize: '0.85rem' }
-        }, uploadErr) : null
+        }, up.error) : null
       ),
 
       h('div', { className: 'portal-form-actions' },

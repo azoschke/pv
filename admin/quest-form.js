@@ -14,8 +14,9 @@
   var h = React.createElement;
   var useState = React.useState;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+  // Image field (URL box + Upload + preview) lives in admin/image-upload.js;
+  // it stays exported here for the sections that use PVAdminQuestUtils.
+  var ImageField = window.PVAdminImageUpload.ImageField;
 
   var MISSION_TYPES = ['Training', 'Investigation', 'Bounty', 'Escort', 'Gathering'];
 
@@ -84,88 +85,6 @@
       return parts.join(' · ');
     }
     return when || 'Scheduled';
-  }
-
-  // ── Image upload (shared resize + upload in PVAdminAPI) ─────────────────
-  // Generic multipart upload to one of the worker's */images endpoints.
-  async function uploadImage(path, file, extraFields, resizeOpts) {
-    return PVAdminAPI.uploadImage(path, file, extraFields, resizeOpts);
-  }
-
-  // ── Image field (URL input + upload button + preview) ────────────────────
-  function ImageField(props) {
-    var value = props.value;
-    var onChange = props.onChange;
-    // readOnly: show the image without letting it change (URL box and upload off).
-    var disabled = props.disabled || props.readOnly;
-    var uploadPath = props.uploadPath;
-    var extraFields = props.extraFields;
-    var resize = props.resize;
-    var help = props.help;
-
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
-
-    async function handleUpload(file) {
-      if (!file) return;
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadImage(uploadPath, file, extraFields, resize);
-        onChange(url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
-
-    return h('div', { className: 'portal-field' },
-      h('label', null, 'Image'),
-      h('div', { className: 'portal-image-row' },
-        h('input', {
-          type: 'text',
-          value: value,
-          disabled: !!props.readOnly,
-          onChange: function (e) { onChange(e.target.value); },
-          placeholder: 'https://…',
-          className: 'portal-grow'
-        }),
-        h('label', {
-          className: 'portal-btn is-ghost is-small portal-upload-btn',
-          title: uploading ? 'Uploading…' : 'Upload an image.',
-          style: { opacity: (uploading || disabled) ? 0.55 : 1, cursor: (uploading || disabled) ? 'not-allowed' : 'pointer' }
-        },
-          uploading ? 'Uploading…' : 'Upload',
-          h('input', {
-            type: 'file',
-            accept: UPLOAD_ACCEPT,
-            disabled: uploading || disabled,
-            className: 'portal-file-input',
-            onChange: function (e) {
-              var f = e.target.files && e.target.files[0];
-              e.target.value = '';
-              handleUpload(f);
-            }
-          })
-        )
-      ),
-      help ? h('p', { className: 'portal-field-help' }, help) : null,
-      uploadErr ? h('p', {
-        className: 'portal-field-help is-error'
-      }, uploadErr) : null,
-      value ? h('img', {
-        src: value, alt: '',
-        className: 'portal-image-preview',
-        onError: function (e) { e.target.style.display = 'none'; }
-      }) : null
-    );
   }
 
   // ── Quest form ────────────────────────────────────────────────────────────

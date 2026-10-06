@@ -19,13 +19,6 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-
-  async function uploadJobImage(file, jobTitle) {
-    return PVAdminAPI.uploadImage('/jobs/images', file, { job_title: jobTitle });
-  }
-
   var CATEGORIES = [
     { value: 'mercenary',   label: 'Mercenary' },
     { value: 'medical',     label: 'Medical' },
@@ -124,56 +117,11 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var titleReady = !!draft.title.trim();
 
     function setField(k, v) {
       setDraft(function (d) { return Object.assign({}, d, { [k]: v }); });
-    }
-
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (!titleReady) { setUploadErr('Enter the job title before uploading.'); return; }
-      if (file.size > UPLOAD_MAX_BYTES) { setUploadErr('File is larger than 10 MB. Pick a smaller image.'); return; }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadJobImage(file, draft.title.trim());
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
-
-    function uploadButton() {
-      var disabled = !titleReady || uploading || saving;
-      var title = !titleReady
-        ? 'Enter the job title above before uploading an image.'
-        : (uploading ? 'Uploading…' : 'Upload an image.');
-      return h('label', {
-        className: 'portal-btn is-ghost is-small portal-upload-btn',
-        title: title,
-        style: { opacity: disabled ? 0.55 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }
-      },
-        uploading ? 'Uploading…' : 'Upload',
-        h('input', {
-          type: 'file',
-          accept: UPLOAD_ACCEPT,
-          disabled: disabled,
-          className: 'portal-file-input',
-          onChange: function (e) {
-            var f = e.target.files && e.target.files[0];
-            e.target.value = '';
-            handleImageUpload(f);
-          }
-        })
-      );
     }
 
     async function handleSubmit(e) {
@@ -244,30 +192,15 @@
         })
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { className: 'portal-image-row' },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            className: 'portal-grow'
-          }),
-          uploadButton()
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. The posting must be titled before uploading.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help is-error'
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          className: 'portal-image-preview',
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: titleReady ? null : 'Enter the job title above before uploading an image.',
+        uploadPath: '/jobs/images',
+        extraFields: { job_title: draft.title.trim() },
+        help: 'Paste a URL, or upload an image. The posting must be titled before uploading.'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Description'),

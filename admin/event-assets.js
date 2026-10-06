@@ -26,9 +26,6 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-
   // Fixed vocabularies — keep in sync with the worker's EVENT_ASSET_TYPES /
   // EVENT_ASSET_TAGS so client and server validation agree.
   var TYPES = ['Roleplay', 'PVE', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
@@ -36,10 +33,6 @@
     'Maps', 'FATEs', 'Field Operations', 'Deep Dungeons', 'V&C Dungeons',
     'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove', 'Unlock'
   ];
-
-  async function uploadEventAssetImage(file, eventTopic) {
-    return PVAdminAPI.uploadImage('/event-assets/images', file, { event_topic: eventTopic || '' });
-  }
 
   function canManage() {
     return PVAdminAPI.can('event_assets.edit');
@@ -164,10 +157,6 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var topicReady = !!draft.event_topic.trim();
 
@@ -183,28 +172,6 @@
       });
     }
 
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (!topicReady) {
-        setUploadErr('Enter the event topic before uploading an image.');
-        return;
-      }
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadEventAssetImage(file, draft.event_topic.trim());
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
-
     async function submit(e) {
       e.preventDefault();
       if (!topicReady) { setErr('Event topic is required.'); return; }
@@ -218,8 +185,6 @@
         setSaving(false);
       }
     }
-
-    var uploadDisabled = !topicReady || uploading || saving;
 
     return h('form', { onSubmit: submit, className: 'portal-form' },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
@@ -311,49 +276,15 @@
         })
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { className: 'portal-image-row' },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            className: 'portal-grow'
-          }),
-          h('label', {
-            className: 'portal-btn is-ghost is-small portal-upload-btn',
-            title: !topicReady
-              ? 'Enter the event topic above before uploading an image.'
-              : (uploading ? 'Uploading…' : 'Upload an image.'),
-            style: { opacity: uploadDisabled ? 0.55 : 1, cursor: uploadDisabled ? 'not-allowed' : 'pointer' }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploadDisabled,
-              className: 'portal-file-input',
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleImageUpload(f);
-              }
-            })
-          )
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste an image URL, or upload a file. The event topic must be set before uploading.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help is-error'
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          className: 'portal-image-preview',
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: topicReady ? null : 'Enter the event topic above before uploading an image.',
+        uploadPath: '/event-assets/images',
+        extraFields: { event_topic: draft.event_topic.trim() },
+        help: 'Paste an image URL, or upload a file. The event topic must be set before uploading.'
+      }),
 
       h('div', { className: 'portal-form-actions' },
         h('button', {

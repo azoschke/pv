@@ -26,13 +26,6 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-
-  async function uploadMedicalStaffImage(file, memberName) {
-    return PVAdminAPI.uploadImage('/medical-staff/images', file, { member_name: memberName });
-  }
-
   var POSITIONS = [
     'Medical Lead',
     'Assistant Medical Lead',
@@ -119,31 +112,9 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     function setField(k, v) {
       setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
-    }
-
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadMedicalStaffImage(file, row.member.name);
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
     }
 
     function togglePosition(p) {
@@ -230,47 +201,14 @@
         )
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { className: 'portal-image-row' },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            className: 'portal-grow'
-          }),
-          h('label', {
-            className: 'portal-btn is-ghost is-small portal-upload-btn',
-            title: uploading ? 'Uploading…' : 'Upload an image.',
-            style: { opacity: (uploading || saving) ? 0.55 : 1, cursor: (uploading || saving) ? 'not-allowed' : 'pointer' }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploading || saving,
-              className: 'portal-file-input',
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleImageUpload(f);
-              }
-            })
-          )
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL or upload a portrait. Shown on the public staff roster card.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help is-error'
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          className: 'portal-image-preview',
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        uploadPath: '/medical-staff/images',
+        extraFields: { member_name: row.member.name },
+        help: 'Paste a URL or upload a portrait. Shown on the public staff roster card.'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Description'),

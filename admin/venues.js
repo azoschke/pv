@@ -18,13 +18,6 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-
-  async function uploadVenueImage(file, venueName) {
-    return PVAdminAPI.uploadImage('/venues/images', file, { venue_name: venueName });
-  }
-
   var SIZES = [
     { value: 'room',      label: 'Room' },
     { value: 'apartment', label: 'Apartment' },
@@ -158,6 +151,45 @@
   }
 
   // ── Form ────────────────────────────────────────────────────────────────
+  // One gallery image: URL box, Upload and a small thumbnail on one row.
+  function GallerySlot(props) {
+    var up = PVAdminImageUpload.useImageUpload({
+      path: '/venues/images',
+      fields: { venue_name: props.venueName },
+      onUploaded: props.onChange
+    });
+    var val = props.value;
+    return h('div', { style: { marginTop: props.first ? '0.25rem' : '0.4rem' } },
+      h('div', { className: 'portal-image-row' },
+        h('input', {
+          type: 'text',
+          value: val,
+          onChange: function (e) { props.onChange(e.target.value); },
+          placeholder: 'https://…',
+          className: 'portal-grow'
+        }),
+        h(PVAdminImageUpload.UploadButton, {
+          busy: up.uploading,
+          disabled: props.disabled || !!props.blockedReason,
+          title: props.blockedReason || undefined,
+          onFile: up.upload
+        }),
+        val ? h('img', {
+          src: val, alt: '',
+          style: {
+            width: '64px', height: '40px', objectFit: 'cover',
+            border: '1px solid var(--border-color)', borderRadius: '0.25rem'
+          },
+          onError: function (e) { e.target.style.display = 'none'; }
+        }) : null
+      ),
+      up.error ? h('p', {
+        className: 'portal-field-help',
+        style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
+      }, up.error) : null
+    );
+  }
+
   function VenueForm(props) {
     var initial = props.initial;
     var onSubmit = props.onSubmit;
@@ -172,71 +204,11 @@
     var err = errState[0], setErr = errState[1];
     var newTagState = useState('');
     var newTag = newTagState[0], setNewTag = newTagState[1];
-    var uploadingState = useState({});
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState({});
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var allowsRoom = draft.size === 'room' || draft.size === 'apartment';
     var isApartment = draft.size === 'apartment';
     var nameReady = !!draft.name.trim();
-
-    function setSlotFlag(setter, slot, value) {
-      setter(function (s) {
-        var next = Object.assign({}, s);
-        if (value === undefined) delete next[slot]; else next[slot] = value;
-        return next;
-      });
-    }
-
-    async function handleImageUpload(slot, file) {
-      if (!file) return;
-      if (!nameReady) {
-        setSlotFlag(setUploadErr, slot, 'Enter the venue name before uploading.');
-        return;
-      }
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setSlotFlag(setUploadErr, slot, 'File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setSlotFlag(setUploadErr, slot, undefined);
-      setSlotFlag(setUploading, slot, true);
-      try {
-        var url = await uploadVenueImage(file, draft.name.trim());
-        if (slot === 'primary') setField('image_url', url);
-        else setGalleryImage(Number(slot.slice(1)), url);
-      } catch (e) {
-        setSlotFlag(setUploadErr, slot, e.message || 'Upload failed.');
-      } finally {
-        setSlotFlag(setUploading, slot, undefined);
-      }
-    }
-
-    function uploadButton(slot) {
-      var isUp = !!uploading[slot];
-      var disabled = !nameReady || isUp || saving;
-      var title = !nameReady
-        ? 'Enter the venue name above before uploading an image.'
-        : (isUp ? 'Uploading…' : 'Upload an image.');
-      return h('label', {
-        className: 'portal-btn is-ghost is-small portal-upload-btn',
-        title: title,
-        style: { opacity: disabled ? 0.55 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }
-      },
-        isUp ? 'Uploading…' : 'Upload',
-        h('input', {
-          type: 'file',
-          accept: UPLOAD_ACCEPT,
-          disabled: disabled,
-          className: 'portal-file-input',
-          onChange: function (e) {
-            var f = e.target.files && e.target.files[0];
-            e.target.value = '';
-            handleImageUpload(slot, f);
-          }
-        })
-      );
-    }
+    var uploadBlocked = nameReady ? null : 'Enter the venue name above before uploading an image.';
 
     function setField(k, v) {
       setDraft(function (d) {
@@ -380,30 +352,16 @@
         )
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image URL'),
-        h('div', { className: 'portal-image-row' },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            className: 'portal-grow'
-          }),
-          uploadButton('primary')
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
-        ),
-        uploadErr.primary ? h('p', {
-          className: 'portal-field-help is-error'
-        }, uploadErr.primary) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          className: 'portal-image-preview',
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        label: 'Image URL',
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: uploadBlocked,
+        uploadPath: '/venues/images',
+        extraFields: { venue_name: draft.name.trim() },
+        help: 'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Gallery images'),
@@ -411,37 +369,15 @@
           'Add up to three additional images in the gallery.'
         ),
         [0, 1, 2].map(function (idx) {
-          var val = (draft.gallery_images && draft.gallery_images[idx]) || '';
-          var slot = 'g' + idx;
-          return h('div', {
+          return h(GallerySlot, {
             key: idx,
-            style: { marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
-          },
-            h('div', {
-              className: 'portal-image-row'
-            },
-              h('input', {
-                type: 'text',
-                value: val,
-                onChange: function (e) { setGalleryImage(idx, e.target.value); },
-                placeholder: 'https://…',
-                className: 'portal-grow'
-              }),
-              uploadButton(slot),
-              val ? h('img', {
-                src: val, alt: '',
-                style: {
-                  width: '64px', height: '40px', objectFit: 'cover',
-                  border: '1px solid var(--border-color)', borderRadius: '0.25rem'
-                },
-                onError: function (e) { e.target.style.display = 'none'; }
-              }) : null
-            ),
-            uploadErr[slot] ? h('p', {
-              className: 'portal-field-help',
-              style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
-            }, uploadErr[slot]) : null
-          );
+            first: idx === 0,
+            value: (draft.gallery_images && draft.gallery_images[idx]) || '',
+            onChange: function (v) { setGalleryImage(idx, v); },
+            disabled: saving,
+            blockedReason: uploadBlocked,
+            venueName: draft.name.trim()
+          });
         })
       ),
 

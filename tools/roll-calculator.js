@@ -66,16 +66,6 @@
     return parts.slice(0, -1).join(' ') + ' ' + parts[parts.length - 1].charAt(0) + '.';
   }
   function modLabel(m) { return m.label ? m.label : (m.item_name + (m.ability_name ? ' · ' + m.ability_name : '')); }
-  function targetText(m) {
-    switch (m.target_kind) {
-      case 'self': return 'self'; case 'group': return 'group';
-      case 'class': return String(m.target_ref || '').toUpperCase();
-      case 'holder_item': case 'holder_items': return 'item holders';
-      case 'party_member': return 'chosen target'; case 'party_members': return 'chosen targets';
-      case 'some_bosses': return 'chosen enemies'; case 'all_bosses': return 'all enemies';
-    }
-    return '';
-  }
 
   // ── Plain-language descriptions ────────────────────────────────────────────
   function targetPhrase(tk, ref) {
