@@ -225,9 +225,18 @@
       var cancelled = false;
       (async function () {
         try {
-          var data = await PVAdminAPI.request('GET', '/members/faction?division=' + encodeURIComponent(division), undefined, true);
+          var rows;
+          try {
+            rows = await PVAdminAPI.request('GET', '/members/faction?division=' + encodeURIComponent(division), undefined, true);
+          } catch (e) {
+            // Until pv-med-database-worker v23 is live: the full list, filtered here.
+            if (e.status !== 404) throw e;
+            rows = ((await PVAdminAPI.request('GET', '/members', undefined, true)) || []).filter(function (m) {
+              return parseFactions(m.faction).indexOf(faction) !== -1;
+            });
+          }
           if (cancelled) return;
-          var rows = Array.isArray(data) ? data : [];
+          rows = Array.isArray(rows) ? rows : [];
           setMembers(rows.sort(compareMembers));
         } catch (e) {
           if (!cancelled) setErr(e.message || 'Failed to load roster.');
