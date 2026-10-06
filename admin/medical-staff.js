@@ -6,13 +6,13 @@
 //  tags, description) which gates whether they appear on the public roster
 //  at /pv/vanguard-medical/staff-roster.html.
 //
-//  Worker routes:
-//    GET    /members                  (existing, auth)
-//    GET    /medical-staff/admin      officer | admin
+//  Worker routes (all need "Manage the medical staff roster"):
+//    GET    /members/faction?division=medical   the Medical faction's members
+//    GET    /medical-staff/admin
 //        -> [{ member_id, positions:[], tags:[], description, updated_at }]
-//    PUT    /medical-staff/:member_id officer | admin
+//    PUT    /medical-staff/:member_id
 //        body { positions:[], tags:[], description }
-//    DELETE /medical-staff/:member_id admin
+//    DELETE /medical-staff/:member_id
 //
 //  Public route (used by the staff-roster.html page, not this module):
 //    GET    /medical-staff
@@ -474,7 +474,7 @@
     async function reload() {
       setErr('');
       try {
-        var membersData = await PVAdminAPI.request('GET', '/members', undefined, true);
+        var membersData = await PVAdminAPI.request('GET', '/members/faction?division=medical', undefined, true);
         var profilesData = await PVAdminAPI.request('GET', '/medical-staff/admin', undefined, true);
         setMembers(Array.isArray(membersData) ? membersData : []);
         setProfiles(Array.isArray(profilesData) ? profilesData : []);

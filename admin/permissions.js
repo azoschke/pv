@@ -7,8 +7,9 @@
 //  roles, Deny wins. An action allowed for a role that can't see its page or
 //  tab gets a warning tint.
 //
-//  Roles can be added, relabelled and deleted here; deleting is refused while
-//  any account still has the role (the worker names those accounts).
+//  Roles can be added, relabelled, reordered and deleted here; deleting is
+//  refused while any account still has the role (the worker names those
+//  accounts).
 //
 //  The preview shows what one account's combined roles allow, including any
 //  pending changes.
@@ -17,6 +18,7 @@
 //    GET    /admin/permissions   { permissions, roles, grants }
 //    PUT    /admin/permissions   { changes: [{ role_id, permission_key, effect }] }
 //    POST   /admin/roles         { slug, label }
+//    POST   /admin/roles/reorder { ids }
 //    PATCH  /admin/roles/:id     { label }
 //    DELETE /admin/roles/:id
 //  and GET /admin/users for the preview's account list.
@@ -111,7 +113,7 @@
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, 'Roles')),
       h('div', { className: 'perm-roles' },
-        roles.map(function (r) {
+        roles.map(function (r, i) {
           var isEditing = editing && editing.id === r.id;
           return h('div', { className: 'perm-role', key: r.id },
             isEditing
@@ -131,6 +133,14 @@
                     h('button', { key: 'c', type: 'button', className: 'portal-btn is-small is-ghost', disabled: busy, onClick: function () { setEditing(null); } }, 'Cancel')
                   ]
                 : [
+                    h('button', {
+                      key: 'u', type: 'button', className: 'portal-btn is-small is-ghost', 'aria-label': 'Move ' + r.label + ' up',
+                      disabled: busy || i === 0, onClick: function () { run(function () { return props.onMove(i, -1); }); }
+                    }, '↑'),
+                    h('button', {
+                      key: 'n', type: 'button', className: 'portal-btn is-small is-ghost', 'aria-label': 'Move ' + r.label + ' down',
+                      disabled: busy || i === roles.length - 1, onClick: function () { run(function () { return props.onMove(i, 1); }); }
+                    }, '↓'),
                     h('button', { key: 'r', type: 'button', className: 'portal-btn is-small is-ghost', disabled: busy, onClick: function () { setEditing({ id: r.id, label: r.label }); } }, 'Rename'),
                     h('button', {
                       key: 'd', type: 'button', className: 'portal-btn is-small is-danger', disabled: busy,
@@ -274,6 +284,16 @@
       return PVAdminAPI.request('PATCH', '/admin/roles/' + id, { label: label }, true)
         .then(function () { return load(); }).then(function () { done('Role renamed.'); });
     }
+    // Role order sets the grid columns and the role lists in Admin Settings.
+    // Saved right away.
+    function moveRole(index, delta) {
+      var ids = data.roles.map(function (r) { return r.id; });
+      var other = index + delta;
+      ids[index] = data.roles[other].id;
+      ids[other] = data.roles[index].id;
+      return PVAdminAPI.request('POST', '/admin/roles/reorder', { ids: ids }, true)
+        .then(function (d) { setErr(''); setData(d); });
+    }
     function deleteRole(r) {
       return PVAdminAPI.request('DELETE', '/admin/roles/' + r.id, undefined, true).then(function () {
         setDraft(function (d) {
@@ -361,7 +381,7 @@
               h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: discard }, 'Discard'),
               h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
           : null),
-      h(RolesCard, { roles: roles, onCreate: createRole, onRename: renameRole, onDelete: deleteRole, onError: fail }),
+      h(RolesCard, { roles: roles, onCreate: createRole, onRename: renameRole, onMove: moveRole, onDelete: deleteRole, onError: fail }),
       h(PreviewCard, { users: users, roles: roles, perms: data.permissions, valueOf: valueOf }));
   }
 
