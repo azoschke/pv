@@ -442,6 +442,8 @@
           h('div', { className: 'portal-card-actions' },
             h('input', {
               type: 'search',
+              name: 'account-search',
+              autoComplete: 'off',
               className: 'portal-search',
               placeholder: 'Filter by username or display name…',
               value: filter,
