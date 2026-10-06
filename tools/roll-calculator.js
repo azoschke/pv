@@ -6,6 +6,11 @@
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
+  // Shared lists + plain-language helpers (js/rp-shared.js).
+  var RPS = window.PVRpShared;
+  var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
+    CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase;
   var useRef = React.useRef;
 
   var POLL_MS = 5000;
@@ -17,21 +22,6 @@
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
   // Tab glyphs.
   var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield', skill: 'target' };
-  // Character skill checks (d20 + item skill bonuses). Kept in sync with the
-  // admin item editor's skill list.
-  var SKILLS = [
-    { value: 'perception', label: 'Perception' },
-    { value: 'investigation', label: 'Investigation' },
-    { value: 'stealth', label: 'Stealth' },
-    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
-    { value: 'disarm_traps', label: 'Disarm Traps' },
-    { value: 'athletics', label: 'Athletics' },
-    { value: 'animal_handling', label: 'Animal Handling' },
-    { value: 'deception', label: 'Deception' },
-    { value: 'persuasion', label: 'Persuasion' },
-    { value: 'diplomacy', label: 'Diplomacy' }
-  ];
-  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   function skillPhrase(skill, value) { return (value >= 0 ? '+' : '') + value + ' to ' + skillLabel(skill) + ' checks'; }
   function summonPhrase(s) { s = s || {}; var atk = s.attack_mode === 'd20' ? ', D20 atk' : (s.attack ? ', ' + s.attack + ' atk' : ''); return 'summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ')'; }
 
@@ -49,10 +39,6 @@
   };
   function rulesOf(data) { return (data && data.rules) || FALLBACK_RULES; }
 
-  // Scene state (location / time of day) the DM sets from the Control Deck. Fixed
-  // lists shared with the admin Combat Toolkit and the worker — keep in lockstep.
-  var RP_LOCATIONS = ['Arctic', 'Cave', 'Coastal', 'Desert', 'Forest', 'Jungle', 'Grassland', 'Mountain', 'Swamp', 'Town'];
-  var RP_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
 
   function damageFor(rules, r) {
     var tiers = (rules.damage_tiers || []).slice().sort(function (a, b) { return b.min - a.min; });
@@ -82,33 +68,6 @@
   }
 
   // ── Plain-language descriptions ────────────────────────────────────────────
-  var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
-  // A roll_bonus modifier boosts one or more rolls with a single value.
-  function rollsPhrase(rolls, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    var set = Array.isArray(rolls) ? rolls : [];
-    if (set.length >= 3) return v + ' to all rolls';
-    if (!set.length) return v + ' roll bonus';
-    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
-    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
-  }
-  function typePhrase(type, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    switch (type) {
-      case 'attack_roll': return v + ' attack roll bonus';
-      case 'defense_roll': return v + ' defense roll bonus';
-      case 'heal_roll': return v + ' healing roll bonus';
-      case 'attack_output': return v + ' bonus attack damage';
-      case 'heal_output': return v + ' bonus healing';
-      case 'attack_mult': return '×' + value + ' attack damage';
-      case 'damage_reduction': return '−' + value + ' damage taken';
-      case 'shield': return 'grants ' + value + ' shield';
-      case 'heal': return 'restores ' + value + ' HP';
-      case 'damage': return 'deals ' + value + ' damage';
-      case 'dot': return value + ' damage per turn';
-    }
-    return v + ' ' + String(type || '').replace(/_/g, ' ');
-  }
   function targetPhrase(tk, ref) {
     switch (tk) {
       case 'self': return 'the holder';
@@ -121,33 +80,6 @@
       case 'boss': return 'a chosen enemy';
       case 'some_bosses': return 'several chosen enemies';
       case 'all_bosses': return 'all enemies';
-    }
-    return '';
-  }
-  // Conditional-activation gate (HP / scene). The worker sends `conditions` as a
-  // parsed object already, but tolerate a JSON string too. Mirrors the admin
-  // authoring copy so the wording matches what the DM set.
-  function parseConditions(c) {
-    if (!c) return null;
-    if (typeof c === 'object') return c;
-    try { return JSON.parse(c) || null; } catch (_) { return null; }
-  }
-  function conditionPhrase(c) {
-    c = parseConditions(c);
-    if (!c) return '';
-    if (c.kind === 'hp') {
-      var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
-      function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
-      var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
-      var s = 'Only while ' + whose + ' is ' + pt(c.start);
-      if (c.stop) s += ' (until ' + pt(c.stop) + ')';
-      return s;
-    }
-    if (c.kind === 'scene') {
-      var parts = [];
-      if (Array.isArray(c.locations) && c.locations.length) parts.push('in ' + c.locations.join(', '));
-      if (Array.isArray(c.times) && c.times.length) parts.push('at ' + c.times.join(', '));
-      return parts.length ? 'Only ' + parts.join(' ') : '';
     }
     return '';
   }
@@ -1052,15 +984,6 @@
   }
 
   // ── DM panel ──────────────────────────────────────────────────────────────
-  function bossTargetPhrase(tk, ref) {
-    switch (tk) {
-      case 'party_member': return 'a chosen player';
-      case 'party_members': return 'chosen players';
-      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
-      case 'group': return 'the whole party';
-    }
-    return 'a target';
-  }
   // Plain-language boss-effect wording, mirroring the item describer.
   function bossEffectText(e) {
     var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';

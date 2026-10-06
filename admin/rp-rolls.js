@@ -16,6 +16,11 @@
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
+  // Shared lists + plain-language helpers (js/rp-shared.js).
+  var RPS = window.PVRpShared;
+  var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
+    CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -313,20 +318,6 @@
     { value: 'defense_roll', label: 'Defense roll' },
     { value: 'heal_roll', label: 'Healing roll' }
   ];
-  // Character skill checks — kept in sync with the roll calculator's list.
-  var SKILLS = [
-    { value: 'perception', label: 'Perception' },
-    { value: 'investigation', label: 'Investigation' },
-    { value: 'stealth', label: 'Stealth' },
-    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
-    { value: 'disarm_traps', label: 'Disarm Traps' },
-    { value: 'athletics', label: 'Athletics' },
-    { value: 'animal_handling', label: 'Animal Handling' },
-    { value: 'deception', label: 'Deception' },
-    { value: 'persuasion', label: 'Persuasion' },
-    { value: 'diplomacy', label: 'Diplomacy' }
-  ];
-  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   var TARGET_OPTIONS = [
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Everyone' },
@@ -337,11 +328,9 @@
   ];
   // ── Conditional activation (Advanced) ───────────────────────────────────────
   // An optional gate on any effect: the holder's HP, or the campaign's scene
-  // (location / time of day). Untouched = the effect always applies. These fixed
-  // lists are shared with the roll calculator's DM Control Deck AND the worker's
-  // validation — keep all three in lockstep if they ever change.
-  var RP_LOCATIONS = ['Arctic', 'Cave', 'Coastal', 'Desert', 'Forest', 'Jungle', 'Grassland', 'Mountain', 'Swamp', 'Town'];
-  var RP_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
+  // (location / time of day). Untouched = the effect always applies. The
+  // location/time lists live in js/rp-shared.js and must stay in step with the
+  // worker's validation (lib/constants.js).
   // HP comparison operators. '=' is only valid with a flat HP value — a percent
   // rarely lands on an exact integer — enforced on submit and in the worker.
   var HP_OPS = [
@@ -351,32 +340,8 @@
     { value: '>=', label: 'at or above' },
     { value: '>', label: 'above' }
   ];
-  function parseConditions(c) {
-    if (!c) return null;
-    if (typeof c === 'object') return c;
-    try { return JSON.parse(c) || null; } catch (_) { return null; }
-  }
   // A short plain-language note for the catalogue summary, e.g.
   // "Only while the holder is below 50% HP" / "Only in Forest, Jungle at Night".
-  function conditionPhrase(c) {
-    c = parseConditions(c);
-    if (!c) return '';
-    if (c.kind === 'hp') {
-      var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
-      function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
-      var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
-      var s = 'Only while ' + whose + ' is ' + pt(c.start);
-      if (c.stop) s += ' (until ' + pt(c.stop) + ')';
-      return s;
-    }
-    if (c.kind === 'scene') {
-      var parts = [];
-      if (Array.isArray(c.locations) && c.locations.length) parts.push('in ' + c.locations.join(', '));
-      if (Array.isArray(c.times) && c.times.length) parts.push('at ' + c.times.join(', '));
-      return parts.length ? 'Only ' + parts.join(' ') : '';
-    }
-    return '';
-  }
   // "How it works" options are phrased per effect so timing reads naturally and
   // never contradicts itself (an "always on" choice never carries a turn limit;
   // over-time is a named option, not a hidden toggle). Each maps to mode +
@@ -900,33 +865,6 @@
   // Plain-language summary of a modifier (matches the player-facing wording in
   // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
   // holder, this turn. · 2 uses/session".
-  var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
-  // "+2 to all rolls" / "+1 to attack & defense rolls" for a roll_bonus modifier.
-  function rollsPhrase(rolls, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    var set = Array.isArray(rolls) ? rolls : [];
-    if (set.length >= 3) return v + ' to all rolls';
-    if (!set.length) return v + ' roll bonus';
-    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
-    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
-  }
-  function typePhrase(type, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    switch (type) {
-      case 'attack_roll': return v + ' attack roll bonus';
-      case 'defense_roll': return v + ' defense roll bonus';
-      case 'heal_roll': return v + ' healing roll bonus';
-      case 'attack_output': return v + ' bonus attack damage';
-      case 'heal_output': return v + ' bonus healing';
-      case 'attack_mult': return '×' + value + ' attack damage';
-      case 'damage_reduction': return '−' + value + ' damage taken';
-      case 'shield': return 'grants ' + value + ' shield';
-      case 'heal': return 'restores ' + value + ' HP';
-      case 'damage': return 'deals ' + value + ' damage';
-      case 'dot': return value + ' damage per turn';
-    }
-    return v + ' ' + String(type || '').replace(/_/g, ' ');
-  }
   function modifierSummary(m, catalogue) {
     var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
     if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
@@ -1003,15 +941,6 @@
     none: ''
   };
 
-  function bossTargetPhrase(tk, ref) {
-    switch (tk) {
-      case 'party_member': return 'a chosen player';
-      case 'party_members': return 'chosen players';
-      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
-      case 'group': return 'the whole party';
-    }
-    return 'a target';
-  }
   // Plain-language boss-effect wording, mirroring the item modifier summary.
   function bossEffectSummary(e) {
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
