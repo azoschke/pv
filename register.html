@@ -7,8 +7,8 @@
 
   <meta name="robots" content="noindex, nofollow">
   <meta property="og:image" content="https://images.phoenixvanguard-tools.com/pv-fc-share.jpg">
-  <link rel="icon" href="/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 
@@ -81,8 +81,8 @@
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
-          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
-            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          <a href="index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="assets/pdf-emblem-web.png" alt="" class="login-home-logo">
           </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Create Account</p>
@@ -119,13 +119,13 @@
           <button type="submit" id="reg-submit" class="submit-btn" style="width:100%;">Create Account</button>
         </form>
 
-        <a class="login-link" href="/pv/login.html">Already have an account? Sign in →</a>
+        <a class="login-link" href="login.html">Already have an account? Sign in →</a>
       </div>
     </section>
   </div>
 
-  <script src="/pv/js/pv-session.js"></script>
-  <script src="/pv/admin/api.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="admin/api.js"></script>
   <script>
   (function () {
     var form = document.getElementById('registerForm');
@@ -142,7 +142,7 @@
     }
 
     if (PVAdminAPI.getSession()) {
-      window.location.replace('/pv/portal.html');
+      window.location.replace('portal.html');
       return;
     }
 
@@ -198,7 +198,7 @@
               is_root: !!data.is_root,
               expires_at: data.expires_at || null
             });
-            window.location.replace('/pv/portal.html');
+            window.location.replace('portal.html');
             return;
           }
         } catch (_e) {

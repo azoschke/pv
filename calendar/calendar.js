@@ -12,8 +12,8 @@
 //  (category + search) mirrors the Bounty Board / Job Board pattern.
 //
 //  Load order (see calendar.html):
-//    <script src="/pv/js/pv-session.js"></script>   (provides the session)
-//    <script src="/pv/calendar/calendar.js"></script>
+//    <script src="js/pv-session.js"></script>   (provides the session)
+//    <script src="calendar/calendar.js"></script>
 // ============================================================================
 
 (function () {
@@ -276,7 +276,7 @@
       '<div class="cal-panel">' +
         '<h2>Members only</h2>' +
         '<p>The event calendar is available to signed-in Phoenix Vanguard members.</p>' +
-        '<a class="cal-panel-btn" href="/pv/login.html?redirect=' + back + '">Sign in</a>' +
+        '<a class="cal-panel-btn" href="login.html?redirect=' + back + '">Sign in</a>' +
       '</div>'
     );
   }

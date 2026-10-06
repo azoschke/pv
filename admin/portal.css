@@ -2,7 +2,7 @@
    Phoenix Vanguard — Admin Portal styles
    ----------------------------------------------------------------------------
    Layout shell only: ink-dark sidebar + flexible main area. All colors
-   reference the existing CSS variables from /pv/css/styles.css so the site's
+   reference the existing CSS variables from css/styles.css so the site's
    light/dark theme toggle works for the portal without extra JS.
    The sidebar scopes `data-theme="dark"` onto itself so its text colors
    resolve against the dark-mode variable branch regardless of the site theme

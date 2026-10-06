@@ -8,8 +8,8 @@
   <meta name="referrer" content="no-referrer" />
   <title>Admin Portal — Reset Password</title>
 
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 
@@ -50,8 +50,8 @@
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
-          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
-            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          <a href="index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="assets/pdf-emblem-web.png" alt="" class="login-home-logo">
           </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Management Portal</p>
@@ -66,7 +66,7 @@
 
         <div id="reset-invalid" style="display:none;">
           <div class="flash error" id="reset-invalid-msg">This reset link is invalid or has expired.</div>
-          <a href="/pv/login.html"
+          <a href="login.html"
              style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
             Back to sign in →
           </a>
@@ -89,7 +89,7 @@
 
         <div id="reset-done" style="display:none;">
           <div class="flash success">Your password has been updated. You can now sign in with it.</div>
-          <a href="/pv/login.html"
+          <a href="login.html"
              style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
             Go to sign in →
           </a>
@@ -98,8 +98,8 @@
     </section>
   </div>
 
-  <script src="/pv/js/pv-session.js"></script>
-  <script src="/pv/admin/api.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="admin/api.js"></script>
   <script>
   (function () {
     var checking = document.getElementById('reset-checking');

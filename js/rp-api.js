@@ -7,8 +7,8 @@
  * just forward the token PVAdminAPI already stores.
  *
  * Load order on any page that uses this:
- *   <script src="/pv/js/pv-session.js"></script>   (provides the session)
- *   <script src="/pv/js/rp-api.js"></script>
+ *   <script src="js/pv-session.js"></script>   (provides the session)
+ *   <script src="js/rp-api.js"></script>
  *
  * Exposes a global `PVRollAPI` with { API_BASE, request, getSession }.
  */

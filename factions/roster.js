@@ -1,7 +1,7 @@
 // ============================================================================
 //  Phoenix Vanguard Company Roster — public directory (all factions)
 //
-//  Drives /pv/company-roster.html. Combines every published member
+//  Drives company-roster.html. Combines every published member
 //  profile across all factions into a single browsable directory, mirroring
 //  the venues / staff-roster pattern: a campaign-style filter sidebar plus a
 //  card grid with click-to-expand modal. Filter lists (faction + skills) are

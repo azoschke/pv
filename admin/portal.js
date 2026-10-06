@@ -1,5 +1,5 @@
 // ============================================================================
-//  PVAdminPortal — top-level shell for /pv/portal.html
+//  PVAdminPortal — top-level shell for portal.html
 //
 //  Responsibilities:
 //    - Load /me (refreshes roles and permissions on mount in case they
@@ -143,7 +143,7 @@
     }).filter(function (g) { return g.items.length > 0; });
 
     return h('div', { className: 'portal-sidebar-body' },
-      h('a', { href: '/pv/index.html', className: 'sidebar-brand', 'aria-label': 'Phoenix Vanguard' },
+      h('a', { href: 'index.html', className: 'sidebar-brand', 'aria-label': 'Phoenix Vanguard' },
         h('span', { className: 'site-logo sidebar-logo', role: 'img', 'aria-label': 'Phoenix Vanguard' }),
         h('span', { className: 'sidebar-brand-text' },
           h('span', { className: 'sidebar-brand-title' }, 'Phoenix Vanguard'),
@@ -216,7 +216,7 @@
       },
         h('span', null), h('span', null), h('span', null)
       ),
-      h('a', { href: '/pv/index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
+      h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
         h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' })
       ),
       h('span', { className: 'portal-topbar-title' },

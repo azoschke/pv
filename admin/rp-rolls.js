@@ -1994,7 +1994,7 @@
                 c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
-                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/roll-calculator.html', style: { textDecoration: 'none' } }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
+                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: 'roll-calculator.html', style: { textDecoration: 'none' } }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },

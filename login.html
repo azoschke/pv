@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Portal — Sign In</title>
 
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 
@@ -57,8 +57,8 @@
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
-          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
-            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          <a href="index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="assets/pdf-emblem-web.png" alt="" class="login-home-logo">
           </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Management Portal</p>
@@ -79,7 +79,7 @@
           <button type="submit" id="login-submit" class="submit-btn" style="width:100%;">Sign In</button>
         </form>
 
-        <a href="/pv/register.html"
+        <a href="register.html"
            style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
           Need an account? Create one →
         </a>
@@ -87,8 +87,8 @@
     </section>
   </div>
 
-  <script src="/pv/js/pv-session.js"></script>
-  <script src="/pv/admin/api.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="admin/api.js"></script>
   <script>
   (function () {
     var form = document.getElementById('loginForm');
@@ -105,13 +105,17 @@
     }
 
     // Optional same-site return path (e.g. the bounty board sends users back
-    // after logging in to sign up). Anything else falls through to the portal.
+    // after logging in to sign up). Anything off-site falls through to the
+    // portal.
     var redirectTarget = (function () {
       try {
         var r = new URLSearchParams(window.location.search).get('redirect') || '';
-        if (r.indexOf('/pv/') === 0) return r;
+        if (r) {
+          var u = new URL(r, window.location.href);
+          if (u.origin === window.location.origin) return u.pathname + u.search + u.hash;
+        }
       } catch (_e) { /* ignore */ }
-      return '/pv/portal.html';
+      return 'portal.html';
     })();
 
     // If we already hold a valid-looking session, skip the form.

@@ -87,8 +87,8 @@
 
   // Quest submissions live in the portal's My Profile → Applications tab; the
   // logged-out path goes through login first, then straight there.
-  var PORTAL_SUBMIT_URL = "/pv/portal.html?section=my-profile&tab=applications";
-  var LOGIN_URL = "/pv/login.html?redirect=";
+  var PORTAL_SUBMIT_URL = "portal.html?section=my-profile&tab=applications";
+  var LOGIN_URL = "login.html?redirect=";
   (function () {
     if (!submitBtn) return;
     var session = getSession();

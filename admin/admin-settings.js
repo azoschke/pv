@@ -17,7 +17,7 @@
 //    GET    /admin/roles                      users.roles or users.view
 //
 //  Password resets: users.reset mints a single-use, short-lived reset link the
-//  member opens at /pv/reset.html to set a new password. Only non-admin
+//  member opens at reset.html to set a new password. Only non-admin
 //  accounts can be reset this way; resetting an admin account is limited to
 //  the root admin (Fiora). The plaintext token is shown once, here, and is
 //  never stored or retrievable again.
@@ -392,9 +392,9 @@
           'POST', '/admin/users/' + user.id + '/reset-password', {}, true
         );
         if (!res || !res.token) throw new Error('No reset token was returned.');
-        // Build the member-facing link from the current origin so it works on
-        // whatever domain the portal is served from.
-        var link = window.location.origin + '/pv/reset.html?token=' +
+        // Build the member-facing link from this page's address so it works on
+        // whatever domain (and base path) the portal is served from.
+        var link = new URL('reset.html', window.location.href).href + '?token=' +
           encodeURIComponent(res.token);
         setResetResult({
           username: res.username || user.username,

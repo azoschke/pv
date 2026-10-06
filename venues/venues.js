@@ -351,7 +351,7 @@
 
   // Collect primary + up to three gallery images. Field name mirrors what the
   // worker is expected to return: `gallery_images` as an array of strings
-  // (full URLs or paths under /pv/assets/venues/). Falls back to legacy
+  // (full URLs or paths under assets/venues/). Falls back to legacy
   // `gallery_image_1/2/3` shape if the worker exposes those instead.
   function venueImages(v) {
     var imgs = [];
@@ -573,7 +573,7 @@
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="venue-modal-menu-link" href="/pv/menus.html?venue=' +
+      ? '<a class="venue-modal-menu-link" href="menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
           'View Menu' +
           '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +

@@ -42,7 +42,7 @@
     Session.clear();
     // Deliberate sign-outs land on the public home page; only expired/invalid
     // sessions (a 401 from request) bounce to the login form.
-    window.location.replace('/pv/index.html');
+    window.location.replace('index.html');
   }
 
   // Decode the picked file and re-encode it as WebP, falling back to JPEG

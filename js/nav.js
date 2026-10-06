@@ -3,8 +3,8 @@
  *
  * Add to every page, just before </body>:
  *   <div id="nav-placeholder"></div>
- *   <script src="/pv/js/pv-session.js"></script>
- *   <script src="/pv/js/nav.js"></script>
+ *   <script src="js/pv-session.js"></script>
+ *   <script src="js/nav.js"></script>
  *
  * The script:
  *  1. Fetches <base>/components/nav.html and injects it into #nav-placeholder
@@ -331,10 +331,16 @@
     // not linked verbatim, such as a campaign or the Codex.
     const loc = getCurrentLocation();
     const currentPath = window.location.pathname;
+    // Menu links are relative, so compare the address each one resolves to.
+    function linkTo(container) {
+      return Array.prototype.find.call(container.querySelectorAll('.nav-sublink'), function (a) {
+        return a.pathname === currentPath;
+      }) || null;
+    }
 
     let exactMatched = false;
     placeholder.querySelectorAll('.nav-dropdown[data-page]').forEach(function (dropdown) {
-      const sub = dropdown.querySelector('.nav-sublink[href="' + currentPath + '"]');
+      const sub = linkTo(dropdown);
       if (sub) {
         exactMatched = true;
         dropdown.classList.add('active');
@@ -365,7 +371,7 @@
     // Mark active section in sidebar too (same exact-href-first rule)
     let sidebarExactMatched = false;
     document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
-      const sub = section.querySelector('.nav-sublink[href="' + currentPath + '"]');
+      const sub = linkTo(section);
       if (sub) {
         sidebarExactMatched = true;
         section.classList.add('active', 'open');

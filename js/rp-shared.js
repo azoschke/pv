@@ -3,7 +3,7 @@
  * (tools/roll-calculator.js) and the Combat Toolkit (admin/rp-rolls.js).
  *
  * Load before either of those scripts:
- *   <script src="/pv/js/rp-shared.js"></script>
+ *   <script src="js/rp-shared.js"></script>
  *
  * Exposes a global `PVRpShared`.
  */

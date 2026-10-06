@@ -8,12 +8,14 @@
 //
 //  Load it before admin/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in:
-//    <script src="/pv/js/pv-session.js"></script>
+//    <script src="js/pv-session.js"></script>
 // ============================================================================
 
 (function (global) {
   var SESSION_KEY = 'pv.admin.session';
-  var LOGIN_PATH = '/pv/login.html';
+  // Every page sits at the top level, so the login page is a sibling of the
+  // current page (under /pv on GitHub Pages, at the root on the live site).
+  var LOGIN_PAGE = 'login.html';
 
   // The stored session, or null when signed out or past expires_at.
   function get() {
@@ -72,8 +74,8 @@
   }
 
   function redirectToLogin() {
-    if (window.location.pathname !== LOGIN_PATH) {
-      window.location.replace(LOGIN_PATH);
+    if (!/\/login(\.html)?$/.test(window.location.pathname)) {
+      window.location.replace(LOGIN_PAGE);
     }
   }
 
