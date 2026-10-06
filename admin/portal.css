@@ -1281,7 +1281,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   white-space: nowrap;
 }
 .perm-grid thead th.perm-corner { left: 0; z-index: 3; }
-.perm-grid .perm-role-col { text-align: center; min-width: 5.5rem; }
+.perm-grid .perm-role-col { text-align: center; min-width: 4.25rem; }
 .perm-row-label {
   position: sticky;
   left: 0;
@@ -1289,7 +1289,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: var(--bg-card);
   text-align: left;
   font-weight: 400;
-  padding: 0.35rem 0.75rem;
+  padding: 0.2rem 0.75rem;
   min-width: 15rem;
   max-width: 22rem;
   border-bottom: 1px solid var(--border-color);
@@ -1324,15 +1324,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-secondary);
 }
 .perm-group-row td > span { position: sticky; left: 0.75rem; padding: 0 0.75rem; }
-.perm-cell-td { text-align: center; padding: 0.25rem; border-bottom: 1px solid var(--border-color); }
+.perm-cell-td { text-align: center; padding: 0.15rem 0.2rem; border-bottom: 1px solid var(--border-color); }
 .perm-page-row .perm-cell-td { background: var(--bg-card-light); }
 .perm-cell {
-  width: 2rem;
-  height: 2rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 3px;
   background: transparent;
-  font-size: 1rem;
+  font-size: 0.8rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text-secondary);
