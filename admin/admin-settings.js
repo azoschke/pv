@@ -7,12 +7,14 @@
 //    opens a popup whose checkboxes commit the full intended role set for
 //    that user in one request.
 //  - Admins can delete user accounts (confirm prompt). Cannot delete self.
+//  - The root admin also gets a Permissions tab (admin/permissions.js).
 //
 //  Worker routes (all gated by admin role on the server):
 //    GET    /admin/users                      list users w/ roles
 //    PUT    /admin/users/:id/roles            { roles: ['medical', ...] } — replace set
 //    DELETE /admin/users/:id                  hard delete
 //    POST   /admin/users/:id/reset-password   mint a one-time reset link
+//    GET    /admin/roles                      the roles that can be assigned
 //
 //  Password resets: an admin mints a single-use, short-lived reset link the
 //  member opens at /pv/admin/reset.html to set a new password. Ordinary admins
@@ -26,7 +28,10 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  var ROLE_CATALOG = [
+  // Roles come from the worker (GET /admin/roles) so roles added in the
+  // Permissions tab can be assigned. This list is used until it loads, or if
+  // the worker doesn't have that route yet.
+  var FALLBACK_ROLES = [
     { slug: 'member',      label: 'Member' },
     { slug: 'medical',     label: 'Medical' },
     { slug: 'mercenary',   label: 'Mercenary' },
@@ -37,10 +42,12 @@
     { slug: 'officer',     label: 'Officer' },
     { slug: 'admin',       label: 'Admin' }
   ];
-  var LABEL_BY_SLUG = {};
-  ROLE_CATALOG.forEach(function (r) { LABEL_BY_SLUG[r.slug] = r.label; });
-  function roleLabels(roles) {
-    return (roles || []).map(function (r) { return LABEL_BY_SLUG[r] || r; });
+  function roleLabeler(roles) {
+    var bySlug = {};
+    roles.forEach(function (r) { bySlug[r.slug] = r.label; });
+    return function (slugs) {
+      return (slugs || []).map(function (s) { return bySlug[s] || s; });
+    };
   }
 
   // Root admin: frozen account. No admin can change its roles or delete it.
@@ -66,6 +73,7 @@
     var callerIsRoot = props.callerIsRoot;
     var deleting = props.deleting;
     var resetting = props.resetting;
+    var roleLabels = props.roleLabels;
 
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
@@ -251,7 +259,7 @@
     }
 
     function save() {
-      var selected = ROLE_CATALOG
+      var selected = props.roles
         .filter(function (r) { return draft[r.slug]; })
         .map(function (r) { return r.slug; });
       setSaving(true); setMerr('');
@@ -269,7 +277,7 @@
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
-        ROLE_CATALOG.map(function (r) {
+        props.roles.map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
             h('input', {
               type: 'checkbox',
@@ -308,6 +316,10 @@
     var resetResult = resetResultState[0], setResetResult = resetResultState[1];
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
+    var rolesState = useState(FALLBACK_ROLES);
+    var roles = rolesState[0], setRoles = rolesState[1];
+    var tabState = useState('accounts');
+    var tab = tabState[0], setTab = tabState[1];
 
     var session = PVAdminAPI.getSession();
     var selfUsername = session && session.username;
@@ -326,6 +338,16 @@
     }
 
     useEffect(function () { reload(); }, []);
+
+    // Reload the role list whenever the Accounts tab is shown, so roles added
+    // or relabelled in the Permissions tab show up.
+    useEffect(function () {
+      if (tab !== 'accounts') return;
+      PVAdminAPI.request('GET', '/admin/roles', undefined, true).then(function (rows) {
+        if (Array.isArray(rows) && rows.length) setRoles(rows);
+      }, function () { /* keep the fallback list */ });
+    // eslint-disable-next-line
+    }, [tab]);
 
     // Commit the full intended role set for a user in one request. Resolves on
     // success (and closes the popup); rejects so the popup can show the error.
@@ -404,7 +426,16 @@
       selfId = self ? self.id : null;
     }
 
+    var tabs = [{ id: 'accounts', label: 'Accounts' }]
+      .concat(callerIsRoot && window.PVAdminPermissions ? [{ id: 'permissions', label: 'Permissions' }] : []);
+    if (tab === 'permissions' && callerIsRoot && window.PVAdminPermissions) {
+      return h('div', null,
+        h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
+        h(window.PVAdminPermissions));
+    }
+
     return h('div', null,
+      h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Users & Roles'),
@@ -444,7 +475,8 @@
                           onDelete: handleDelete,
                           onReset: handleReset,
                           deleting: deletingId === u.id,
-                          resetting: resettingId === u.id
+                          resetting: resettingId === u.id,
+                          roleLabels: roleLabeler(roles)
                         });
                       })
                     : h('tr', null,
@@ -459,6 +491,7 @@
       ),
       editingUser ? h(RoleEditModal, {
         user: editingUser,
+        roles: roles,
         onSave: handleSaveRoles,
         onClose: function () { setEditingUser(null); }
       }) : null,
