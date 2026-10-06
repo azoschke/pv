@@ -471,11 +471,11 @@
       }
     }
     useEffect(function () { reload(); }, []);
-    // Members power the optional author dropdown; a failure here is non-fatal.
+    // Member names power the optional author dropdown; a failure here is non-fatal.
     useEffect(function () {
       (async function () {
         try {
-          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
+          var data = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
           var list = (Array.isArray(data) ? data : []).slice().sort(function (a, b) {
             return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
           });

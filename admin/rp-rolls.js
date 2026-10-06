@@ -1683,17 +1683,9 @@
     }
     // FC roster, used to resolve/set item owners in the catalogue and to name
     // the DM. Loaded once; selectCampaign also fills it lazily for non-admins.
-    // Member names for the pickers. Until pv-med-database-worker v23 is live
-    // (it opens the name list to DMs), fall back to the full member list.
-    function loadMemberNames() {
-      return PVAdminAPI.request('GET', '/members/basic', undefined, true).catch(function (e) {
-        if (e.status !== 403) throw e;
-        return PVAdminAPI.request('GET', '/members', undefined, true);
-      });
-    }
     async function loadMembers() {
       if (members !== null) return;
-      try { setMembers(await loadMemberNames() || []); }
+      try { setMembers(await PVAdminAPI.request('GET', '/members/basic', undefined, true) || []); }
       catch (e) { setErr('Could not load FC members: ' + e.message); }
     }
     async function loadRoster(cid) {
@@ -1746,7 +1738,7 @@
     // The boss library's 'Added By' filter names creators from the FC roster.
     useEffect(function () {
       if (!isStaff || tab !== 'bosses' || members !== null) return;
-      loadMemberNames()
+      PVAdminAPI.request('GET', '/members/basic', undefined, true)
         .then(function (rows) { setMembers(rows || []); })
         .catch(function () { /* creators fall back to 'Former member' */ });
       /* eslint-disable-next-line */
@@ -1810,7 +1802,7 @@
       if (isAdmin) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
-        loadMemberNames()
+        PVAdminAPI.request('GET', '/members/basic', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
           .catch(function (e) { setErr('Could not load FC members: ' + e.message); });
       }
