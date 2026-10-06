@@ -107,7 +107,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
-      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit campaign' : 'New campaign'),
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit campaign' : 'New campaign'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -137,7 +137,7 @@
           onChange: function (e) { setBlurb(e.target.value); } })
       ),
 
-      h('div', { className: 'cmp-actions' },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create campaign')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -212,7 +212,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
-      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit chapter' : 'New chapter'),
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit chapter' : 'New chapter'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'cmp-grid' },
@@ -255,7 +255,7 @@
               onChange: function (e) { setTldr(e.target.value); } })
       ),
 
-      h('div', { className: 'cmp-actions' },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving || loadingBody },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create chapter')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -336,7 +336,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
-      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit codex entry' : 'New codex entry'),
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit codex entry' : 'New codex entry'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -399,7 +399,7 @@
               onChange: function (e) { setField('image_url', e.target.value); } })
           ),
 
-      h('div', { className: 'cmp-actions' },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create entry')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')

@@ -596,6 +596,60 @@
 .rp-item-toggle.is-off { opacity: 0.62; }
 .rp-item-toggle-name { font-size: 0.88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ── Combat Toolkit editors ──────────────────────────────────────────────────
+   Boss / item skills lists, effect forms, campaign cards and System Rules. */
+.rp-campaign-tag {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.4rem;
+}
+.rp-campaign-tag.is-live { color: #fff; background: var(--accent-red); }
+.rp-campaign-tag.is-paused { color: var(--text-primary); border: 1px solid var(--accent-gold); }
+
+/* Skills list: one row per skill, its effects underneath. */
+.rp-skill-row { padding: 0.4rem 0; border-top: 1px solid var(--border-color); }
+.rp-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.rp-skill-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.15rem; white-space: pre-wrap; }
+.rp-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+.rp-actions.is-wide { gap: 0.35rem; }
+.rp-effect-box {
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-card-light);
+  border: 1px solid var(--border-color);
+  border-radius: 0.35rem;
+  margin-top: 0.3rem;
+}
+.rp-effect-box.is-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.rp-small { font-size: 0.8rem; }
+
+/* Buttons: square icon buttons, tiny Edit / ✕ on effect rows, + Add skill. */
+.portal-btn.is-small.rp-icon-btn { padding: 0.25rem 0.45rem; line-height: 1; }
+.portal-btn.is-small.rp-mini-btn { padding: 0.12rem 0.4rem; font-size: 0.72rem; }
+.portal-btn.rp-add-skill { margin-bottom: 0.6rem; }
+.portal-btn.rp-fill-btn { flex: 1; justify-content: center; }
+
+/* Effect / skill forms */
+.portal-card.rp-subform { margin-top: 0.4rem; background: var(--bg-darker); }
+.rp-inline-check { display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 400; }
+.rp-inline-check.is-wide { gap: 0.4rem; }
+.rp-grow-select { flex: 1 1 12rem; }
+.portal-field-help.rp-help-tight { margin: 0.3rem 0 0; }
+.portal-field-help.rp-help-flush { margin: 0; }
+.rp-w6 { max-width: 6rem; }
+.rp-w9 { max-width: 9rem; }
+.rp-w12 { max-width: 12rem; }
+.rp-w14 { max-width: 14rem; }
+.rp-mt3 { margin-top: 0.3rem; }
+.rp-mt4 { margin-top: 0.4rem; }
+.rp-mt5 { margin-top: 0.5rem; }
+
+/* System Rules */
+.rp-rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.5rem; }
+.rp-rule-check { display: flex; align-items: center; gap: 0.35rem; }
+
 @media (max-width: 1100px) {
   .rp-roster-grid,
   .rp-catalogue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

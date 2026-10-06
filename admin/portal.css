@@ -1442,6 +1442,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-field.is-full { grid-column: 1 / -1; }
 .portal-field.is-tight { margin-bottom: 0.6rem; }
 .portal-btn.is-end { margin-left: auto; }
+.portal-form-title { margin-top: 0; }   /* "New … / Edit …" heading of a form card */
+.portal-btn-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }   /* Save / Cancel */
+.portal-card.is-tight { margin-bottom: 0.6rem; }
+.portal-card.is-inset { background: var(--bg-card-light); margin-bottom: 0.5rem; }   /* card inside a card */
 .portal-btn.is-spaced { margin-left: 0.4rem; }
 .portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
 
@@ -1463,10 +1467,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 /* Campaigns section: campaign / chapter / codex editors. */
 .portal-card.cmp-form { margin-bottom: 1rem; }
-.cmp-form-title { margin-top: 0; }
 .cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
 .cmp-hint { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
-.cmp-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 textarea.cmp-code,
 .portal-field textarea.cmp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
 .portal-card.cmp-list-card { margin-bottom: 0.75rem; }
