@@ -310,7 +310,6 @@
     heal_output: 'Makes the holder’s heals restore more HP.',
     damage_reduction: 'Lowers damage the target takes.',
     skill: 'Adds to the holder’s rolls for one skill.',
-    stun_immune: 'Target can’t be stunned by boss skills. The DM can still stun them by hand after confirming.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
     none: ''
