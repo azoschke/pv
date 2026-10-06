@@ -33,26 +33,18 @@
     return '';
   })();
 
-  // ── 1. Detect current section + page from URL path ────────────────────────
-  // Returns { section, page } where:
-  //   section = first path segment after BASE_PATH (e.g. "zodiac-weapons")
-  //   page    = file name without extension (e.g. "atma")
+  // ── 1. Detect the current page from the URL path ─────────────────────────
+  // Every page sits at the top level (<base>/<page>.html), so the file name
+  // decides which menu is current: nav.html lists each menu's pages in its
+  // data-page attribute. Returns { page }, e.g. { page: "atma" }.
   function getCurrentLocation() {
     let pathname = window.location.pathname;
     if (BASE_PATH && pathname.indexOf(BASE_PATH) === 0) {
       pathname = pathname.slice(BASE_PATH.length);
     }
     const parts = pathname.split('/').filter(Boolean);
-    let section = 'home';
-    let page = 'index';
-    if (parts.length && !/\.html?$/i.test(parts[0])) {
-      section = parts[0];
-      const file = parts[parts.length - 1] || '';
-      page = file.replace(/\.html?$/i, '') || 'index';
-    } else if (parts.length) {
-      page = parts[0].replace(/\.html?$/i, '') || 'index';
-    }
-    return { section: section, page: page };
+    const file = parts[parts.length - 1] || '';
+    return { page: file.replace(/\.html?$/i, '') || 'index' };
   }
 
   // ── 1b. Admin session (shared with the management portal) ──────────────────
@@ -68,7 +60,7 @@
     const session = getAdminSession();
     if (!session) return;
     const name = String(session.display_name || session.username || 'Account').trim();
-    const portalUrl = BASE_PATH + '/admin/portal.html';
+    const portalUrl = BASE_PATH + '/portal.html';
     placeholder.querySelectorAll('.nav-login-btn').forEach(function (btn) {
       btn.href = portalUrl;
       btn.setAttribute('data-subpage', 'admin-portal');
@@ -117,7 +109,7 @@
   function currentCampaignSlug() {
     try {
       const loc = getCurrentLocation();
-      if (loc.section !== 'campaigns' || loc.page !== 'view') return null;
+      if (loc.page !== 'view') return null;
       return new URLSearchParams(window.location.search).get('c');
     } catch (_e) { return null; }
   }
@@ -129,14 +121,14 @@
     let codexActive = false;
     try {
       const cloc = getCurrentLocation();
-      codexActive = (cloc.section === 'campaigns' && cloc.page === 'codex');
+      codexActive = cloc.page === 'codex';
     } catch (_e) { codexActive = false; }
 
     // Are we on the landing filtered to one-shots (the One-Shots menu target)?
     let oneshotActive = false;
     try {
       const loc = getCurrentLocation();
-      if (loc.section === 'campaigns' && loc.page === 'campaigns') {
+      if (loc.page === 'campaigns') {
         oneshotActive = (new URLSearchParams(window.location.search).get('tag') || '').toLowerCase() === 'oneshot';
       }
     } catch (_e) { oneshotActive = false; }
@@ -178,7 +170,7 @@
 
       listed.forEach(function (c) {
         makeItem(
-          BASE_PATH + '/campaigns/view.html?c=' + encodeURIComponent(c.slug),
+          BASE_PATH + '/view.html?c=' + encodeURIComponent(c.slug),
           c.name || c.slug,
           'campaign-' + c.slug,
           !!(activeSlug && c.slug === activeSlug)
@@ -187,7 +179,7 @@
 
       // One-Shots always shows, even with none yet (a known category).
       makeItem(
-        BASE_PATH + '/campaigns/campaigns.html?tag=oneshot',
+        BASE_PATH + '/campaigns.html?tag=oneshot',
         'One-Shots',
         'campaigns-oneshots',
         oneshotActive
@@ -206,7 +198,7 @@
       divider.className = 'nav-campaign-dynamic nav-submenu-divider';
       divider.setAttribute(isDesktop ? 'role' : 'aria-hidden', isDesktop ? 'separator' : 'true');
       menu.appendChild(divider);
-      makeItem(BASE_PATH + '/campaigns/codex.html', 'Codex', 'campaigns-codex', codexActive);
+      makeItem(BASE_PATH + '/codex.html', 'Codex', 'campaigns-codex', codexActive);
     });
   }
 
@@ -334,10 +326,9 @@
 
     placeholder.innerHTML = navHTML;
 
-    // Mark active dropdown + sub-link. Exact href matches win — pages can
-    // live in a dropdown outside their own URL section (e.g. the Medical
-    // staff roster sits under Community) — with the data-page section match
-    // as the fallback for anything not linked verbatim.
+    // Mark active dropdown + sub-link. Exact href matches win, with the
+    // data-page list (the pages each menu covers) as the fallback for pages
+    // not linked verbatim, such as a campaign or the Codex.
     const loc = getCurrentLocation();
     const currentPath = window.location.pathname;
 
@@ -356,7 +347,7 @@
     if (!exactMatched) {
       placeholder.querySelectorAll('.nav-dropdown[data-page]').forEach(function (dropdown) {
         const pages = dropdown.dataset.page.split(/\s+/).filter(Boolean);
-        if (pages.indexOf(loc.section) !== -1) {
+        if (pages.indexOf(loc.page) !== -1) {
           dropdown.classList.add('active');
           const toggle = dropdown.querySelector('.nav-dropdown-toggle');
           if (toggle) toggle.classList.add('active');
@@ -368,7 +359,7 @@
 
     // Also support any legacy top-level .nav-link[data-page]
     placeholder.querySelectorAll('.nav-link[data-page]').forEach(function (link) {
-      if (link.dataset.page === loc.section) link.classList.add('active');
+      if (link.dataset.page === loc.page) link.classList.add('active');
     });
 
     // Mark active section in sidebar too (same exact-href-first rule)
@@ -387,7 +378,7 @@
     if (!sidebarExactMatched) {
       document.querySelectorAll('.nav-sidebar-section[data-page]').forEach(function (section) {
         const pages = section.dataset.page.split(/\s+/).filter(Boolean);
-        if (pages.indexOf(loc.section) !== -1) {
+        if (pages.indexOf(loc.page) !== -1) {
           section.classList.add('active', 'open');
           const toggle = section.querySelector('.nav-sidebar-toggle');
           if (toggle) toggle.setAttribute('aria-expanded', 'true');

@@ -121,7 +121,7 @@
           h('input', { type: 'text', maxLength: 60, value: slug,
             onChange: function (e) { setTouched(true); setSlug(e.target.value); } }),
           h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
-            'Used in the link: /campaigns/view.html?c=' + (deriveSlug(slug || name) || '…') +
+            'Used in the link: /view.html?c=' + (deriveSlug(slug || name) || '…') +
             (isEdit ? ' — changing it breaks old links.' : ''))
         ),
         h('div', { className: 'portal-field' },
@@ -768,7 +768,7 @@
                     h('strong', { style: { fontSize: '1.05rem' } }, c.name)
                   ),
                   h('p', { style: { margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-                    (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /campaigns/view.html?c=' + c.slug)
+                    (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /view.html?c=' + c.slug)
                 ),
                 h(RowControls, {
                   canDelete: canDeleteStory,

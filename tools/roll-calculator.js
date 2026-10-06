@@ -210,7 +210,7 @@
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'lock'),
       h('h2', null, 'Members only'),
       h('p', null, 'Sign in with your account to use the Roll Calculator.'),
-      h('a', { className: 'rp-btn', href: '/pv/admin/login.html?redirect=/pv/tools/roll-calculator.html' }, 'Sign in'));
+      h('a', { className: 'rp-btn', href: '/pv/login.html?redirect=/pv/roll-calculator.html' }, 'Sign in'));
   }
   function PausedCard(props) {
     return h('div', { className: 'rp-gate' },
@@ -1333,7 +1333,7 @@
           h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
           h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session'),
           // Jump straight to the Combat Toolkit admin page (portal RP section).
-          h('a', { className: 'rp-btn is-small is-ghost', href: '/pv/admin/portal.html?section=rp-rolls',
+          h('a', { className: 'rp-btn is-small is-ghost', href: '/pv/portal.html?section=rp-rolls',
             title: 'Open the Combat Toolkit admin page', style: { textDecoration: 'none' } },
             h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', marginRight: '0.28rem', fontVariationSettings: "'FILL' 1" } }, 'casino'),
             'Combat Toolkit')),
@@ -1517,7 +1517,7 @@
     function onSetTurns(e, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id, { remaining_turns: Math.max(0, v) }); }); }
     function onRemoveEffect(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/active-modifiers/' + e.id); }); }
     function onPauseSession() { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/pause', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to pause.'); }); }
-    function onEndSession() { if (!confirm('End the session?')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/admin/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
+    function onEndSession() { if (!confirm('End the session?')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
     // Heal apply: one atomic request — additive server-side (no lost heals when two
     // land together) and unable to revive KO'd targets. Then refresh.
     function onApplyHeal(entries, mode) {

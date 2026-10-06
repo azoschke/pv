@@ -1,5 +1,5 @@
 // ============================================================================
-//  PVAdminPortal — top-level shell for /pv/admin/portal.html
+//  PVAdminPortal — top-level shell for /pv/portal.html
 //
 //  Responsibilities:
 //    - Load /me (refreshes roles and permissions on mount in case they

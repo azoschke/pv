@@ -216,7 +216,7 @@
       h('h2', { className: 'portal-card-title' }, 'My Quest Signups'),
       h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
         'Sign up from the public ',
-        h('a', { href: '/pv/bounty-board/bounty-board.html' }, 'Bounty Board'),
+        h('a', { href: '/pv/bounty-board.html' }, 'Bounty Board'),
         '. You can withdraw anytime.'
       ),
       signups.length ? h('div', { className: 'portal-table-wrap', style: { marginTop: '0.85rem' } },
@@ -272,7 +272,7 @@
       h('h2', { className: 'portal-card-title' }, 'My Job Applications'),
       h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
         'Apply from the public ',
-        h('a', { href: '/pv/job-board/job-board.html' }, 'Job Board'),
+        h('a', { href: '/pv/job-board.html' }, 'Job Board'),
         '. Applications can be withdrawn until an officer starts processing them.'
       ),
       apps.length ? h('div', { className: 'portal-table-wrap', style: { marginTop: '0.85rem' } },

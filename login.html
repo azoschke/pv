@@ -79,7 +79,7 @@
           <button type="submit" id="login-submit" class="submit-btn" style="width:100%;">Sign In</button>
         </form>
 
-        <a href="/pv/admin/register.html"
+        <a href="/pv/register.html"
            style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
           Need an account? Create one →
         </a>
@@ -111,7 +111,7 @@
         var r = new URLSearchParams(window.location.search).get('redirect') || '';
         if (r.indexOf('/pv/') === 0) return r;
       } catch (_e) { /* ignore */ }
-      return '/pv/admin/portal.html';
+      return '/pv/portal.html';
     })();
 
     // If we already hold a valid-looking session, skip the form.

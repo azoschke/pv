@@ -1,6 +1,6 @@
 /* ============================================================================
    combat.css — styles for the combat pages
-     • Roll Calculator (tools/roll-calculator.html) — everything under .rp-tool / .rp-gate
+     • Roll Calculator (roll-calculator.html) — everything under .rp-tool / .rp-gate
      • Combat Toolkit (portal → Combat Toolkit) — roster & catalogue card grids
    Both pages load this file; the classes don't overlap except the shared
    .rp-switch toggle, which is defined once below.

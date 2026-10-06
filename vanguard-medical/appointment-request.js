@@ -19,7 +19,7 @@ function initAppointmentGate() {
         if (loginGate) loginGate.style.display = 'block';
         const btn = document.getElementById('login-redirect-btn');
         if (btn) {
-            btn.href = '/pv/admin/login.html?redirect=' +
+            btn.href = '/pv/login.html?redirect=' +
                 encodeURIComponent(window.location.pathname);
         }
         return;
@@ -49,7 +49,7 @@ async function submitAppointmentRequest(event) {
     // sits open. If it has, bounce back through login rather than sending.
     const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
     if (!session) {
-        window.location.href = '/pv/admin/login.html?redirect=' +
+        window.location.href = '/pv/login.html?redirect=' +
             encodeURIComponent(window.location.pathname);
         return;
     }

@@ -228,7 +228,7 @@
     // ── Card grid (keeps the existing landing-card look) ──────────────────────
     function buildCard(c) {
       var a = document.createElement('a');
-      a.href = '/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug);
+      a.href = '/pv/view.html?c=' + encodeURIComponent(c.slug);
       a.className = 'landing-card';
       a.innerHTML =
         '<div class="landing-card-inner">' +

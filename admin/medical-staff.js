@@ -4,7 +4,7 @@
 //  The candidate roster is every FC member whose `faction` field contains
 //  "Medical". For each candidate, an admin can attach a profile (positions,
 //  tags, description) which gates whether they appear on the public roster
-//  at /pv/vanguard-medical/staff-roster.html.
+//  at /pv/staff-roster.html.
 //
 //  Worker routes (all need "Manage the medical staff roster"):
 //    GET    /members/faction?division=medical   the Medical faction's members

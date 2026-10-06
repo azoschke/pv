@@ -13,7 +13,7 @@
 
 (function (global) {
   var SESSION_KEY = 'pv.admin.session';
-  var LOGIN_PATH = '/pv/admin/login.html';
+  var LOGIN_PATH = '/pv/login.html';
 
   // The stored session, or null when signed out or past expires_at.
   function get() {

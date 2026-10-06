@@ -276,7 +276,7 @@
       '<div class="cal-panel">' +
         '<h2>Members only</h2>' +
         '<p>The event calendar is available to signed-in Phoenix Vanguard members.</p>' +
-        '<a class="cal-panel-btn" href="/pv/admin/login.html?redirect=' + back + '">Sign in</a>' +
+        '<a class="cal-panel-btn" href="/pv/login.html?redirect=' + back + '">Sign in</a>' +
       '</div>'
     );
   }

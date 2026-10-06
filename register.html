@@ -119,7 +119,7 @@
           <button type="submit" id="reg-submit" class="submit-btn" style="width:100%;">Create Account</button>
         </form>
 
-        <a class="login-link" href="/pv/admin/login.html">Already have an account? Sign in →</a>
+        <a class="login-link" href="/pv/login.html">Already have an account? Sign in →</a>
       </div>
     </section>
   </div>
@@ -142,7 +142,7 @@
     }
 
     if (PVAdminAPI.getSession()) {
-      window.location.replace('/pv/admin/portal.html');
+      window.location.replace('/pv/portal.html');
       return;
     }
 
@@ -198,7 +198,7 @@
               is_root: !!data.is_root,
               expires_at: data.expires_at || null
             });
-            window.location.replace('/pv/admin/portal.html');
+            window.location.replace('/pv/portal.html');
             return;
           }
         } catch (_e) {

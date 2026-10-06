@@ -35,7 +35,7 @@
   }
 
   // Patient record form laid out to mirror the patient intake form
-  // (vanguard-medical/patient-intake-form.html), grouped into the same
+  // (patient-intake-form.html), grouped into the same
   // sections so editing an existing record follows the same flow an
   // intake captures:
   //   1. Patient Information

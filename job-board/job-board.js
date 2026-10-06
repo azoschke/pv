@@ -524,7 +524,7 @@
     if (!getSession()) {
       // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="/pv/admin/login.html?redirect=' +
+        '<a class="quest-action-btn" href="/pv/login.html?redirect=' +
         encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
         '</div>';
     }
