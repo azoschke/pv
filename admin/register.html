@@ -193,6 +193,8 @@
               username: data.username || username,
               display_name: data.display_name || displayName,
               roles: data.roles || [],
+              permissions: data.permissions || [],
+              is_root: !!data.is_root,
               expires_at: data.expires_at || null
             });
             window.location.replace('/pv/admin/portal.html');

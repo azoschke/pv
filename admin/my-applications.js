@@ -1,16 +1,16 @@
 // ============================================================================
 //  PVAdminMyApplications — member self-service activity section
 //
-//  Visible to every logged-in account. Three cards:
-//    1. My Quest Submissions — submit new quests (live after officer
-//       approval), edit them (edits to listed quests queue for approval),
-//       withdraw pending ones.
-//    2. My Quest Signups — quests the member has signed up for on the public
-//       Bounty Board; withdrawable anytime.
-//    3. My Job Applications — status of public job board applications;
-//       withdrawable while still unreviewed.
+//  Three cards, each shown only with its permission:
+//    1. My Quest Submissions (quests.submit) — submit new quests (live after
+//       officer approval), edit them (edits to listed quests queue for
+//       approval), withdraw pending ones.
+//    2. My Quest Signups (quests.signup) — quests the member has signed up
+//       for on the public Bounty Board; withdrawable anytime.
+//    3. My Job Applications (jobs.apply) — status of public job board
+//       applications; withdrawable while still unreviewed.
 //
-//  Worker routes (all authed, no special role):
+//  Worker routes (all authed):
 //    GET  /my/quests        POST /quests      PATCH/DELETE /my/quests/:id
 //    DELETE /quest-edits/:id                  (cancel own proposed edit)
 //    GET  /my/signups       DELETE /quests/:id/signups
@@ -330,16 +330,25 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
+    var canSubmit = PVAdminAPI.can('quests.submit');
+    var canSignup = PVAdminAPI.can('quests.signup');
+    var canApply = PVAdminAPI.can('jobs.apply');
+
+    // Only load what this account may see.
+    function load(allowed, path, empty) {
+      return allowed ? PVAdminAPI.request('GET', path, undefined, true) : Promise.resolve(empty);
+    }
+
     async function reload() {
       setErr('');
       try {
         var results = await Promise.all([
-          PVAdminAPI.request('GET', '/my/quests', undefined, true),
-          PVAdminAPI.request('GET', '/my/signups', undefined, true),
-          PVAdminAPI.request('GET', '/my/applications', undefined, true),
+          load(canSubmit, '/my/quests', null),
+          load(canSignup, '/my/signups', []),
+          load(canApply, '/my/applications', []),
           // Postings carry job_type / category; index by id so My Job
           // Applications can show the division label and Primary/Secondary type.
-          PVAdminAPI.request('GET', '/jobs', undefined, true).catch(function () { return []; })
+          load(canApply, '/jobs', []).catch(function () { return []; })
         ]);
         setMyQuests(results[0] && results[0].quests ? results[0] : { quests: [], edits: [] });
         setMySignups(Array.isArray(results[1]) ? results[1] : []);
@@ -365,9 +374,9 @@
         h('div', { className: 'portal-flash error' }, err)
       ) : null,
 
-      h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }),
-      h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }),
-      h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr })
+      canSubmit ? h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }) : null,
+      canSignup ? h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }) : null,
+      canApply ? h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr }) : null
     );
   }
 

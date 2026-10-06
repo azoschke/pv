@@ -4,9 +4,9 @@
 //  Worker (cosmic-exploration.chlorinatorgreen.workers.dev) routes used:
 //    GET    /api/meta                       public
 //    GET    /api/quests                     public
-//    POST   /api/admin/quests               admin | officer
-//    PUT    /api/admin/quests/:id           admin | officer
-//    DELETE /api/admin/quests/:id           admin | officer
+//    POST   /api/admin/quests               cosmic.edit
+//    PUT    /api/admin/quests/:id           cosmic.edit
+//    DELETE /api/admin/quests/:id           cosmic.edit
 //
 //  Auth: forwards the PVAdminAPI session bearer to the cosmic Worker, which
 //  validates it against pv-med-database-worker /me.

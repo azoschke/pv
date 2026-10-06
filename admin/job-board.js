@@ -1,12 +1,15 @@
 // ============================================================================
-//  PVAdminJobBoard — Job board management for officers/admins
+//  PVAdminJobBoard — Job board management
+//
+//  Tabs: Job Postings (jobs.postings) and Applications
+//  (jobs.applications_view); each shows only with its permission.
 //
 //  Worker routes:
 //    GET    /jobs          public
-//    POST   /jobs          officer | admin
-//    PATCH  /jobs/:id      officer | admin
-//    DELETE /jobs/:id      officer | admin
-//    POST   /jobs/images   officer | admin  (single image upload)
+//    POST   /jobs          jobs.postings
+//    PATCH  /jobs/:id      jobs.postings
+//    DELETE /jobs/:id      jobs.postings
+//    POST   /jobs/images   jobs.postings  (single image upload)
 //
 // ============================================================================
 
@@ -586,14 +589,19 @@
   // The dashboard deep-links into the Applications view with a stage filter
   // (and member search) via portal navParams.
   function JobBoardSection(props) {
+    var tabs = [
+      PVAdminAPI.can('jobs.postings') ? { id: 'postings', label: 'Job Postings' } : null,
+      PVAdminAPI.can('jobs.applications_view') ? { id: 'applications', label: 'Applications' } : null
+    ].filter(Boolean);
+    var wanted = props && props.initialView === 'applications' ? 'applications' : 'postings';
     var viewState = useState(
-      props && props.initialView === 'applications' ? 'applications' : 'postings'
+      tabs.some(function (t) { return t.id === wanted; }) ? wanted : (tabs[0] ? tabs[0].id : null)
     );
     var view = viewState[0], setView = viewState[1];
 
     return h('div', null,
       h(window.PVAdminSubnav, {
-        tabs: [{ id: 'postings', label: 'Job Postings' }, { id: 'applications', label: 'Applications' }],
+        tabs: tabs,
         active: view,
         onChange: setView
       }),

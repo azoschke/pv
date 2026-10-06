@@ -141,6 +141,8 @@
           username: data.username || username,
           display_name: data.display_name || username,
           roles: data.roles || [],
+          permissions: data.permissions || [],
+          is_root: !!data.is_root,
           expires_at: data.expires_at || null
         });
         document.getElementById('login-password').value = '';

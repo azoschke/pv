@@ -55,16 +55,19 @@
     sessionStorage.removeItem(SESSION_KEY);
   }
 
-  function hasRole(role) {
+  // Permission keys from the permission grid (Admin Settings → Permissions),
+  // stored with the session at sign-in and refreshed from /me by the portal.
+  // The root admin's list has every key.
+  function can(key) {
     var s = getSession();
-    if (!s || !Array.isArray(s.roles)) return false;
-    return s.roles.indexOf(role) !== -1;
+    if (!s || !Array.isArray(s.permissions)) return false;
+    return s.permissions.indexOf(key) !== -1;
   }
 
-  function hasAnyRole(roles) {
-    if (!roles || !roles.length) return true;
-    for (var i = 0; i < roles.length; i++) {
-      if (hasRole(roles[i])) return true;
+  // Any one of the keys is enough.
+  function canAny(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      if (can(keys[i])) return true;
     }
     return false;
   }
@@ -136,8 +139,8 @@
     getSession: getSession,
     setSession: setSession,
     clearSession: clearSession,
-    hasRole: hasRole,
-    hasAnyRole: hasAnyRole,
+    can: can,
+    canAny: canAny,
     redirectToLogin: redirectToLogin,
     request: request,
     me: me,

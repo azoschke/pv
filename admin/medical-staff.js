@@ -446,7 +446,7 @@
 
   // --------- Main component ----------
   function MedicalStaff() {
-    var allowDelete = PVAdminAPI.hasRole('admin') || PVAdminAPI.hasRole('officer');
+    var allowDelete = PVAdminAPI.can('factions.medical.manage');
 
     var membersState = useState([]);
     var members = membersState[0], setMembers = membersState[1];

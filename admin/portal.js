@@ -2,11 +2,12 @@
 //  PVAdminPortal — top-level shell for /pv/admin/portal.html
 //
 //  Responsibilities:
-//    - Load /me (refreshes roles on mount in case they changed server-side)
+//    - Load /me (refreshes roles and permissions on mount in case they
+//      changed server-side)
 //    - Render the ink-dark sidebar (logo, brand, user, nav, theme, logout)
 //    - On mobile/tablet the sidebar collapses to a slide-in drawer opened by
 //      a top bar with a hamburger button (mirrors the main site nav)
-//    - Gate sidebar items by role via ROLE_ACCESS
+//    - Gate sidebar items and tabs by permission via PAGE_ACCESS
 //    - Route to the active section's component
 // ============================================================================
 
@@ -15,10 +16,10 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  // --------- Role + section metadata ----------
+  // --------- Section metadata ----------
   // NAV_GROUPS is the source of truth for sidebar layout: ordered groups, each
-  // with a small-caps header and its nav items. Headers are role-gated — a
-  // group whose items are all hidden for the current role renders nothing.
+  // with a small-caps header and its nav items. Headers are permission-gated —
+  // a group whose items are all hidden for the account renders nothing.
   // The pinned group (no header) holds the two personal "landing" destinations;
   // everything else lives under a titled group. Sub-views that used to be their
   // own nav rows are now tabs inside a single section (see FactionsSection and
@@ -55,52 +56,56 @@
     return acc.concat(g.items);
   }, []);
 
-  // '*' means any logged-in account that has at least one role. Freshly
-  // registered accounts have no roles and see nothing until an admin assigns
-  // one (the App renders an "awaiting approval" notice instead).
-  // Sub-view keys (my-applications, medical-division, mercenary, pirate,
-  // house-staff) are no longer their own nav rows, but their access rules are
-  // still consulted by MyProfileSection / FactionsSection to gate the tabs.
-  // 'factions' is the union of the four division rules — enough to open the
-  // section; the individual tabs are gated separately inside it.
-  var ROLE_ACCESS = {
-    dashboard:        ['officer', 'admin'],
-    'my-profile':     '*',
-    'my-applications': '*',
-    members:          ['officer', 'admin'],
-    'member-profiles': ['officer', 'admin'],
-    medical:          ['medical', 'admin'],
-    factions:         ['officer', 'mercenary', 'pirate', 'recon', 'house_staff', 'admin'],
-    'medical-division': ['officer', 'admin'],
-    mercenary:        ['officer', 'mercenary', 'admin'],
-    pirate:           ['officer', 'pirate', 'admin'],
-    'house-staff':    ['officer', 'house_staff', 'admin'],
-    recon:            ['officer', 'recon', 'admin'],
-    venues:           ['officer', 'admin'],
-    jobs:             ['officer', 'admin'],
-    bounties:         ['officer', 'admin'],
-    'event-assets':   '*',
-    campaigns:        ['officer', 'admin'],
-    'rp-rolls':       ['officer', 'admin', 'dm'],
-    cosmic:           ['officer', 'admin'],
-    announcements:    ['medical', 'mercenary', 'pirate', 'officer', 'admin'],
-    admin:            ['admin']
+  // Permission keys (from the permission grid) that open each section; any
+  // one is enough. Tab keys (profile-*, the factions) gate the tabs inside My
+  // Profile and Factions; a section opens when any of its tabs would. Accounts
+  // with no access at all (new registrations have no roles) get the
+  // "awaiting approval" notice instead.
+  var PROFILE_TABS = {
+    'profile-profile':      ['profile.own'],
+    'profile-applications': ['jobs.apply', 'quests.submit', 'quests.signup'],
+    'profile-items':        ['items.own']
   };
+  var FACTION_TABS = {
+    mercenary:     ['factions.mercenary.view'],
+    pirate:        ['factions.pirate.view'],
+    'medical-division': ['factions.medical.manage'],
+    recon:         ['factions.recon.view'],
+    'house-staff': ['factions.house_staff.view']
+  };
+  function unionOf(map) {
+    return Object.keys(map).reduce(function (acc, k) { return acc.concat(map[k]); }, []);
+  }
+  var PAGE_ACCESS = Object.assign({
+    dashboard:         ['dashboard.view'],
+    'my-profile':      unionOf(PROFILE_TABS),
+    members:           ['members.view'],
+    'member-profiles': ['member_profiles.manage'],
+    medical:           ['medical.view'],
+    factions:          unionOf(FACTION_TABS),
+    venues:            ['venues.edit', 'venues.menus'],
+    jobs:              ['jobs.postings', 'jobs.applications_view'],
+    bounties:          ['quests.manage'],
+    'event-assets':    ['event_assets.view'],
+    campaigns:         ['campaigns.story_edit', 'campaigns.codex_edit'],
+    'rp-rolls':        ['combat.view'],
+    cosmic:            ['cosmic.edit'],
+    announcements:     ['announcements.view'],
+    admin:             ['users.view']
+  }, PROFILE_TABS, FACTION_TABS);
 
-  function canAccess(sectionId, roles) {
-    if (ROLE_ACCESS[sectionId] === '*') return !!(roles && roles.length);
-    if (!roles) return false;
-    if (roles.indexOf('admin') !== -1) return true;
-    var allowed = ROLE_ACCESS[sectionId] || [];
-    for (var i = 0; i < allowed.length; i++) {
-      if (roles.indexOf(allowed[i]) !== -1) return true;
+  function canAccess(sectionId, permissions) {
+    var keys = PAGE_ACCESS[sectionId] || [];
+    if (!permissions) return false;
+    for (var i = 0; i < keys.length; i++) {
+      if (permissions.indexOf(keys[i]) !== -1) return true;
     }
     return false;
   }
 
-  function defaultSectionFor(roles) {
+  function defaultSectionFor(permissions) {
     for (var i = 0; i < SECTIONS.length; i++) {
-      if (canAccess(SECTIONS[i].id, roles)) return SECTIONS[i].id;
+      if (canAccess(SECTIONS[i].id, permissions)) return SECTIONS[i].id;
     }
     return null;
   }
@@ -125,14 +130,15 @@
     var onLogout = props.onLogout;
     var theme = props.theme;
     var roles = (session && session.roles) || [];
+    var permissions = (session && session.permissions) || [];
 
-    // Build groups with only the items this role may see; drop empty groups so
-    // the section header never shows above an empty list.
+    // Build groups with only the items this account may see; drop empty groups
+    // so the section header never shows above an empty list.
     var visibleGroups = NAV_GROUPS.map(function (g) {
       return {
         title: g.title,
         pinned: !!g.pinned,
-        items: g.items.filter(function (s) { return canAccess(s.id, roles); })
+        items: g.items.filter(function (s) { return canAccess(s.id, permissions); })
       };
     }).filter(function (g) { return g.items.length > 0; });
 
@@ -222,30 +228,36 @@
   // --------- Consolidated sections (tabbed wrappers) ----------
   // My Profile now hosts three sub-views that used to be separate places:
   // the roster profile editor, the old My Applications section, and the RP
-  // item loadout (My Items). All three are visible to any account with a role.
+  // item loadout (My Items). Each tab follows its own permissions.
   function MyProfileSection(props) {
     var session = props.session;
+    var permissions = (session && session.permissions) || [];
     var TABS = [
       { id: 'profile',      label: 'Profile' },
       { id: 'applications', label: 'Applications' },
       { id: 'items',        label: 'Items' }
-    ];
+    ].filter(function (t) { return canAccess('profile-' + t.id, permissions); });
     var wanted = props.initialTab;
-    var initial = TABS.some(function (t) { return t.id === wanted; }) ? wanted : 'profile';
+    var initial = TABS.some(function (t) { return t.id === wanted; })
+      ? wanted
+      : (TABS[0] ? TABS[0].id : null);
     var tabState = useState(initial);
     var tab = tabState[0], setTab = tabState[1];
+    var active = TABS.some(function (t) { return t.id === tab; })
+      ? tab
+      : (TABS[0] ? TABS[0].id : null);
 
     var body;
-    if (tab === 'applications') {
+    if (active === 'applications') {
       body = h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
-    } else if (tab === 'items') {
+    } else if (active === 'items') {
       body = h(window.PVAdminMyItems || Missing('my-profile.js'), { session: session });
     } else {
       body = h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
     }
 
     return h('div', null,
-      h(window.PVAdminSubnav, { tabs: TABS, active: tab, onChange: setTab }),
+      h(window.PVAdminSubnav, { tabs: TABS, active: active, onChange: setTab }),
       body
     );
   }
@@ -256,7 +268,7 @@
   // different component (the medical-staff roster) than the other three.
   function FactionsSection(props) {
     var session = props.session;
-    var roles = (session && session.roles) || [];
+    var permissions = (session && session.permissions) || [];
     var ALL = [
       { id: 'mercenary',   label: 'Mercenary',   access: 'mercenary' },
       { id: 'pirate',      label: 'Pirate',      access: 'pirate' },
@@ -264,7 +276,7 @@
       { id: 'recon',       label: 'Recon',       access: 'recon' },
       { id: 'house-staff', label: 'House Staff', access: 'house-staff' }
     ];
-    var tabs = ALL.filter(function (d) { return canAccess(d.access, roles); });
+    var tabs = ALL.filter(function (d) { return canAccess(d.access, permissions); });
 
     var wanted = props.initialTab;
     var initial = tabs.some(function (t) { return t.id === wanted; })
@@ -394,10 +406,13 @@
 
     // ?section=<id> deep-links straight to a section (e.g. the public bounty
     // board's "Submit a quest" button opens My Profile's Applications tab), if
-    // the role allows. ?tab=<id> selects a sub-view within a tabbed section.
-    // Legacy section ids that are now tabs are remapped so old links still land
+    // the account's permissions allow. ?tab=<id> selects a sub-view within a
+    // tabbed section. Legacy section ids that are now tabs are remapped so old links still land
     // in the right place.
-    var initialRoles = (initialSession && initialSession.roles) || [];
+    // Sessions stored before permissions existed have none until /me answers;
+    // the section is picked then.
+    var initialPermissions = initialSession && initialSession.permissions;
+    var permissionsKnown = Array.isArray(initialPermissions);
     var _params = new URLSearchParams(window.location.search);
     var requestedSection = _params.get('section');
     var requestedTab = _params.get('tab');
@@ -409,9 +424,11 @@
       requestedSection = 'factions';
     }
     var sectionState = useState(
-      (requestedSection && canAccess(requestedSection, initialRoles))
+      !permissionsKnown
+        ? null
+        : (requestedSection && canAccess(requestedSection, initialPermissions))
         ? requestedSection
-        : defaultSectionFor(initialRoles)
+        : defaultSectionFor(initialPermissions)
     );
     var section = sectionState[0], setSection = sectionState[1];
 
@@ -428,7 +445,7 @@
     var navParamsState = useState(requestedTab ? { tab: requestedTab } : null);
     var navParams = navParamsState[0], setNavParams = navParamsState[1];
 
-    // Refresh /me on mount so stale role lists get corrected.
+    // Refresh /me on mount so stale roles and permissions get corrected.
     useEffect(function () {
       var cancelled = false;
       PVAdminAPI.me().then(function (data) {
@@ -439,16 +456,28 @@
           username: data.username || current.username,
           display_name: data.display_name || current.display_name,
           roles: Array.isArray(data.roles) ? data.roles : current.roles,
+          permissions: Array.isArray(data.permissions) ? data.permissions : (current.permissions || []),
+          is_root: !!data.is_root,
           expires_at: data.expires_at || current.expires_at
         });
         PVAdminAPI.setSession(merged);
         setSession(merged);
-        if (!canAccess(section, merged.roles)) {
-          var fallback = defaultSectionFor(merged.roles);
+        var wantedSection = permissionsKnown ? section : requestedSection;
+        if (!canAccess(wantedSection, merged.permissions)) {
+          var fallback = defaultSectionFor(merged.permissions);
           setSection(fallback);
           syncSectionUrl(fallback, null);
+        } else if (wantedSection !== section) {
+          setSection(wantedSection);
         }
-      }).catch(function (_err) { /* 401 handled in api.js */ });
+      }).catch(function (_err) {
+        // 401 is handled in api.js. Without stored permissions there is
+        // nothing to show, so sign in again to get them.
+        if (!cancelled && !permissionsKnown) {
+          PVAdminAPI.clearSession();
+          PVAdminAPI.redirectToLogin();
+        }
+      });
       return function () { cancelled = true; };
     // eslint-disable-next-line
     }, []);
@@ -496,13 +525,17 @@
       return h('div', { className: 'portal-boot' }, 'Redirecting…');
     }
 
+    if (!Array.isArray(session.permissions)) {
+      return h('div', { className: 'portal-boot' }, 'Loading…');
+    }
+
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });
-    var accessible = activeMeta ? canAccess(activeMeta.id, session.roles || []) : false;
+    var permissions = session.permissions;
+    var accessible = activeMeta ? canAccess(activeMeta.id, permissions) : false;
 
     // Freshly registered accounts have no roles, which unlocks no sections at
     // all — show an "awaiting approval" notice instead of an empty shell.
-    var roles = session.roles || [];
-    var hasAnyAccess = SECTIONS.some(function (s) { return canAccess(s.id, roles); });
+    var hasAnyAccess = SECTIONS.some(function (s) { return canAccess(s.id, permissions); });
 
     var sidebarProps = {
       session: session,

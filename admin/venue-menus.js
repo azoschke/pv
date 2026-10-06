@@ -1,5 +1,5 @@
 // ============================================================================
-//  PVAdminVenueMenus — per-venue menu editing for officers/admins
+//  PVAdminVenueMenus — per-venue menu editing (venues.menus)
 //
 //  Rendered as the "Menus" tab of the Venues section (see admin/venues.js).
 //  Only venues flagged has_menu appear in the picker; the worker enforces the
@@ -10,15 +10,15 @@
 //
 //  Worker routes:
 //    GET    /menus?venue_id=:id      public (shared with the public page)
-//    POST   /menu-categories         officer | admin
-//    PATCH  /menu-categories/:id     officer | admin
-//    DELETE /menu-categories/:id     officer | admin
-//    POST   /menu-categories/reorder officer | admin  { venue_id, ids: [] }
-//    POST   /menus                   officer | admin
-//    PATCH  /menus/:id               officer | admin
-//    DELETE /menus/:id               officer | admin
-//    POST   /menus/reorder           officer | admin  { category_id, ids: [] }
-//    POST   /menus/images            officer | admin  (multipart -> { url })
+//    POST   /menu-categories         venues.menus
+//    PATCH  /menu-categories/:id     venues.menus
+//    DELETE /menu-categories/:id     venues.menus
+//    POST   /menu-categories/reorder venues.menus  { venue_id, ids: [] }
+//    POST   /menus                   venues.menus
+//    PATCH  /menus/:id               venues.menus
+//    DELETE /menus/:id               venues.menus
+//    POST   /menus/reorder           venues.menus  { category_id, ids: [] }
+//    POST   /menus/images            venues.menus  (multipart -> { url })
 // ============================================================================
 
 (function () {

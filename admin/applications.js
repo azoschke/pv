@@ -4,7 +4,8 @@
 //  Exposes two globals:
 //    - PVAdminApplications     full management card (Name · Position · Division
 //                              · Date · Stage). Rendered beneath the Jobs card
-//                              in the Job Board section. Officer/admin edit.
+//                              in the Job Board section. Editing needs
+//                              jobs.applications_edit.
 //    - PVAdminApplicationsCard read-only, division-filtered card dropped onto
 //                              the Mercenary / Pirate / Medical / House Staff
 //                              division pages as an informational card.
@@ -14,10 +15,11 @@
 //  category by the worker, so the card on each division page can filter to it.
 //
 //  Worker routes:
-//    GET    /applications[?division=]   officer | admin | pirate | mercenary
-//    POST   /applications               officer | admin
-//    PATCH  /applications/:id           officer | admin
-//    DELETE /applications/:id           officer | admin
+//    GET    /applications               jobs.applications_view
+//    GET    /applications?division=     that, or the division's Factions tab
+//    POST   /applications               jobs.applications_edit
+//    PATCH  /applications/:id           jobs.applications_edit
+//    DELETE /applications/:id           jobs.applications_edit
 // ============================================================================
 
 (function () {
@@ -333,6 +335,7 @@
     var onDelete = props.onDelete;
     var onStage = props.onStage;
     var onArchive = props.onArchive;
+    var canEdit = props.canEdit;
     var jobsById = props.jobsById || {};
 
     var job = jobsById[a.job_id];
@@ -352,15 +355,15 @@
       h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
       h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
       h('td', null,
-        h('select', {
+        canEdit ? h('select', {
           className: 'portal-filter-select',
           value: a.stage,
           onChange: function (e) { onStage(a, e.target.value); }
         }, STAGES.map(function (s) {
           return h('option', { key: s.value, value: s.value }, s.label);
-        }))
+        })) : h(StageBadge, { stage: a.stage })
       ),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      canEdit ? h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
@@ -377,11 +380,12 @@
             if (confirm('Delete the application for "' + a.member_name + '"?')) onDelete(a);
           }
         }, 'Delete')
-      )
+      ) : h('td', null)
     );
   }
 
   function Applications(props) {
+    var canEdit = PVAdminAPI.can('jobs.applications_edit');
     var listState = useState([]);
     var list = listState[0], setList = listState[1];
     var membersState = useState([]);
@@ -429,10 +433,12 @@
     // Members + jobs feed the new/edit dropdowns. Failure here is non-fatal —
     // the list still renders; the form just shows empty selects.
     async function loadPickers() {
-      try {
-        var m = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
-        setMembers(Array.isArray(m) ? m : []);
-      } catch (_e) { /* leave empty */ }
+      if (canEdit) {
+        try {
+          var m = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
+          setMembers(Array.isArray(m) ? m : []);
+        } catch (_e) { /* leave empty */ }
+      }
       try {
         var j = await PVAdminAPI.request('GET', '/jobs', undefined, true);
         setJobs(Array.isArray(j) ? j : []);
@@ -540,14 +546,14 @@
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search applications…'
           }),
-          h('button', {
+          canEdit ? h('button', {
             type: 'button',
             className: 'portal-btn',
             onClick: function () { setFormOpen({ app: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
             h('span', null, 'New application')
-          )
+          ) : null
         ),
         h('div', { className: 'portal-filter-row', style: { marginTop: '0.6rem' } },
           h('select', {
@@ -623,7 +629,8 @@
                         onEdit: function (aa) { setFormOpen({ app: aa }); },
                         onDelete: handleDelete,
                         onStage: handleStage,
-                        onArchive: handleArchive
+                        onArchive: handleArchive,
+                        canEdit: canEdit
                       });
                     })
                   )

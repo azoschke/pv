@@ -1,11 +1,14 @@
 // ============================================================================
-//  PVAdminVenues — Venue directory management for officers/admins
+//  PVAdminVenues — Venue directory management
+//
+//  Tabs: Directory (venues.edit) and Menus (venues.menus); each shows only
+//  with its permission.
 //
 //  Worker routes:
 //    GET    /venues          public
-//    POST   /venues          officer | admin
-//    PATCH  /venues/:id      officer | admin
-//    DELETE /venues/:id      officer | admin
+//    POST   /venues          venues.edit
+//    PATCH  /venues/:id      venues.edit
+//    DELETE /venues/:id      venues.edit
 //
 // ============================================================================
 
@@ -896,17 +899,18 @@
   //  views of the same section, so they share the portal's sub-nav strip
   //  rather than becoming a second entry in the portal sidebar.
   function Venues(props) {
-    var tabState = useState('directory');
+    var tabs = [
+      PVAdminAPI.can('venues.edit') ? { id: 'directory', label: 'Directory' } : null,
+      PVAdminAPI.can('venues.menus') ? { id: 'menus', label: 'Menus' } : null
+    ].filter(Boolean);
+    var tabState = useState(tabs[0] ? tabs[0].id : null);
     var tab = tabState[0], setTab = tabState[1];
 
     var MenusTab = window.PVAdminVenueMenus;
 
     return h('div', null,
       h(window.PVAdminSubnav, {
-        tabs: [
-          { id: 'directory', label: 'Directory' },
-          { id: 'menus',     label: 'Menus' }
-        ],
+        tabs: tabs,
         active: tab,
         onChange: setTab
       }),

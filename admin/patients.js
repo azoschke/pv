@@ -8,8 +8,11 @@
 //    - edit-patient   : edit the patient record
 //    - visits         : visit list for the selected patient; each visit is a
 //                       compact row (date / medic / discharge / complaint).
-//                       Editing or adding opens a modal popup. Delete only
-//                       on admin role.
+//                       Editing or adding opens a modal popup.
+//
+//  Buttons follow the permission grid: medical.edit adds and edits patients
+//  and adds visits, medical.visits_own / medical.visits_all edit visits, and
+//  medical.delete deletes patients and visits.
 //
 //  Patient ID is auto-assigned by the worker (next sequential number) on
 //  create, and never shown or edited afterwards.
@@ -289,6 +292,7 @@
     var onNew = props.onNew;
     var onDelete = props.onDelete;
     var allowDelete = props.allowDelete;
+    var allowEdit = PVAdminAPI.can('medical.edit');
 
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
@@ -311,14 +315,14 @@
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }
           }),
-          h('button', {
+          allowEdit ? h('button', {
             type: 'button',
             className: 'portal-btn',
             onClick: onNew
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
             h('span', null, 'New patient')
-          )
+          ) : null
         )
       ),
       h('div', { className: 'portal-table-wrap' },
@@ -347,12 +351,12 @@
                         : null
                     ),
                     h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
-                      h('button', {
+                      allowEdit ? h('button', {
                         type: 'button',
                         className: 'portal-btn is-small is-ghost',
                         onClick: function () { onEditPatient(p.patient_id); }
-                      }, 'Edit patient'),
-                      ' ',
+                      }, 'Edit patient') : null,
+                      allowEdit ? ' ' : null,
                       h('button', {
                         type: 'button',
                         className: 'portal-btn is-small',
@@ -449,12 +453,13 @@
   }
 
   // Returns true if the current user is allowed to edit the given visit.
-  // Admins always can. Medics can only edit visits where attending_medic
-  // (trimmed, case-insensitive) matches their own display_name. A blank
-  // attending_medic locks the visit until an admin fills it in.
+  // "Edit any visit" always can. "Edit own visits" only covers visits where
+  // attending_medic (trimmed, case-insensitive) matches their own
+  // display_name. A blank attending_medic locks the visit until someone who
+  // can edit any visit fills it in.
   function canEditVisit(v) {
-    if (PVAdminAPI.hasRole('admin')) return true;
-    if (!PVAdminAPI.hasRole('medical')) return false;
+    if (PVAdminAPI.can('medical.visits_all')) return true;
+    if (!PVAdminAPI.can('medical.visits_own')) return false;
     var medic = (v && v.attending_medic ? String(v.attending_medic) : '').trim().toLowerCase();
     if (!medic) return false;
     var session = PVAdminAPI.getSession();
@@ -468,6 +473,8 @@
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
     var allowDelete = props.allowDelete;
+    // Without either visit permission there is no Edit button at all.
+    var showEdit = PVAdminAPI.canAny(['medical.visits_own', 'medical.visits_all']);
     var allowEdit = canEditVisit(v);
     var editTooltip = allowEdit
       ? null
@@ -484,14 +491,14 @@
       h('td', null, v.discharge_status || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', null, preview || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
-        h('button', {
+        showEdit ? h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
           disabled: !allowEdit,
           title: editTooltip || undefined,
           'aria-disabled': allowEdit ? undefined : 'true',
           onClick: function () { if (allowEdit) onEdit(v); }
-        }, 'Edit'),
+        }, 'Edit') : null,
         allowDelete ? h('span', null, ' ',
           h('button', {
             type: 'button',
@@ -511,7 +518,7 @@
   function PatientVisits(props) {
     var patientId = props.patientId;
     var onBack = props.onBack;
-    var allowDelete = PVAdminAPI.hasRole('admin');
+    var allowDelete = PVAdminAPI.can('medical.delete');
 
     var dataState = useState(null);
     var data = dataState[0], setData = dataState[1];
@@ -597,7 +604,7 @@
         ),
         h('h2', { className: 'portal-card-title' },
           'Visits — ' + p.patient_name),
-        h('div', { className: 'portal-card-actions' },
+        PVAdminAPI.can('medical.edit') ? h('div', { className: 'portal-card-actions' },
           h('button', {
             type: 'button',
             className: 'portal-btn is-small',
@@ -608,7 +615,7 @@
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
             h('span', null, 'Add visit')
           )
-        )
+        ) : null
       ),
       h('div', { className: 'portal-table-wrap', style: { marginTop: '0.75rem' } },
         h('table', { className: 'portal-table' },
@@ -714,7 +721,7 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
-    var allowDelete = PVAdminAPI.hasRole('admin');
+    var allowDelete = PVAdminAPI.can('medical.delete');
 
     async function reload() {
       setErr('');

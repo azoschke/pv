@@ -1,5 +1,5 @@
 // ============================================================================
-//  PVAdminBounties — Bounty Board management (officer | admin)
+//  PVAdminBounties — Bounty Board management (quests.manage)
 //
 //  Two cards:
 //    1. Needs review — member-submitted quests awaiting approval and
@@ -10,12 +10,12 @@
 //       passed (nothing auto-hides; officers re-date, hide or delete).
 //
 //  Worker routes:
-//    GET    /quests/admin             officer | admin
-//    POST   /quests                   (officer create -> listed by default)
-//    PATCH  /quests/:id               officer | admin
-//    DELETE /quests/:id               officer | admin
-//    POST   /quest-edits/:id/approve  officer | admin
-//    DELETE /quest-edits/:id          officer | admin (reject)
+//    GET    /quests/admin             quests.manage
+//    POST   /quests                   (staff create -> listed by default)
+//    PATCH  /quests/:id               quests.manage
+//    DELETE /quests/:id               quests.delete (also rejects a submission)
+//    POST   /quest-edits/:id/approve  quests.manage
+//    DELETE /quest-edits/:id          quests.manage (reject)
 // ============================================================================
 
 (function () {
@@ -125,6 +125,7 @@
 
   // --------- Main component ----------
   function Bounties() {
+    var canDelete = PVAdminAPI.can('quests.delete');
     var questsState = useState([]);
     var quests = questsState[0], setQuests = questsState[1];
     var loadingState = useState(true);
@@ -271,10 +272,10 @@
             type: 'button', className: 'portal-btn is-small',
             onClick: function () { patchQuest(q.id, { status: 'listed' }, 'Quest approved and listed.'); }
           }, 'Approve'),
-          h('button', {
+          canDelete ? h('button', {
             type: 'button', className: 'portal-btn is-small is-danger',
             onClick: function () { handleDelete(q); }
-          }, 'Reject')
+          }, 'Reject') : null
         );
       }),
 
@@ -326,11 +327,11 @@
             type: 'button', className: 'portal-btn is-small is-ghost',
             onClick: function () { setModal({ kind: 'form', quest: q }); }
           }, 'Edit'),
-          h('button', {
+          canDelete ? h('button', {
             type: 'button', className: 'portal-btn is-small is-danger',
             style: { marginLeft: '0.4rem' },
             onClick: function () { handleDelete(q); }
-          }, 'Delete')
+          }, 'Delete') : null
         )
       );
     }
@@ -383,10 +384,10 @@
             type: 'button', className: 'portal-btn is-ghost',
             onClick: function () { setModal({ kind: 'form', quest: modal.quest }); }
           }, 'Edit first'),
-          h('button', {
+          canDelete ? h('button', {
             type: 'button', className: 'portal-btn is-danger', style: { marginLeft: 'auto' },
             onClick: function () { handleDelete(modal.quest); }
-          }, 'Reject & delete')
+          }, 'Reject & delete') : null
         )
       );
     } else if (modal && modal.kind === 'diff') {

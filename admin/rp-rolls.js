@@ -1176,10 +1176,10 @@
       h('h3', { className: 'rp-catalogue-name' }, b.name),
       h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '')),
       b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
-      h('div', { className: 'rp-catalogue-actions' },
+      props.canEdit ? h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onSkills(b); } }, 'Skills'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only')),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only'))));
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only'))) : null);
   }
 
   // Boss fields only — skills live in their own modal (BossSkillsModal).
@@ -1618,9 +1618,16 @@
 
   // ── Main component ────────────────────────────────────────────────────────
   function PVAdminRpRolls(props) {
-    var roles = (props.session && props.session.roles) || [];
-    var isAdmin = roles.indexOf('admin') !== -1;
-    var isStaff = isAdmin || roles.indexOf('officer') !== -1;
+    // Tabs and buttons follow the permission grid. A campaign's DM still runs
+    // and deletes their own campaign (c.is_dm), and a boss's creator edits it.
+    var canItems = PVAdminAPI.can('combat.items');
+    var canRules = PVAdminAPI.can('combat.rules');
+    var canCreate = PVAdminAPI.can('combat.campaigns_create');
+    var canManage = PVAdminAPI.can('combat.campaigns_manage');
+    var canDeleteAny = PVAdminAPI.can('combat.campaigns_delete');
+    var canAddBosses = PVAdminAPI.can('combat.bosses');
+    var canEditAllBosses = PVAdminAPI.can('combat.bosses_edit_all');
+    var canPrivate = PVAdminAPI.can('combat.bosses_private');
 
     var tabState = useState('campaigns'); var tab = tabState[0], setTab = tabState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1734,10 +1741,10 @@
       try { setCampBosses(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/bosses') || []); }
       catch (e) { setCampBosses([]); }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadBaseHp(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadBaseHp(); loadProfileImages(); loadBossLib(); if (canItems) loadMembers(); /* eslint-disable-next-line */ }, []);
     // The boss library's 'Added By' filter names creators from the FC roster.
     useEffect(function () {
-      if (!isStaff || tab !== 'bosses' || members !== null) return;
+      if (!canEditAllBosses || tab !== 'bosses' || members !== null) return;
       PVAdminAPI.request('GET', '/members/basic', undefined, true)
         .then(function (rows) { setMembers(rows || []); })
         .catch(function () { /* creators fall back to 'Former member' */ });
@@ -1798,8 +1805,8 @@
 
     function selectCampaign(c) {
       setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
-      // Per-campaign item enable/disable is an admin-only panel.
-      if (isAdmin) loadDisabledItems(c.id);
+      // Per-campaign item enable/disable needs "Manage any campaign".
+      if (canManage) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
         PVAdminAPI.request('GET', '/members/basic', undefined, true)
@@ -1879,7 +1886,7 @@
       catch (e) { setErr(e.message); }
     }
     async function createBoss(payload) {
-      if (isAdmin) payload = Object.assign({}, payload, { private: bossPrivate });
+      if (canPrivate) payload = Object.assign({}, payload, { private: bossPrivate });
       await PVRollAPI.request('POST', '/rp/boss-library', payload);
       setBossForm(false); await loadBossLib();
     }
@@ -1926,12 +1933,16 @@
     var inCampaign = {}; roster.forEach(function (r) { inCampaign[r.member_id] = true; });
     var availableMembers = (members || []).filter(function (m) { return !inCampaign[m.id]; });
 
+    // Anyone who DMs a campaign can see the Boss Library (their own bosses).
+    var showBosses = bossesSupported &&
+      (canAddBosses || canEditAllBosses || campaigns.some(function (c) { return c.is_dm; }));
+
     return h('div', null,
       h(window.PVAdminSubnav, {
         tabs: [{ id: 'campaigns', label: 'Campaigns & Sessions' }]
-          .concat(isAdmin ? [{ id: 'items', label: 'Item Catalogue' }] : [])
-          .concat(bossesSupported ? [{ id: 'bosses', label: 'Boss Library' }] : [])
-          .concat(isAdmin && bossesSupported ? [{ id: 'rules', label: 'System Rules' }] : []),
+          .concat(canItems ? [{ id: 'items', label: 'Item Catalogue' }] : [])
+          .concat(showBosses ? [{ id: 'bosses', label: 'Boss Library' }] : [])
+          .concat(canRules && bossesSupported ? [{ id: 'rules', label: 'System Rules' }] : []),
         active: tab,
         onChange: setTab
       }),
@@ -1954,8 +1965,8 @@
                 h('button', { type: 'button', className: 'portal-btn is-ghost',
                   onClick: function () { setShowNew(false); setNewErr(''); } }, 'Cancel'))
             )
-          : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' },
-              onClick: function () { setNewName(''); setNewErr(''); setShowNew(true); } }, '+ New campaign'),
+          : canCreate ? h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' },
+              onClick: function () { setNewName(''); setNewErr(''); setShowNew(true); } }, '+ New campaign') : null,
         !campaigns.length ? h('div', { className: 'portal-card' }, 'No campaigns yet.') :
           campaigns.map(function (c) {
             var isSel = selected && selected.id === c.id;
@@ -1972,7 +1983,7 @@
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
                     title: isSel ? 'Close manager' : 'Manage', 'aria-label': isSel ? 'Close manager' : 'Manage', 'aria-expanded': isSel ? 'true' : 'false',
                     onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, mi(isSel ? 'close' : 'edit', 'only')),
-                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
+                  (canDeleteAny || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
                     title: 'Delete', 'aria-label': 'Delete campaign', onClick: function () { deleteCampaign(c); } }, mi('delete', 'only')) : null
                 )
               ),
@@ -1987,7 +1998,7 @@
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
-                isAdmin
+                canManage
                   ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
                       h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
                         members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
@@ -2024,8 +2035,8 @@
                 // on/off by default, with an Advanced view for per-item control.
                 (function () {
                   if (!disabledSupported) return null;
-                  // Item control stays with admins; DMs manage rosters/bosses only.
-                  if (!isAdmin) return null;
+                  // Item control needs "Manage any campaign"; DMs manage rosters/bosses only.
+                  if (!canManage) return null;
                   var camp = campaignItemList();
                   if (!camp.length) return null;
                   var loading = disabledItems === null;
@@ -2080,7 +2091,7 @@
                 h('label', { className: 'portal-block-label' }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
                   roster.map(function (ch) {
-                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin, baseHp: baseHp,
+                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: canItems, baseHp: baseHp,
                       campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
                       onSave: saveCharacter, onRemove: removeCharacter,
                       imageUrl: profileImages[ch.member_id] || profileImages[Number(ch.member_id)] || profileImages[String(ch.member_id)] });
@@ -2090,7 +2101,7 @@
           })
       ) : null,
 
-      tab === 'items' && isAdmin ? h('div', null,
+      tab === 'items' && canItems ? h('div', null,
         itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
           h('input', { type: 'search', className: 'portal-search', value: itemQuery,
@@ -2116,13 +2127,13 @@
           onClose: function () { setAbilitiesItem(null); } }) : null
       ) : null,
 
-      tab === 'bosses' && bossesSupported ? h('div', null,
+      tab === 'bosses' && showBosses ? h('div', null,
         bossForm ? h(BossForm, { onSubmit: createBoss, onCancel: function () { setBossForm(false); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
           h('input', { type: 'search', className: 'portal-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
-          isStaff ? (function () {
+          canEditAllBosses ? (function () {
             var ids = [];
             bossLib.forEach(function (b) { if (b.created_by != null && ids.indexOf(String(b.created_by)) === -1) ids.push(String(b.created_by)); });
             var opts = ids.map(function (id) {
@@ -2134,9 +2145,9 @@
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));
           })() : null,
-          bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
+          bossForm || !canAddBosses ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
-        isAdmin ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
+        canPrivate ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
           h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.6rem' } },
             h('span', null, 'Hide My Bosses'),
             h('button', { type: 'button', className: 'rp-switch' + (bossPrivate ? ' is-on' : ''), role: 'switch',
@@ -2156,7 +2167,7 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (b) {
-              return h(BossCard, { key: b.id, boss: b, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onDelete: deleteBoss });
+              return h(BossCard, { key: b.id, boss: b, canEdit: canAddBosses || canEditAllBosses, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onDelete: deleteBoss });
             }));
         })(),
         editBoss ? h(BossEditorModal, { boss: editBoss,
@@ -2165,7 +2176,7 @@
           onChanged: refreshBossLib, onClose: function () { setSkillsBoss(null); } }) : null
       ) : null,
 
-      tab === 'rules' && isAdmin ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
+      tab === 'rules' && canRules ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
     );
   }
 

@@ -1,6 +1,5 @@
 // ============================================================================
 //  PVAdminMemberProfiles — moderation view for public roster profiles
-//  (officer | admin)
 //
 //  Profiles are written by members themselves (portal → My Profile); officers
 //  use this list to review what is publicly visible, unpublish anything
@@ -8,9 +7,9 @@
 //  the member.
 //
 //  Worker routes:
-//    GET    /member-profiles/admin        officer | admin
-//    PATCH  /member-profiles/:member_id   officer | admin  { published }
-//    DELETE /member-profiles/:member_id   officer | admin
+//    GET    /member-profiles/admin        member_profiles.manage
+//    PATCH  /member-profiles/:member_id   member_profiles.manage  { published }
+//    DELETE /member-profiles/:member_id   member_profiles.delete
 // ============================================================================
 
 (function () {
@@ -49,6 +48,7 @@
   }
 
   function MemberProfiles() {
+    var allowDelete = PVAdminAPI.can('member_profiles.delete');
     var profilesState = useState([]);
     var profiles = profilesState[0], setProfiles = profilesState[1];
     var loadingState = useState(true);
@@ -207,11 +207,11 @@
                             style: { marginLeft: '0.4rem' },
                             onClick: function () { togglePublished(p); }
                           }, p.published ? 'Unpublish' : 'Publish'),
-                          h('button', {
+                          allowDelete ? h('button', {
                             type: 'button', className: 'portal-btn is-small is-danger',
                             style: { marginLeft: '0.4rem' },
                             onClick: function () { handleDelete(p); }
-                          }, 'Delete')
+                          }, 'Delete') : null
                         )
                       );
                     })

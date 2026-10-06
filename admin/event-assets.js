@@ -1,9 +1,9 @@
 // ============================================================================
-//  PVAdminEventAssets — shared event asset library for role-holders
+//  PVAdminEventAssets — shared event asset library
 //
-//  Every signed-in account with at least one role can view the assets, copy
-//  the individual text fields, and download the images. Officers and admins
-//  can add, edit, and delete entries, and upload images.
+//  Accounts with event_assets.view can view the assets, copy the individual
+//  text fields, and download the images. event_assets.edit adds, edits and
+//  deletes entries, and uploads images.
 //
 //  Type is a single required value; tags are optional. Both are filter-only
 //  (not copyable). Listing is a table with a small image thumbnail, matching
@@ -11,10 +11,10 @@
 //
 //  Worker routes:
 //    GET    /event-assets          any role-holder
-//    POST   /event-assets          officer | admin
-//    PATCH  /event-assets/:id       officer | admin
-//    DELETE /event-assets/:id       officer | admin
-//    POST   /event-assets/images    officer | admin   (multipart, returns {url})
+//    POST   /event-assets          event_assets.edit
+//    PATCH  /event-assets/:id       event_assets.edit
+//    DELETE /event-assets/:id       event_assets.edit
+//    POST   /event-assets/images    event_assets.edit   (multipart, returns {url})
 //
 //  An entry is: { id, event_topic, type, location, description, image_url,
 //                 tags: string[], created_at, updated_at }
@@ -125,7 +125,7 @@
   }
 
   function canManage() {
-    return PVAdminAPI.hasAnyRole(['officer', 'admin']);
+    return PVAdminAPI.can('event_assets.edit');
   }
 
   // Copy helper with a clipboard-API path and a legacy textarea fallback.

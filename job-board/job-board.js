@@ -88,6 +88,15 @@
     }
   }
 
+  // Permission from the stored session (Admin Settings → Permissions). A
+  // session saved before permissions existed has no list; it keeps the
+  // buttons, and the worker still checks.
+  function sessionCan(session, key) {
+    if (!session) return false;
+    if (!Array.isArray(session.permissions)) return true;
+    return session.permissions.indexOf(key) !== -1;
+  }
+
   async function authedRequest(method, path) {
     var session = getSession();
     if (!session) throw new Error("You are no longer logged in.");
@@ -551,6 +560,7 @@
         encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
         '</div>';
     }
+    if (!sessionCan(getSession(), "jobs.apply")) return "";
     var app = myApplicationFor(j);
     if (!app) {
       if (jobTypeOf(j) === "primary") {
@@ -610,7 +620,7 @@
   }
 
   async function loadMyApplications() {
-    if (!getSession()) { myApplications = []; return; }
+    if (!sessionCan(getSession(), "jobs.apply")) { myApplications = []; return; }
     try {
       var data = await authedRequest("GET", "/my/applications");
       myApplications = Array.isArray(data) ? data : [];

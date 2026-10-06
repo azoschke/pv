@@ -10,7 +10,8 @@
 //    - a cross-feature "Needs Attention" feed
 //
 //  "Open →" and the stat tiles call props.onNavigate(sectionId) to switch the
-//  portal to the relevant sidebar section.
+//  portal to the relevant sidebar section. Each list loads, and its tiles
+//  show, only when the account can open that section.
 // ============================================================================
 
 (function () {
@@ -52,17 +53,27 @@
   function Dashboard(props) {
     var onNavigate = props.onNavigate || function () {};
 
+    var canMembers = PVAdminAPI.can('members.view');
+    var canApps = PVAdminAPI.can('jobs.applications_view');
+    var canQuests = PVAdminAPI.can('quests.manage');
+
     var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [] });
     var state = st[0], setState = st[1];
 
     useEffect(function () {
       var cancelled = false;
-      function getList(path) {
+      function getList(path, allowed) {
+        if (!allowed) return Promise.resolve([]);
         return PVAdminAPI.request('GET', path, undefined, true)
           .then(function (d) { return Array.isArray(d) ? d : []; })
           .catch(function () { return null; }); // null marks a failed call
       }
-      Promise.all([getList('/members'), getList('/applications'), getList('/jobs'), getList('/quests/admin')])
+      Promise.all([
+        getList('/members', canMembers),
+        getList('/applications', canApps),
+        getList('/jobs', true),
+        getList('/quests/admin', canQuests)
+      ])
         .then(function (res) {
           if (cancelled) return;
           if (res[0] === null && res[1] === null && res[2] === null && res[3] === null) {
@@ -112,6 +123,7 @@
 
     function statTile(num, label, target, alert, params) {
       return h('button', {
+        key: target + ':' + label,
         type: 'button',
         className: 'dash-stat' + (alert ? ' is-alert' : ''),
         onClick: function () { onNavigate(target, params || null); }
@@ -120,6 +132,18 @@
         h('span', { className: 'dash-stat-label' }, label)
       );
     }
+
+    var pendingTiles = [
+      canMembers ? statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }) : null,
+      canApps ? statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
+        { view: 'applications', stage: 'new' }) : null,
+      canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null
+    ].filter(Boolean);
+    var scheduledTiles = [
+      canMembers ? statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0, { interview: 'Scheduled' }) : null,
+      canApps ? statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0,
+        { view: 'applications', stage: 'scheduled' }) : null
+    ].filter(Boolean);
 
     // Cross-feature attention feed, ordered: applications → job interviews →
     // IC interviews → inactive members.
@@ -197,23 +221,14 @@
       h('div', { className: 'dash-stat-groups' },
         // flexGrow matches each group's tile count so every tile renders at the
         // same width whether it sits under Pending (3) or Scheduled (2).
-        h('div', { className: 'dash-stat-section', style: { flexGrow: 3 } },
+        pendingTiles.length ? h('div', { className: 'dash-stat-section', style: { flexGrow: pendingTiles.length } },
           h('p', { className: 'dash-stat-heading' }, 'Pending'),
-          h('div', { className: 'dash-stats' },
-            statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }),
-            statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
-              { view: 'applications', stage: 'new' }),
-            statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0)
-          )
-        ),
-        h('div', { className: 'dash-stat-section', style: { flexGrow: 2 } },
+          h('div', { className: 'dash-stats' }, pendingTiles)
+        ) : null,
+        scheduledTiles.length ? h('div', { className: 'dash-stat-section', style: { flexGrow: scheduledTiles.length } },
           h('p', { className: 'dash-stat-heading' }, 'Scheduled'),
-          h('div', { className: 'dash-stats' },
-            statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0, { interview: 'Scheduled' }),
-            statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0,
-              { view: 'applications', stage: 'scheduled' })
-          )
-        )
+          h('div', { className: 'dash-stats' }, scheduledTiles)
+        ) : null
       ),
 
       // Needs Attention

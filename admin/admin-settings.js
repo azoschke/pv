@@ -1,24 +1,24 @@
 // ============================================================================
-//  PVAdminSettings — Admin-only user + role management
+//  PVAdminSettings — user + role management (users.view)
 //
 //  - Lists every admin_users row (username, display_name, created_at,
 //    last_login) along with their current role slugs.
 //  - Each row shows its roles as a read-only list; an "Edit roles" action
-//    opens a popup whose checkboxes commit the full intended role set for
-//    that user in one request.
-//  - Admins can delete user accounts (confirm prompt). Cannot delete self.
+//    (users.roles) opens a popup whose checkboxes commit the full intended
+//    role set for that user in one request.
+//  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
 //  - The root admin also gets a Permissions tab (admin/permissions.js).
 //
-//  Worker routes (all gated by admin role on the server):
-//    GET    /admin/users                      list users w/ roles
-//    PUT    /admin/users/:id/roles            { roles: ['medical', ...] } — replace set
-//    DELETE /admin/users/:id                  hard delete
-//    POST   /admin/users/:id/reset-password   mint a one-time reset link
-//    GET    /admin/roles                      the roles that can be assigned
+//  Worker routes:
+//    GET    /admin/users                      users.view — list users w/ roles
+//    PUT    /admin/users/:id/roles            users.roles — { roles: [...] } replace set
+//    DELETE /admin/users/:id                  users.delete — hard delete
+//    POST   /admin/users/:id/reset-password   users.reset — mint a one-time reset link
+//    GET    /admin/roles                      users.roles or users.view
 //
-//  Password resets: an admin mints a single-use, short-lived reset link the
-//  member opens at /pv/admin/reset.html to set a new password. Ordinary admins
-//  may reset only non-admin accounts; resetting an admin account is limited to
+//  Password resets: users.reset mints a single-use, short-lived reset link the
+//  member opens at /pv/admin/reset.html to set a new password. Only non-admin
+//  accounts can be reset this way; resetting an admin account is limited to
 //  the root admin (Fiora). The plaintext token is shown once, here, and is
 //  never stored or retrievable again.
 // ============================================================================
@@ -74,6 +74,9 @@
     var deleting = props.deleting;
     var resetting = props.resetting;
     var roleLabels = props.roleLabels;
+    var canRoles = props.canRoles;
+    var canDelete = props.canDelete;
+    var canReset = props.canReset;
 
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
@@ -81,7 +84,7 @@
     var targetIsAdmin = (u.roles || []).indexOf('admin') !== -1;
     // Mirror of the server rule: never reset the root admin; resetting an admin
     // account is limited to the root admin (Fiora).
-    var resetAllowed = !isRoot && (!targetIsAdmin || callerIsRoot);
+    var resetAllowed = canReset && !isRoot && (!targetIsAdmin || callerIsRoot);
 
     return h('tr', { className: needsRole ? 'is-needs-role' : null },
       h('td', null,
@@ -105,7 +108,7 @@
         },
           // Root admin is protected: its empty action set is the cue, so no
           // "Edit roles"/"Delete" controls and no explicit "(protected)" label.
-          !isRoot
+          !isRoot && canRoles
             ? h('button', {
                 type: 'button',
                 className: 'portal-btn is-small is-ghost',
@@ -125,6 +128,8 @@
             ? null
             : isSelf
               ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(you)')
+              : !canDelete
+              ? null
               : h('button', {
                   type: 'button',
                   className: 'portal-btn is-small is-danger',
@@ -478,7 +483,10 @@
                           onReset: handleReset,
                           deleting: deletingId === u.id,
                           resetting: resettingId === u.id,
-                          roleLabels: roleLabeler(roles)
+                          roleLabels: roleLabeler(roles),
+                          canRoles: PVAdminAPI.can('users.roles'),
+                          canDelete: PVAdminAPI.can('users.delete'),
+                          canReset: PVAdminAPI.can('users.reset')
                         });
                       })
                     : h('tr', null,

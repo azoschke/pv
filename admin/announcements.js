@@ -6,9 +6,9 @@
 //    - PVAdminAnnouncements   the main Announcements tab (general channel)
 //
 //  Worker routes (channel-aware):
-//    GET    /announcements?channel=general|pirate|mercenary
-//    POST   /announcements      body.channel decides allowed posters
-//    DELETE /announcements/:id  admin only
+//    GET    /announcements?channel=general|pirate|mercenary|recon|house_staff
+//    POST   /announcements      body.channel decides the permission needed
+//    DELETE /announcements/:id  announcements.delete
 //
 //  Discord forwarding only exists on the `general` channel; the worker
 //  ignores `post_to_discord` for the other two.
@@ -153,11 +153,10 @@
     );
   }
 
-  // Roles allowed to POST per channel. Mirrors the worker's channelPostRoles.
-  function postRolesForChannel(channel) {
-    if (channel === 'pirate')    return ['officer', 'pirate', 'admin'];
-    if (channel === 'mercenary') return ['officer', 'mercenary', 'admin'];
-    return ['officer', 'admin'];
+  // Permission to POST per channel. Mirrors the worker's channelPostPermission:
+  // General is the Announcements page, each faction channel its Factions tab.
+  function postPermissionForChannel(channel) {
+    return channel === 'general' ? 'announcements.post' : 'factions.' + channel + '.post';
   }
 
   // --------- Reusable board ----------
@@ -174,8 +173,8 @@
     var showDiscord = !!props.showDiscord;
     var discordLabel = props.discordLabel;
 
-    var canPost = PVAdminAPI.hasAnyRole(postRolesForChannel(channel));
-    var canDelete = PVAdminAPI.hasRole('admin');
+    var canPost = PVAdminAPI.can(postPermissionForChannel(channel));
+    var canDelete = PVAdminAPI.can('announcements.delete');
 
     var listState = useState([]);
     var list = listState[0], setList = listState[1];

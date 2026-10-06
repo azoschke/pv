@@ -5,14 +5,14 @@
 //    GET    /campaigns                                  public
 //    GET    /campaigns/:slug                            public (campaign + chapter index)
 //    GET    /campaigns/:slug/chapters/:chSlug           public (one chapter body)
-//    POST   /campaigns                                  officer | admin
-//    PATCH  /campaigns/:id                              officer | admin
-//    DELETE /campaigns/:id                              officer | admin
-//    PUT    /campaigns/reorder            { ids: [] }   officer | admin
-//    POST   /campaigns/:id/chapters                     officer | admin
-//    PATCH  /chapters/:id                               officer | admin
-//    DELETE /chapters/:id                               officer | admin
-//    PUT    /campaigns/:id/chapters/reorder { ids: [] } officer | admin
+//    POST   /campaigns                                  campaigns.story_edit
+//    PATCH  /campaigns/:id                              campaigns.story_edit
+//    DELETE /campaigns/:id                              campaigns.story_delete
+//    PUT    /campaigns/reorder            { ids: [] }   campaigns.story_edit
+//    POST   /campaigns/:id/chapters                     campaigns.story_edit
+//    PATCH  /chapters/:id                               campaigns.story_edit
+//    DELETE /chapters/:id                               campaigns.story_delete
+//    PUT    /campaigns/:id/chapters/reorder { ids: [] } campaigns.story_edit
 //
 //  Auth: forwards the PVAdminAPI session bearer to the campaigns Worker, which
 //  validates it against pv-med-database-worker /me (via a Service Binding).
@@ -296,7 +296,7 @@
   }
 
   // ── Reusable reorder/edit/delete row controls ────────────────────────────────
-  // Delete is gated to admins (props.canDelete); officers see reorder + edit only.
+  // Delete shows only with the delete permission (props.canDelete).
   function RowControls(props) {
     return h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
@@ -441,7 +441,7 @@
 
   // ── Codex manager (list grouped by type + form) ──────────────────────────────
   function CodexManager(props) {
-    var isAdmin = props.isAdmin;
+    var canDelete = props.canDelete;
     var campaigns = props.campaigns || [];
 
     var entriesState = useState([]);
@@ -557,7 +557,7 @@
                   h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
                     h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
                       onClick: function () { setForm({ entry: e }); } }, 'Edit'),
-                    isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+                    canDelete ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
                       onClick: function () { deleteEntry(e); } }, 'Delete') : null
                   )
                 );
@@ -569,12 +569,16 @@
 
   // ── Main component ────────────────────────────────────────────────────────────
   function PVAdminCampaigns(props) {
-    // Only admins may delete campaigns/chapters; officers get add/edit/reorder.
-    var roles = (props.session && props.session.roles) || [];
-    var isAdmin = roles.indexOf('admin') !== -1;
+    // Each tab and its delete buttons follow the permission grid.
+    var canDeleteStory = PVAdminAPI.can('campaigns.story_delete');
+    var canDeleteCodex = PVAdminAPI.can('campaigns.codex_delete');
+    var tabs = [
+      PVAdminAPI.can('campaigns.story_edit') ? { id: 'story', label: 'Story' } : null,
+      PVAdminAPI.can('campaigns.codex_edit') ? { id: 'codex', label: 'Codex' } : null
+    ].filter(Boolean);
 
     // 'story' = campaign/chapter editor; 'codex' = the codex entry manager.
-    var tabState = useState('story');
+    var tabState = useState(tabs[0] ? tabs[0].id : 'story');
     var tab = tabState[0], setTab = tabState[1];
 
     var campaignsState = useState([]);
@@ -734,7 +738,7 @@
     // Story / Codex tab switch — both live under the Campaigns admin section.
     function tabBar() {
       return h(window.PVAdminSubnav, {
-        tabs: [{ id: 'story', label: 'Story' }, { id: 'codex', label: 'Codex' }],
+        tabs: tabs,
         active: tab,
         onChange: setTab
       });
@@ -742,7 +746,7 @@
 
     if (tab === 'codex') {
       return h('div', null, tabBar(),
-        h(CodexManager, { isAdmin: isAdmin, campaigns: campaigns }));
+        h(CodexManager, { canDelete: canDeleteCodex, campaigns: campaigns }));
     }
 
     if (loading) return h('div', null, tabBar(), h('div', { className: 'portal-card' }, 'Loading campaigns…'));
@@ -799,7 +803,7 @@
                     (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /campaigns/view.html?c=' + c.slug)
                 ),
                 h(RowControls, {
-                  canDelete: isAdmin,
+                  canDelete: canDeleteStory,
                   isFirst: idx === 0, isLast: idx === campaigns.length - 1,
                   onUp: function () { reorderCampaigns(idx, idx - 1); },
                   onDown: function () { reorderCampaigns(idx, idx + 1); },
@@ -832,7 +836,7 @@
                               h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } }, ch.chapter_date || '—')
                             ),
                             h(RowControls, {
-                              canDelete: isAdmin,
+                              canDelete: canDeleteStory,
                               isFirst: cidx === 0, isLast: cidx === chapters.length - 1,
                               onUp: function () { reorderChapters(c, cidx, cidx - 1); },
                               onDown: function () { reorderChapters(c, cidx, cidx + 1); },

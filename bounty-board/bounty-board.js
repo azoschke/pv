@@ -94,13 +94,25 @@
     }
   }
 
+  // Permission from the stored session (Admin Settings → Permissions). A
+  // session saved before permissions existed has no list; it keeps the
+  // buttons, and the worker still checks.
+  function sessionCan(session, key) {
+    if (!session) return false;
+    if (!Array.isArray(session.permissions)) return true;
+    return session.permissions.indexOf(key) !== -1;
+  }
+
   // Quest submissions live in the portal's My Profile → Applications tab; the
   // logged-out path goes through login first, then straight there.
   var PORTAL_SUBMIT_URL = "/pv/admin/portal.html?section=my-profile&tab=applications";
   var LOGIN_URL = "/pv/admin/login.html?redirect=";
   (function () {
     if (!submitBtn) return;
-    if (getSession()) {
+    var session = getSession();
+    if (session && !sessionCan(session, "quests.submit")) {
+      submitBtn.style.display = "none";
+    } else if (session) {
       submitBtn.href = PORTAL_SUBMIT_URL;
     } else {
       submitBtn.href = LOGIN_URL + encodeURIComponent(PORTAL_SUBMIT_URL);
@@ -608,6 +620,7 @@
         encodeURIComponent(window.location.pathname) + '">Log in to sign up</a>' +
         '</div>';
     }
+    if (!sessionCan(session, "quests.signup")) return "";
     var mine = mySignup(q);
     if (mine) {
       return '<div class="quest-modal-actions">' +

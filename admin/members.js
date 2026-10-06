@@ -1,11 +1,11 @@
 // ============================================================================
 //  PVAdminMembers — FC Member Directory
 //
-//  Worker routes:
-//    GET    /members
-//    POST   /members
-//    PATCH  /members/:id
-//    DELETE /members/:id          (admin only — UI gates with hasRole)
+//  Worker routes (the UI hides what the permission grid doesn't allow):
+//    GET    /members              members.view
+//    POST   /members              members.edit
+//    PATCH  /members/:id          members.edit
+//    DELETE /members/:id          members.delete
 // ============================================================================
 
 (function () {
@@ -505,6 +505,7 @@
     var m = props.member;
     var onEdit = props.onEdit;
     var onToggleTalkedTo = props.onToggleTalkedTo;
+    var canEdit = props.canEdit;
 
     var showTalkedTo = shouldShowTalkedTo(m.activity);
 
@@ -537,11 +538,11 @@
           h('span', null, m.activity),
           showTalkedTo
             ? h('label', { className: 'talked-to-cell' },
-                h('input', {
+                canEdit ? h('input', {
                   type: 'checkbox',
                   checked: !!m.talked_to,
                   onChange: function (e) { onToggleTalkedTo(m, e.target.checked); }
-                }),
+                }) : null,
                 h('span', null, 'Talked to · ' + (m.talked_to ? 'Yes' : 'No'))
               )
             : null
@@ -549,18 +550,19 @@
       ),
       h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || ''), member: m, allMembers: props.allMembers })),
       h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
-        h('button', {
+        canEdit ? h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(m); }
-        }, 'Edit')
+        }, 'Edit') : null
       )
     );
   }
 
   // --------- Main component ----------
   function Members(props) {
-    var allowDelete = PVAdminAPI.hasRole('admin');
+    var allowEdit = PVAdminAPI.can('members.edit');
+    var allowDelete = PVAdminAPI.can('members.delete');
 
     var membersState = useState([]);
     var members = membersState[0], setMembers = membersState[1];
@@ -743,14 +745,14 @@
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }
           }),
-          h('button', {
+          allowEdit ? h('button', {
             type: 'button',
             className: 'portal-btn',
             onClick: function () { setModalMember({}); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
             h('span', null, 'Add member')
-          )
+          ) : null
         )
       ),
 
@@ -813,7 +815,8 @@
                             member: m,
                             allMembers: members,
                             onEdit: function (member) { setModalMember(member); },
-                            onToggleTalkedTo: handleToggleTalkedTo
+                            onToggleTalkedTo: handleToggleTalkedTo,
+                            canEdit: allowEdit
                           });
                         }));
                       })
