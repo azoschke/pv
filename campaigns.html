@@ -58,7 +58,7 @@
         </div>
 
         <div class="landing-grid" id="campaign-landing-grid">
-          <div class="chapter-loading" style="grid-column:1/-1;">Loading campaigns&hellip;</div>
+          <div class="chapter-loading">Loading campaigns&hellip;</div>
         </div>
       </main>
 
@@ -248,9 +248,8 @@
       if (!filtered.length) {
         var empty = document.createElement('div');
         empty.className = 'venues-empty';
-        empty.style.gridColumn = '1 / -1';
         empty.innerHTML = '<p>No campaigns match these filters.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+          '<p class="venues-empty-hint">Try clearing a filter.</p>';
         grid.appendChild(empty);
         return;
       }
@@ -287,7 +286,7 @@
         renderGrid();
       })
       .catch(function (err) {
-        grid.innerHTML = '<p class="chapter-error" style="grid-column:1/-1;">Could not load campaigns. Please try again later.</p>';
+        grid.innerHTML = '<p class="chapter-error">Could not load campaigns. Please try again later.</p>';
         countEl.textContent = '';
         console.error('[campaigns] landing load error:', err);
       });

@@ -1,0 +1,91 @@
+/* ============================================================================
+   account.css — sign-in pages: login.html, register.html, reset.html
+   ========================================================================== */
+.admin-login-wrap { max-width: 420px; margin: 3rem auto; }
+.admin-login-wrap .parchment { padding: 32px; }
+.portal-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.login-home-link { display: inline-block; margin-bottom: 0.75rem; }
+.login-home-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  transition: transform 0.15s ease;
+}
+.login-home-link:hover .login-home-logo { transform: scale(1.06); }
+.portal-brand-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+.portal-brand-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.flash {
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  margin-top: 0.75rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+}
+.flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+.flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+.admin-login-wrap .section-heading { text-align: center; }
+.admin-login-wrap .submit-btn { width: 100%; }
+/* "Create one →" / "Sign in →" links under the form. */
+.login-link {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--accent-red);
+}
+
+/* ── Create Account (register.html) ─────────────────────────────────────── */
+/* A little wider than sign-in, with slightly larger messages. */
+.admin-login-wrap.is-register { max-width: 460px; }
+.is-register .flash { font-size: 0.95rem; }
+.help-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+.rules-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.75rem 0.9rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+.rules-card strong { color: var(--text-primary); }
+
+/* ── Reset Password (reset.html) ────────────────────────────────────────── */
+.reset-checking {
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+}
+.reset-target {
+  text-align: center;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+}
+.reset-target strong { color: var(--text-primary); }
+.reset-hint { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; }

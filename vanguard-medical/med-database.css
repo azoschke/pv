@@ -1,0 +1,251 @@
+/* ============================================================================
+   med-database.css — Medical Database page (med-database.html)
+   ========================================================================== */
+
+/* --- V2 Patient Records — campaign-style sidebar + card sections --- */
+
+/* ── Patient record cards ──────────────────────────────────────── */
+.record-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1rem;
+}
+.record-card:last-child { margin-bottom: 0; }
+@media (max-width: 600px) { .record-card { padding: 1.25rem; } }
+
+.record-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+.record-card-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 0.3rem;
+}
+/* The patient's other name, under the name header. */
+.record-card-label.is-other-name { margin-top: 0.4rem; }
+/* "Please see Fiora…" under the select-a-patient message. */
+.record-card-note { font-size: 1.1rem; color: var(--text-secondary); }
+.record-card-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Patient name header — large decorative */
+.patient-name-header {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 2.2rem;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ── Field styling — chapter-body prose sizes ──────────────────── */
+.record-field {
+  margin-bottom: 1.25rem;
+}
+.record-field:last-child { margin-bottom: 0; }
+.record-field-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+.record-field-value h2 {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    margin: 0;
+    margin-bottom: .75rem;
+    margin-top: 1rem;
+    color: var(--text-secondary);
+}
+.record-field-value p, .record-field-value ul li, .record-field-value ol li {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.record-field-value p strong {
+  color: var(--text-secondary);
+}
+.record-field-value p { margin: 0 0 0.75rem; }
+.record-field-value p:last-child { margin-bottom: 0; }
+.record-field-value ul, .record-field-value ol {
+    padding: 0;
+    margin: 0;
+    margin-left: 1rem;
+    margin-bottom: .75rem;
+}
+
+/* ── Inline field row (for short fields like race/gender/age) ── */
+.record-fields-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+/* ── Visit list ────────────────────────────────────────────────── */
+.visit-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.visit-card:last-child { margin-bottom: 0; }
+
+.visit-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  background: var(--bg-card);
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+.visit-card-header:hover { background: var(--bg-darker); }
+.visit-card.open .visit-card-header {
+  border-bottom-color: var(--border-color);
+}
+
+.visit-card-date {
+  font-family: 'Stoke', serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.visit-card.open .visit-card-date { color: var(--accent-red); }
+
+.visit-card-meta {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.visit-card-chevron {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.visit-card.open .visit-card-chevron { transform: rotate(180deg); }
+
+.visit-card-body {
+  display: none;
+  padding: 1.25rem 1.5rem;
+}
+.visit-card.open .visit-card-body { display: block; }
+@media (max-width: 600px) { .visit-card-body { padding: 1rem; } }
+.visit-card-empty { color: var(--text-secondary); }
+
+/* Visit subsection headings (Patient Intake / Treatment Report) */
+.visit-subsection-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+  margin-bottom: 1rem;
+}
+.visit-subsection-divider {
+  border-top: 1px solid var(--border-color);
+  margin: 1.25rem 0;
+}
+
+/* ── Loading / error states ────────────────────────────────────── */
+.v2-state-msg {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  padding: 2rem 0;
+}
+.v2-state-msg.error { color: var(--accent-red); }
+/* Loading / failed text inside the patient list. */
+.chapter-list-item > .patient-list-state { padding: 0.55rem 1rem; }
+
+/* ── Patient sidebar: search + A–Z jump bar + letter groups ─────── */
+/* Header + search + jump bar stay pinned so the ✕ and search remain
+   reachable no matter how far the list is scrolled. */
+.patient-sidebar-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg-card);
+}
+.patient-controls {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.patient-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.45rem 0.6rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: var(--bg-darker);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+}
+.patient-search::placeholder { color: var(--text-secondary); }
+/* Fixed 9-column grid: 26 letters + "#" = exactly 3 even rows, so the
+   last row lines up instead of stretching a few letters across. */
+.patient-az-bar {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+  margin-top: 0.5rem;
+}
+.patient-az-letter {
+  padding: 0.12rem 0;
+  text-align: center;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: 0.2rem;
+  cursor: pointer;
+}
+.patient-az-letter:hover:not(:disabled) {
+  background: var(--bg-darker);
+  color: var(--text-primary);
+}
+.patient-az-letter:disabled { opacity: 0.25; cursor: default; }
+.patient-group-header {
+  padding: 0.45rem 1rem 0.2rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.25rem;
+}
+.patient-group-header.is-first { border-top: none; margin-top: 0; }
+.patient-empty-msg {
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}

@@ -8,22 +8,6 @@
   <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
   <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
-  <style>
-    /* Markdown styling for codex entry bodies */
-    .codex-modal-desc hr {
-      border: none;
-      border-top: 1px solid var(--border-color);
-      margin: 1rem 0;
-    }
-    .codex-modal-desc blockquote {
-      margin: 0.85rem 0;
-      padding: 0.4rem 0 0.4rem 1rem;
-      border-left: 3px solid var(--border-color);
-      color: var(--text-secondary);
-      font-style: italic;
-    }
-    .codex-modal-desc blockquote p { margin: 0; }
-  </style>
 </head>
 <body>
 
@@ -396,7 +380,7 @@
         var empty = document.createElement('div');
         empty.className = 'venues-empty';
         empty.innerHTML = '<p>No codex entries match these filters.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+          '<p class="venues-empty-hint">Try clearing a filter.</p>';
         listEl.appendChild(empty);
         return;
       }

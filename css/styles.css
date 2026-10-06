@@ -818,6 +818,9 @@ pre {
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
+/* A parchment with another directly below it (Patient Intake). */
+.parchment.is-stacked { margin-bottom: 20px; }
+
 /* Section headings */
 .section-heading {
   font-family: 'Stoke', serif;
@@ -840,6 +843,9 @@ pre {
   padding-bottom: 4px;
   border-bottom: 2px dashed var(--bg-darker);
 }
+
+/* Smaller section headings (Treatment Report). */
+.subsection-heading.is-compact { font-size: 1rem; margin-top: 15px; }
 
 /* Form toggle (intake/report) */
 .form-toggle {
@@ -1150,11 +1156,17 @@ pre {
   padding: 20px 0 10px;
 }
 
+/* Always shown — its wrapper is what gets toggled (Appointment Request). */
+.confirmation-panel.is-shown { display: block; }
+
 .confirmation-panel .check-icon {
   font-size: 3rem;
   color: #a54d44;
   margin-bottom: 1rem;
 }
+
+/* The sign-in lock follows the theme's red. */
+.confirmation-panel .check-icon.is-lock { color: var(--accent-red); }
 
 .confirmation-panel h2 {
   font-family: 'Stoke', serif;
@@ -1215,6 +1227,25 @@ pre {
   background: #3a2020;
   border-color: #7a4040;
   color: #e5a0a0;
+}
+
+.error-message .material-icons {
+  font-size: 1rem;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+/* ── Appointment Request: name comes from the signed-in account ───────────── */
+.appt-name-note {
+  margin: 0.35rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+#appt-name[readonly] {
+  opacity: 0.85;
+  cursor: not-allowed;
 }
 
 
@@ -2265,6 +2296,10 @@ body.nav-sidebar-open {
   color: var(--accent-red);
 }
 
+/* Campaigns landing: loading / error text spans the whole card grid. */
+.landing-grid > .chapter-loading,
+.landing-grid > .chapter-error { grid-column: 1 / -1; }
+
 /* ── Mobile overlay ─────────────────────────────────────────────────────────── */
 
 .campaign-overlay {
@@ -3059,6 +3094,8 @@ body.nav-sidebar-open {
 
 .venues-empty p { margin: 0 0 0.5rem; }
 .venues-empty p:last-child { margin-bottom: 0; }
+/* "Try clearing a filter." under the empty message. */
+.venues-empty-hint { font-size: 0.95rem; color: var(--text-secondary); }
 
 .venues-empty-error { color: var(--accent-red); }
 
@@ -3599,6 +3636,21 @@ body.nav-sidebar-open {
 @media (max-width: 768px) {
   .codex-row { padding: 0.8rem 0.9rem; }
 }
+
+/* Markdown styling for codex entry bodies */
+.codex-modal-desc hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+.codex-modal-desc blockquote {
+  margin: 0.85rem 0;
+  padding: 0.4rem 0 0.4rem 1rem;
+  border-left: 3px solid var(--border-color);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+.codex-modal-desc blockquote p { margin: 0; }
 
 
 /* =============================================================================

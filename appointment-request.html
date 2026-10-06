@@ -13,20 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-    <style>
-        .appt-name-note {
-            margin: 0.35rem 0 0;
-            font-family: 'Crimson Pro', serif;
-            font-size: 0.85rem;
-            font-style: italic;
-            color: var(--text-secondary);
-        }
-        #appt-name[readonly] {
-            opacity: 0.85;
-            cursor: not-allowed;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -45,8 +31,8 @@
              "log in to apply" round-trip — sign in, then land back here. -->
         <div id="login-gate" style="display: none;">
             <div class="parchment">
-                <div class="confirmation-panel" style="display: block;">
-                    <span class="material-icons check-icon" style="color: var(--accent-red);">lock</span>
+                <div class="confirmation-panel is-shown">
+                    <span class="material-icons check-icon is-lock">lock</span>
                     <h2>Sign in to request an appointment</h2>
                     <p>
                         Appointment requests are tied to your Phoenix Vanguard account, please
@@ -103,7 +89,7 @@
                         </div>
 
                         <div id="error-message" class="error-message">
-                            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 6px;">error_outline</span>
+                            <span class="material-icons">error_outline</span>
                             <span id="error-text">Something went wrong. Please try again.</span>
                         </div>
                     </div>
@@ -121,7 +107,7 @@
         <!-- Confirmation Message -->
         <div id="confirmation-wrapper" style="display: none;">
             <div class="parchment">
-                <div class="confirmation-panel" style="display: block;">
+                <div class="confirmation-panel is-shown">
                     <span class="material-icons check-icon">check_circle</span>
                     <h2>Request Sent</h2>
                     <p>
