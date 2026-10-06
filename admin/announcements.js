@@ -6,9 +6,9 @@
 //    - PVAdminAnnouncements   the main Announcements tab (general channel)
 //
 //  Worker routes (channel-aware):
-//    GET    /announcements?channel=general|pirate|mercenary
-//    POST   /announcements      body.channel decides allowed posters
-//    DELETE /announcements/:id  admin only
+//    GET    /announcements?channel=general|pirate|mercenary|recon|house_staff
+//    POST   /announcements      body.channel decides the permission needed
+//    DELETE /announcements/:id  announcements.delete
 //
 //  Discord forwarding only exists on the `general` channel; the worker
 //  ignores `post_to_discord` for the other two.
@@ -88,7 +88,7 @@
         })
       ),
       h('div', { style: { display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.25rem' } },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: pinned,
@@ -96,7 +96,7 @@
           }),
           h('span', null, 'Pin to top')
         ),
-        showDiscord ? h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        showDiscord ? h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: toDiscord,
@@ -149,15 +149,14 @@
           fontFamily: 'La Belle Aurore, cursive', fontSize: '0.95rem'
         }
       }, author + ' · ' + formatWhen(a.created_at)),
-      h('div', { style: { whiteSpace: 'pre-wrap' } }, a.body)
+      h('div', { className: 'portal-pre' }, a.body)
     );
   }
 
-  // Roles allowed to POST per channel. Mirrors the worker's channelPostRoles.
-  function postRolesForChannel(channel) {
-    if (channel === 'pirate')    return ['officer', 'pirate', 'admin'];
-    if (channel === 'mercenary') return ['officer', 'mercenary', 'admin'];
-    return ['officer', 'admin'];
+  // Permission to POST per channel. Mirrors the worker's channelPostPermission:
+  // General is the Announcements page, each faction channel its Factions tab.
+  function postPermissionForChannel(channel) {
+    return channel === 'general' ? 'announcements.post' : 'factions.' + channel + '.post';
   }
 
   // --------- Reusable board ----------
@@ -174,8 +173,8 @@
     var showDiscord = !!props.showDiscord;
     var discordLabel = props.discordLabel;
 
-    var canPost = PVAdminAPI.hasAnyRole(postRolesForChannel(channel));
-    var canDelete = PVAdminAPI.hasRole('admin');
+    var canPost = PVAdminAPI.can(postPermissionForChannel(channel));
+    var canDelete = PVAdminAPI.can('announcements.delete');
 
     var listState = useState([]);
     var list = listState[0], setList = listState[1];
@@ -248,7 +247,7 @@
         flash ? h('div', { className: 'portal-flash success' }, flash) : null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
-          ? h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'Loading bulletins…')
+          ? h('p', { className: 'portal-note' }, 'Loading bulletins…')
           : list.length
             ? h('div', { className: 'bulletin-list' },
                 list.map(function (a) {

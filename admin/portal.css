@@ -2,7 +2,7 @@
    Phoenix Vanguard — Admin Portal styles
    ----------------------------------------------------------------------------
    Layout shell only: ink-dark sidebar + flexible main area. All colors
-   reference the existing CSS variables from /pv/css/styles.css so the site's
+   reference the existing CSS variables from css/styles.css so the site's
    light/dark theme toggle works for the portal without extra JS.
    The sidebar scopes `data-theme="dark"` onto itself so its text colors
    resolve against the dark-mode variable branch regardless of the site theme
@@ -401,19 +401,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   box-sizing: border-box;
   min-width: 11rem;
 }
-
-/* Sliding on/off switch, same as the Roll Calculator's toggle skills
-   (tools/roll-calculator.html): both states shown, lit knob slides. */
-.rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;
-  border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-card); cursor: pointer; font: inherit; overflow: hidden; }
-.rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
-  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
-.rp-switch:not(.is-on) .rp-switch-off { color: var(--text-primary); font-weight: 600; }
-.rp-switch.is-on .rp-switch-on { color: #fff; font-weight: 600; }
-.rp-switch-knob { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 3px); border-radius: 999px; z-index: 0;
-  background: var(--border-color); transition: left 0.16s ease, background 0.16s ease; }
-.rp-switch.is-on .rp-switch-knob { left: calc(50% + 1px); background: var(--accent-brown); }
-.rp-switch:disabled { opacity: 0.5; cursor: default; }
 
 /* --------------- Tables --------------- */
 .portal-table-wrap { overflow-x: auto; }
@@ -1263,6 +1250,229 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-decoration: underline;
 }
 
+/* --------------- Permissions (root only) --------------- */
+/* Matrix: roles across the top, Page → Tab → Action down the side. The header
+   row and the label column stay put while the grid scrolls inside its box. */
+.perm-grid-wrap {
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.perm-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+}
+.perm-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-card-light);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0.4rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.perm-grid thead th.perm-corner { left: 0; z-index: 3; }
+.perm-grid .perm-role-col { text-align: center; min-width: 4.25rem; }
+.perm-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg-card);
+  text-align: left;
+  font-weight: 400;
+  padding: 0.2rem 0.75rem;
+  min-width: 15rem;
+  max-width: 22rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+.perm-row-label.is-action { padding-left: 2.2rem; }
+.perm-row-label.is-tab { padding-left: 2.2rem; }
+.perm-row-label.is-tab-action { padding-left: 3.4rem; }
+.perm-row-sub { display: block; font-size: 0.85rem; color: var(--text-secondary); }
+.perm-page-row .perm-row-label { background: var(--bg-card-light); }
+.perm-page-name { font-family: 'Stoke', serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.perm-tab-name { font-style: italic; }
+.perm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.perm-toggle .material-icons { font-size: 1.1rem; }
+.perm-group-row td {
+  background: var(--bg-darker);
+  padding: 0.4rem 0;
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.perm-group-row td > span { position: sticky; left: 0.75rem; padding: 0 0.75rem; }
+.perm-cell-td { text-align: center; padding: 0.15rem 0.2rem; border-bottom: 1px solid var(--border-color); }
+.perm-page-row .perm-cell-td { background: var(--bg-card-light); }
+.perm-cell {
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: transparent;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.perm-cell.is-allow { color: var(--check-color); background: rgba(90, 138, 60, 0.15); border-color: rgba(90, 138, 60, 0.5); }
+.perm-cell.is-deny  { color: var(--accent-red); background: rgba(165, 77, 68, 0.15); border-color: rgba(165, 77, 68, 0.5); }
+.perm-cell.is-warn  { background: rgba(212, 165, 116, 0.35); border-color: var(--star-filled); }
+.perm-cell.is-pending { box-shadow: 0 0 0 2px var(--accent-brown); }
+.perm-cell:disabled { cursor: wait; opacity: 0.6; }
+.perm-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0.75rem -1.25rem -1.25rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card-light);
+  border-top: 1px solid var(--border-color);
+}
+.perm-savebar-count { margin-right: auto; font-family: 'Crimson Pro', serif; color: var(--text-primary); }
+.perm-loading { color: var(--text-secondary); margin: 0; }
+
+/* Roles list + add form */
+.perm-roles { display: flex; flex-direction: column; }
+.perm-role {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Crimson Pro', serif;
+}
+.perm-role-label { font-weight: 600; min-width: 9rem; }
+.perm-role-input { min-width: 9rem; }
+.perm-role-slug { font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); }
+.perm-role-count { color: var(--text-secondary); }
+.perm-role-actions { display: inline-flex; gap: 0.4rem; margin-left: auto; }
+.perm-role-add { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.perm-role-add .portal-field { margin: 0; }
+
+/* Effective access preview */
+.perm-preview-roles { margin: 0 0 0.75rem; font-family: 'Crimson Pro', serif; color: var(--text-secondary); }
+.perm-preview-root { margin: 0; font-family: 'Crimson Pro', serif; }
+.perm-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.perm-preview-title {
+  margin: 0 0 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--check-color);
+}
+.perm-preview-title.is-deny { color: var(--accent-red); }
+.perm-preview-group { margin-bottom: 0.6rem; font-family: 'Crimson Pro', serif; }
+.perm-preview-page { font-weight: 600; }
+.perm-preview-group ul { margin: 0.15rem 0 0; padding-left: 1.2rem; }
+.perm-preview-empty { margin: 0; color: var(--text-secondary); font-family: 'Crimson Pro', serif; }
+@media (max-width: 900px) {
+  .perm-preview { grid-template-columns: 1fr; }
+  .perm-row-label { min-width: 11rem; }
+  .perm-role-actions { margin-left: 0; }
+}
+
+/* --------------- Shared section pieces --------------- */
+/* Layouts most sections repeat. These replace identical inline styles that
+   were copied between the section scripts. */
+
+/* Header card at the top of a section: title with search / buttons, an
+   optional description, and the "saved" message. */
+.portal-card.portal-head { padding: 0.85rem 1.1rem; }
+.portal-head-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.portal-head-title { margin: 0; flex: 1; }
+.portal-head-desc { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.92rem; }
+.portal-head-desc.is-tight { margin-top: 0.3rem; }
+.portal-flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
+
+/* Text */
+.portal-muted { color: var(--text-secondary); }
+.portal-note { margin: 0; color: var(--text-secondary); }   /* empty / loading notes */
+.portal-strong { font-weight: 600; }
+.portal-pre { white-space: pre-wrap; }
+.portal-gap-top { margin-top: 0.85rem; }
+.portal-card > .portal-table-wrap.portal-gap-top { margin-top: 0.85rem; }
+
+/* Tables */
+.portal-table .portal-col-actions { text-align: right; white-space: nowrap; }
+.portal-table th.portal-col-actions { width: 1%; }
+.portal-table .portal-col-center { text-align: center; }
+.portal-table .portal-nowrap { white-space: nowrap; }
+/* "Nothing here yet" row spanning the table (beats the edge-cell inset). */
+.portal-table td.portal-empty-cell,
+.portal-card > .portal-table-wrap .portal-table td.portal-empty-cell {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 1.5rem;
+}
+/* First cell: the row's name, with any badges beside it. */
+.portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
+.portal-row-title { font-family: Stoke, serif; font-size: 0.9rem; }
+
+/* Forms */
+.portal-field.is-full { grid-column: 1 / -1; }
+.portal-field.is-tight { margin-bottom: 0.6rem; }
+.portal-btn.is-end { margin-left: auto; }
+.portal-form-title { margin-top: 0; }   /* "New … / Edit …" heading of a form card */
+.portal-btn-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }   /* Save / Cancel */
+.portal-card.is-tight { margin-bottom: 0.6rem; }
+.portal-card.is-inset { background: var(--bg-card-light); margin-bottom: 0.5rem; }   /* card inside a card */
+.portal-btn.is-spaced { margin-left: 0.4rem; }
+.portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Image fields: URL box + Upload button, hidden file input, error, preview. */
+.portal-image-row { display: flex; gap: 0.5rem; align-items: center; }
+.portal-grow { flex: 1; }
+.portal-upload-btn { white-space: nowrap; }
+.portal-file-input { display: none; }
+.portal-field-help.is-error { color: var(--danger-color, #c0392b); }
+.portal-image-preview {
+  display: block;
+  margin-top: 0.5rem;
+  max-width: 320px;
+  max-height: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  object-fit: cover;
+}
+
+/* Campaigns section: campaign / chapter / codex editors. */
+.portal-card.cmp-form { margin-bottom: 1rem; }
+.cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+.cmp-hint { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+textarea.cmp-code,
+.portal-field textarea.cmp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+.portal-card.cmp-list-card { margin-bottom: 0.75rem; }
+
 /* --------------- Responsive --------------- */
 @media (max-width: 1100px) {
   .division-grid { grid-template-columns: 1fr; }
@@ -1319,164 +1529,4 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
     margin-left: 0;
     flex-wrap: wrap;
   }
-}
-
-/* ============================================================================
-   Combat Toolkit — roster & catalogue card grids
-   ========================================================================== */
-
-/* Both grids share the same card-media treatment as the public venue / My Items
-   cards: the image bleeds to the card's top edge (no padding around it), the
-   torn contrast border sits under it, and only the text below is padded. */
-.rp-roster-grid,
-.rp-catalogue-grid {
-  display: grid;
-  gap: 1rem;
-  align-items: stretch; /* cards in a row share the tallest card's height */
-}
-.rp-roster-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 0.75rem; }
-.rp-catalogue-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.rp-roster-card,
-.rp-catalogue-card { margin-bottom: 0 !important; display: flex; flex-direction: column; }
-
-/* Full-bleed media: negative margins cancel the .portal-card 1.25rem padding so
-   the image reaches the card's edges; radius matches the card's 6px top corners. */
-.rp-card-media {
-  position: relative;
-  margin: -1.25rem -1.25rem 0.85rem;
-  aspect-ratio: 16 / 10;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
-  overflow: hidden;
-  border-radius: 6px 6px 0 0;
-}
-.rp-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Item art is square (600×600 uploads); roster portraits keep the venue 16:10. */
-.rp-catalogue-card .rp-card-media { aspect-ratio: 1 / 1; }
-.rp-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  right: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.62);
-  pointer-events: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rp-roster-name,
-.rp-catalogue-name {
-  font-family: 'Stoke', serif;
-  font-size: 1.3rem;
-  font-weight: 400;
-  line-height: 1.15;
-  margin: 0;
-  color: var(--text-primary);
-}
-/* Campaign row title — mirrors .rp-catalogue-name but stays inline so the
-   Live/Paused badges keep flowing beside it. */
-.rp-campaign-name {
-  font-family: 'Stoke', serif;
-  font-size: 1.17rem;
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--text-primary);
-  vertical-align: middle;
-}
-.rp-roster-substat {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  margin-top: 0.2rem;
-}
-.rp-catalogue-desc {
-  margin: 0.3rem 0 0;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-style: italic;
-  white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.rp-catalogue-actions {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: auto;
-  padding-top: 0.75rem;
-}
-
-/* Item catalogue: read-only "Owner:" line on each card. Sits above the actions
-   (which keep their margin-top:auto bottom alignment). Reassignment is done in
-   the item editor modal. */
-.rp-catalogue-owner {
-  margin-top: 0.6rem;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-}
-.rp-owner-key {
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.72rem;
-}
-.rp-owner-val {
-  color: var(--text-primary);
-}
-.rp-owner-warn {
-  color: var(--danger, #c0392b);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Item catalogue toolbar: search + new-item button. */
-.rp-catalogue-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-.rp-catalogue-toolbar .portal-search { flex: 1 1 14rem; }
-
-/* Editor modal: item fields + abilities/modifiers all in one place so editing
-   no longer expands cards inline and shifts the grid around. */
-.rp-editor-section { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
-.rp-editor-section > h4 { margin: 0 0 0.6rem; font-family: 'Stoke', serif; font-weight: 400; }
-
-/* Per-campaign item enable/disable toggles (in the campaign Manage panel).
-   Disabling hides an item's options and passives from that campaign's Roll
-   Calculator; it does not un-assign the item from anyone. */
-.rp-item-toggle-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 0.5rem;
-}
-.rp-item-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  background: var(--bg-card-light);
-  border: 1px solid var(--border-color);
-  border-radius: 0.35rem;
-}
-.rp-item-toggle.is-off { opacity: 0.62; }
-.rp-item-toggle-name { font-size: 0.88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-@media (max-width: 1100px) {
-  .rp-roster-grid,
-  .rp-catalogue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 820px) {
-  .rp-roster-grid,
-  .rp-catalogue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 560px) {
-  .rp-roster-grid,
-  .rp-catalogue-grid { grid-template-columns: 1fr; }
 }

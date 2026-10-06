@@ -5,25 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Codex — Phoenix Vanguard</title>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
-  <style>
-    /* Markdown styling for codex entry bodies */
-    .codex-modal-desc hr {
-      border: none;
-      border-top: 1px solid var(--border-color);
-      margin: 1rem 0;
-    }
-    .codex-modal-desc blockquote {
-      margin: 0.85rem 0;
-      padding: 0.4rem 0 0.4rem 1rem;
-      border-left: 3px solid var(--border-color);
-      color: var(--text-secondary);
-      font-style: italic;
-    }
-    .codex-modal-desc blockquote p { margin: 0; }
-  </style>
 </head>
 <body>
 
@@ -110,7 +94,7 @@
   </div>
 
   <!-- Shared markdown utilities, then page logic -->
-  <script src="./campaigns.js"></script>
+  <script src="campaigns/campaigns.js"></script>
   <script>
   (function () {
     var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
@@ -396,7 +380,7 @@
         var empty = document.createElement('div');
         empty.className = 'venues-empty';
         empty.innerHTML = '<p>No codex entries match these filters.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+          '<p class="venues-empty-hint">Try clearing a filter.</p>';
         listEl.appendChild(empty);
         return;
       }
@@ -537,6 +521,7 @@
   })();
   </script>
 
-  <script src="/pv/js/nav.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

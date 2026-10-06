@@ -264,7 +264,7 @@
         h('div', { className: 'venue-modal-content' },
           h('h2', { className: 'venue-modal-title' }, it.name),
           it.description
-            ? h('p', { className: 'venue-modal-desc', style: { whiteSpace: 'pre-wrap' } }, it.description)
+            ? h('p', { className: 'venue-modal-desc portal-pre' }, it.description)
             : null,
           abilities.length
             ? h('div', { className: 'pv-item-abilities' },
@@ -321,7 +321,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       (!items || !items.length)
         ? h('div', { className: 'portal-card' },
-            h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No items are assigned to your character yet.'))
+            h('p', { className: 'portal-note' }, 'No items are assigned to your character yet.'))
         : h('div', { className: 'my-items-grid' },
             items.map(function (it) {
               return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenItem(it); } });

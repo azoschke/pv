@@ -22,7 +22,6 @@
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-  var SESSION_KEY = "pv.admin.session";
   var SIDEBAR_KEY = "pv-quests-sidebar-hidden";
   var FILTER_KEY  = "pv-quests-filters";
   var SORT_KEY    = "pv-quests-sort";
@@ -77,30 +76,25 @@
 
   if (window.marked && marked.use) marked.use({ breaks: true });
 
-  // ── Session (shared with the management portal) ──────────────────────────
-  function getSession() {
-    try {
-      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      if (!s || !s.token) return null;
-      if (s.expires_at) {
-        var exp = new Date(s.expires_at).getTime();
-        if (!isNaN(exp) && exp <= Date.now()) return null;
-      }
-      return s;
-    } catch (_e) {
-      return null;
-    }
+  // ── Session (js/pv-session.js, shared with the management portal) ──────
+  var getSession = PVSession.get;
+
+  // A session saved before permissions existed has no list; it keeps the
+  // buttons, and the worker still checks.
+  function canUse(key) {
+    return PVSession.can(key, true);
   }
 
   // Quest submissions live in the portal's My Profile → Applications tab; the
   // logged-out path goes through login first, then straight there.
-  var PORTAL_SUBMIT_URL = "/pv/admin/portal.html?section=my-profile&tab=applications";
-  var LOGIN_URL = "/pv/admin/login.html?redirect=";
+  var PORTAL_SUBMIT_URL = "portal.html?section=my-profile&tab=applications";
+  var LOGIN_URL = "login.html?redirect=";
   (function () {
     if (!submitBtn) return;
-    if (getSession()) {
+    var session = getSession();
+    if (session && !canUse("quests.submit")) {
+      submitBtn.style.display = "none";
+    } else if (session) {
       submitBtn.href = PORTAL_SUBMIT_URL;
     } else {
       submitBtn.href = LOGIN_URL + encodeURIComponent(PORTAL_SUBMIT_URL);
@@ -520,7 +514,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No quests match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or showing past quests.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or showing past quests.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -608,6 +602,7 @@
         encodeURIComponent(window.location.pathname) + '">Log in to sign up</a>' +
         '</div>';
     }
+    if (!canUse("quests.signup")) return "";
     var mine = mySignup(q);
     if (mine) {
       return '<div class="quest-modal-actions">' +
@@ -620,23 +615,9 @@
       '</div>';
   }
 
-  async function authedFetch(method, path) {
-    var session = getSession();
-    if (!session) throw new Error("You are no longer logged in.");
-    var res = await fetch(API_BASE + path, {
-      method: method,
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer " + session.token
-      }
-    });
-    var text = await res.text();
-    var data = null;
-    if (text) { try { data = JSON.parse(text); } catch (_e) { data = null; } }
-    if (!res.ok) {
-      throw new Error((data && data.error) || ("Request failed (" + res.status + ")"));
-    }
-    return data;
+  function authedFetch(method, path) {
+    if (!getSession()) return Promise.reject(new Error("You are no longer logged in."));
+    return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
   }
 
   function wireModalActions(q) {
@@ -672,16 +653,16 @@
 
     var descHtml = q.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(q.description)) : "<p>" + escapeHTML(q.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges = "";
     if (q.mission_type) {
       badges += '<span class="job-badge job-badge-category quest-type-' + typeSlug(q.mission_type) +
-        '" style="position:static;">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
+        ' is-static">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
     }
     badges +=
       '<span class="job-badge job-badge-status quest-sched-' + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "") + '" style="position:static;">' +
+      (isPast(q) ? " quest-sched-past" : "") + ' is-static">' +
       escapeHTML(scheduleBadgeText(q)) + '</span>';
 
     modalBody.innerHTML =

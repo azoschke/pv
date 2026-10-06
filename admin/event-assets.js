@@ -1,9 +1,9 @@
 // ============================================================================
-//  PVAdminEventAssets — shared event asset library for role-holders
+//  PVAdminEventAssets — shared event asset library
 //
-//  Every signed-in account with at least one role can view the assets, copy
-//  the individual text fields, and download the images. Officers and admins
-//  can add, edit, and delete entries, and upload images.
+//  Accounts with event_assets.view can view the assets, copy the individual
+//  text fields, and download the images. event_assets.edit adds, edits and
+//  deletes entries, and uploads images.
 //
 //  Type is a single required value; tags are optional. Both are filter-only
 //  (not copyable). Listing is a table with a small image thumbnail, matching
@@ -11,10 +11,10 @@
 //
 //  Worker routes:
 //    GET    /event-assets          any role-holder
-//    POST   /event-assets          officer | admin
-//    PATCH  /event-assets/:id       officer | admin
-//    DELETE /event-assets/:id       officer | admin
-//    POST   /event-assets/images    officer | admin   (multipart, returns {url})
+//    POST   /event-assets          event_assets.edit
+//    PATCH  /event-assets/:id       event_assets.edit
+//    DELETE /event-assets/:id       event_assets.edit
+//    POST   /event-assets/images    event_assets.edit   (multipart, returns {url})
 //
 //  An entry is: { id, event_topic, type, location, description, image_url,
 //                 tags: string[], created_at, updated_at }
@@ -26,11 +26,6 @@
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-  var UPLOAD_TARGET_WIDTH = 1400;
-  var UPLOAD_WEBP_QUALITY = 0.8;
-
   // Fixed vocabularies — keep in sync with the worker's EVENT_ASSET_TYPES /
   // EVENT_ASSET_TAGS so client and server validation agree.
   var TYPES = ['Roleplay', 'PVE', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
@@ -39,93 +34,8 @@
     'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove', 'Unlock'
   ];
 
-  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
-  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
-  // (Same approach as the Venues section so uploads stay consistent in size.)
-  async function resizeImageToWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
-    var hgt = Math.max(1, Math.round((w / srcW) * srcH));
-    var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = hgt;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, 0, 0, w, hgt);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Browsers without a WebP encoder (notably Safari) silently hand back a
-    // PNG here, which the worker would reject. Re-encode as JPEG instead
-    // (universally supported, and far smaller than the PNG fallback).
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
-  async function uploadEventAssetImage(file, eventTopic) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('event_topic', eventTopic || '');
-    var res = await fetch(PVAdminAPI.API_BASE + '/event-assets/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
-      throw new Error(msg);
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
-  }
-
   function canManage() {
-    return PVAdminAPI.hasAnyRole(['officer', 'admin']);
+    return PVAdminAPI.can('event_assets.edit');
   }
 
   // Copy helper with a clipboard-API path and a legacy textarea fallback.
@@ -247,10 +157,6 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var topicReady = !!draft.event_topic.trim();
 
@@ -264,28 +170,6 @@
         var next = has ? d.tags.filter(function (x) { return x !== t; }) : d.tags.concat([t]);
         return Object.assign({}, d, { tags: next });
       });
-    }
-
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (!topicReady) {
-        setUploadErr('Enter the event topic before uploading an image.');
-        return;
-      }
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadEventAssetImage(file, draft.event_topic.trim());
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
     }
 
     async function submit(e) {
@@ -302,10 +186,8 @@
       }
     }
 
-    var uploadDisabled = !topicReady || uploading || saving;
-
     return h('form', { onSubmit: submit, className: 'portal-form' },
-      err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.75rem' } }, err) : null,
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Event *'),
@@ -394,59 +276,15 @@
         })
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            style: { flex: 1 }
-          }),
-          h('label', {
-            className: 'portal-btn is-ghost is-small',
-            title: !topicReady
-              ? 'Enter the event topic above before uploading an image.'
-              : (uploading ? 'Uploading…' : 'Upload an image.'),
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: uploadDisabled ? 0.55 : 1,
-              cursor: uploadDisabled ? 'not-allowed' : 'pointer'
-            }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploadDisabled,
-              style: { display: 'none' },
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleImageUpload(f);
-              }
-            })
-          )
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste an image URL, or upload a file. The event topic must be set before uploading.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: topicReady ? null : 'Enter the event topic above before uploading an image.',
+        uploadPath: '/event-assets/images',
+        extraFields: { event_topic: draft.event_topic.trim() },
+        help: 'Paste an image URL, or upload a file. The event topic must be set before uploading.'
+      }),
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
@@ -676,11 +514,11 @@
     })();
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Event Assets'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Event Assets'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -721,7 +559,7 @@
         h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
           'Click any text to copy it, and use Download to save an image.'
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -732,7 +570,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading event assets…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length
                   ? 'No event assets match those filters.'
                   : (manage ? 'No event assets yet. Add the first one.' : 'No event assets yet.')

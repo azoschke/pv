@@ -1,22 +1,24 @@
 // ============================================================================
-//  PVAdminSettings — Admin-only user + role management
+//  PVAdminSettings — user + role management (users.view)
 //
 //  - Lists every admin_users row (username, display_name, created_at,
 //    last_login) along with their current role slugs.
 //  - Each row shows its roles as a read-only list; an "Edit roles" action
-//    opens a popup whose checkboxes commit the full intended role set for
-//    that user in one request.
-//  - Admins can delete user accounts (confirm prompt). Cannot delete self.
+//    (users.roles) opens a popup whose checkboxes commit the full intended
+//    role set for that user in one request.
+//  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
+//  - The root admin also gets a Permissions tab (admin/permissions.js).
 //
-//  Worker routes (all gated by admin role on the server):
-//    GET    /admin/users                      list users w/ roles
-//    PUT    /admin/users/:id/roles            { roles: ['medical', ...] } — replace set
-//    DELETE /admin/users/:id                  hard delete
-//    POST   /admin/users/:id/reset-password   mint a one-time reset link
+//  Worker routes:
+//    GET    /admin/users                      users.view — list users w/ roles
+//    PUT    /admin/users/:id/roles            users.roles — { roles: [...] } replace set
+//    DELETE /admin/users/:id                  users.delete — hard delete
+//    POST   /admin/users/:id/reset-password   users.reset — mint a one-time reset link
+//    GET    /admin/roles                      users.roles or users.view
 //
-//  Password resets: an admin mints a single-use, short-lived reset link the
-//  member opens at /pv/admin/reset.html to set a new password. Ordinary admins
-//  may reset only non-admin accounts; resetting an admin account is limited to
+//  Password resets: users.reset mints a single-use, short-lived reset link the
+//  member opens at reset.html to set a new password. Only non-admin
+//  accounts can be reset this way; resetting an admin account is limited to
 //  the root admin (Fiora). The plaintext token is shown once, here, and is
 //  never stored or retrievable again.
 // ============================================================================
@@ -26,7 +28,10 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  var ROLE_CATALOG = [
+  // Roles come from the worker (GET /admin/roles) so roles added in the
+  // Permissions tab can be assigned. This list is used until it loads, or if
+  // the worker doesn't have that route yet.
+  var FALLBACK_ROLES = [
     { slug: 'member',      label: 'Member' },
     { slug: 'medical',     label: 'Medical' },
     { slug: 'mercenary',   label: 'Mercenary' },
@@ -37,10 +42,12 @@
     { slug: 'officer',     label: 'Officer' },
     { slug: 'admin',       label: 'Admin' }
   ];
-  var LABEL_BY_SLUG = {};
-  ROLE_CATALOG.forEach(function (r) { LABEL_BY_SLUG[r.slug] = r.label; });
-  function roleLabels(roles) {
-    return (roles || []).map(function (r) { return LABEL_BY_SLUG[r] || r; });
+  function roleLabeler(roles) {
+    var bySlug = {};
+    roles.forEach(function (r) { bySlug[r.slug] = r.label; });
+    return function (slugs) {
+      return (slugs || []).map(function (s) { return bySlug[s] || s; });
+    };
   }
 
   // Root admin: frozen account. No admin can change its roles or delete it.
@@ -66,6 +73,10 @@
     var callerIsRoot = props.callerIsRoot;
     var deleting = props.deleting;
     var resetting = props.resetting;
+    var roleLabels = props.roleLabels;
+    var canRoles = props.canRoles;
+    var canDelete = props.canDelete;
+    var canReset = props.canReset;
 
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
@@ -73,31 +84,31 @@
     var targetIsAdmin = (u.roles || []).indexOf('admin') !== -1;
     // Mirror of the server rule: never reset the root admin; resetting an admin
     // account is limited to the root admin (Fiora).
-    var resetAllowed = !isRoot && (!targetIsAdmin || callerIsRoot);
+    var resetAllowed = canReset && !isRoot && (!targetIsAdmin || callerIsRoot);
 
     return h('tr', { className: needsRole ? 'is-needs-role' : null },
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
-          h('span', { style: { fontWeight: 600 } }, u.username),
+        h('div', { className: 'portal-name-row' },
+          h('span', { className: 'portal-strong' }, u.username),
           isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null,
           needsRole ? h('span', { className: 'portal-badge is-warn', title: 'No role assigned yet' }, 'Needs role') : null
         ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
       h('td', null, fmtDate(u.created_at)),
-      h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { style: { color: 'var(--text-secondary)' } }, 'never')),
+      h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { className: 'portal-muted' }, 'never')),
       h('td', null,
         (u.roles && u.roles.length)
           ? roleLabels(u.roles).join(', ')
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-col-actions' },
         h('div', {
           style: { display: 'inline-flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }
         },
           // Root admin is protected: its empty action set is the cue, so no
           // "Edit roles"/"Delete" controls and no explicit "(protected)" label.
-          !isRoot
+          !isRoot && canRoles
             ? h('button', {
                 type: 'button',
                 className: 'portal-btn is-small is-ghost',
@@ -117,6 +128,8 @@
             ? null
             : isSelf
               ? h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, '(you)')
+              : !canDelete
+              ? null
               : h('button', {
                   type: 'button',
                   className: 'portal-btn is-small is-danger',
@@ -215,8 +228,7 @@
           onClick: function () { copy(result.link, 'link'); }
         }, copied === 'link' ? 'Copied!' : 'Copy link only'),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
-          style: { marginLeft: 'auto' },
+          type: 'button', className: 'portal-btn is-ghost is-end',
           onClick: onClose
         }, 'Done')
       )
@@ -251,7 +263,7 @@
     }
 
     function save() {
-      var selected = ROLE_CATALOG
+      var selected = props.roles
         .filter(function (r) { return draft[r.slug]; })
         .map(function (r) { return r.slug; });
       setSaving(true); setMerr('');
@@ -269,7 +281,7 @@
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
-        ROLE_CATALOG.map(function (r) {
+        props.roles.map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
             h('input', {
               type: 'checkbox',
@@ -308,6 +320,10 @@
     var resetResult = resetResultState[0], setResetResult = resetResultState[1];
     var filterState = useState('');
     var filter = filterState[0], setFilter = filterState[1];
+    var rolesState = useState(FALLBACK_ROLES);
+    var roles = rolesState[0], setRoles = rolesState[1];
+    var tabState = useState('accounts');
+    var tab = tabState[0], setTab = tabState[1];
 
     var session = PVAdminAPI.getSession();
     var selfUsername = session && session.username;
@@ -326,6 +342,16 @@
     }
 
     useEffect(function () { reload(); }, []);
+
+    // Reload the role list whenever the Accounts tab is shown, so roles added
+    // or relabelled in the Permissions tab show up.
+    useEffect(function () {
+      if (tab !== 'accounts') return;
+      PVAdminAPI.request('GET', '/admin/roles', undefined, true).then(function (rows) {
+        if (Array.isArray(rows) && rows.length) setRoles(rows);
+      }, function () { /* keep the fallback list */ });
+    // eslint-disable-next-line
+    }, [tab]);
 
     // Commit the full intended role set for a user in one request. Resolves on
     // success (and closes the popup); rejects so the popup can show the error.
@@ -365,9 +391,9 @@
           'POST', '/admin/users/' + user.id + '/reset-password', {}, true
         );
         if (!res || !res.token) throw new Error('No reset token was returned.');
-        // Build the member-facing link from the current origin so it works on
-        // whatever domain the portal is served from.
-        var link = window.location.origin + '/pv/admin/reset.html?token=' +
+        // Build the member-facing link from this page's address so it works on
+        // whatever domain (and base path) the portal is served from.
+        var link = new URL('reset.html', window.location.href).href + '?token=' +
           encodeURIComponent(res.token);
         setResetResult({
           username: res.username || user.username,
@@ -404,13 +430,24 @@
       selfId = self ? self.id : null;
     }
 
+    var tabs = [{ id: 'accounts', label: 'Accounts' }]
+      .concat(callerIsRoot && window.PVAdminPermissions ? [{ id: 'permissions', label: 'Permissions' }] : []);
+    if (tab === 'permissions' && callerIsRoot && window.PVAdminPermissions) {
+      return h('div', null,
+        h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
+        h(window.PVAdminPermissions));
+    }
+
     return h('div', null,
+      h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Users & Roles'),
           h('div', { className: 'portal-card-actions' },
             h('input', {
               type: 'search',
+              name: 'account-search',
+              autoComplete: 'off',
               className: 'portal-search',
               placeholder: 'Filter by username or display name…',
               value: filter,
@@ -420,7 +457,7 @@
         ),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
-          ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading users…')
+          ? h('p', { className: 'portal-muted' }, 'Loading users…')
           : h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table' },
                 h('thead', null,
@@ -429,7 +466,7 @@
                     h('th', null, 'Created'),
                     h('th', null, 'Last Login'),
                     h('th', null, 'Roles'),
-                    h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                    h('th', { className: 'portal-col-actions' }, '')
                   )
                 ),
                 h('tbody', null,
@@ -444,13 +481,17 @@
                           onDelete: handleDelete,
                           onReset: handleReset,
                           deleting: deletingId === u.id,
-                          resetting: resettingId === u.id
+                          resetting: resettingId === u.id,
+                          roleLabels: roleLabeler(roles),
+                          canRoles: PVAdminAPI.can('users.roles'),
+                          canDelete: PVAdminAPI.can('users.delete'),
+                          canReset: PVAdminAPI.can('users.reset')
                         });
                       })
                     : h('tr', null,
                         h('td', {
                           colSpan: 5,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                          className: 'portal-empty-cell'
                         }, q ? 'No users match your filter.' : 'No users yet.')
                       )
                 )
@@ -459,6 +500,7 @@
       ),
       editingUser ? h(RoleEditModal, {
         user: editingUser,
+        roles: roles,
         onSave: handleSaveRoles,
         onClose: function () { setEditingUser(null); }
       }) : null,

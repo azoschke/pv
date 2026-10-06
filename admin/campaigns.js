@@ -5,14 +5,14 @@
 //    GET    /campaigns                                  public
 //    GET    /campaigns/:slug                            public (campaign + chapter index)
 //    GET    /campaigns/:slug/chapters/:chSlug           public (one chapter body)
-//    POST   /campaigns                                  officer | admin
-//    PATCH  /campaigns/:id                              officer | admin
-//    DELETE /campaigns/:id                              officer | admin
-//    PUT    /campaigns/reorder            { ids: [] }   officer | admin
-//    POST   /campaigns/:id/chapters                     officer | admin
-//    PATCH  /chapters/:id                               officer | admin
-//    DELETE /chapters/:id                               officer | admin
-//    PUT    /campaigns/:id/chapters/reorder { ids: [] } officer | admin
+//    POST   /campaigns                                  campaigns.story_edit
+//    PATCH  /campaigns/:id                              campaigns.story_edit
+//    DELETE /campaigns/:id                              campaigns.story_delete
+//    PUT    /campaigns/reorder            { ids: [] }   campaigns.story_edit
+//    POST   /campaigns/:id/chapters                     campaigns.story_edit
+//    PATCH  /chapters/:id                               campaigns.story_edit
+//    DELETE /chapters/:id                               campaigns.story_delete
+//    PUT    /campaigns/:id/chapters/reorder { ids: [] } campaigns.story_edit
 //
 //  Auth: forwards the PVAdminAPI session bearer to the campaigns Worker, which
 //  validates it against pv-med-database-worker /me (via a Service Binding).
@@ -56,39 +56,7 @@
 
   // ── Worker request helper ───────────────────────────────────────────────────
   async function campaignsRequest(method, path, body, authed) {
-    var headers = { 'Accept': 'application/json' };
-    if (body !== undefined && body !== null) headers['Content-Type'] = 'application/json';
-    if (authed) {
-      var s = PVAdminAPI.getSession();
-      if (!s) {
-        PVAdminAPI.redirectToLogin();
-        throw new Error('Session expired. Please sign in again.');
-      }
-      headers['Authorization'] = 'Bearer ' + s.token;
-    }
-
-    var res = await fetch(CAMPAIGNS_API_BASE + path, {
-      method: method,
-      headers: headers,
-      body: (body === undefined || body === null) ? undefined : JSON.stringify(body)
-    });
-
-    if (res.status === 401 && authed) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-
-    var text = await res.text();
-    var data = null;
-    if (text) { try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; } }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Request failed (' + res.status + ')');
-      var e = new Error(msg);
-      e.status = res.status;
-      throw e;
-    }
-    return data;
+    return PVSession.request(CAMPAIGNS_API_BASE, method, path, body, { auth: !!authed, loginOn401: !!authed });
   }
 
   // ── Campaign form ───────────────────────────────────────────────────────────
@@ -138,8 +106,8 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit campaign' : 'New campaign'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit campaign' : 'New campaign'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -147,13 +115,13 @@
         h('input', { type: 'text', maxLength: 120, value: name, required: true,
           onChange: function (e) { onNameChange(e.target.value); } })
       ),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'URL slug *'),
           h('input', { type: 'text', maxLength: 60, value: slug,
             onChange: function (e) { setTouched(true); setSlug(e.target.value); } }),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
-            'Used in the link: /campaigns/view.html?c=' + (deriveSlug(slug || name) || '…') +
+          h('p', { className: 'cmp-hint' },
+            'Used in the link: /view.html?c=' + (deriveSlug(slug || name) || '…') +
             (isEdit ? ' — changing it breaks old links.' : ''))
         ),
         h('div', { className: 'portal-field' },
@@ -169,7 +137,7 @@
           onChange: function (e) { setBlurb(e.target.value); } })
       ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create campaign')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -243,11 +211,11 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit chapter' : 'New chapter'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit chapter' : 'New chapter'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Title *'),
           h('input', { type: 'text', maxLength: 160, value: title, required: true,
@@ -264,16 +232,16 @@
         h('label', null, 'URL slug *'),
         h('input', { type: 'text', maxLength: 60, value: slug,
           onChange: function (e) { setTouched(true); setSlug(e.target.value); } }),
-        h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+        h('p', { className: 'cmp-hint' },
           'Permalink: ?c=' + (props.campaignSlug || '…') + '&ch=' + (deriveSlug(slug || title) || '…') +
           (isEdit ? ' — changing it breaks old links.' : ''))
       ),
       h('div', { className: 'portal-field' },
         h('label', null, 'Chapter text (Markdown) *'),
         loadingBody
-          ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading chapter text…')
+          ? h('p', { className: 'portal-muted' }, 'Loading chapter text…')
           : h('textarea', { rows: 16, value: body,
-              style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+              className: 'cmp-code',
               placeholder: 'Paste the chapter markdown here.',
               onChange: function (e) { setBody(e.target.value); } })
       ),
@@ -282,12 +250,12 @@
         loadingBody
           ? null
           : h('textarea', { rows: 6, value: tldr,
-              style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+              className: 'cmp-code',
               placeholder: 'Optional short summary. Leave blank for none.',
               onChange: function (e) { setTldr(e.target.value); } })
       ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving || loadingBody },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create chapter')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -296,7 +264,7 @@
   }
 
   // ── Reusable reorder/edit/delete row controls ────────────────────────────────
-  // Delete is gated to admins (props.canDelete); officers see reorder + edit only.
+  // Delete shows only with the delete permission (props.canDelete).
   function RowControls(props) {
     return h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
       h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
@@ -367,8 +335,8 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit codex entry' : 'New codex entry'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit codex entry' : 'New codex entry'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -377,7 +345,7 @@
           onChange: function (e) { setField('name', e.target.value); } })
       ),
 
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Type *'),
           h('select', { value: draft.type, onChange: function (e) { setField('type', e.target.value); } },
@@ -389,7 +357,7 @@
             h('option', { value: '' }, '— None —'),
             regions.filter(function (r) { return !isEdit || r.id !== initial.id; })
               .map(function (r) { return h('option', { key: r.id, value: String(r.id) }, r.name); })),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+          h('p', { className: 'cmp-hint' },
             'Optional. Tie this entry to a Region-type entry.')
         ) : null,
         h('div', { className: 'portal-field' },
@@ -403,7 +371,7 @@
           h('select', { value: draft.author_member_id, onChange: function (e) { onAuthorChange(e.target.value); } },
             h('option', { value: '' }, '— None —'),
             members.map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+          h('p', { className: 'cmp-hint' },
             'Optional attribution.')
         )
       ),
@@ -411,7 +379,7 @@
       h('div', { className: 'portal-field' },
         h('label', null, 'Description (Markdown)'),
         h('textarea', { rows: 8, value: draft.description_md,
-          style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+          className: 'cmp-code',
           placeholder: 'Describe this entry. Markdown allowed.',
           onChange: function (e) { setField('description_md', e.target.value); } })
       ),
@@ -431,7 +399,7 @@
               onChange: function (e) { setField('image_url', e.target.value); } })
           ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create entry')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -441,7 +409,7 @@
 
   // ── Codex manager (list grouped by type + form) ──────────────────────────────
   function CodexManager(props) {
-    var isAdmin = props.isAdmin;
+    var canDelete = props.canDelete;
     var campaigns = props.campaigns || [];
 
     var entriesState = useState([]);
@@ -471,11 +439,11 @@
       }
     }
     useEffect(function () { reload(); }, []);
-    // Members power the optional author dropdown; a failure here is non-fatal.
+    // Member names power the optional author dropdown; a failure here is non-fatal.
     useEffect(function () {
       (async function () {
         try {
-          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
+          var data = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
           var list = (Array.isArray(data) ? data : []).slice().sort(function (a, b) {
             return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
           });
@@ -529,7 +497,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
-        h('p', { style: { margin: 0, color: 'var(--text-secondary)' } },
+        h('p', { className: 'portal-note' },
           entries.length + (entries.length === 1 ? ' entry' : ' entries')),
         h('button', { type: 'button', className: 'portal-btn',
           onClick: function () { setForm({ entry: null }); } }, '+ New entry')
@@ -538,14 +506,14 @@
       !entries.length
         ? h('div', { className: 'portal-card' }, 'No codex entries yet. Create one to get started.')
         : groups.map(function (g) {
-            return h('div', { key: g.type, className: 'portal-card', style: { marginBottom: '0.75rem' } },
+            return h('div', { key: g.type, className: 'portal-card cmp-list-card' },
               h('p', { style: { margin: '0 0 0.5rem', fontSize: '0.78rem', letterSpacing: '0.08em',
                 textTransform: 'uppercase', color: 'var(--text-secondary)' } }, g.label + ' · ' + g.items.length),
               g.items.map(function (e, idx) {
                 return h('div', { key: e.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   gap: '0.75rem', padding: '0.45rem 0', borderTop: idx === 0 ? 'none' : '1px solid var(--border-color)' } },
                   h('div', { style: { minWidth: 0 } },
-                    h('div', { style: { fontWeight: 600 } }, e.name,
+                    h('div', { className: 'portal-strong' }, e.name,
                       (function () {
                         var meta = [e.region_name, e.campaign_name].filter(Boolean).join(' · ');
                         return meta ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + meta) : null;
@@ -557,7 +525,7 @@
                   h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
                     h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
                       onClick: function () { setForm({ entry: e }); } }, 'Edit'),
-                    isAdmin ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+                    canDelete ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
                       onClick: function () { deleteEntry(e); } }, 'Delete') : null
                   )
                 );
@@ -569,12 +537,16 @@
 
   // ── Main component ────────────────────────────────────────────────────────────
   function PVAdminCampaigns(props) {
-    // Only admins may delete campaigns/chapters; officers get add/edit/reorder.
-    var roles = (props.session && props.session.roles) || [];
-    var isAdmin = roles.indexOf('admin') !== -1;
+    // Each tab and its delete buttons follow the permission grid.
+    var canDeleteStory = PVAdminAPI.can('campaigns.story_delete');
+    var canDeleteCodex = PVAdminAPI.can('campaigns.codex_delete');
+    var tabs = [
+      PVAdminAPI.can('campaigns.story_edit') ? { id: 'story', label: 'Story' } : null,
+      PVAdminAPI.can('campaigns.codex_edit') ? { id: 'codex', label: 'Codex' } : null
+    ].filter(Boolean);
 
     // 'story' = campaign/chapter editor; 'codex' = the codex entry manager.
-    var tabState = useState('story');
+    var tabState = useState(tabs[0] ? tabs[0].id : 'story');
     var tab = tabState[0], setTab = tabState[1];
 
     var campaignsState = useState([]);
@@ -734,7 +706,7 @@
     // Story / Codex tab switch — both live under the Campaigns admin section.
     function tabBar() {
       return h(window.PVAdminSubnav, {
-        tabs: [{ id: 'story', label: 'Story' }, { id: 'codex', label: 'Codex' }],
+        tabs: tabs,
         active: tab,
         onChange: setTab
       });
@@ -742,7 +714,7 @@
 
     if (tab === 'codex') {
       return h('div', null, tabBar(),
-        h(CodexManager, { isAdmin: isAdmin, campaigns: campaigns }));
+        h(CodexManager, { canDelete: canDeleteCodex, campaigns: campaigns }));
     }
 
     if (loading) return h('div', null, tabBar(), h('div', { className: 'portal-card' }, 'Loading campaigns…'));
@@ -776,7 +748,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
-        h('p', { style: { margin: 0, color: 'var(--text-secondary)' } },
+        h('p', { className: 'portal-note' },
           campaigns.length + (campaigns.length === 1 ? ' campaign' : ' campaigns')),
         h('button', { type: 'button', className: 'portal-btn',
           onClick: function () { setCampaignForm({ campaign: null }); } }, '+ New campaign')
@@ -786,7 +758,7 @@
         ? h('div', { className: 'portal-card' }, 'No campaigns yet. Create one to get started.')
         : campaigns.map(function (c, idx) {
             var isSelected = selectedSlug === c.slug;
-            return h('div', { key: c.id, className: 'portal-card', style: { marginBottom: '0.75rem' } },
+            return h('div', { key: c.id, className: 'portal-card cmp-list-card' },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', flexWrap: 'wrap' } },
                 h('div', { style: { flex: '1 1 16rem' } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
@@ -796,10 +768,10 @@
                     h('strong', { style: { fontSize: '1.05rem' } }, c.name)
                   ),
                   h('p', { style: { margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-                    (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /campaigns/view.html?c=' + c.slug)
+                    (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /view.html?c=' + c.slug)
                 ),
                 h(RowControls, {
-                  canDelete: isAdmin,
+                  canDelete: canDeleteStory,
                   isFirst: idx === 0, isLast: idx === campaigns.length - 1,
                   onUp: function () { reorderCampaigns(idx, idx - 1); },
                   onDown: function () { reorderCampaigns(idx, idx + 1); },
@@ -820,19 +792,19 @@
                     onClick: function () { setFullChapter(null); setChapterForm({ campaign: c, chapter: null }); } }, '+ New chapter')
                 ),
                 chaptersLoading
-                  ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading chapters…')
+                  ? h('p', { className: 'portal-muted' }, 'Loading chapters…')
                   : (!chapters.length
-                      ? h('p', { style: { color: 'var(--text-secondary)' } }, 'No chapters yet.')
+                      ? h('p', { className: 'portal-muted' }, 'No chapters yet.')
                       : chapters.map(function (ch, cidx) {
                           return h('div', { key: ch.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             gap: '0.75rem', padding: '0.45rem 0', borderBottom: '1px solid var(--border-color)' } },
                             h('div', null,
-                              h('div', { style: { fontWeight: 600 } }, ch.title,
+                              h('div', { className: 'portal-strong' }, ch.title,
                                 ch.has_tldr ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.7rem', color: 'var(--text-secondary)' } }, '· TL;DR') : null),
                               h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } }, ch.chapter_date || '—')
                             ),
                             h(RowControls, {
-                              canDelete: isAdmin,
+                              canDelete: canDeleteStory,
                               isFirst: cidx === 0, isLast: cidx === chapters.length - 1,
                               onUp: function () { reorderChapters(c, cidx, cidx - 1); },
                               onDown: function () { reorderChapters(c, cidx, cidx + 1); },

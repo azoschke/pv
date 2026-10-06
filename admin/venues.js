@@ -1,11 +1,14 @@
 // ============================================================================
-//  PVAdminVenues — Venue directory management for officers/admins
+//  PVAdminVenues — Venue directory management
+//
+//  Tabs: Directory (venues.edit) and Menus (venues.menus); each shows only
+//  with its permission.
 //
 //  Worker routes:
 //    GET    /venues          public
-//    POST   /venues          officer | admin
-//    PATCH  /venues/:id      officer | admin
-//    DELETE /venues/:id      officer | admin
+//    POST   /venues          venues.edit
+//    PATCH  /venues/:id      venues.edit
+//    DELETE /venues/:id      venues.edit
 //
 // ============================================================================
 
@@ -14,95 +17,6 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
-
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-  var UPLOAD_TARGET_WIDTH = 1400;
-  var UPLOAD_WEBP_QUALITY = 0.8;
-
-  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
-  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
-  async function resizeImageToWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
-    var h = Math.max(1, Math.round((w / srcW) * srcH));
-    var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Browsers without a WebP encoder (notably Safari) silently hand back a
-    // PNG here, which the worker would reject. Re-encode as JPEG instead
-    // (universally supported, and far smaller than the PNG fallback).
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
-  async function uploadVenueImage(file, venueName) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('venue_name', venueName);
-    var res = await fetch(PVAdminAPI.API_BASE + '/venues/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
-      throw new Error(msg);
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
-  }
 
   var SIZES = [
     { value: 'room',      label: 'Room' },
@@ -237,6 +151,45 @@
   }
 
   // ── Form ────────────────────────────────────────────────────────────────
+  // One gallery image: URL box, Upload and a small thumbnail on one row.
+  function GallerySlot(props) {
+    var up = PVAdminImageUpload.useImageUpload({
+      path: '/venues/images',
+      fields: { venue_name: props.venueName },
+      onUploaded: props.onChange
+    });
+    var val = props.value;
+    return h('div', { style: { marginTop: props.first ? '0.25rem' : '0.4rem' } },
+      h('div', { className: 'portal-image-row' },
+        h('input', {
+          type: 'text',
+          value: val,
+          onChange: function (e) { props.onChange(e.target.value); },
+          placeholder: 'https://…',
+          className: 'portal-grow'
+        }),
+        h(PVAdminImageUpload.UploadButton, {
+          busy: up.uploading,
+          disabled: props.disabled || !!props.blockedReason,
+          title: props.blockedReason || undefined,
+          onFile: up.upload
+        }),
+        val ? h('img', {
+          src: val, alt: '',
+          style: {
+            width: '64px', height: '40px', objectFit: 'cover',
+            border: '1px solid var(--border-color)', borderRadius: '0.25rem'
+          },
+          onError: function (e) { e.target.style.display = 'none'; }
+        }) : null
+      ),
+      up.error ? h('p', {
+        className: 'portal-field-help',
+        style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
+      }, up.error) : null
+    );
+  }
+
   function VenueForm(props) {
     var initial = props.initial;
     var onSubmit = props.onSubmit;
@@ -251,75 +204,11 @@
     var err = errState[0], setErr = errState[1];
     var newTagState = useState('');
     var newTag = newTagState[0], setNewTag = newTagState[1];
-    var uploadingState = useState({});
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState({});
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var allowsRoom = draft.size === 'room' || draft.size === 'apartment';
     var isApartment = draft.size === 'apartment';
     var nameReady = !!draft.name.trim();
-
-    function setSlotFlag(setter, slot, value) {
-      setter(function (s) {
-        var next = Object.assign({}, s);
-        if (value === undefined) delete next[slot]; else next[slot] = value;
-        return next;
-      });
-    }
-
-    async function handleImageUpload(slot, file) {
-      if (!file) return;
-      if (!nameReady) {
-        setSlotFlag(setUploadErr, slot, 'Enter the venue name before uploading.');
-        return;
-      }
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setSlotFlag(setUploadErr, slot, 'File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setSlotFlag(setUploadErr, slot, undefined);
-      setSlotFlag(setUploading, slot, true);
-      try {
-        var url = await uploadVenueImage(file, draft.name.trim());
-        if (slot === 'primary') setField('image_url', url);
-        else setGalleryImage(Number(slot.slice(1)), url);
-      } catch (e) {
-        setSlotFlag(setUploadErr, slot, e.message || 'Upload failed.');
-      } finally {
-        setSlotFlag(setUploading, slot, undefined);
-      }
-    }
-
-    function uploadButton(slot) {
-      var isUp = !!uploading[slot];
-      var disabled = !nameReady || isUp || saving;
-      var title = !nameReady
-        ? 'Enter the venue name above before uploading an image.'
-        : (isUp ? 'Uploading…' : 'Upload an image.');
-      return h('label', {
-        className: 'portal-btn is-ghost is-small',
-        title: title,
-        style: {
-          whiteSpace: 'nowrap',
-          opacity: disabled ? 0.55 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer'
-        }
-      },
-        isUp ? 'Uploading…' : 'Upload',
-        h('input', {
-          type: 'file',
-          accept: UPLOAD_ACCEPT,
-          disabled: disabled,
-          style: { display: 'none' },
-          onChange: function (e) {
-            var f = e.target.files && e.target.files[0];
-            e.target.value = '';
-            handleImageUpload(slot, f);
-          }
-        })
-      );
-    }
+    var uploadBlocked = nameReady ? null : 'Enter the venue name above before uploading an image.';
 
     function setField(k, v) {
       setDraft(function (d) {
@@ -463,36 +352,16 @@
         )
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image URL'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            style: { flex: 1 }
-          }),
-          uploadButton('primary')
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
-        ),
-        uploadErr.primary ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
-        }, uploadErr.primary) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        label: 'Image URL',
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: uploadBlocked,
+        uploadPath: '/venues/images',
+        extraFields: { venue_name: draft.name.trim() },
+        help: 'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Gallery images'),
@@ -500,37 +369,15 @@
           'Add up to three additional images in the gallery.'
         ),
         [0, 1, 2].map(function (idx) {
-          var val = (draft.gallery_images && draft.gallery_images[idx]) || '';
-          var slot = 'g' + idx;
-          return h('div', {
+          return h(GallerySlot, {
             key: idx,
-            style: { marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
-          },
-            h('div', {
-              style: { display: 'flex', gap: '0.5rem', alignItems: 'center' }
-            },
-              h('input', {
-                type: 'text',
-                value: val,
-                onChange: function (e) { setGalleryImage(idx, e.target.value); },
-                placeholder: 'https://…',
-                style: { flex: 1 }
-              }),
-              uploadButton(slot),
-              val ? h('img', {
-                src: val, alt: '',
-                style: {
-                  width: '64px', height: '40px', objectFit: 'cover',
-                  border: '1px solid var(--border-color)', borderRadius: '0.25rem'
-                },
-                onError: function (e) { e.target.style.display = 'none'; }
-              }) : null
-            ),
-            uploadErr[slot] ? h('p', {
-              className: 'portal-field-help',
-              style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
-            }, uploadErr[slot]) : null
-          );
+            first: idx === 0,
+            value: (draft.gallery_images && draft.gallery_images[idx]) || '',
+            onChange: function (v) { setGalleryImage(idx, v); },
+            disabled: saving,
+            blockedReason: uploadBlocked,
+            venueName: draft.name.trim()
+          });
         })
       ),
 
@@ -576,7 +423,7 @@
             },
             maxLength: 32,
             placeholder: 'Press Enter to add',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           h('button', {
             type: 'button',
@@ -615,7 +462,7 @@
       ),
 
       h('div', { className: 'portal-field' },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: draft.featured,
@@ -626,7 +473,7 @@
       ),
 
       menuEligible(draft.tags) ? h('div', { className: 'portal-field' },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: !!draft.has_menu,
@@ -710,9 +557,9 @@
         )
       ),
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+        h('div', { className: 'portal-name-row' },
           v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
-          h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, v.name)
+          h('span', { className: 'portal-row-title' }, v.name)
         )
       ),
       h('td', null, labelFor(SIZES, v.size)),
@@ -720,9 +567,9 @@
       h('td', null,
         (Array.isArray(v.tags) ? v.tags : [])
           .map(function (t) { return labelFor(TAGS, t); })
-          .join(', ') || h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          .join(', ') || h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(v); }
@@ -814,11 +661,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Venue Directory'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Directory'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -835,7 +682,7 @@
             h('span', null, 'New venue')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -846,7 +693,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading venues…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No venues match that search.' : 'No venues yet. Add the first one.'
               )
             )
@@ -896,17 +743,18 @@
   //  views of the same section, so they share the portal's sub-nav strip
   //  rather than becoming a second entry in the portal sidebar.
   function Venues(props) {
-    var tabState = useState('directory');
+    var tabs = [
+      PVAdminAPI.can('venues.edit') ? { id: 'directory', label: 'Directory' } : null,
+      PVAdminAPI.can('venues.menus') ? { id: 'menus', label: 'Menus' } : null
+    ].filter(Boolean);
+    var tabState = useState(tabs[0] ? tabs[0].id : null);
     var tab = tabState[0], setTab = tabState[1];
 
     var MenusTab = window.PVAdminVenueMenus;
 
     return h('div', null,
       h(window.PVAdminSubnav, {
-        tabs: [
-          { id: 'directory', label: 'Directory' },
-          { id: 'menus',     label: 'Menus' }
-        ],
+        tabs: tabs,
         active: tab,
         onChange: setTab
       }),

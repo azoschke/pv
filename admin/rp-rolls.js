@@ -16,6 +16,11 @@
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
+  // Shared lists + plain-language helpers (js/rp-shared.js).
+  var RPS = window.PVRpShared;
+  var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
+    CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -163,7 +168,7 @@
       return c.assigned_member_id == null || Number(c.assigned_member_id) === Number(ch.member_id);
     });
 
-    return h('div', { className: 'portal-card rp-roster-card', style: { marginBottom: '0.6rem' } },
+    return h('div', { className: 'portal-card rp-roster-card' },
       // Portrait pulled from the member's roster profile when they have one;
       // otherwise the venue-style fallback tile (gradient + name in script).
       // Full-bleed image + torn contrast border, matching the item cards.
@@ -215,7 +220,7 @@
             })),
         props.canEquip ? (showAdd
           ? h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-              h('select', { value: pick, style: { flex: '1 1 12rem' }, onChange: function (e) { setPick(e.target.value); } },
+              h('select', { value: pick, className: 'rp-grow-select', onChange: function (e) { setPick(e.target.value); } },
                 h('option', { value: '' }, available.length ? '— choose an item —' : 'No more items to add'),
                 available.map(function (c) { return h('option', { key: c.id, value: c.id }, c.name); })),
               h('button', { type: 'button', className: 'portal-btn is-small', disabled: !pick, onClick: addItem }, 'Add'),
@@ -251,7 +256,7 @@
       h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
         h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
         'Offer an “Activate all” master control on this ability'),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
@@ -282,7 +287,8 @@
       { value: 'attack_mult', label: 'Multiply attack damage' },
       { value: 'heal_output', label: 'Boost healing done' },
       { value: 'damage_reduction', label: 'Reduce damage taken' },
-      { value: 'skill', label: 'Add to a skill check' }
+      { value: 'skill', label: 'Add to a skill check' },
+      { value: 'stun_immune', label: 'Immune to stun' }
     ] },
     { label: 'Debuffs a target', options: [
       { value: 'vulnerability', label: 'Make a target take more damage' },
@@ -313,35 +319,21 @@
     { value: 'defense_roll', label: 'Defense roll' },
     { value: 'heal_roll', label: 'Healing roll' }
   ];
-  // Character skill checks — kept in sync with the roll calculator's list.
-  var SKILLS = [
-    { value: 'perception', label: 'Perception' },
-    { value: 'investigation', label: 'Investigation' },
-    { value: 'stealth', label: 'Stealth' },
-    { value: 'sleight_of_hand', label: 'Sleight of Hand' },
-    { value: 'disarm_traps', label: 'Disarm Traps' },
-    { value: 'athletics', label: 'Athletics' },
-    { value: 'animal_handling', label: 'Animal Handling' },
-    { value: 'deception', label: 'Deception' },
-    { value: 'persuasion', label: 'Persuasion' },
-    { value: 'diplomacy', label: 'Diplomacy' }
-  ];
-  function skillLabel(v) { for (var i = 0; i < SKILLS.length; i++) if (SKILLS[i].value === v) return SKILLS[i].label; return v; }
   var TARGET_OPTIONS = [
     { value: 'self', label: 'Self' },
     { value: 'group', label: 'Everyone' },
     { value: 'class', label: 'A class' },
     { value: 'party_member', label: 'A chosen ally' },
     { value: 'party_members', label: 'Several chosen allies' },
-    { value: 'holder_items', label: 'Holder of item(s)' }
+    { value: 'holder_items', label: 'Holder of item(s)' },
+    // Players picked here, when the item is set up. Stun immunity only.
+    { value: 'players', label: 'Specific players', only: 'stun_immune' }
   ];
   // ── Conditional activation (Advanced) ───────────────────────────────────────
   // An optional gate on any effect: the holder's HP, or the campaign's scene
-  // (location / time of day). Untouched = the effect always applies. These fixed
-  // lists are shared with the roll calculator's DM Control Deck AND the worker's
-  // validation — keep all three in lockstep if they ever change.
-  var RP_LOCATIONS = ['Arctic', 'Cave', 'Coastal', 'Desert', 'Forest', 'Jungle', 'Grassland', 'Mountain', 'Swamp', 'Town'];
-  var RP_TIMES = ['Morning', 'Afternoon', 'Evening', 'Night'];
+  // (location / time of day). Untouched = the effect always applies. The
+  // location/time lists live in js/rp-shared.js and must stay in step with the
+  // worker's validation (lib/constants.js).
   // HP comparison operators. '=' is only valid with a flat HP value — a percent
   // rarely lands on an exact integer — enforced on submit and in the worker.
   var HP_OPS = [
@@ -351,32 +343,8 @@
     { value: '>=', label: 'at or above' },
     { value: '>', label: 'above' }
   ];
-  function parseConditions(c) {
-    if (!c) return null;
-    if (typeof c === 'object') return c;
-    try { return JSON.parse(c) || null; } catch (_) { return null; }
-  }
   // A short plain-language note for the catalogue summary, e.g.
   // "Only while the holder is below 50% HP" / "Only in Forest, Jungle at Night".
-  function conditionPhrase(c) {
-    c = parseConditions(c);
-    if (!c) return '';
-    if (c.kind === 'hp') {
-      var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
-      function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
-      var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
-      var s = 'Only while ' + whose + ' is ' + pt(c.start);
-      if (c.stop) s += ' (until ' + pt(c.stop) + ')';
-      return s;
-    }
-    if (c.kind === 'scene') {
-      var parts = [];
-      if (Array.isArray(c.locations) && c.locations.length) parts.push('in ' + c.locations.join(', '));
-      if (Array.isArray(c.times) && c.times.length) parts.push('at ' + c.times.join(', '));
-      return parts.length ? 'Only ' + parts.join(' ') : '';
-    }
-    return '';
-  }
   // "How it works" options are phrased per effect so timing reads naturally and
   // never contradicts itself (an "always on" choice never carries a turn limit;
   // over-time is a named option, not a hidden toggle). Each maps to mode +
@@ -438,7 +406,7 @@
     var sTurnsState = useState(initSummon.turns ? String(initSummon.turns) : ''); var sTurns = sTurnsState[0], setSTurns = sTurnsState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
-    var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
+    var timingState = useState(initTiming(initEffect, m)); var timingRaw = timingState[0], setTiming = timingState[1];
     var initTk = (m.target_kind && m.target_kind !== 'boss' && m.target_kind !== 'all_bosses')
       ? (m.target_kind === 'holder_item' ? 'holder_items' : m.target_kind) : 'self';
     var tkState = useState(initTk); var tk = tkState[0], setTk = tkState[1];
@@ -448,6 +416,9 @@
     var initRefs = m.target_kind === 'holder_items' ? parseRefs(m.target_ref) : (m.target_kind === 'holder_item' && m.target_ref ? [String(m.target_ref)] : []);
     var refsState = useState(initRefs); var refs = refsState[0], setRefs = refsState[1];
     function toggleRef(id) { setRefs(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
+    // "Specific players" targets store an array of member ids in target_ref (JSON).
+    var playersState = useState(m.target_kind === 'players' ? parseRefs(m.target_ref) : []); var players = playersState[0], setPlayers = playersState[1];
+    function togglePlayer(id) { setPlayers(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
     // Strike can hit one chosen enemy, several chosen enemies, or all of them.
     var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : m.target_kind === 'some_bosses' ? 'some_bosses' : m.target_kind === 'minions' ? 'minions' : 'boss'); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
     // "Several enemies" can cap how many are picked (blank = no cap); stored in target_ref.
@@ -527,6 +498,7 @@
       // Heal over time stores a hidden start_next_turn flag; don't carry it into
       // another effect's "Wait a turn before it starts" box.
       if (next !== effect) setStartNext(false);
+      if (next !== 'stun_immune' && tk === 'players') setTk('self');
       var opts = timingOptions(next).map(function (o) { return o.value; });
       if (wasEmpty || opts.indexOf(timing) === -1) setTiming(opts[0]);
     }
@@ -537,9 +509,13 @@
     var isVuln = effect === 'vulnerability'; // debuff; its own self-contained block
     var isStun = effect === 'stun';           // debuff; its own self-contained block
     var isNone = effect === 'none';
+    var isImmune = effect === 'stun_immune';
+    // Stun immunity on an ally chosen when it's used only works as Temporary.
+    var lockTemp = isImmune && (tk === 'party_member' || tk === 'party_members');
+    var timing = lockTemp ? 'temp' : timingRaw;
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
+    var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun && !isImmune;
     var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln && !isStun;
     var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
     var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
@@ -619,7 +595,7 @@
         try { await props.onSubmit(sp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
         return;
       }
-      var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
+      var payload = { label: label.trim() || null, value: (isSummon || isImmune) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
         summon: resolvedSummon(), conditions: conditions,
@@ -629,6 +605,7 @@
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
+      else if (tk === 'players') { if (!players.length) { setErr('Pick at least one player.'); return; } payload.target_ref = JSON.stringify(players.map(Number)); }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -639,7 +616,7 @@
         'Wait a turn before it starts');
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+    return h('form', { onSubmit: submit, className: 'portal-card rp-subform' },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       // ── What it does ──────────────────────────────────────────────────────
@@ -655,7 +632,7 @@
                 g.options.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }));
             })))
       ]),
-      (hasEffect && EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, EFFECT_HELP[effect]) : null,
+      (hasEffect && EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help rp-help-tight' }, EFFECT_HELP[effect]) : null,
 
       // ── Vulnerability (self-contained: how much, who, how long) ───────────
       isVuln ? secHead('How much extra') : null,
@@ -698,7 +675,7 @@
                 CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
           : null
       ]) : null,
-      isVuln ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
+      isVuln ? h('div', { className: 'portal-field rp-w14 rp-mt5' }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } })) : null,
       isVuln ? startNextField() : null,
 
@@ -733,17 +710,17 @@
           : null
       ]) : null,
       isStun ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Bosses marked stun-immune are skipped. Minions are enemy adds.') : null,
-      isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
+      isStun ? h('div', { className: 'portal-field rp-w14 rp-mt5' }, h('label', null, 'Skips how many turns?'),
         h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
 
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
       ]) : null,
-      effect === 'roll' ? h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'Which rolls (tick all for every roll)'),
+      effect === 'roll' ? h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'Which rolls (tick all for every roll)'),
         h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap', paddingTop: '0.2rem' } },
           ROLL_KINDS.map(function (o) {
-            return h('label', { key: o.value, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+            return h('label', { key: o.value, className: 'rp-inline-check' },
               h('input', { type: 'checkbox', checked: rolls.indexOf(o.value) !== -1, onChange: function () { toggleRoll(o.value); } }),
               o.label);
           }))) : null,
@@ -779,7 +756,7 @@
         sScope === 'some_bosses' ? h('div', { className: 'portal-field', key: 'scap' }, h('label', null, 'Up to how many? (blank = no limit)'),
           h('input', { type: 'number', min: 1, value: sCap, placeholder: 'no limit', onChange: function (e) { setSCap(e.target.value); } })) : null
       ]) : null,
-      isSummon ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'Lasts how many turns?'),
+      isSummon ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'Lasts how many turns?'),
         h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } })) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
@@ -797,36 +774,45 @@
       showTarget ? fieldGrid([
         h('div', { className: 'portal-field', key: 'tk' }, h('label', null, 'Target'),
           h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
-            TARGET_OPTIONS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
+            TARGET_OPTIONS.filter(function (t) { return !t.only || t.only === effect; }).map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
         tk === 'class' ? h('div', { className: 'portal-field', key: 'cls' }, h('label', null, 'Which class'),
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null
       ]) : null,
-      (showTarget && tk === 'party_members') ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, 'The player picks the allies when it’s used.') : null,
-      (showTarget && tk === 'holder_items') ? h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'Whose holders (tick each item)'),
+      (showTarget && tk === 'party_members') ? h('p', { className: 'portal-field-help rp-help-tight' }, 'The player picks the allies when it’s used.') : null,
+      (showTarget && tk === 'holder_items') ? h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'Whose holders (tick each item)'),
         (props.catalogue || []).length
           ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem 1rem', paddingTop: '0.2rem' } },
               (props.catalogue || []).map(function (c) {
-                return h('label', { key: c.id, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                return h('label', { key: c.id, className: 'rp-inline-check' },
                   h('input', { type: 'checkbox', checked: refs.indexOf(c.id) !== -1, onChange: function () { toggleRef(c.id); } }),
                   c.name);
               }))
-          : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No other items yet.')) : null,
+          : h('p', { className: 'portal-field-help rp-help-flush' }, 'No other items yet.')) : null,
+      (showTarget && tk === 'players') ? h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'Which players (tick each)'),
+        props.members == null ? h('p', { className: 'portal-field-help rp-help-flush' }, 'Loading roster…')
+          : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem 1rem', paddingTop: '0.2rem' } },
+              props.members.map(function (mb) {
+                var id = String(mb.id);
+                return h('label', { key: id, className: 'rp-inline-check' },
+                  h('input', { type: 'checkbox', checked: players.indexOf(id) !== -1, onChange: function () { togglePlayer(id); } }),
+                  mb.name);
+              }))) : null,
 
       // ── How it works ──────────────────────────────────────────────────────
       (showTiming || isSummon) ? secHead('How it works') : null,
       showTiming ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
-            timingOptions(effect).map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+            timingOptions(effect).filter(function (o) { return !lockTemp || o.value === 'temp'; }).map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
       ]) : null,
-      showUses ? h('div', { style: { marginTop: '0.5rem' } },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
+      showUses ? h('div', { className: 'rp-mt5' },
+        h('label', { className: 'rp-inline-check is-wide' },
           h('input', { type: 'checkbox', checked: limitUses, onChange: function (e) { setLimitUses(e.target.checked); } }),
           'Limit how many times per session'),
-        limitUses ? h('div', { className: 'portal-field', style: { maxWidth: '9rem', marginTop: '0.3rem' } }, h('label', null, 'Times per session'),
+        limitUses ? h('div', { className: 'portal-field rp-w9 rp-mt3' }, h('label', null, 'Times per session'),
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
-      showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
+      showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
 
@@ -841,7 +827,7 @@
           h('option', { value: 'hp' }, 'The holder’s HP is in range'),
           h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
 
-      (hasEffect && advOpen && condKind === 'hp') ? h('div', { style: { marginTop: '0.4rem' } },
+      (hasEffect && advOpen && condKind === 'hp') ? h('div', { className: 'rp-mt4' },
         fieldGrid([
           h('div', { className: 'portal-field', key: 'csub' }, h('label', null, 'Whose HP'),
             h('select', { value: condSubject, onChange: function (e) { setCondSubject(e.target.value); } },
@@ -856,9 +842,9 @@
           h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'Turns on when HP is'),
             h('select', { value: startOp, onChange: function (e) { setStartOp(e.target.value); } },
               HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Amount'),
+          h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Amount'),
             h('input', { type: 'number', min: 0, value: startVal, onChange: function (e) { setStartVal(e.target.value); } })),
-          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Unit'),
+          h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Unit'),
             h('select', { value: startUnit, onChange: function (e) { setStartUnit(e.target.value); } },
               h('option', { value: 'pct' }, '%'),
               h('option', { value: 'flat' }, 'HP')))),
@@ -869,25 +855,25 @@
           h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'Turns off when HP is'),
             h('select', { value: stopOp, onChange: function (e) { setStopOp(e.target.value); } },
               HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
-          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Amount'),
+          h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Amount'),
             h('input', { type: 'number', min: 0, value: stopVal, onChange: function (e) { setStopVal(e.target.value); } })),
-          h('div', { className: 'portal-field', style: { maxWidth: '6rem' } }, h('label', null, 'Unit'),
+          h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Unit'),
             h('select', { value: stopUnit, onChange: function (e) { setStopUnit(e.target.value); } },
               h('option', { value: 'pct' }, '%'),
               h('option', { value: 'flat' }, 'HP')))) : null
       ) : null,
 
-      (hasEffect && advOpen && condKind === 'scene') ? h('div', { style: { marginTop: '0.4rem' } },
+      (hasEffect && advOpen && condKind === 'scene') ? h('div', { className: 'rp-mt4' },
         h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
             RP_LOCATIONS.map(function (loc) {
-              return h('label', { key: loc, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+              return h('label', { key: loc, className: 'rp-inline-check' },
                 h('input', { type: 'checkbox', checked: condLocs.indexOf(loc) !== -1, onChange: function () { toggleLoc(loc); } }), loc);
             }))),
-        h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'And these times of day (any)'),
+        h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'And these times of day (any)'),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
             RP_TIMES.map(function (tod) {
-              return h('label', { key: tod, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+              return h('label', { key: tod, className: 'rp-inline-check' },
                 h('input', { type: 'checkbox', checked: condTimes.indexOf(tod) !== -1, onChange: function () { toggleTime(tod); } }), tod);
             }))),
       ) : null,
@@ -900,34 +886,7 @@
   // Plain-language summary of a modifier (matches the player-facing wording in
   // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
   // holder, this turn. · 2 uses/session".
-  var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
-  // "+2 to all rolls" / "+1 to attack & defense rolls" for a roll_bonus modifier.
-  function rollsPhrase(rolls, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    var set = Array.isArray(rolls) ? rolls : [];
-    if (set.length >= 3) return v + ' to all rolls';
-    if (!set.length) return v + ' roll bonus';
-    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
-    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
-  }
-  function typePhrase(type, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    switch (type) {
-      case 'attack_roll': return v + ' attack roll bonus';
-      case 'defense_roll': return v + ' defense roll bonus';
-      case 'heal_roll': return v + ' healing roll bonus';
-      case 'attack_output': return v + ' bonus attack damage';
-      case 'heal_output': return v + ' bonus healing';
-      case 'attack_mult': return '×' + value + ' attack damage';
-      case 'damage_reduction': return '−' + value + ' damage taken';
-      case 'shield': return 'grants ' + value + ' shield';
-      case 'heal': return 'restores ' + value + ' HP';
-      case 'damage': return 'deals ' + value + ' damage';
-      case 'dot': return value + ' damage per turn';
-    }
-    return v + ' ' + String(type || '').replace(/_/g, ' ');
-  }
-  function modifierSummary(m, catalogue) {
+  function modifierSummary(m, catalogue, members) {
     var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
     if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
     if (m.type === 'summon') {
@@ -945,6 +904,7 @@
       case 'holder_items': { var ids = []; try { ids = JSON.parse(m.target_ref) || []; } catch (_) { ids = m.target_ref ? [m.target_ref] : []; } var names = ids.map(function (id) { var c = (catalogue || []).filter(function (x) { return x.id === id; })[0]; return c ? c.name : null; }).filter(Boolean); t = names.length ? 'holders of ' + names.join(', ') : 'item holders'; break; }
       case 'party_member': t = 'a chosen ally'; break;
       case 'party_members': t = 'several chosen allies'; break;
+      case 'players': { var pids = []; try { pids = JSON.parse(m.target_ref) || []; } catch (_) { pids = []; } var pnames = pids.map(function (id) { var mb = (members || []).filter(function (x) { return String(x.id) === String(id); })[0]; return mb ? mb.name : null; }).filter(Boolean); t = pnames.length ? pnames.join(', ') : 'specific players'; break; }
       case 'boss': t = 'a chosen enemy'; break;
       case 'some_bosses': t = 'several chosen enemies' + (m.target_ref ? ' (up to ' + m.target_ref + ')' : ''); break;
       case 'all_bosses': t = 'all enemies'; break;
@@ -1003,15 +963,6 @@
     none: ''
   };
 
-  function bossTargetPhrase(tk, ref) {
-    switch (tk) {
-      case 'party_member': return 'a chosen player';
-      case 'party_members': return 'chosen players';
-      case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
-      case 'group': return 'the whole party';
-    }
-    return 'a target';
-  }
   // Plain-language boss-effect wording, mirroring the item modifier summary.
   function bossEffectSummary(e) {
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
@@ -1102,7 +1053,7 @@
       };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginTop: '0.4rem', background: 'var(--bg-darker)' } },
+    return h('form', { onSubmit: submit, className: 'portal-card rp-subform' },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       secHead('What it does'),
@@ -1117,7 +1068,7 @@
         showValue ? h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null
       ]),
-      (effect && BOSS_EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, BOSS_EFFECT_HELP[effect]) : null,
+      (effect && BOSS_EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help rp-help-tight' }, BOSS_EFFECT_HELP[effect]) : null,
 
       hitsPlayers ? secHead('Who it affects') : null,
       hitsPlayers ? fieldGrid([
@@ -1138,16 +1089,16 @@
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
             timingOpts().map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
       ]) : null,
-      isStun ? h('div', { className: 'portal-field', style: { maxWidth: '14rem', marginTop: '0.5rem' } }, h('label', null, 'Skips how many turns?'),
+      isStun ? h('div', { className: 'portal-field rp-w14 rp-mt5' }, h('label', null, 'Skips how many turns?'),
         h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
-      showTurns ? h('div', { className: 'portal-field', style: { maxWidth: '12rem', marginTop: '0.5rem' } }, h('label', null, 'How many turns?'),
+      showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      effect ? h('div', { style: { marginTop: '0.5rem' } },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
+      effect ? h('div', { className: 'rp-mt5' },
+        h('label', { className: 'rp-inline-check is-wide' },
           h('input', { type: 'checkbox', checked: limitUses, onChange: function (e) { setLimitUses(e.target.checked); } }),
           'Limit how many times per session'),
-        limitUses ? h('div', { className: 'portal-field', style: { maxWidth: '9rem', marginTop: '0.3rem' } }, h('label', null, 'Times per session'),
+        limitUses ? h('div', { className: 'portal-field rp-w9 rp-mt3' }, h('label', null, 'Times per session'),
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem' } },
@@ -1169,66 +1120,93 @@
     var immuneState = useState(initImmune); var stunImmune = immuneState[0], setStunImmune = immuneState[1];
     // Once the DM toggles the box themselves, changing the tier won't stomp it.
     var immuneTouchedState = useState(b.stun_immune != null); var immuneTouched = immuneTouchedState[0], setImmuneTouched = immuneTouchedState[1];
+    // Public bosses show in everyone's Boss Library; anyone can add or copy them.
+    var publicState = useState(!!b.public); var isPublic = publicState[0], setPublic = publicState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     function changeTier(v) { setTier(v); if (!immuneTouched) setStunImmune(tierStunImmuneDefault(v)); }
+    // Read-only: someone else's boss you can see but not edit (e.g. public).
+    var ro = !!props.readOnly;
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
       var hp = parseInt(maxHp, 10);
       if (!hp || hp < 1) { setErr('Max HP must be a positive number.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp, boss_tier: tier, stun_immune: !!stunImmune }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, image_url: image.trim() || null, max_hp: hp, boss_tier: tier, stun_immune: !!stunImmune, public: !!isPublic }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
-      props.inModal ? null : h('h3', { style: { marginTop: 0 } }, props.initial ? 'Edit boss' : 'New boss'),
+      props.inModal ? null : h('h3', { className: 'portal-form-title' }, props.initial ? 'Edit boss' : 'New boss'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
-        h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
+        h('input', { type: 'text', value: name, disabled: ro, onChange: function (e) { setName(e.target.value); } })),
       // Tier + stun immunity share one row.
       h('div', { className: 'portal-field' }, h('label', null, 'Tier'),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' } },
-          h('select', { style: { flex: '1 1 12rem' }, value: tier, onChange: function (e) { changeTier(e.target.value); } },
+          h('select', { className: 'rp-grow-select', value: tier, disabled: ro, onChange: function (e) { changeTier(e.target.value); } },
             BOSS_TIERS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); })),
           h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, whiteSpace: 'nowrap' } },
-            h('input', { type: 'checkbox', checked: stunImmune, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
-            'Immune to stun'))),
+            h('input', { type: 'checkbox', checked: stunImmune, disabled: ro, onChange: function (e) { setImmuneTouched(true); setStunImmune(e.target.checked); } }),
+            'Immune to stun'),
+          h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, whiteSpace: 'nowrap' } },
+            h('input', { type: 'checkbox', checked: isPublic, disabled: ro, onChange: function (e) { setPublic(e.target.checked); } }),
+            'Public'))),
       h('div', { className: 'portal-field' }, h('label', null, 'Health *'),
-        h('input', { type: 'number', min: 1, value: maxHp, onChange: function (e) { setMaxHp(e.target.value); } })),
+        h('input', { type: 'number', min: 1, value: maxHp, disabled: ro, onChange: function (e) { setMaxHp(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Notes'),
-        h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+        h('textarea', { rows: 3, value: desc, disabled: ro, onChange: function (e) { setDesc(e.target.value); } })),
       (window.PVAdminQuestUtils && PVAdminQuestUtils.ImageField)
         ? h(PVAdminQuestUtils.ImageField, {
             value: image,
+            readOnly: ro,
             onChange: function (v) { setImage(v); },
             uploadPath: '/venues/images',
             extraFields: { venue_name: name.trim() || 'boss' },
             resize: { square: true, maxSize: 600 }
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
-            h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+            h('input', { type: 'text', value: image, placeholder: 'https://…', disabled: ro, onChange: function (e) { setImage(e.target.value); } })),
+      ro ? null : h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save boss' : 'Create boss'),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')));
   }
 
+  // A boss's creator, resolved through the FC roster like an item's owner.
+  function creatorLabel(b, members) {
+    if (b.created_by == null) return '—';
+    if (members == null) return 'Member #' + b.created_by;
+    var row = members.filter(function (m) { return String(m.id) === String(b.created_by); })[0];
+    return row ? row.name : 'Former member';
+  }
+
   function BossCard(props) {
     var b = props.boss;
+    // Someone else's public boss is read-only (unless you can edit any boss):
+    // Skills and the view icon open it without editing, and it can be copied.
+    var editable = props.canEdit && b.can_edit !== false;
+    var copyable = props.canCopy;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
       h('div', { className: 'rp-card-media sketch-wash' },
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
           : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
+        b.public ? h('span', { className: 'venue-badge venue-badge-featured' }, 'Public') : null,
         h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
+      h('div', { className: 'rp-catalogue-owner' },
+        h('span', { className: 'rp-owner-key' }, 'Creator: '),
+        h('span', { className: 'rp-owner-val' }, creatorLabel(b, props.members))),
       h('p', { className: 'rp-catalogue-desc' }, tierLabel(b.boss_tier) + ' · ' + b.max_hp + ' HP · ' + (b.abilities || []).length + ' skill' + ((b.abilities || []).length === 1 ? '' : 's') + ((b.stun_immune != null ? b.stun_immune : tierStunImmuneDefault(b.boss_tier || 'monster')) ? ' · stun-immune' : '')),
       b.description ? h('p', { className: 'rp-catalogue-desc' }, b.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onSkills(b); } }, 'Skills'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only')),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only'))));
+        editable
+          ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-icon-btn', title: 'Edit boss', 'aria-label': 'Edit boss', onClick: function () { props.onEdit(b); } }, mi('edit', 'only'))
+          : h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-icon-btn', title: 'View boss', 'aria-label': 'View boss', onClick: function () { props.onEdit(b); } }, mi('visibility', 'only')),
+        copyable ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-icon-btn', title: 'Copy boss', 'aria-label': 'Copy boss', onClick: function () { props.onCopy(b); } }, mi('content_copy', 'only')) : null,
+        editable ? h('button', { type: 'button', className: 'portal-btn is-small is-danger rp-icon-btn', title: 'Delete boss', 'aria-label': 'Delete boss', onClick: function () { props.onDelete(b); } }, mi('delete', 'only')) : null));
   }
 
   // Boss fields only — skills live in their own modal (BossSkillsModal).
@@ -1242,12 +1220,14 @@
     }
     return h(window.PVAdminModal, { title: b.name, size: 'lg', onClose: props.onClose },
       saved ? h('div', { className: 'portal-flash success' }, saved) : null,
-      h(BossForm, { initial: b, inModal: true, onSubmit: saveBoss, onCancel: props.onClose }));
+      h(BossForm, { initial: b, inModal: true, readOnly: props.readOnly, onSubmit: saveBoss, onCancel: props.onClose }));
   }
 
   // Boss skills (abilities + their effects), split out of the boss-fields editor.
   function BossSkillsModal(props) {
     var b = props.boss;
+    // Read-only for bosses you can see but not edit: no add, edit or delete.
+    var ro = !!props.readOnly;
     var abFormState = useState(null); var abForm = abFormState[0], setAbForm = abFormState[1]; // null | {ability?}
     var fxFormState = useState(null); var fxForm = fxFormState[0], setFxForm = fxFormState[1]; // null | {abilityId, effect?}
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1283,34 +1263,37 @@
       h('div', null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add skill'),
+          : ro ? null : h('button', { type: 'button', className: 'portal-btn is-small rp-add-skill', onClick: function () { setAbForm({}); } }, '+ Add skill'),
         !(b.abilities || []).length ? null :
           (b.abilities || []).map(function (a) {
-            return h('div', { key: a.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
+            return h('div', { key: a.id, className: 'rp-skill-row' },
+              h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('strong', null, a.name),
-                  a.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, a.description) : null),
-                h('div', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
+                  a.description ? h('div', { className: 'rp-skill-desc' }, a.description) : null),
+                ro ? null : h('div', { className: 'rp-actions' },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕'))),
-              h(DragReorder, { items: a.effects || [], onReorder: reorderEffects, renderRow: function (x) {
-                return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
-                  h('span', { style: { fontSize: '0.8rem' } }, bossEffectSummary(x)),
-                  h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
-                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
-                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteEffect(x); } }, '✕')));
+              ro ? (a.effects || []).map(function (x) {
+                return h('div', { key: x.id, className: 'rp-effect-box' },
+                  h('span', { className: 'rp-small' }, bossEffectSummary(x)));
+              }) : h(DragReorder, { items: a.effects || [], onReorder: reorderEffects, renderRow: function (x) {
+                return h('div', { className: 'rp-effect-box is-row' },
+                  h('span', { className: 'rp-small' }, bossEffectSummary(x)),
+                  h('span', { className: 'rp-actions' },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-mini-btn', onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
+                    h('button', { type: 'button', className: 'portal-btn is-small is-danger rp-mini-btn', onClick: function () { deleteEffect(x); } }, '✕')));
               } }),
               (fxForm && fxForm.abilityId === a.id)
                 ? h(BossEffectForm, { initial: fxForm.effect, onSubmit: submitEffect, onCancel: function () { setFxForm(null); } })
-                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setFxForm({ abilityId: a.id, effect: null }); } }, '+ Add effect'));
+                : ro ? null : h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-mini-btn rp-mt3', onClick: function () { setFxForm({ abilityId: a.id, effect: null }); } }, '+ Add effect'));
           })));
   }
 
   // ── System rules editor (admin only) ──────────────────────────────────────
   // One global JSON doc on the worker (rp_rules), strictly validated server-side.
   // Missing keys always fall back to code defaults, so this form can never brick
-  // the calculator. History keeps the last 5 saves for one-click restore.
+  // the calculator.
   var PASSIVE_TYPES = [
     { value: 'attack_roll', label: 'Attack roll' },
     { value: 'defense_roll', label: 'Defense roll' },
@@ -1318,25 +1301,24 @@
   ];
   function RulesEditor(props) {
     var docState = useState(null); var doc = docState[0], setDoc = docState[1];
-    var defaultsState = useState(null); var defaults = defaultsState[0], setDefaults = defaultsState[1];
     var metaState = useState(null); var meta = metaState[0], setMeta = metaState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
-    var histState = useState(null); var history = histState[0], setHistory = histState[1];
-    var showHistState = useState(false); var showHist = showHistState[0], setShowHist = showHistState[1];
 
     function clone(x) { return JSON.parse(JSON.stringify(x)); }
     async function load() {
       try {
         var r = await PVRollAPI.request('GET', '/rp/rules');
-        setDoc(clone(r.rules)); setDefaults(r.defaults || null); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
+        setDoc(clone(r.rules)); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
       } catch (e) { setErr(e.status === 404 ? 'The worker doesn’t support editable rules yet.' : (e.message || 'Failed to load rules.')); }
     }
     useEffect(function () { load(); /* eslint-disable-next-line */ }, []);
 
     function upd(fn) { var next = clone(doc); fn(next); setDoc(next); }
     function num(v) { var n = parseInt(v, 10); return isNaN(n) ? 0 : n; }
+    function healOf(d, role) { return (d.heal && d.heal[role]) || { single: false, single_scope: 'self', aoe: false }; }
+    function setHeal(role, patch) { upd(function (d) { d.heal = d.heal || {}; d.heal[role] = Object.assign({}, healOf(d, role), patch); }); }
 
     async function save() {
       setSaving(true); setErr(''); setSaved('');
@@ -1344,23 +1326,12 @@
         var r = await PVRollAPI.request('PUT', '/rp/rules', doc);
         setDoc(clone(r.rules)); setSaved('Rules saved.');
         setTimeout(function () { setSaved(''); }, 4000);
-        setHistory(null);
       } catch (e) { setErr(e.message || 'Failed to save.'); }
       finally { setSaving(false); }
-    }
-    async function loadHistory() {
-      try { setHistory(await PVRollAPI.request('GET', '/rp/rules/history') || []); }
-      catch (e) { setErr(e.message); setHistory([]); }
-    }
-    async function restore(entry) {
-      if (!confirm('Restore the rules saved by ' + (entry.updated_by || 'unknown') + '? Current rules go into history.')) return;
-      try { var r = await PVRollAPI.request('POST', '/rp/rules/restore', { history_id: entry.id }); setDoc(clone(r.rules)); setHistory(null); setSaved('Rules restored.'); setTimeout(function () { setSaved(''); }, 3000); }
-      catch (e) { setErr(e.message); }
     }
 
     if (!doc) return h('div', { className: 'portal-card' }, err ? h('div', { className: 'portal-flash error' }, err) : 'Loading rules…');
 
-    var fieldGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' };
     return h('div', null,
       props.anyLive ? h('div', { className: 'portal-flash error' }, 'A session is live right now, saved changes apply to it immediately.') : null,
       err ? h('div', { className: 'portal-flash error' }, err) : null,
@@ -1369,9 +1340,9 @@
         'Last saved by ' + (meta.updated_by || 'unknown') + ' · ' + new Date(meta.updated_at * 1000).toLocaleString()) : null,
 
       // Base HP + shield + action economy
-      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-        h('h3', { style: { marginTop: 0 } }, 'Classes & core caps'),
-        h('div', { style: fieldGrid },
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Classes & core caps'),
+        h('div', { className: 'rp-rules-grid' },
           CLASS_ROLES.map(function (o) {
             return h('div', { className: 'portal-field', key: o.value }, h('label', null, o.label + ' base HP'),
               h('input', { type: 'number', min: 1, value: String(doc.role_base_hp[o.value]), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.role_base_hp[o.value] = v; }); } }));
@@ -1385,14 +1356,14 @@
         h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0.5rem' } }, 'Which actions consume the per-turn budget:'),
         h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap' } },
           ['attack', 'heal', 'buff'].map(function (k) {
-            return h('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+            return h('label', { key: k, className: 'rp-rule-check' },
               h('input', { type: 'checkbox', checked: doc.action_types[k] !== false, onChange: function (e) { var v = e.target.checked; upd(function (d) { d.action_types[k] = v; }); } }), k);
           }))),
 
       // Dice
-      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-        h('h3', { style: { marginTop: 0 } }, 'Dice'),
-        h('div', { style: fieldGrid },
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Dice'),
+        h('div', { className: 'rp-rules-grid' },
           h('div', { className: 'portal-field' }, h('label', null, 'Attack/defense die (D)'),
             h('input', { type: 'number', min: 1, value: String(doc.attack_die), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.attack_die = v; }); } })),
           h('div', { className: 'portal-field' }, h('label', null, 'Heal die (D)'),
@@ -1400,9 +1371,28 @@
           h('div', { className: 'portal-field' }, h('label', null, 'AOE heal max targets'),
             h('input', { type: 'number', min: 1, value: String(doc.aoe_max_targets), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.aoe_max_targets = v; }); } })))),
 
+      // Healing per class: a single-target heal (self only, or anyone in the
+      // party) and/or an AOE heal. Both off = that class has no Heal tab.
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Healing'),
+        CLASS_ROLES.map(function (o) {
+          var hk = healOf(doc, o.value);
+          return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' } },
+            h('strong', null, o.label),
+            h('div', { style: { display: 'flex', gap: '0.5rem 1rem', flexWrap: 'wrap', alignItems: 'center' } },
+              h('label', { className: 'rp-rule-check' },
+                h('input', { type: 'checkbox', checked: !!hk.single, onChange: function (e) { setHeal(o.value, { single: e.target.checked }); } }), 'Single heal'),
+              h('select', { className: 'portal-select', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
+                'aria-label': o.label + ' single heal target', onChange: function (e) { setHeal(o.value, { single_scope: e.target.value }); } },
+                h('option', { value: 'self' }, 'Self only'),
+                h('option', { value: 'party' }, 'Anyone in the party')),
+              h('label', { className: 'rp-rule-check' },
+                h('input', { type: 'checkbox', checked: !!hk.aoe, onChange: function (e) { setHeal(o.value, { aoe: e.target.checked }); } }), 'AOE heal (party)')));
+        })),
+
       // Armor modifiers
-      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-        h('h3', { style: { marginTop: 0 } }, 'Armor modifiers'),
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Armor modifiers'),
         ARMOR_TYPES.map(function (o) {
           return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr 1fr', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
             h('strong', { style: { paddingBottom: '0.55rem' } }, o.label),
@@ -1413,8 +1403,8 @@
         })),
 
       // Class passives
-      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-        h('h3', { style: { marginTop: 0 } }, 'Class passives'),
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Class passives'),
         (doc.class_passives || []).map(function (p, i) {
           return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
@@ -1430,13 +1420,13 @@
               h('input', { type: 'text', value: p.label || '', onChange: function (e) { var v = e.target.value; upd(function (d) { d.class_passives[i].label = v; }); } }))),
             h('div', { className: 'portal-field' },
               h('label', { 'aria-hidden': 'true' }, '\u00a0'),
-              h('button', { type: 'button', className: 'portal-btn is-danger', 'aria-label': 'Remove passive', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕')));
+              h('button', { type: 'button', className: 'portal-btn is-danger rp-fill-btn', 'aria-label': 'Remove passive', onClick: function () { upd(function (d) { d.class_passives.splice(i, 1); }); } }, '✕')));
         }),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { upd(function (d) { d.class_passives.push({ class: 'dps', type: 'attack_roll', value: 1, label: '' }); }); } }, '+ Add passive')),
 
       // Damage tiers
-      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
-        h('h3', { style: { marginTop: 0 } }, 'Attack damage tiers'),
+      h('div', { className: 'portal-card is-tight' },
+        h('h3', { className: 'portal-form-title' }, 'Attack damage tiers'),
         (doc.damage_tiers || []).map(function (t, i) {
           return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 1fr 2.2rem', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
             h('div', { className: 'portal-field' }, h('label', null, 'Min roll'),
@@ -1445,23 +1435,13 @@
               h('input', { type: 'number', min: 0, value: String(t.damage), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.damage_tiers[i].damage = v; }); } })),
             h('div', { className: 'portal-field' },
               h('label', { 'aria-hidden': 'true' }, '\u00a0'),
-              h('button', { type: 'button', className: 'portal-btn is-danger', 'aria-label': 'Remove tier', style: { flex: 1, justifyContent: 'center' }, onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕')));
+              h('button', { type: 'button', className: 'portal-btn is-danger rp-fill-btn', 'aria-label': 'Remove tier', onClick: function () { upd(function (d) { d.damage_tiers.splice(i, 1); }); } }, '✕')));
         }),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
 
-      // Save / defaults / history
+      // Save
       h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' } },
-        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save rules'),
-        defaults ? h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { if (confirm('Load the built-in defaults into the form? Nothing is saved until you press Save.')) setDoc(clone(defaults)); } }, 'Load defaults') : null,
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { var next = !showHist; setShowHist(next); if (next && history === null) loadHistory(); } }, (showHist ? '▾ ' : '▸ ') + 'History')),
-      showHist ? h('div', { className: 'portal-card', style: { marginTop: '0.6rem' } },
-        history === null ? h('p', { style: { margin: 0 } }, 'Loading…') :
-          (!history.length ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No previous saves yet.') :
-            history.map(function (e2) {
-              return h('div', { key: e2.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', borderTop: '1px solid var(--border-color)' } },
-                h('span', { style: { fontSize: '0.85rem' } }, (e2.updated_by || 'unknown') + ' · ' + new Date(e2.updated_at * 1000).toLocaleString()),
-                h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { restore(e2); } }, 'Restore'));
-            }))) : null);
+        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save rules')));
   }
 
   // ── Item card (compact; opens the editor modal) ───────────────────────────
@@ -1501,8 +1481,8 @@
       it.description ? h('p', { className: 'rp-catalogue-desc' }, it.description) : null,
       h('div', { className: 'rp-catalogue-actions' },
         h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { props.onAbilities(it); } }, 'Abilities'),
-        h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Edit item', 'aria-label': 'Edit item', onClick: function () { props.onEdit(it); } }, mi('edit', 'only')),
-        h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 }, title: 'Delete item', 'aria-label': 'Delete item', onClick: function () { props.onDelete(it); } }, mi('delete', 'only'))));
+        h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-icon-btn', title: 'Edit item', 'aria-label': 'Edit item', onClick: function () { props.onEdit(it); } }, mi('edit', 'only')),
+        h('button', { type: 'button', className: 'portal-btn is-small is-danger rp-icon-btn', title: 'Delete item', 'aria-label': 'Delete item', onClick: function () { props.onDelete(it); } }, mi('delete', 'only'))));
   }
 
   // ── Item editor modal (item fields + owner; abilities live in their own modal) ──
@@ -1599,29 +1579,29 @@
       h('div', null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
-          : h('button', { type: 'button', className: 'portal-btn is-small', style: { marginBottom: '0.6rem' }, onClick: function () { setAbForm({}); } }, '+ Add ability'),
+          : h('button', { type: 'button', className: 'portal-btn is-small rp-add-skill', onClick: function () { setAbForm({}); } }, '+ Add ability'),
         abilities === null ? h('p', null, 'Loading…') :
           (!abilities.length ? null :
           abilities.map(function (ab) {
-            return h('div', { key: ab.id, style: { padding: '0.4rem 0', borderTop: '1px solid var(--border-color)' } },
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
+            return h('div', { key: ab.id, className: 'rp-skill-row' },
+              h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('strong', null, ab.name),
                   ab.activate_all ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0 0.3rem' } }, 'activate all') : null,
-                  ab.description ? h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' } }, ab.description) : null),
+                  ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕'))),
               h(DragReorder, { items: ab.modifiers || [], onReorder: reorderModifiers, renderRow: function (mod) {
-                return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
-                  h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue)),
-                  h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
-                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
-                    h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteModifier(mod); } }, '✕')));
+                return h('div', { className: 'rp-effect-box is-row' },
+                  h('span', { className: 'rp-small' }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue, props.members)),
+                  h('span', { className: 'rp-actions' },
+                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-mini-btn', onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
+                    h('button', { type: 'button', className: 'portal-btn is-small is-danger rp-mini-btn', onClick: function () { deleteModifier(mod); } }, '✕')));
               } }),
               (modForm && modForm.abilityId === ab.id)
-                ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
-                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add effect'));
+                ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, members: props.members, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
+                : h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-mini-btn rp-mt3', onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add effect'));
           }))
       ));
   }
@@ -1643,7 +1623,7 @@
     }
 
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
-      props.inModal ? null : h('h3', { style: { marginTop: 0 } }, props.initial ? 'Edit item' : 'New item'),
+      props.inModal ? null : h('h3', { className: 'portal-form-title' }, props.initial ? 'Edit item' : 'New item'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
@@ -1660,7 +1640,7 @@
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
             h('input', { type: 'text', value: image, placeholder: 'https://…', onChange: function (e) { setImage(e.target.value); } })),
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn' }, props.initial ? 'Save item' : 'Create item'),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onCancel }, 'Cancel')
       )
@@ -1669,9 +1649,16 @@
 
   // ── Main component ────────────────────────────────────────────────────────
   function PVAdminRpRolls(props) {
-    var roles = (props.session && props.session.roles) || [];
-    var isAdmin = roles.indexOf('admin') !== -1;
-    var isStaff = isAdmin || roles.indexOf('officer') !== -1;
+    // Tabs and buttons follow the permission grid. A campaign's DM still runs
+    // and deletes their own campaign (c.is_dm), and a boss's creator edits it.
+    var canItems = PVAdminAPI.can('combat.items');
+    var canRules = PVAdminAPI.can('combat.rules');
+    var canCreate = PVAdminAPI.can('combat.campaigns_create');
+    var canManage = PVAdminAPI.can('combat.campaigns_manage');
+    var canDeleteAny = PVAdminAPI.can('combat.campaigns_delete');
+    var canAddBosses = PVAdminAPI.can('combat.bosses');
+    var canEditAllBosses = PVAdminAPI.can('combat.bosses_edit_all');
+    var canPrivate = PVAdminAPI.can('combat.bosses_private');
 
     var tabState = useState('campaigns'); var tab = tabState[0], setTab = tabState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1736,7 +1723,7 @@
     // the DM. Loaded once; selectCampaign also fills it lazily for non-admins.
     async function loadMembers() {
       if (members !== null) return;
-      try { setMembers(await PVAdminAPI.request('GET', '/members', undefined, true) || []); }
+      try { setMembers(await PVAdminAPI.request('GET', '/members/basic', undefined, true) || []); }
       catch (e) { setErr('Could not load FC members: ' + e.message); }
     }
     async function loadRoster(cid) {
@@ -1785,11 +1772,12 @@
       try { setCampBosses(await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/bosses') || []); }
       catch (e) { setCampBosses([]); }
     }
-    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadBaseHp(); loadProfileImages(); loadBossLib(); if (isAdmin) loadMembers(); /* eslint-disable-next-line */ }, []);
-    // The boss library's 'Added By' filter names creators from the FC roster.
+    useEffect(function () { loadCampaigns(); loadItems(); loadDefaults(); loadBaseHp(); loadProfileImages(); loadBossLib(); if (canItems) loadMembers(); /* eslint-disable-next-line */ }, []);
+    // The Boss Library names each boss's creator (and the 'Added By' filter)
+    // from the FC roster.
     useEffect(function () {
-      if (!isStaff || tab !== 'bosses' || members !== null) return;
-      PVAdminAPI.request('GET', '/members', undefined, true)
+      if (tab !== 'bosses' || members !== null) return;
+      PVAdminAPI.request('GET', '/members/basic', undefined, true)
         .then(function (rows) { setMembers(rows || []); })
         .catch(function () { /* creators fall back to 'Former member' */ });
       /* eslint-disable-next-line */
@@ -1849,11 +1837,11 @@
 
     function selectCampaign(c) {
       setSelected(c); setRoster([]); loadRoster(c.id); loadDefaults();
-      // Per-campaign item enable/disable is an admin-only panel.
-      if (isAdmin) loadDisabledItems(c.id);
+      // Per-campaign item enable/disable needs "Manage any campaign".
+      if (canManage) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
-        PVAdminAPI.request('GET', '/members', undefined, true)
+        PVAdminAPI.request('GET', '/members/basic', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
           .catch(function (e) { setErr('Could not load FC members: ' + e.message); });
       }
@@ -1930,9 +1918,20 @@
       catch (e) { setErr(e.message); }
     }
     async function createBoss(payload) {
-      if (isAdmin) payload = Object.assign({}, payload, { private: bossPrivate });
+      if (canPrivate) payload = Object.assign({}, payload, { private: bossPrivate });
       await PVRollAPI.request('POST', '/rp/boss-library', payload);
       setBossForm(false); await loadBossLib();
+    }
+    // Bosses you can see but not edit open read-only (same rule as the card).
+    function bossReadOnly(b) {
+      return !((canAddBosses || canEditAllBosses) && b.can_edit !== false);
+    }
+    // A copy lands in your own library (not public), skills and all.
+    async function copyBoss(b) {
+      try {
+        await PVRollAPI.request('POST', '/rp/boss-library/' + b.id + '/copy', canPrivate ? { private: bossPrivate } : {});
+        await loadBossLib();
+      } catch (e) { setErr(e.message); }
     }
     async function deleteBoss(b) {
       if (!confirm('Delete boss?')) return;
@@ -1977,12 +1976,16 @@
     var inCampaign = {}; roster.forEach(function (r) { inCampaign[r.member_id] = true; });
     var availableMembers = (members || []).filter(function (m) { return !inCampaign[m.id]; });
 
+    // Anyone who DMs a campaign can see the Boss Library (their own bosses).
+    var showBosses = bossesSupported &&
+      (canAddBosses || canEditAllBosses || campaigns.some(function (c) { return c.is_dm; }));
+
     return h('div', null,
       h(window.PVAdminSubnav, {
         tabs: [{ id: 'campaigns', label: 'Campaigns & Sessions' }]
-          .concat(isAdmin ? [{ id: 'items', label: 'Item Catalogue' }] : [])
-          .concat(bossesSupported ? [{ id: 'bosses', label: 'Boss Library' }] : [])
-          .concat(isAdmin && bossesSupported ? [{ id: 'rules', label: 'System Rules' }] : []),
+          .concat(canItems ? [{ id: 'items', label: 'Item Catalogue' }] : [])
+          .concat(showBosses ? [{ id: 'bosses', label: 'Boss Library' }] : [])
+          .concat(canRules && bossesSupported ? [{ id: 'rules', label: 'System Rules' }] : []),
         active: tab,
         onChange: setTab
       }),
@@ -1993,37 +1996,37 @@
         showNew
           ? h('form', { className: 'portal-card', style: { marginBottom: '1rem' },
               onSubmit: function (e) { e.preventDefault(); createCampaign(); } },
-              h('h3', { style: { marginTop: 0 } }, 'New campaign'),
+              h('h3', { className: 'portal-form-title' }, 'New campaign'),
               newErr ? h('div', { className: 'portal-flash error' }, newErr) : null,
               h('div', { className: 'portal-field' },
                 h('label', null, 'Campaign name *'),
                 h('input', { type: 'text', autoFocus: true, value: newName,
                   placeholder: 'e.g. Symphony of the Eclipse',
                   onChange: function (e) { setNewName(e.target.value); } })),
-              h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+              h('div', { className: 'portal-btn-row' },
                 h('button', { type: 'submit', className: 'portal-btn' }, 'Create campaign'),
                 h('button', { type: 'button', className: 'portal-btn is-ghost',
                   onClick: function () { setShowNew(false); setNewErr(''); } }, 'Cancel'))
             )
-          : h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' },
-              onClick: function () { setNewName(''); setNewErr(''); setShowNew(true); } }, '+ New campaign'),
+          : canCreate ? h('button', { type: 'button', className: 'portal-btn', style: { marginBottom: '1rem' },
+              onClick: function () { setNewName(''); setNewErr(''); setShowNew(true); } }, '+ New campaign') : null,
         !campaigns.length ? h('div', { className: 'portal-card' }, 'No campaigns yet.') :
           campaigns.map(function (c) {
             var isSel = selected && selected.id === c.id;
-            return h('div', { key: c.id, className: 'portal-card', style: { marginBottom: '0.6rem' } },
+            return h('div', { key: c.id, className: 'portal-card is-tight' },
               // Header: title + status on the left; edit (manage) and delete pinned
               // to the top-right corner as icon buttons.
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' } },
+              h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('span', { className: 'rp-campaign-name' }, c.name),
-                  c.active ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', background: 'var(--accent-red)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Live') : null,
-                  c.paused ? h('span', { style: { marginLeft: '0.5rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-primary)', border: '1px solid var(--accent-gold)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } }, 'Paused') : null
+                  c.active ? h('span', { className: 'rp-campaign-tag is-live' }, 'Live') : null,
+                  c.paused ? h('span', { className: 'rp-campaign-tag is-paused' }, 'Paused') : null
                 ),
-                h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
-                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
+                h('div', { className: 'rp-actions is-wide' },
+                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost rp-icon-btn',
                     title: isSel ? 'Close manager' : 'Manage', 'aria-label': isSel ? 'Close manager' : 'Manage', 'aria-expanded': isSel ? 'true' : 'false',
                     onClick: function () { isSel ? setSelected(null) : selectCampaign(c); } }, mi(isSel ? 'close' : 'edit', 'only')),
-                  (isAdmin || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.25rem 0.45rem', lineHeight: 1 },
+                  (canDeleteAny || c.is_dm) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger rp-icon-btn',
                     title: 'Delete', 'aria-label': 'Delete campaign', onClick: function () { deleteCampaign(c); } }, mi('delete', 'only')) : null
                 )
               ),
@@ -2034,14 +2037,14 @@
                 c.active ? h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'portal-btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
-                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: '/pv/tools/roll-calculator.html', style: { textDecoration: 'none' } }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
+                c.active ? h('a', { className: 'portal-btn is-small is-ghost', href: 'roll-calculator.html', style: { textDecoration: 'none' } }, 'Roll Calculator', mi('arrow_forward', 'trail')) : null
               ),
 
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
-                isAdmin
-                  ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                canManage
+                  ? h('div', { className: 'portal-card is-inset' },
                       h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
-                        members === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading members…') :
+                        members === null ? h('p', { className: 'portal-note' }, 'Loading members…') :
                           h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
                             h('option', { value: '' }, '— none —'),
                             (members || []).map(function (m) { return h('option', { key: m.id, value: m.id }, m.name); }))))
@@ -2050,7 +2053,7 @@
                       h('p', { style: { margin: 0 } }, dmNameFor(c))),
 
                 // Add a member — kept at the top of the panel, right under the DM.
-                h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                h('div', { className: 'portal-card is-inset' },
                   h('label', { className: 'portal-block-label' }, 'Add a member'),
                   members === null ? h('p', null, 'Loading members…') :
                     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem', alignItems: 'end' } },
@@ -2075,14 +2078,14 @@
                 // on/off by default, with an Advanced view for per-item control.
                 (function () {
                   if (!disabledSupported) return null;
-                  // Item control stays with admins; DMs manage rosters/bosses only.
-                  if (!isAdmin) return null;
+                  // Item control needs "Manage any campaign"; DMs manage rosters/bosses only.
+                  if (!canManage) return null;
                   var camp = campaignItemList();
                   if (!camp.length) return null;
                   var loading = disabledItems === null;
                   var offCount = loading ? 0 : camp.filter(function (it) { return !!disabledItems[it.id]; }).length;
                   var onCount = camp.length - offCount;
-                  return h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                  return h('div', { className: 'portal-card is-inset' },
                     h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
                       h('label', { className: 'portal-block-label', style: { margin: 0, flex: '1 1 auto' } }, 'Campaign items'),
                       h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem' } },
@@ -2110,19 +2113,19 @@
 
                 // Bosses staged for this campaign. The DM manages HP/visibility and
                 // fires skills live from the calculator; this is pre-session setup.
-                bossesSupported ? h('div', { className: 'portal-card', style: { background: 'var(--bg-card-light)', marginBottom: '0.5rem' } },
+                bossesSupported ? h('div', { className: 'portal-card is-inset' },
                   h('label', { className: 'portal-block-label' }, 'Bosses'),
-                  campBosses === null ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'Loading…') :
+                  campBosses === null ? h('p', { className: 'portal-note' }, 'Loading…') :
                     (!campBosses.length ? h('p', { style: { margin: '0 0 0.4rem', color: 'var(--text-secondary)', fontSize: '0.85rem' } }, 'No bosses staged for this campaign.') :
                       campBosses.map(function (b) {
                         return h('div', { key: b.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0' } },
                           h('span', null, b.name + ' · ' + b.current_hp + '/' + b.max_hp + ' HP' + (b.defeated ? ' · defeated' : '') + (b.hp_visible ? '' : ' · HP hidden')),
-                          h('div', { style: { display: 'flex', gap: '0.35rem', flexShrink: 0 } },
+                          h('div', { className: 'rp-actions is-wide' },
                             h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { toggleBossHp(b); } }, b.hp_visible ? 'Hide HP' : 'Show HP'),
                             h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove')));
                       })),
                   h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-                    h('select', { className: 'portal-select', value: campBossPick, style: { flex: '1 1 12rem' }, onChange: function (e) { setCampBossPick(e.target.value); } },
+                    h('select', { className: 'portal-select rp-grow-select', value: campBossPick, onChange: function (e) { setCampBossPick(e.target.value); } },
                       h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
                       bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
                     h('button', { type: 'button', className: 'portal-btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
@@ -2131,7 +2134,7 @@
                 h('label', { className: 'portal-block-label' }, 'Roster'),
                 h('div', { className: 'rp-roster-grid' },
                   roster.map(function (ch) {
-                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: isAdmin, baseHp: baseHp,
+                    return h(RosterRow, { key: ch.member_id, character: ch, canEquip: canItems, baseHp: baseHp,
                       campaignId: selected.id, catalogue: items, onItemsChanged: loadItems,
                       onSave: saveCharacter, onRemove: removeCharacter,
                       imageUrl: profileImages[ch.member_id] || profileImages[Number(ch.member_id)] || profileImages[String(ch.member_id)] });
@@ -2141,7 +2144,7 @@
           })
       ) : null,
 
-      tab === 'items' && isAdmin ? h('div', null,
+      tab === 'items' && canItems ? h('div', null,
         itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
           h('input', { type: 'search', className: 'portal-search', value: itemQuery,
@@ -2163,17 +2166,17 @@
         })(),
         editItem ? h(ItemEditorModal, { item: editItem, catalogue: items, members: members,
           onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null,
-        abilitiesItem ? h(ItemAbilitiesModal, { item: abilitiesItem, catalogue: items,
+        abilitiesItem ? h(ItemAbilitiesModal, { item: abilitiesItem, catalogue: items, members: members,
           onClose: function () { setAbilitiesItem(null); } }) : null
       ) : null,
 
-      tab === 'bosses' && bossesSupported ? h('div', null,
+      tab === 'bosses' && showBosses ? h('div', null,
         bossForm ? h(BossForm, { onSubmit: createBoss, onCancel: function () { setBossForm(false); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
           h('input', { type: 'search', className: 'portal-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
-          isStaff ? (function () {
+          canEditAllBosses ? (function () {
             var ids = [];
             bossLib.forEach(function (b) { if (b.created_by != null && ids.indexOf(String(b.created_by)) === -1) ids.push(String(b.created_by)); });
             var opts = ids.map(function (id) {
@@ -2185,9 +2188,9 @@
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));
           })() : null,
-          bossForm ? null : h('button', { type: 'button', className: 'portal-btn',
+          bossForm || !canAddBosses ? null : h('button', { type: 'button', className: 'portal-btn',
             onClick: function () { setBossForm(true); } }, '+ New boss')),
-        isAdmin ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
+        canPrivate ? h('div', { style: { marginTop: '-0.4rem', marginBottom: '1rem' } },
           h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.6rem' } },
             h('span', null, 'Hide My Bosses'),
             h('button', { type: 'button', className: 'rp-switch' + (bossPrivate ? ' is-on' : ''), role: 'switch',
@@ -2207,16 +2210,16 @@
           if (!shown.length) return h('div', { className: 'portal-card' }, 'No bosses match that search.');
           return h('div', { className: 'rp-catalogue-grid' },
             shown.map(function (b) {
-              return h(BossCard, { key: b.id, boss: b, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onDelete: deleteBoss });
+              return h(BossCard, { key: b.id, boss: b, members: members, canEdit: canAddBosses || canEditAllBosses, canCopy: canAddBosses, onEdit: function (x) { setEditBoss(x); }, onSkills: function (x) { setSkillsBoss(x); }, onCopy: copyBoss, onDelete: deleteBoss });
             }));
         })(),
-        editBoss ? h(BossEditorModal, { boss: editBoss,
+        editBoss ? h(BossEditorModal, { boss: editBoss, readOnly: bossReadOnly(editBoss),
           onChanged: refreshBossLib, onClose: function () { setEditBoss(null); } }) : null,
-        skillsBoss ? h(BossSkillsModal, { boss: skillsBoss,
+        skillsBoss ? h(BossSkillsModal, { boss: skillsBoss, readOnly: bossReadOnly(skillsBoss),
           onChanged: refreshBossLib, onClose: function () { setSkillsBoss(null); } }) : null
       ) : null,
 
-      tab === 'rules' && isAdmin ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
+      tab === 'rules' && canRules ? h(RulesEditor, { anyLive: campaigns.some(function (c) { return c.active; }) }) : null
     );
   }
 

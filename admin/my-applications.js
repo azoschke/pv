@@ -1,16 +1,16 @@
 // ============================================================================
 //  PVAdminMyApplications — member self-service activity section
 //
-//  Visible to every logged-in account. Three cards:
-//    1. My Quest Submissions — submit new quests (live after officer
-//       approval), edit them (edits to listed quests queue for approval),
-//       withdraw pending ones.
-//    2. My Quest Signups — quests the member has signed up for on the public
-//       Bounty Board; withdrawable anytime.
-//    3. My Job Applications — status of public job board applications;
-//       withdrawable while still unreviewed.
+//  Three cards, each shown only with its permission:
+//    1. My Quest Submissions (quests.submit) — submit new quests (live after
+//       officer approval), edit them (edits to listed quests queue for
+//       approval), withdraw pending ones.
+//    2. My Quest Signups (quests.signup) — quests the member has signed up
+//       for on the public Bounty Board; withdrawable anytime.
+//    3. My Job Applications (jobs.apply) — status of public job board
+//       applications; withdrawable while still unreviewed.
 //
-//  Worker routes (all authed, no special role):
+//  Worker routes (all authed):
 //    GET  /my/quests        POST /quests      PATCH/DELETE /my/quests/:id
 //    DELETE /quest-edits/:id                  (cancel own proposed edit)
 //    GET  /my/signups       DELETE /quests/:id/signups
@@ -111,21 +111,21 @@
     var edits = (data && data.edits) || [];
 
     return h('div', { className: 'portal-card' },
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'My Quest Submissions'),
+      h('div', { className: 'portal-head-row' },
+        h('h2', { className: 'portal-card-title portal-head-title' }, 'My Quest Submissions'),
         h('button', {
           type: 'button', className: 'portal-btn is-small',
           onClick: function () { setModal({ quest: null }); }
         }, 'New submission')
       ),
-      h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+      h('p', { className: 'portal-head-desc' },
         'Submissions go live on the public Bounty Board after an officer approves them. ' +
         'Edits to an approved quest will be reviewed before they apply.'
       ),
 
       flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem' } }, flash) : null,
 
-      quests.length ? h('div', { className: 'portal-table-wrap', style: { marginTop: '0.85rem' } },
+      quests.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },
           h('thead', null,
             h('tr', null,
@@ -133,25 +133,24 @@
               h('th', null, 'Type'),
               h('th', null, 'Schedule'),
               h('th', null, 'Status'),
-              h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+              h('th', { className: 'portal-col-actions' }, '')
             )
           ),
           h('tbody', null,
             quests.map(function (q) {
               var pill = QUEST_STATUS_PILL[q.status] || QUEST_STATUS_PILL.hidden;
               return h('tr', { key: q.id },
-                h('td', { style: { fontWeight: 600 } }, q.title),
+                h('td', { className: 'portal-strong' }, q.title),
                 h('td', null, q.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(q)),
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
-                h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+                h('td', { className: 'portal-col-actions' },
                   h('button', {
                     type: 'button', className: 'portal-btn is-small is-ghost',
                     onClick: function () { setModal({ quest: q }); }
                   }, 'Edit'),
                   q.status === 'pending' ? h('button', {
-                    type: 'button', className: 'portal-btn is-small is-danger',
-                    style: { marginLeft: '0.4rem' },
+                    type: 'button', className: 'portal-btn is-small is-danger is-spaced',
                     onClick: function () { handleWithdraw(q); }
                   }, 'Withdraw') : null
                 )
@@ -159,11 +158,11 @@
             })
           )
         )
-      ) : h('p', { style: { marginTop: '0.85rem', color: 'var(--text-secondary)' } },
+      ) : h('p', { className: 'portal-muted portal-gap-top' },
         'No quest submissions. Submit a quest or bounty for the public board.'
       ),
 
-      edits.length ? h('div', { style: { marginTop: '0.85rem' } },
+      edits.length ? h('div', { className: 'portal-gap-top' },
         h('p', { style: { margin: '0 0 0.4rem', fontWeight: 600 } }, 'Proposed edits awaiting approval'),
         edits.map(function (e) {
           return h('div', {
@@ -214,28 +213,28 @@
 
     return h('div', { className: 'portal-card' },
       h('h2', { className: 'portal-card-title' }, 'My Quest Signups'),
-      h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+      h('p', { className: 'portal-head-desc' },
         'Sign up from the public ',
-        h('a', { href: '/pv/bounty-board/bounty-board.html' }, 'Bounty Board'),
+        h('a', { href: 'bounty-board.html' }, 'Bounty Board'),
         '. You can withdraw anytime.'
       ),
-      signups.length ? h('div', { className: 'portal-table-wrap', style: { marginTop: '0.85rem' } },
+      signups.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },
           h('thead', null,
             h('tr', null,
               h('th', null, 'Quest'),
               h('th', null, 'Type'),
               h('th', null, 'Schedule'),
-              h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+              h('th', { className: 'portal-col-actions' }, '')
             )
           ),
           h('tbody', null,
             signups.map(function (s) {
               return h('tr', { key: s.id },
-                h('td', { style: { fontWeight: 600 } }, s.title),
+                h('td', { className: 'portal-strong' }, s.title),
                 h('td', null, s.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(s)),
-                h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+                h('td', { className: 'portal-col-actions' },
                   h('button', {
                     type: 'button', className: 'portal-btn is-small is-ghost',
                     onClick: function () { handleWithdraw(s); }
@@ -245,7 +244,7 @@
             })
           )
         )
-      ) : h('p', { style: { marginTop: '0.85rem', color: 'var(--text-secondary)' } },
+      ) : h('p', { className: 'portal-muted portal-gap-top' },
         'No signups yet.'
       )
     );
@@ -270,12 +269,12 @@
 
     return h('div', { className: 'portal-card' },
       h('h2', { className: 'portal-card-title' }, 'My Job Applications'),
-      h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+      h('p', { className: 'portal-head-desc' },
         'Apply from the public ',
-        h('a', { href: '/pv/job-board/job-board.html' }, 'Job Board'),
+        h('a', { href: 'job-board.html' }, 'Job Board'),
         '. Applications can be withdrawn until an officer starts processing them.'
       ),
-      apps.length ? h('div', { className: 'portal-table-wrap', style: { marginTop: '0.85rem' } },
+      apps.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },
           h('thead', null,
             h('tr', null,
@@ -284,7 +283,7 @@
               h('th', null, 'Type'),
               h('th', null, 'Applied'),
               h('th', null, 'Status'),
-              h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+              h('th', { className: 'portal-col-actions' }, '')
             )
           ),
           h('tbody', null,
@@ -293,12 +292,12 @@
               var job = jobsById[a.job_id];
               var jobType = job && job.job_type ? job.job_type : null;
               return h('tr', { key: a.id },
-                h('td', { style: { fontWeight: 600 } }, a.job_title),
+                h('td', { className: 'portal-strong' }, a.job_title),
                 h('td', null, divisionLabel(a.division)),
                 h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
                 h('td', null, fmtDate(a.created_at)),
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
-                h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+                h('td', { className: 'portal-col-actions' },
                   a.stage === 'new' ? h('button', {
                     type: 'button', className: 'portal-btn is-small is-ghost',
                     onClick: function () { handleWithdraw(a); }
@@ -308,7 +307,7 @@
             })
           )
         )
-      ) : h('p', { style: { marginTop: '0.85rem', color: 'var(--text-secondary)' } },
+      ) : h('p', { className: 'portal-muted portal-gap-top' },
         'No applications yet.'
       )
     );
@@ -330,16 +329,25 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
+    var canSubmit = PVAdminAPI.can('quests.submit');
+    var canSignup = PVAdminAPI.can('quests.signup');
+    var canApply = PVAdminAPI.can('jobs.apply');
+
+    // Only load what this account may see.
+    function load(allowed, path, empty) {
+      return allowed ? PVAdminAPI.request('GET', path, undefined, true) : Promise.resolve(empty);
+    }
+
     async function reload() {
       setErr('');
       try {
         var results = await Promise.all([
-          PVAdminAPI.request('GET', '/my/quests', undefined, true),
-          PVAdminAPI.request('GET', '/my/signups', undefined, true),
-          PVAdminAPI.request('GET', '/my/applications', undefined, true),
+          load(canSubmit, '/my/quests', null),
+          load(canSignup, '/my/signups', []),
+          load(canApply, '/my/applications', []),
           // Postings carry job_type / category; index by id so My Job
           // Applications can show the division label and Primary/Secondary type.
-          PVAdminAPI.request('GET', '/jobs', undefined, true).catch(function () { return []; })
+          load(canApply, '/jobs', []).catch(function () { return []; })
         ]);
         setMyQuests(results[0] && results[0].quests ? results[0] : { quests: [], edits: [] });
         setMySignups(Array.isArray(results[1]) ? results[1] : []);
@@ -365,9 +373,9 @@
         h('div', { className: 'portal-flash error' }, err)
       ) : null,
 
-      h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }),
-      h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }),
-      h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr })
+      canSubmit ? h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }) : null,
+      canSignup ? h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }) : null,
+      canApply ? h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr }) : null
     );
   }
 

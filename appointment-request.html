@@ -5,28 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointment Request</title>
 
-    <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-    <link rel="stylesheet" href="/pv/css/styles.css">
+    <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+    <link rel="stylesheet" href="css/styles.css">
     <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-    <style>
-        .appt-name-note {
-            margin: 0.35rem 0 0;
-            font-family: 'Crimson Pro', serif;
-            font-size: 0.85rem;
-            font-style: italic;
-            color: var(--text-secondary);
-        }
-        #appt-name[readonly] {
-            opacity: 0.85;
-            cursor: not-allowed;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -38,15 +24,15 @@
         </header>
 
         <p class="landing-intro">
-            Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="/pv/vanguard-medical/staff-roster">review the Staff Roster</a> <br><em>All fields are required</em>.
+            Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a> <br><em>All fields are required</em>.
         </p>
 
         <!-- Login gate: shown when no valid session. Mirrors the job board's
              "log in to apply" round-trip — sign in, then land back here. -->
         <div id="login-gate" style="display: none;">
             <div class="parchment">
-                <div class="confirmation-panel" style="display: block;">
-                    <span class="material-icons check-icon" style="color: var(--accent-red);">lock</span>
+                <div class="confirmation-panel is-shown">
+                    <span class="material-icons check-icon is-lock">lock</span>
                     <h2>Sign in to request an appointment</h2>
                     <p>
                         Appointment requests are tied to your Phoenix Vanguard account, please
@@ -103,7 +89,7 @@
                         </div>
 
                         <div id="error-message" class="error-message">
-                            <span class="material-icons" style="font-size: 1rem; vertical-align: middle; margin-right: 6px;">error_outline</span>
+                            <span class="material-icons">error_outline</span>
                             <span id="error-text">Something went wrong. Please try again.</span>
                         </div>
                     </div>
@@ -121,7 +107,7 @@
         <!-- Confirmation Message -->
         <div id="confirmation-wrapper" style="display: none;">
             <div class="parchment">
-                <div class="confirmation-panel" style="display: block;">
+                <div class="confirmation-panel is-shown">
                     <span class="material-icons check-icon">check_circle</span>
                     <h2>Request Sent</h2>
                     <p>
@@ -130,7 +116,7 @@
                     <p>
                         In the meantime, please fill out a Patient Intake Form and post it to the appointment request channel in Discord so your medic can prepare.
                     </p>
-                    <a href="/pv/vanguard-medical/patient-intake-form.html" class="intake-btn">
+                    <a href="patient-intake-form.html" class="intake-btn">
                         <span class="material-icons">assignment</span>
                         Fill Out Patient Intake Form
                     </a>
@@ -144,8 +130,9 @@
         </div>
     </div>
 
-    <script src="/pv/admin/api.js"></script>
-    <script src="/pv/vanguard-medical/appointment-request.js"></script>
-    <script src="/pv/js/nav.js"></script>
+    <script src="js/pv-session.js"></script>
+    <script src="admin/api.js"></script>
+    <script src="vanguard-medical/appointment-request.js"></script>
+    <script src="js/nav.js"></script>
 </body>
 </html>

@@ -5,66 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Portal — Sign In</title>
 
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 
-  <style>
-    .admin-login-wrap { max-width: 420px; margin: 3rem auto; }
-    .admin-login-wrap .parchment { padding: 32px; }
-    .portal-brand {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    .login-home-link { display: inline-block; margin-bottom: 0.75rem; }
-    .login-home-logo {
-      width: 64px;
-      height: 64px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-      transition: transform 0.15s ease;
-    }
-    .login-home-link:hover .login-home-logo { transform: scale(1.06); }
-    .portal-brand-title {
-      font-family: 'Stoke', serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-primary);
-      margin: 0 0 0.25rem;
-    }
-    .portal-brand-subtitle {
-      font-family: 'La Belle Aurore', cursive;
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .flash {
-      padding: 0.6rem 0.8rem;
-      border-radius: 4px;
-      margin-top: 0.75rem;
-      font-family: 'Crimson Pro', serif;
-      font-size: 0.9rem;
-    }
-    .flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
-    .flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
-  </style>
+  <link rel="stylesheet" href="admin/account.css">
 </head>
 <body>
   <div class="container">
     <section class="admin-login-wrap">
       <div class="parchment">
         <div class="portal-brand">
-          <a href="/pv/index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
-            <img src="/pv/assets/pdf-emblem-web.png" alt="" class="login-home-logo">
+          <a href="index.html" class="login-home-link" aria-label="Back to Phoenix Vanguard home" title="Back to home">
+            <img src="assets/pdf-emblem-web.png" alt="" class="login-home-logo">
           </a>
           <p class="portal-brand-title">Phoenix Vanguard</p>
           <p class="portal-brand-subtitle">Management Portal</p>
         </div>
 
-        <h3 class="section-heading" style="text-align:center;">Sign In</h3>
+        <h3 class="section-heading">Sign In</h3>
 
         <form id="loginForm" autocomplete="off">
           <div class="form-group">
@@ -76,18 +36,18 @@
             <input id="login-password" name="password" type="password" required autocomplete="current-password">
           </div>
           <div id="login-flash"></div>
-          <button type="submit" id="login-submit" class="submit-btn" style="width:100%;">Sign In</button>
+          <button type="submit" id="login-submit" class="submit-btn">Sign In</button>
         </form>
 
-        <a href="/pv/admin/register.html"
-           style="display:block;text-align:center;margin-top:1rem;font-family:'Crimson Pro',serif;font-size:0.95rem;color:var(--accent-red);">
+        <a class="login-link" href="register.html">
           Need an account? Create one →
         </a>
       </div>
     </section>
   </div>
 
-  <script src="/pv/admin/api.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="admin/api.js"></script>
   <script>
   (function () {
     var form = document.getElementById('loginForm');
@@ -104,13 +64,17 @@
     }
 
     // Optional same-site return path (e.g. the bounty board sends users back
-    // after logging in to sign up). Anything else falls through to the portal.
+    // after logging in to sign up). Anything off-site falls through to the
+    // portal.
     var redirectTarget = (function () {
       try {
         var r = new URLSearchParams(window.location.search).get('redirect') || '';
-        if (r.indexOf('/pv/') === 0) return r;
+        if (r) {
+          var u = new URL(r, window.location.href);
+          if (u.origin === window.location.origin) return u.pathname + u.search + u.hash;
+        }
       } catch (_e) { /* ignore */ }
-      return '/pv/admin/portal.html';
+      return 'portal.html';
     })();
 
     // If we already hold a valid-looking session, skip the form.
@@ -141,12 +105,14 @@
           username: data.username || username,
           display_name: data.display_name || username,
           roles: data.roles || [],
+          permissions: data.permissions || [],
+          is_root: !!data.is_root,
           expires_at: data.expires_at || null
         });
         document.getElementById('login-password').value = '';
         window.location.replace(redirectTarget);
       } catch (err) {
-        showFlash('error', err.message || 'Login failed.');
+        showFlash('error', err.status === 401 ? 'Incorrect Password' : (err.message || 'Login failed.'));
         btn.disabled = false;
         btn.textContent = 'Sign In';
       }

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Intake Form</title>
 	
-	<link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-	<link rel="stylesheet" href="/pv/css/styles.css">
+	<link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+	<link rel="stylesheet" href="css/styles.css">
 	<script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 
     <!-- Google Fonts -->
@@ -38,7 +38,7 @@
             <div class="form-container active" id="form-intake">
                 <form id="intakeForm" onsubmit="generateIntakePDF(event)">
 
-					<div class="parchment" style="margin-bottom:20px;">
+					<div class="parchment is-stacked">
                     <!-- In Character Information -->
                     <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
 
@@ -409,7 +409,8 @@
     </div>
     </div>
 
-	<script src="/pv/vanguard-medical/med-forms.js"></script>
-	<script src="/pv/js/nav.js"></script>
+	<script src="js/pv-session.js"></script>
+	<script src="vanguard-medical/med-forms.js"></script>
+	<script src="js/nav.js"></script>
 </body>
 </html>

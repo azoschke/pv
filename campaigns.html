@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Campaigns — Phoenix Vanguard Tools</title>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 </head>
 <body>
@@ -58,7 +58,7 @@
         </div>
 
         <div class="landing-grid" id="campaign-landing-grid">
-          <div class="chapter-loading" style="grid-column:1/-1;">Loading campaigns&hellip;</div>
+          <div class="chapter-loading">Loading campaigns&hellip;</div>
         </div>
       </main>
 
@@ -228,7 +228,7 @@
     // ── Card grid (keeps the existing landing-card look) ──────────────────────
     function buildCard(c) {
       var a = document.createElement('a');
-      a.href = '/pv/campaigns/view.html?c=' + encodeURIComponent(c.slug);
+      a.href = 'view.html?c=' + encodeURIComponent(c.slug);
       a.className = 'landing-card';
       a.innerHTML =
         '<div class="landing-card-inner">' +
@@ -248,9 +248,8 @@
       if (!filtered.length) {
         var empty = document.createElement('div');
         empty.className = 'venues-empty';
-        empty.style.gridColumn = '1 / -1';
         empty.innerHTML = '<p>No campaigns match these filters.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter.</p>';
+          '<p class="venues-empty-hint">Try clearing a filter.</p>';
         grid.appendChild(empty);
         return;
       }
@@ -287,13 +286,14 @@
         renderGrid();
       })
       .catch(function (err) {
-        grid.innerHTML = '<p class="chapter-error" style="grid-column:1/-1;">Could not load campaigns. Please try again later.</p>';
+        grid.innerHTML = '<p class="chapter-error">Could not load campaigns. Please try again later.</p>';
         countEl.textContent = '';
         console.error('[campaigns] landing load error:', err);
       });
   })();
   </script>
 
-  <script src="/pv/js/nav.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

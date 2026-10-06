@@ -3,9 +3,8 @@
 //
 //  Renders two stacked cards:
 //    1. Channel-scoped bulletin board (via PVAdminBulletinBoard)
-//    2. Read-only faction roster pulled from /members, filtered client-side
-//       to rows whose faction list includes the section's faction. Only the
-//       member name and IC rank are shown.
+//    2. Read-only faction roster from /members/faction, which returns only
+//       this faction's members and only the fields shown here.
 //
 //  Props:
 //    faction  e.g. "Pirate" | "Mercenary"  (must match a value the FC roster
@@ -160,7 +159,7 @@
       ),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
-        ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading roster…')
+        ? h('p', { className: 'portal-muted' }, 'Loading roster…')
         : members.length
           ? h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table' },
@@ -180,7 +179,7 @@
                           h('td', null,
                             m.ic_rank
                               ? m.ic_rank
-                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                              : h('span', { className: 'portal-muted' }, '—')
                           ),
                           h('td', null,
                             factions.length
@@ -189,20 +188,20 @@
                                     return h('span', { key: f, className: 'portal-faction-tag' }, f);
                                   })
                                 )
-                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                              : h('span', { className: 'portal-muted' }, '—')
                           )
                         );
                       })
                     : h('tr', null,
                         h('td', {
                           colSpan: 3,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                          className: 'portal-empty-cell'
                         }, 'No members match your filter.')
                       )
                 )
               )
             )
-          : h('p', { style: { color: 'var(--text-secondary)' } },
+          : h('p', { className: 'portal-muted' },
               'No ' + faction + ' faction members on the roster yet.')
     );
   }
@@ -220,18 +219,16 @@
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
 
-    // One roster fetch feeds both the IC Interview card and the roster.
+    // One roster fetch feeds both the IC Interview card and the roster. The
+    // worker returns only this faction's members, with just the fields shown.
     useEffect(function () {
       var cancelled = false;
       (async function () {
         try {
-          var data = await PVAdminAPI.request('GET', '/members', undefined, true);
+          var data = await PVAdminAPI.request('GET', '/members/faction?division=' + encodeURIComponent(division), undefined, true);
           if (cancelled) return;
           var rows = Array.isArray(data) ? data : [];
-          var matches = rows.filter(function (m) {
-            return parseFactions(m.faction).indexOf(faction) !== -1;
-          });
-          setMembers(matches.sort(compareMembers));
+          setMembers(rows.sort(compareMembers));
         } catch (e) {
           if (!cancelled) setErr(e.message || 'Failed to load roster.');
         } finally {
@@ -239,7 +236,7 @@
         }
       })();
       return function () { cancelled = true; };
-    }, [faction]);
+    }, [division]);
 
     return h('div', { className: 'division-grid' },
       h('div', { className: 'division-col' },

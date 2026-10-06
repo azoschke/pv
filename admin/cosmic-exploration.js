@@ -4,9 +4,9 @@
 //  Worker (cosmic-exploration.chlorinatorgreen.workers.dev) routes used:
 //    GET    /api/meta                       public
 //    GET    /api/quests                     public
-//    POST   /api/admin/quests               admin | officer
-//    PUT    /api/admin/quests/:id           admin | officer
-//    DELETE /api/admin/quests/:id           admin | officer
+//    POST   /api/admin/quests               cosmic.edit
+//    PUT    /api/admin/quests/:id           cosmic.edit
+//    DELETE /api/admin/quests/:id           cosmic.edit
 //
 //  Auth: forwards the PVAdminAPI session bearer to the cosmic Worker, which
 //  validates it against pv-med-database-worker /me.
@@ -56,41 +56,7 @@
   // ── Worker request helper ───────────────────────────────────────────────────
 
   async function cosmicRequest(method, path, body, authed) {
-    var headers = { 'Accept': 'application/json' };
-    if (body !== undefined && body !== null) headers['Content-Type'] = 'application/json';
-    if (authed) {
-      var s = PVAdminAPI.getSession();
-      if (!s) {
-        PVAdminAPI.redirectToLogin();
-        throw new Error('Session expired. Please sign in again.');
-      }
-      headers['Authorization'] = 'Bearer ' + s.token;
-    }
-
-    var res = await fetch(COSMIC_API_BASE + path, {
-      method: method,
-      headers: headers,
-      body: (body === undefined || body === null) ? undefined : JSON.stringify(body)
-    });
-
-    if (res.status === 401 && authed) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Request failed (' + res.status + ')');
-      var e = new Error(msg);
-      e.status = res.status;
-      throw e;
-    }
-    return data;
+    return PVSession.request(COSMIC_API_BASE, method, path, body, { auth: !!authed, loginOn401: !!authed });
   }
 
   // ── Draft helpers ───────────────────────────────────────────────────────────
@@ -320,7 +286,7 @@
             h('div', {
               style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' }
             },
-              h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
+              h('div', { className: 'portal-field is-full' },
                 h('label', null, 'Item name'),
                 h('input', {
                   type: 'text', maxLength: 200,
@@ -418,7 +384,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { style: { fontWeight: 600 } }, q.questName || '(unnamed)'),
+        h('div', { className: 'portal-strong' }, q.questName || '(unnamed)'),
         itemNames ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, itemNames) : null
       ),
       h('td', null, q.job || '—'),
@@ -427,9 +393,9 @@
       h('td', null,
         rewardBits.length
           ? rewardBits.join(' · ')
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(q); }
@@ -542,11 +508,11 @@
     var categories = (meta && meta.categories) || [];
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Cosmic Exploration Catalog'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Cosmic Exploration Catalog'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -588,7 +554,7 @@
             h('span', null, 'New quest')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -599,7 +565,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading catalog…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No quests match those filters.' : 'No quests yet. Add the first one.'
               )
             )

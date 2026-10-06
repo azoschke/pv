@@ -1,5 +1,5 @@
 // ============================================================================
-//  PVAdminVenueMenus — per-venue menu editing for officers/admins
+//  PVAdminVenueMenus — per-venue menu editing (venues.menus)
 //
 //  Rendered as the "Menus" tab of the Venues section (see admin/venues.js).
 //  Only venues flagged has_menu appear in the picker; the worker enforces the
@@ -10,15 +10,15 @@
 //
 //  Worker routes:
 //    GET    /menus?venue_id=:id      public (shared with the public page)
-//    POST   /menu-categories         officer | admin
-//    PATCH  /menu-categories/:id     officer | admin
-//    DELETE /menu-categories/:id     officer | admin
-//    POST   /menu-categories/reorder officer | admin  { venue_id, ids: [] }
-//    POST   /menus                   officer | admin
-//    PATCH  /menus/:id               officer | admin
-//    DELETE /menus/:id               officer | admin
-//    POST   /menus/reorder           officer | admin  { category_id, ids: [] }
-//    POST   /menus/images            officer | admin  (multipart -> { url })
+//    POST   /menu-categories         venues.menus
+//    PATCH  /menu-categories/:id     venues.menus
+//    DELETE /menu-categories/:id     venues.menus
+//    POST   /menu-categories/reorder venues.menus  { venue_id, ids: [] }
+//    POST   /menus                   venues.menus
+//    PATCH  /menus/:id               venues.menus
+//    DELETE /menus/:id               venues.menus
+//    POST   /menus/reorder           venues.menus  { category_id, ids: [] }
+//    POST   /menus/images            venues.menus  (multipart -> { url })
 // ============================================================================
 
 (function () {
@@ -26,12 +26,9 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
   // Menu thumbnails render at 64px, so 512 leaves headroom for retina without
   // paying the venue-image cost on a menu with forty items.
   var MENU_IMAGE_SIZE = 512;
-  var UPLOAD_WEBP_QUALITY = 0.82;
 
   // ── Category icons ───────────────────────────────────────────────────────
   //  Must stay in sync with MENU_ICONS in venues/menus.js — the worker stores
@@ -85,90 +82,7 @@
   //  Menu images are square by design: the resize centre-crops to the shorter
   //  edge before scaling, so a wide photo loses its sides rather than being
   //  letterboxed into the thumbnail.
-  async function resizeImageToSquareWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-
-    var side = Math.min(srcW, srcH);
-    var sx = Math.round((srcW - side) / 2);
-    var sy = Math.round((srcH - side) / 2);
-    var out = Math.min(MENU_IMAGE_SIZE, side);
-
-    var canvas = document.createElement('canvas');
-    canvas.width = out; canvas.height = out;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, out, out);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Safari has no WebP encoder and silently returns a PNG, which the worker
-    // rejects — fall back to JPEG, as the venue form does.
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
-  async function uploadMenuImage(file, venueName) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToSquareWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('venue_name', venueName);
-    var res = await fetch(PVAdminAPI.API_BASE + '/menus/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      throw new Error((data && (data.error || data.message)) || ('Upload failed (' + res.status + ')'));
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
-  }
+  var MENU_IMAGE_RESIZE = { square: true, maxSize: MENU_IMAGE_SIZE, quality: 0.82 };
 
   function formatCost(cost) {
     if (cost == null || cost === '') return '—';
@@ -283,10 +197,6 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     function setField(k, v) {
       setDraft(function (d) {
@@ -296,22 +206,13 @@
       });
     }
 
-    async function handleUpload(file) {
-      if (!file) return;
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr(''); setUploading(true);
-      try {
-        var url = await uploadMenuImage(file, props.venueName);
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
+    var up = PVAdminImageUpload.useImageUpload({
+      path: '/menus/images',
+      fields: { venue_name: props.venueName },
+      resize: MENU_IMAGE_RESIZE,
+      onUploaded: function (url) { setField('image_url', url); }
+    });
+    var uploading = up.uploading;
 
     async function submit(e) {
       e.preventDefault();
@@ -396,27 +297,7 @@
                   color: 'var(--text-secondary)'
                 }
               }, h(Icon, { name: props.categoryIcon, size: 26 })),
-          h('label', {
-            className: 'portal-btn is-ghost is-small',
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: uploading || saving ? 0.55 : 1,
-              cursor: uploading || saving ? 'not-allowed' : 'pointer'
-            }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploading || saving,
-              style: { display: 'none' },
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleUpload(f);
-              }
-            })
-          ),
+          h(PVAdminImageUpload.UploadButton, { busy: uploading, disabled: saving, title: null, onFile: up.upload }),
           draft.image_url ? h('button', {
             type: 'button',
             className: 'portal-btn is-ghost is-small',
@@ -424,9 +305,9 @@
             disabled: uploading || saving
           }, 'Remove') : null
         ),
-        uploadErr ? h('p', {
+        up.error ? h('p', {
           style: { margin: '0.4rem 0 0', color: 'var(--accent-red)', fontSize: '0.85rem' }
-        }, uploadErr) : null
+        }, up.error) : null
       ),
 
       h('div', { className: 'portal-form-actions' },
@@ -638,7 +519,7 @@
             }, h(Icon, { name: cat.icon, size: 20 })),
 
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontWeight: 600 } }, item.name),
+          h('div', { className: 'portal-strong' }, item.name),
           item.description
             ? h('div', {
                 style: {
@@ -680,8 +561,7 @@
           h('span', { style: { color: 'var(--accent-brown)', display: 'flex' } },
             h(Icon, { name: cat.icon, size: 20 })),
           h('h3', {
-            className: 'portal-card-title',
-            style: { margin: 0, flex: 1 }
+            className: 'portal-card-title portal-head-title'
           }, cat.name),
           arrowBtn('▲', function () { moveCategory(index, -1); }, index === 0),
           arrowBtn('▼', function () { moveCategory(index, 1); }, index === cats.length - 1),
@@ -709,11 +589,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Venue Menus'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Menus'),
           h('select', {
             className: 'portal-search',
             value: venueId,
@@ -737,8 +617,7 @@
           ) : null
         ),
         flash ? h('div', {
-          className: 'portal-flash success',
-          style: { marginTop: '0.75rem', marginBottom: 0 }
+          className: 'portal-flash success is-head'
         }, flash) : null
       ),
 
@@ -750,18 +629,18 @@
         ? h('div', { className: 'portal-card' }, 'Loading venues…')
         : !venues.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 'No venue has a menu enabled yet. Open the Directory tab, edit a ' +
                 'venue tagged Tavern or Restaurant, and tick “Has a menu”.'))
           : !venueId
             ? h('div', { className: 'portal-card' },
-                h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+                h('p', { className: 'portal-note' },
                   'Choose a venue above to edit its menu.'))
             : loadingMenu
               ? h('div', { className: 'portal-card' }, 'Loading menu…')
               : !cats.length
                 ? h('div', { className: 'portal-card' },
-                    h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+                    h('p', { className: 'portal-note' },
                       'This menu is empty. Add a category to get started — items ' +
                       'live inside categories.'))
                 : cats.map(renderCategory),

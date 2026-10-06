@@ -4,7 +4,8 @@
 //  Exposes two globals:
 //    - PVAdminApplications     full management card (Name · Position · Division
 //                              · Date · Stage). Rendered beneath the Jobs card
-//                              in the Job Board section. Officer/admin edit.
+//                              in the Job Board section. Editing needs
+//                              jobs.applications_edit.
 //    - PVAdminApplicationsCard read-only, division-filtered card dropped onto
 //                              the Mercenary / Pirate / Medical / House Staff
 //                              division pages as an informational card.
@@ -14,10 +15,11 @@
 //  category by the worker, so the card on each division page can filter to it.
 //
 //  Worker routes:
-//    GET    /applications[?division=]   officer | admin | pirate | mercenary
-//    POST   /applications               officer | admin
-//    PATCH  /applications/:id           officer | admin
-//    DELETE /applications/:id           officer | admin
+//    GET    /applications               jobs.applications_view
+//    GET    /applications?division=     that, or the division's Factions tab
+//    POST   /applications               jobs.applications_edit
+//    PATCH  /applications/:id           jobs.applications_edit
+//    DELETE /applications/:id           jobs.applications_edit
 // ============================================================================
 
 (function () {
@@ -333,6 +335,7 @@
     var onDelete = props.onDelete;
     var onStage = props.onStage;
     var onArchive = props.onArchive;
+    var canEdit = props.canEdit;
     var jobsById = props.jobsById || {};
 
     var job = jobsById[a.job_id];
@@ -341,7 +344,7 @@
 
     return h('tr', archived ? { style: { opacity: 0.55 } } : null,
       h('td', null,
-        h('span', { style: { fontWeight: 600 } }, a.member_name),
+        h('span', { className: 'portal-strong' }, a.member_name),
         archived ? h('span', {
           className: 'portal-pill is-muted',
           style: { marginLeft: '0.5rem' }
@@ -350,17 +353,17 @@
       h('td', null, a.job_title),
       h('td', null, labelFor(DIVISIONS, a.division)),
       h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
-      h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+      h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
       h('td', null,
-        h('select', {
+        canEdit ? h('select', {
           className: 'portal-filter-select',
           value: a.stage,
           onChange: function (e) { onStage(a, e.target.value); }
         }, STAGES.map(function (s) {
           return h('option', { key: s.value, value: s.value }, s.label);
-        }))
+        })) : h(StageBadge, { stage: a.stage })
       ),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      canEdit ? h('td', { className: 'portal-col-actions' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
@@ -377,11 +380,12 @@
             if (confirm('Delete the application for "' + a.member_name + '"?')) onDelete(a);
           }
         }, 'Delete')
-      )
+      ) : h('td', null)
     );
   }
 
   function Applications(props) {
+    var canEdit = PVAdminAPI.can('jobs.applications_edit');
     var listState = useState([]);
     var list = listState[0], setList = listState[1];
     var membersState = useState([]);
@@ -429,10 +433,12 @@
     // Members + jobs feed the new/edit dropdowns. Failure here is non-fatal —
     // the list still renders; the form just shows empty selects.
     async function loadPickers() {
-      try {
-        var m = await PVAdminAPI.request('GET', '/members', undefined, true);
-        setMembers(Array.isArray(m) ? m : []);
-      } catch (_e) { /* leave empty */ }
+      if (canEdit) {
+        try {
+          var m = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
+          setMembers(Array.isArray(m) ? m : []);
+        } catch (_e) { /* leave empty */ }
+      }
       try {
         var j = await PVAdminAPI.request('GET', '/jobs', undefined, true);
         setJobs(Array.isArray(j) ? j : []);
@@ -528,11 +534,11 @@
     var anyFilterActive = !!(query || divisionFilter || stageFilter || showArchived);
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Applications'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Applications'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -540,14 +546,14 @@
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search applications…'
           }),
-          h('button', {
+          canEdit ? h('button', {
             type: 'button',
             className: 'portal-btn',
             onClick: function () { setFormOpen({ app: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
             h('span', null, 'New application')
-          )
+          ) : null
         ),
         h('div', { className: 'portal-filter-row', style: { marginTop: '0.6rem' } },
           h('select', {
@@ -585,7 +591,7 @@
             onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -596,7 +602,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading applications…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No applications match your filter.' : 'No applications yet. Add the first one.'
               )
             )
@@ -611,7 +617,7 @@
                       h('th', null, 'Type'),
                       h('th', null, 'Date'),
                       h('th', null, 'Stage'),
-                      h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                      h('th', { className: 'portal-col-actions' }, '')
                     )
                   ),
                   h('tbody', null,
@@ -623,7 +629,8 @@
                         onEdit: function (aa) { setFormOpen({ app: aa }); },
                         onDelete: handleDelete,
                         onStage: handleStage,
-                        onArchive: handleArchive
+                        onArchive: handleArchive,
+                        canEdit: canEdit
                       });
                     })
                   )
@@ -728,7 +735,7 @@
               return h('tr', { key: a.id },
                 h('td', null, a.member_name),
                 h('td', null, a.job_title),
-                h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+                h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
                 h('td', null, h(StageBadge, { stage: a.stage }))
               );
             })

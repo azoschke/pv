@@ -529,7 +529,7 @@
     const header = h('div', {
       className: 'craft-card-header ' + (isExpanded ? 'expanded' : ''),
       onClick: onToggle,
-      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent', paddingRight: '80px', position: 'relative' }
+      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent' }
     },
       h('div', { className: 'craft-title-section' },
         h('h3', { className: 'craft-name' }, quest.questName || '(unnamed)')
@@ -552,11 +552,7 @@
         ),
         h('button', {
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'cdb-btn cdb-btn-secondary',
-          style: {
-            padding: '8px', position: 'absolute', right: '0', top: '50%',
-            transform: 'translateY(-50%) translateX(50%)', zIndex: 10
-          },
+          className: 'cdb-btn cdb-btn-secondary cdb-card-edit',
           title: isExpanded ? 'Collapse' : 'Expand'
         },
           h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
@@ -566,8 +562,7 @@
 
     // Per-item copy strip when collapsed
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row',
-      style: { padding: '0 1rem 0.75rem', flexWrap: 'wrap', gap: '0.4rem' }
+      className: 'cdb-inline-row cdb-card-tags'
     },
       h('span', { style: { fontSize: '0.9rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
       ...(quest.items || []).flatMap((item) => {
@@ -609,7 +604,7 @@
     );
 
     if (!isExpanded) {
-      return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+      return h('div', { className: 'craft-card' },
         header,
         collapsedBody
       );
@@ -648,7 +643,7 @@
         ...quest.items.map((item) => {
           const cur = draft.items[item.id] || { itemName: item.name, macro: '' };
           const autoFocus = focusItemId === item.id;
-          return h('div', { key: item.id, style: { marginBottom: '0.75rem' } },
+          return h('div', { key: item.id, className: 'cdb-item-block' },
             h('label', { className: 'cdb-label-xs' }, 'Macro for ' + (item.name || 'Item')),
             h('textarea', {
               className: 'cdb-input cdb-input-mono',
@@ -688,7 +683,7 @@
       )
     );
 
-    return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+    return h('div', { className: 'craft-card' },
       header,
       h('div', { className: 'cdb-card-body' },
         isEditing && editBody,
@@ -714,7 +709,7 @@
         !isEditing && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Data Reward (' + quest.job + ')'),
           h(DataRewardChips, { dataReward: quest.dataReward || {}, levels: dataRewardLevels })
-            || h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(none)')
+            || h('span', { className: 'cdb-meta' }, '(none)')
         ),
         !isEditing && !questHasMacro(rec) && h('div', {
           style: {
@@ -743,9 +738,9 @@
             const macroText = (userItem && userItem.macro) || '';
             if (!macroText) return null;
             const chunks = splitMacroIntoChunks(macroText);
-            return h('div', { key: item.id, style: { marginBottom: '0.75rem' } },
+            return h('div', { key: item.id, className: 'cdb-item-block' },
               quest.items.length > 1 && h('div', {
-                style: { fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }
+                className: 'cdb-item-label'
               }, item.name || 'Item'),
               h('div', { className: 'cdb-macro-grid' },
                 ...chunks.map((chunk, chunkIdx) => {
@@ -781,7 +776,6 @@
         h('span', {
           onClick: (e) => { e.stopPropagation(); startEdit(); },
           className: 'material-icons cdb-icon-btn',
-          style: { color: 'var(--accent-brown)', fontSize: '24px' },
           title: questHasUserData(rec) ? 'Edit my macros / notes' : 'Add my macros / notes'
         }, 'edit')
       )
@@ -1032,11 +1026,10 @@
                 if (file) handleImportFile(file);
                 e.target.value = '';
               },
-              style: { display: 'none' }
+              className: 'cdb-file-input'
             })
           ),
-          h('button', { onClick: handleClearLocal, className: 'cdb-btn cdb-btn-secondary',
-            style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' } },
+          h('button', { onClick: handleClearLocal, className: 'cdb-btn cdb-btn-secondary is-danger' },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'delete_sweep'),
             'Clear My Data'
           )
@@ -1134,7 +1127,7 @@
         )
       ),
 
-      h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+      h('div', { className: 'cdb-results-count' },
         loadState === 'loading'
           ? 'Loading catalog…'
           : 'Found ' + filtered.length + ' mission' + (filtered.length !== 1 ? 's' : '')

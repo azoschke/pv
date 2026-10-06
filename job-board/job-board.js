@@ -17,7 +17,6 @@
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-  var SESSION_KEY = "pv.admin.session";
   var SIDEBAR_KEY = "pv-jobs-sidebar-hidden";
   var FILTER_KEY  = "pv-jobs-filters";
   var SORT_KEY    = "pv-jobs-sort";
@@ -71,40 +70,18 @@
 
   if (window.marked && marked.use) marked.use({ breaks: true });
 
-  // ── Session (shared with the management portal) ──────────────────────────
-  function getSession() {
-    try {
-      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      if (!s || !s.token) return null;
-      if (s.expires_at) {
-        var exp = new Date(s.expires_at).getTime();
-        if (!isNaN(exp) && exp <= Date.now()) return null;
-      }
-      return s;
-    } catch (_e) {
-      return null;
-    }
+  // ── Session (js/pv-session.js, shared with the management portal) ──────
+  var getSession = PVSession.get;
+
+  // A session saved before permissions existed has no list; it keeps the
+  // buttons, and the worker still checks.
+  function canUse(key) {
+    return PVSession.can(key, true);
   }
 
-  async function authedRequest(method, path) {
-    var session = getSession();
-    if (!session) throw new Error("You are no longer logged in.");
-    var res = await fetch(API_BASE + path, {
-      method: method,
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer " + session.token
-      }
-    });
-    var text = await res.text();
-    var data = null;
-    if (text) { try { data = JSON.parse(text); } catch (_e) { data = null; } }
-    if (!res.ok) {
-      throw new Error((data && data.error) || ("Request failed (" + res.status + ")"));
-    }
-    return data;
+  function authedRequest(method, path) {
+    if (!getSession()) return Promise.reject(new Error("You are no longer logged in."));
+    return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
   }
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -450,7 +427,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No postings match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or showing closed postings.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or showing closed postings.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -479,12 +456,12 @@
 
     var descHtml = j.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(j.description)) : "<p>" + escapeHTML(j.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges =
-      '<span class="job-badge job-badge-category job-cat-' + j.category + '" style="position:static;">' +
+      '<span class="job-badge job-badge-category job-cat-' + j.category + ' is-static">' +
         escapeHTML(jobBadgeLabel(j).toUpperCase()) + '</span>' +
-      '<span class="job-badge job-badge-status job-status-' + j.status + '" style="position:static;">' +
+      '<span class="job-badge job-badge-status job-status-' + j.status + ' is-static">' +
         escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
 
     var contactHtml = j.contact
@@ -547,10 +524,11 @@
     if (!getSession()) {
       // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="/pv/admin/login.html?redirect=' +
+        '<a class="quest-action-btn" href="login.html?redirect=' +
         encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
         '</div>';
     }
+    if (!canUse("jobs.apply")) return "";
     var app = myApplicationFor(j);
     if (!app) {
       if (jobTypeOf(j) === "primary") {
@@ -610,7 +588,7 @@
   }
 
   async function loadMyApplications() {
-    if (!getSession()) { myApplications = []; return; }
+    if (!canUse("jobs.apply")) { myApplications = []; return; }
     try {
       var data = await authedRequest("GET", "/my/applications");
       myApplications = Array.isArray(data) ? data : [];

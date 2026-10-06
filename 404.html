@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="pv-forwarding">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found</title>
+  <style>.pv-forwarding body { visibility: hidden; }</style>
+  <script>
+    // GitHub Pages serves this page for any address it can't find, at that
+    // address — so links here are built from the site's base path, which is
+    // /pv on GitHub Pages and empty on the live domain.
+    //
+    // Pages used to live in folders (/pv/job-board/job-board.html); they all
+    // sit at the top level now, so an old address is forwarded to
+    // <base>/<page>.html, keeping its ?query and #hash.
+    (function () {
+      var path = window.location.pathname;
+      var base = path.indexOf('/pv/') === 0 ? '/pv' : '';
+      var parts = path.slice(base.length).split('/').filter(Boolean);
+      var name = parts.length > 1 ? parts[parts.length - 1].replace(/\.html?$/i, '') : '';
+      if (name) {
+        window.location.replace(base + '/' + name + '.html' + window.location.search + window.location.hash);
+        return;
+      }
+      window.PV_BASE = base;
+      var theme = localStorage.getItem('crafting-tools-theme');
+      if (theme) document.documentElement.setAttribute('data-theme', theme);
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = base + '/css/styles.css';
+      document.head.appendChild(css);
+      var icon = document.createElement('link');
+      icon.rel = 'icon';
+      icon.type = 'image/png';
+      icon.href = base + '/assets/pdf-emblem-web.png';
+      document.head.appendChild(icon);
+      document.documentElement.classList.remove('pv-forwarding');
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <h1 class="app-title">Page not found</h1>
+      <p class="landing-tagline"><a id="pv-home-link" href="/">Back to home</a></p>
+    </header>
+  </div>
+  <script>
+    if (window.PV_BASE !== undefined) {
+      document.getElementById('pv-home-link').href = window.PV_BASE + '/index.html';
+    }
+  </script>
+</body>
+</html>

@@ -4,15 +4,15 @@
 //  The candidate roster is every FC member whose `faction` field contains
 //  "Medical". For each candidate, an admin can attach a profile (positions,
 //  tags, description) which gates whether they appear on the public roster
-//  at /pv/vanguard-medical/staff-roster.html.
+//  at staff-roster.html.
 //
-//  Worker routes:
-//    GET    /members                  (existing, auth)
-//    GET    /medical-staff/admin      officer | admin
+//  Worker routes (all need "Manage the medical staff roster"):
+//    GET    /members/faction?division=medical   the Medical faction's members
+//    GET    /medical-staff/admin
 //        -> [{ member_id, positions:[], tags:[], description, updated_at }]
-//    PUT    /medical-staff/:member_id officer | admin
+//    PUT    /medical-staff/:member_id
 //        body { positions:[], tags:[], description }
-//    DELETE /medical-staff/:member_id admin
+//    DELETE /medical-staff/:member_id
 //
 //  Public route (used by the staff-roster.html page, not this module):
 //    GET    /medical-staff
@@ -25,95 +25,6 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
-
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-  var UPLOAD_TARGET_WIDTH = 1400;
-  var UPLOAD_WEBP_QUALITY = 0.8;
-
-  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
-  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
-  async function resizeImageToWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
-    var hgt = Math.max(1, Math.round((w / srcW) * srcH));
-    var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = hgt;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, 0, 0, w, hgt);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Browsers without a WebP encoder (notably Safari) silently hand back a
-    // PNG here, which the worker would reject. Re-encode as JPEG instead
-    // (universally supported, and far smaller than the PNG fallback).
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
-  async function uploadMedicalStaffImage(file, memberName) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('member_name', memberName);
-    var res = await fetch(PVAdminAPI.API_BASE + '/medical-staff/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
-      throw new Error(msg);
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
-  }
 
   var POSITIONS = [
     'Medical Lead',
@@ -201,31 +112,9 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     function setField(k, v) {
       setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
-    }
-
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (file.size > UPLOAD_MAX_BYTES) {
-        setUploadErr('File is larger than 10 MB. Pick a smaller image.');
-        return;
-      }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadMedicalStaffImage(file, row.member.name);
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
     }
 
     function togglePosition(p) {
@@ -312,57 +201,14 @@
         )
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            style: { flex: 1 }
-          }),
-          h('label', {
-            className: 'portal-btn is-ghost is-small',
-            title: uploading ? 'Uploading…' : 'Upload an image.',
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: (uploading || saving) ? 0.55 : 1,
-              cursor: (uploading || saving) ? 'not-allowed' : 'pointer'
-            }
-          },
-            uploading ? 'Uploading…' : 'Upload',
-            h('input', {
-              type: 'file',
-              accept: UPLOAD_ACCEPT,
-              disabled: uploading || saving,
-              style: { display: 'none' },
-              onChange: function (e) {
-                var f = e.target.files && e.target.files[0];
-                e.target.value = '';
-                handleImageUpload(f);
-              }
-            })
-          )
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL or upload a portrait. Shown on the public staff roster card.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        uploadPath: '/medical-staff/images',
+        extraFields: { member_name: row.member.name },
+        help: 'Paste a URL or upload a portrait. Shown on the public staff roster card.'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Description'),
@@ -388,8 +234,7 @@
         }, 'Cancel'),
         (hasProfile && allowDelete) ? h('button', {
           type: 'button',
-          className: 'portal-btn is-danger',
-          style: { marginLeft: 'auto' },
+          className: 'portal-btn is-danger is-end',
           onClick: function () {
             if (confirm('Remove ' + row.member.name + ' from the Medical Division roster? The FC member record is not deleted.')) {
               onDelete(row);
@@ -411,9 +256,9 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+        h('div', { className: 'portal-name-row' },
           !hasProfile ? h('span', { className: 'portal-badge is-pinned' }, 'Needs profile') : null,
-          h('span', { style: { fontWeight: 600 } }, row.member.name)
+          h('span', { className: 'portal-strong' }, row.member.name)
         )
       ),
       h('td', null,
@@ -423,7 +268,7 @@
                 return h('span', { key: p, className: 'portal-faction-tag' }, p);
               })
             )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
       h('td', null,
         tags.length
@@ -432,9 +277,9 @@
                 return h('span', { key: t, className: 'portal-faction-tag' }, t);
               })
             )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      h('td', { className: 'portal-col-actions' },
         h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
@@ -446,7 +291,7 @@
 
   // --------- Main component ----------
   function MedicalStaff() {
-    var allowDelete = PVAdminAPI.hasRole('admin') || PVAdminAPI.hasRole('officer');
+    var allowDelete = PVAdminAPI.can('factions.medical.manage');
 
     var membersState = useState([]);
     var members = membersState[0], setMembers = membersState[1];
@@ -474,7 +319,7 @@
     async function reload() {
       setErr('');
       try {
-        var membersData = await PVAdminAPI.request('GET', '/members', undefined, true);
+        var membersData = await PVAdminAPI.request('GET', '/members/faction?division=medical', undefined, true);
         var profilesData = await PVAdminAPI.request('GET', '/medical-staff/admin', undefined, true);
         setMembers(Array.isArray(membersData) ? membersData : []);
         setProfiles(Array.isArray(profilesData) ? profilesData : []);
@@ -547,11 +392,11 @@
       window.PVAdminApplicationsCard
         ? h(window.PVAdminApplicationsCard, { division: 'medical', label: 'Medical' })
         : null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Medical Division Roster'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Medical Division Roster'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -560,13 +405,13 @@
             placeholder: 'Search name, position, tag…'
           })
         ),
-        h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+        h('p', { className: 'portal-head-desc' },
           'If you do not see a member of the Medical team within this list, ensure they are tagged with Medical in the primary FC list.'
         ),
-        h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+        h('p', { className: 'portal-head-desc is-tight' },
           publishedCount + ' published · ' + needsProfileCount + ' awaiting profile'
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -577,7 +422,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading roster…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 rows.length
                   ? 'No members match that search.'
                   : 'No FC members have Faction = Medical yet. Set a member’s Faction to Medical in FC Members to add them here.'
@@ -591,7 +436,7 @@
                       h('th', null, 'Name'),
                       h('th', null, 'Position(s)'),
                       h('th', null, 'Tags'),
-                      h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                      h('th', { className: 'portal-col-actions' }, '')
                     )
                   ),
                   h('tbody', null,

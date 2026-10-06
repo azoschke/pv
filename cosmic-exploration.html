@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FFXIV Crafting Macro Database</title>
+  <title>FFXIV Cosmic Exploration Macro Database</title>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <!-- Shared Styles -->
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 
   <!-- React and ReactDOM -->
@@ -30,19 +30,20 @@
     </div>
   </div>
 
-  <script src="/pv/crafting-database/crafting-database.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="crafting-database/cosmic-exploration.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const root = ReactDOM.createRoot(document.getElementById('app'));
-      if (typeof CraftingDatabase !== 'undefined') {
-        root.render(React.createElement(CraftingDatabase));
+      if (typeof CosmicExplorationDatabase !== 'undefined') {
+        root.render(React.createElement(CosmicExplorationDatabase));
       } else {
-        root.render(React.createElement('div', { style: { color: 'red' } }, 'Error: CraftingDatabase component not found'));
+        root.render(React.createElement('div', { style: { color: 'red' } }, 'Error: CosmicExplorationDatabase component not found'));
       }
     });
   </script>
 
-  <script src="/pv/js/nav.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

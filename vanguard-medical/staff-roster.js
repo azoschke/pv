@@ -437,7 +437,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No medics match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or two.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or two.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -463,10 +463,10 @@
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges = s._positions.map(function (p) {
-      return '<span class="venue-badge venue-badge-size" style="position:static;">' +
+      return '<span class="venue-badge venue-badge-size is-static">' +
         escapeHTML(p.toUpperCase()) + '</span>';
     }).join("");
 

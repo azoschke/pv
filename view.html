@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Campaign — Phoenix Vanguard</title>
   <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-  <link rel="icon" href="/pv/assets/pdf-emblem-web.png" type="image/png">
-  <link rel="stylesheet" href="/pv/css/styles.css">
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
 </head>
 <body>
@@ -18,7 +18,7 @@
       <p class="app-subtitle" id="campaign-subtitle">Phoenix Vanguard</p>
       <h1 class="app-title" id="campaign-title">Campaign</h1>
       <nav class="campaign-breadcrumb" aria-label="Breadcrumb">
-        <a href="/pv/campaigns/campaigns.html" class="campaign-breadcrumb-link">Campaigns</a>
+        <a href="campaigns.html" class="campaign-breadcrumb-link">Campaigns</a>
         <span class="campaign-breadcrumb-sep" aria-hidden="true">/</span>
         <span class="campaign-breadcrumb-current" id="campaign-breadcrumb-current" aria-current="page">Campaign</span>
       </nav>
@@ -65,7 +65,7 @@
   </div><!-- /.container -->
 
   <!-- Shared markdown utilities, then page logic -->
-  <script src="./campaigns.js"></script>
+  <script src="campaigns/campaigns.js"></script>
   <script>
   (function () {
 
@@ -322,6 +322,7 @@
   })();
   </script>
 
-  <script src="/pv/js/nav.js"></script>
+  <script src="js/pv-session.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

@@ -1,12 +1,15 @@
 // ============================================================================
-//  PVAdminJobBoard — Job board management for officers/admins
+//  PVAdminJobBoard — Job board management
+//
+//  Tabs: Job Postings (jobs.postings) and Applications
+//  (jobs.applications_view); each shows only with its permission.
 //
 //  Worker routes:
 //    GET    /jobs          public
-//    POST   /jobs          officer | admin
-//    PATCH  /jobs/:id      officer | admin
-//    DELETE /jobs/:id      officer | admin
-//    POST   /jobs/images   officer | admin  (single image upload)
+//    POST   /jobs          jobs.postings
+//    PATCH  /jobs/:id      jobs.postings
+//    DELETE /jobs/:id      jobs.postings
+//    POST   /jobs/images   jobs.postings  (single image upload)
 //
 // ============================================================================
 
@@ -15,95 +18,6 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
   var useMemo = React.useMemo;
-
-  var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
-  var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-  var UPLOAD_TARGET_WIDTH = 1400;
-  var UPLOAD_WEBP_QUALITY = 0.8;
-
-  // Decode the picked file, downscale to UPLOAD_TARGET_WIDTH (auto height) if
-  // wider than that, and re-encode as WebP. Returns a Blob ready to upload.
-  async function resizeImageToWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var w = srcW > UPLOAD_TARGET_WIDTH ? UPLOAD_TARGET_WIDTH : srcW;
-    var hgt = Math.max(1, Math.round((w / srcW) * srcH));
-    var canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = hgt;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, 0, 0, w, hgt);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Browsers without a WebP encoder (notably Safari) silently hand back a
-    // PNG here, which the worker would reject. Re-encode as JPEG instead
-    // (universally supported, and far smaller than the PNG fallback).
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
-  async function uploadJobImage(file, jobTitle) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('job_title', jobTitle);
-    var res = await fetch(PVAdminAPI.API_BASE + '/jobs/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
-      throw new Error(msg);
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
-  }
 
   var CATEGORIES = [
     { value: 'mercenary',   label: 'Mercenary' },
@@ -203,60 +117,11 @@
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
-    var uploadingState = useState(false);
-    var uploading = uploadingState[0], setUploading = uploadingState[1];
-    var uploadErrState = useState('');
-    var uploadErr = uploadErrState[0], setUploadErr = uploadErrState[1];
 
     var titleReady = !!draft.title.trim();
 
     function setField(k, v) {
       setDraft(function (d) { return Object.assign({}, d, { [k]: v }); });
-    }
-
-    async function handleImageUpload(file) {
-      if (!file) return;
-      if (!titleReady) { setUploadErr('Enter the job title before uploading.'); return; }
-      if (file.size > UPLOAD_MAX_BYTES) { setUploadErr('File is larger than 10 MB. Pick a smaller image.'); return; }
-      setUploadErr('');
-      setUploading(true);
-      try {
-        var url = await uploadJobImage(file, draft.title.trim());
-        setField('image_url', url);
-      } catch (e) {
-        setUploadErr(e.message || 'Upload failed.');
-      } finally {
-        setUploading(false);
-      }
-    }
-
-    function uploadButton() {
-      var disabled = !titleReady || uploading || saving;
-      var title = !titleReady
-        ? 'Enter the job title above before uploading an image.'
-        : (uploading ? 'Uploading…' : 'Upload an image.');
-      return h('label', {
-        className: 'portal-btn is-ghost is-small',
-        title: title,
-        style: {
-          whiteSpace: 'nowrap',
-          opacity: disabled ? 0.55 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer'
-        }
-      },
-        uploading ? 'Uploading…' : 'Upload',
-        h('input', {
-          type: 'file',
-          accept: UPLOAD_ACCEPT,
-          disabled: disabled,
-          style: { display: 'none' },
-          onChange: function (e) {
-            var f = e.target.files && e.target.files[0];
-            e.target.value = '';
-            handleImageUpload(f);
-          }
-        })
-      );
     }
 
     async function handleSubmit(e) {
@@ -327,36 +192,15 @@
         })
       ),
 
-      h('div', { className: 'portal-field' },
-        h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
-          h('input', {
-            type: 'text',
-            value: draft.image_url,
-            onChange: function (e) { setField('image_url', e.target.value); },
-            placeholder: 'https://…',
-            style: { flex: 1 }
-          }),
-          uploadButton()
-        ),
-        h('p', { className: 'portal-field-help' },
-          'Paste a URL, or upload an image. The posting must be titled before uploading.'
-        ),
-        uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
-        }, uploadErr) : null,
-        draft.image_url ? h('img', {
-          src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
-          onError: function (e) { e.target.style.display = 'none'; }
-        }) : null
-      ),
+      h(PVAdminImageUpload.ImageField, {
+        value: draft.image_url,
+        onChange: function (v) { setField('image_url', v); },
+        disabled: saving,
+        blockedReason: titleReady ? null : 'Enter the job title above before uploading an image.',
+        uploadPath: '/jobs/images',
+        extraFields: { job_title: draft.title.trim() },
+        help: 'Paste a URL, or upload an image. The posting must be titled before uploading.'
+      }),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Description'),
@@ -391,7 +235,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
+        h('span', { className: 'portal-row-title' }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))
@@ -400,9 +244,9 @@
         h('span', { className: statusCls }, labelFor(STATUSES, j.status))
       ),
       h('td', null,
-        j.contact || h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+        j.contact || h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(j); }
@@ -496,11 +340,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Job Board'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Job Board'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -517,7 +361,7 @@
             h('span', null, 'New posting')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -528,7 +372,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading postings…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No postings match that search.' : 'No postings yet. Add the first one.'
               )
             )
@@ -586,14 +430,19 @@
   // The dashboard deep-links into the Applications view with a stage filter
   // (and member search) via portal navParams.
   function JobBoardSection(props) {
+    var tabs = [
+      PVAdminAPI.can('jobs.postings') ? { id: 'postings', label: 'Job Postings' } : null,
+      PVAdminAPI.can('jobs.applications_view') ? { id: 'applications', label: 'Applications' } : null
+    ].filter(Boolean);
+    var wanted = props && props.initialView === 'applications' ? 'applications' : 'postings';
     var viewState = useState(
-      props && props.initialView === 'applications' ? 'applications' : 'postings'
+      tabs.some(function (t) { return t.id === wanted; }) ? wanted : (tabs[0] ? tabs[0].id : null)
     );
     var view = viewState[0], setView = viewState[1];
 
     return h('div', null,
       h(window.PVAdminSubnav, {
-        tabs: [{ id: 'postings', label: 'Job Postings' }, { id: 'applications', label: 'Applications' }],
+        tabs: tabs,
         active: view,
         onChange: setView
       }),
