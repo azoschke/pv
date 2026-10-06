@@ -940,7 +940,6 @@
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !provCan, onClick: provoke },
               h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'campaign'),
               provBusy ? 'Provoking…' : 'Provoke ' + (atkBoss ? atkBoss.name : 'target')),
-            h('span', { className: 'rp-note' }, 'Doesn’t use your action.'),
             provMsg ? h('span', { className: 'rp-note ' + (provMsg.ok ? 'rp-note-ok' : 'rp-note-warn') }, provMsg.text) : null) : null)
           : h('p', { className: 'rp-note' }, 'No enemies on the field.'));
     }

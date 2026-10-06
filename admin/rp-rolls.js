@@ -798,7 +798,6 @@
                   h('input', { type: 'checkbox', checked: players.indexOf(id) !== -1, onChange: function () { togglePlayer(id); } }),
                   mb.name);
               }))) : null,
-      (showTarget && lockTemp) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, 'The ally is picked when it’s used, so this one is Temporary.') : null,
 
       // ── How it works ──────────────────────────────────────────────────────
       (showTiming || isSummon) ? secHead('How it works') : null,
@@ -1358,8 +1357,7 @@
                 h('option', { value: 'party' }, 'Anyone in the party')),
               h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
                 h('input', { type: 'checkbox', checked: !!hk.aoe, onChange: function (e) { setHeal(o.value, { aoe: e.target.checked }); } }), 'AOE heal (party)')));
-        }),
-        h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'A class with both heals off has no Heal tab.')),
+        })),
 
       // Armor modifiers
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
