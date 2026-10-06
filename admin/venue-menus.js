@@ -316,19 +316,15 @@
                 }
               }, h(Icon, { name: props.categoryIcon, size: 26 })),
           h('label', {
-            className: 'portal-btn is-ghost is-small',
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: uploading || saving ? 0.55 : 1,
-              cursor: uploading || saving ? 'not-allowed' : 'pointer'
-            }
+            className: 'portal-btn is-ghost is-small portal-upload-btn',
+            style: { opacity: uploading || saving ? 0.55 : 1, cursor: uploading || saving ? 'not-allowed' : 'pointer' }
           },
             uploading ? 'Uploading…' : 'Upload',
             h('input', {
               type: 'file',
               accept: UPLOAD_ACCEPT,
               disabled: uploading || saving,
-              style: { display: 'none' },
+              className: 'portal-file-input',
               onChange: function (e) {
                 var f = e.target.files && e.target.files[0];
                 e.target.value = '';
@@ -557,7 +553,7 @@
             }, h(Icon, { name: cat.icon, size: 20 })),
 
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { style: { fontWeight: 600 } }, item.name),
+          h('div', { className: 'portal-strong' }, item.name),
           item.description
             ? h('div', {
                 style: {
@@ -599,8 +595,7 @@
           h('span', { style: { color: 'var(--accent-brown)', display: 'flex' } },
             h(Icon, { name: cat.icon, size: 20 })),
           h('h3', {
-            className: 'portal-card-title',
-            style: { margin: 0, flex: 1 }
+            className: 'portal-card-title portal-head-title'
           }, cat.name),
           arrowBtn('▲', function () { moveCategory(index, -1); }, index === 0),
           arrowBtn('▼', function () { moveCategory(index, 1); }, index === cats.length - 1),
@@ -628,11 +623,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Venue Menus'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Menus'),
           h('select', {
             className: 'portal-search',
             value: venueId,
@@ -656,8 +651,7 @@
           ) : null
         ),
         flash ? h('div', {
-          className: 'portal-flash success',
-          style: { marginTop: '0.75rem', marginBottom: 0 }
+          className: 'portal-flash success is-head'
         }, flash) : null
       ),
 
@@ -669,18 +663,18 @@
         ? h('div', { className: 'portal-card' }, 'Loading venues…')
         : !venues.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 'No venue has a menu enabled yet. Open the Directory tab, edit a ' +
                 'venue tagged Tavern or Restaurant, and tick “Has a menu”.'))
           : !venueId
             ? h('div', { className: 'portal-card' },
-                h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+                h('p', { className: 'portal-note' },
                   'Choose a venue above to edit its menu.'))
             : loadingMenu
               ? h('div', { className: 'portal-card' }, 'Loading menu…')
               : !cats.length
                 ? h('div', { className: 'portal-card' },
-                    h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+                    h('p', { className: 'portal-note' },
                       'This menu is empty. Add a category to get started — items ' +
                       'live inside categories.'))
                 : cats.map(renderCategory),

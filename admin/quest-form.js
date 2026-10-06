@@ -128,30 +128,26 @@
 
     return h('div', { className: 'portal-field' },
       h('label', null, 'Image'),
-      h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+      h('div', { className: 'portal-image-row' },
         h('input', {
           type: 'text',
           value: value,
           disabled: !!props.readOnly,
           onChange: function (e) { onChange(e.target.value); },
           placeholder: 'https://…',
-          style: { flex: 1 }
+          className: 'portal-grow'
         }),
         h('label', {
-          className: 'portal-btn is-ghost is-small',
+          className: 'portal-btn is-ghost is-small portal-upload-btn',
           title: uploading ? 'Uploading…' : 'Upload an image.',
-          style: {
-            whiteSpace: 'nowrap',
-            opacity: (uploading || disabled) ? 0.55 : 1,
-            cursor: (uploading || disabled) ? 'not-allowed' : 'pointer'
-          }
+          style: { opacity: (uploading || disabled) ? 0.55 : 1, cursor: (uploading || disabled) ? 'not-allowed' : 'pointer' }
         },
           uploading ? 'Uploading…' : 'Upload',
           h('input', {
             type: 'file',
             accept: UPLOAD_ACCEPT,
             disabled: uploading || disabled,
-            style: { display: 'none' },
+            className: 'portal-file-input',
             onChange: function (e) {
               var f = e.target.files && e.target.files[0];
               e.target.value = '';
@@ -162,17 +158,11 @@
       ),
       help ? h('p', { className: 'portal-field-help' }, help) : null,
       uploadErr ? h('p', {
-        className: 'portal-field-help',
-        style: { color: 'var(--danger-color, #c0392b)' }
+        className: 'portal-field-help is-error'
       }, uploadErr) : null,
       value ? h('img', {
         src: value, alt: '',
-        style: {
-          display: 'block', marginTop: '0.5rem',
-          maxWidth: '320px', maxHeight: '180px',
-          border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-          objectFit: 'cover'
-        },
+        className: 'portal-image-preview',
         onError: function (e) { e.target.style.display = 'none'; }
       }) : null
     );

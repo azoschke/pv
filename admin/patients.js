@@ -162,7 +162,7 @@
         var otherName = linkedMem && linkedMem.nickname && String(linkedMem.nickname).trim()
           ? String(linkedMem.nickname).trim() : '';
         return h('div', {
-          className: 'portal-field', key: f.key, style: { gridColumn: '1 / -1' }
+          className: 'portal-field is-full', key: f.key
         },
           h('label', null, f.label),
           h('input', { type: 'text', value: linkedName, readOnly: true, disabled: true }),
@@ -192,7 +192,7 @@
       if (f.type === 'member-link') {
         var members = props.members || [];
         return h('div', {
-          className: 'portal-field', key: f.key, style: { gridColumn: '1 / -1' }
+          className: 'portal-field is-full', key: f.key
         },
           h('label', null, f.label),
           h('select', {
@@ -338,7 +338,7 @@
               ? filtered.map(function (p) {
                   return h('tr', { key: p.patient_id },
                     h('td', { style: { verticalAlign: 'middle' } },
-                      h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, p.patient_name),
+                      h('span', { className: 'portal-row-title' }, p.patient_name),
                       p.member_id
                         ? h('span', {
                             style: {
@@ -350,7 +350,7 @@
                           }, '· FC')
                         : null
                     ),
-                    h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
+                    h('td', { className: 'portal-col-actions' },
                       allowEdit ? h('button', {
                         type: 'button',
                         className: 'portal-btn is-small is-ghost',
@@ -380,7 +380,7 @@
               : h('tr', null,
                   h('td', {
                     colSpan: 2,
-                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                    className: 'portal-empty-cell'
                   }, q ? 'No patients match your filter.' : 'No patients yet.')
                 )
           )
@@ -486,11 +486,11 @@
     if (preview.length > 60) preview = preview.slice(0, 60) + '…';
 
     return h('tr', null,
-      h('td', null, v.visit_date || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null, v.attending_medic || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null, v.discharge_status || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', null, preview || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      h('td', null, v.visit_date || h('span', { className: 'portal-muted' }, '—')),
+      h('td', null, v.attending_medic || h('span', { className: 'portal-muted' }, '—')),
+      h('td', null, v.discharge_status || h('span', { className: 'portal-muted' }, '—')),
+      h('td', null, preview || h('span', { className: 'portal-muted' }, '—')),
+      h('td', { className: 'portal-col-actions' },
         showEdit ? h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
@@ -625,7 +625,7 @@
               h('th', null, 'Medic'),
               h('th', null, 'Discharge'),
               h('th', null, 'Presenting Complaint'),
-              h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, 'Actions')
+              h('th', { className: 'portal-col-actions' }, 'Actions')
             )
           ),
           h('tbody', null,
@@ -642,7 +642,7 @@
               : h('tr', null,
                   h('td', {
                     colSpan: 5,
-                    style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                    className: 'portal-empty-cell'
                   }, 'No visits recorded yet.')
                 )
           )

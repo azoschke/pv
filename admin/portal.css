@@ -1401,6 +1401,76 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   .perm-role-actions { margin-left: 0; }
 }
 
+/* --------------- Shared section pieces --------------- */
+/* Layouts most sections repeat. These replace identical inline styles that
+   were copied between the section scripts. */
+
+/* Header card at the top of a section: title with search / buttons, an
+   optional description, and the "saved" message. */
+.portal-card.portal-head { padding: 0.85rem 1.1rem; }
+.portal-head-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.portal-head-title { margin: 0; flex: 1; }
+.portal-head-desc { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.92rem; }
+.portal-head-desc.is-tight { margin-top: 0.3rem; }
+.portal-flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
+
+/* Text */
+.portal-muted { color: var(--text-secondary); }
+.portal-note { margin: 0; color: var(--text-secondary); }   /* empty / loading notes */
+.portal-strong { font-weight: 600; }
+.portal-pre { white-space: pre-wrap; }
+.portal-gap-top { margin-top: 0.85rem; }
+.portal-card > .portal-table-wrap.portal-gap-top { margin-top: 0.85rem; }
+
+/* Tables */
+.portal-table .portal-col-actions { text-align: right; white-space: nowrap; }
+.portal-table th.portal-col-actions { width: 1%; }
+.portal-table .portal-col-center { text-align: center; }
+.portal-table .portal-nowrap { white-space: nowrap; }
+/* "Nothing here yet" row spanning the table (beats the edge-cell inset). */
+.portal-table td.portal-empty-cell,
+.portal-card > .portal-table-wrap .portal-table td.portal-empty-cell {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 1.5rem;
+}
+/* First cell: the row's name, with any badges beside it. */
+.portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
+.portal-row-title { font-family: Stoke, serif; font-size: 0.9rem; }
+
+/* Forms */
+.portal-field.is-full { grid-column: 1 / -1; }
+.portal-field.is-tight { margin-bottom: 0.6rem; }
+.portal-btn.is-end { margin-left: auto; }
+.portal-btn.is-spaced { margin-left: 0.4rem; }
+.portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Image fields: URL box + Upload button, hidden file input, error, preview. */
+.portal-image-row { display: flex; gap: 0.5rem; align-items: center; }
+.portal-grow { flex: 1; }
+.portal-upload-btn { white-space: nowrap; }
+.portal-file-input { display: none; }
+.portal-field-help.is-error { color: var(--danger-color, #c0392b); }
+.portal-image-preview {
+  display: block;
+  margin-top: 0.5rem;
+  max-width: 320px;
+  max-height: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  object-fit: cover;
+}
+
+/* Campaigns section: campaign / chapter / codex editors. */
+.portal-card.cmp-form { margin-bottom: 1rem; }
+.cmp-form-title { margin-top: 0; }
+.cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+.cmp-hint { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+.cmp-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+textarea.cmp-code,
+.portal-field textarea.cmp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+.portal-card.cmp-list-card { margin-bottom: 0.75rem; }
+
 /* --------------- Responsive --------------- */
 @media (max-width: 1100px) {
   .division-grid { grid-template-columns: 1fr; }

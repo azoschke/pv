@@ -82,8 +82,8 @@
               var key = f[0], label = f[1];
               return h('tr', { key: key },
                 h('td', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, label),
-                h('td', { style: { whiteSpace: 'pre-wrap' } }, fieldDisplay(key, quest[key])),
-                h('td', { style: { whiteSpace: 'pre-wrap' } }, fieldDisplay(key, payload[key]))
+                h('td', { className: 'portal-pre' }, fieldDisplay(key, quest[key])),
+                h('td', { className: 'portal-pre' }, fieldDisplay(key, payload[key]))
               );
             })
           )
@@ -97,7 +97,7 @@
     var q = props.quest;
     function row(label, value) {
       if (!value) return null;
-      return h('div', { className: 'portal-field', style: { marginBottom: '0.6rem' } },
+      return h('div', { className: 'portal-field is-tight' },
         h('label', null, label),
         h('p', { style: { margin: 0, whiteSpace: 'pre-wrap' } }, value)
       );
@@ -111,7 +111,7 @@
       row('Schedule', U.scheduleSummary(q)),
       row('Reward', q.reward),
       row('Contact', q.contact),
-      q.image_url ? h('div', { className: 'portal-field', style: { marginBottom: '0.6rem' } },
+      q.image_url ? h('div', { className: 'portal-field is-tight' },
         h('label', null, 'Image'),
         h('img', {
           src: q.image_url, alt: '',
@@ -312,7 +312,7 @@
       return h('tr', null,
         h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
-            h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, q.title),
+            h('span', { className: 'portal-row-title' }, q.title),
             past ? h('span', { className: 'portal-pill is-red' }, 'Past date') : null
           ),
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
@@ -321,15 +321,14 @@
         h('td', null, q.mission_type || '—'),
         h('td', null, U.scheduleSummary(q)),
         h('td', null, h('span', { className: pill.cls }, pill.label)),
-        h('td', { style: { textAlign: 'center' } }, signupCount),
-        h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+        h('td', { className: 'portal-col-center' }, signupCount),
+        h('td', { className: 'portal-col-actions' },
           h('button', {
             type: 'button', className: 'portal-btn is-small is-ghost',
             onClick: function () { setModal({ kind: 'form', quest: q }); }
           }, 'Edit'),
           canDelete ? h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger',
-            style: { marginLeft: '0.4rem' },
+            type: 'button', className: 'portal-btn is-small is-danger is-spaced',
             onClick: function () { handleDelete(q); }
           }, 'Delete') : null
         )
@@ -385,7 +384,7 @@
             onClick: function () { setModal({ kind: 'form', quest: modal.quest }); }
           }, 'Edit first'),
           canDelete ? h('button', {
-            type: 'button', className: 'portal-btn is-danger', style: { marginLeft: 'auto' },
+            type: 'button', className: 'portal-btn is-danger is-end',
             onClick: function () { handleDelete(modal.quest); }
           }, 'Reject & delete') : null
         )
@@ -403,7 +402,7 @@
             onClick: function () { approveEdit({ quest: modal.quest, edit: modal.edit }); }
           }, 'Approve & apply'),
           h('button', {
-            type: 'button', className: 'portal-btn is-danger', style: { marginLeft: 'auto' },
+            type: 'button', className: 'portal-btn is-danger is-end',
             onClick: function () { rejectEdit({ quest: modal.quest, edit: modal.edit }); }
           }, 'Reject')
         )
@@ -411,9 +410,9 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' } },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Bounty Board'),
+      h('div', { className: 'portal-card portal-head' },
+        h('div', { className: 'portal-head-row' },
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Bounty Board'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -426,10 +425,10 @@
             onClick: function () { setModal({ kind: 'form', quest: null }); }
           }, 'New quest')
         ),
-        h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+        h('p', { className: 'portal-head-desc' },
           'Manage and approve bounty board quests. Make sure to update repeatable quests after the event date has passed.'
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -442,7 +441,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading quests…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 quests.length ? 'No quests match that search.' : 'No quests yet — create one or wait for member submissions.'
               )
             )
@@ -455,8 +454,8 @@
                       h('th', null, 'Type'),
                       h('th', null, 'Schedule'),
                       h('th', null, 'Status'),
-                      h('th', { style: { textAlign: 'center' } }, 'Signups'),
-                      h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                      h('th', { className: 'portal-col-center' }, 'Signups'),
+                      h('th', { className: 'portal-col-actions' }, '')
                     )
                   ),
                   h('tbody', null,

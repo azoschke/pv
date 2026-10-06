@@ -88,7 +88,7 @@
         })
       ),
       h('div', { style: { display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.25rem' } },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: pinned,
@@ -96,7 +96,7 @@
           }),
           h('span', null, 'Pin to top')
         ),
-        showDiscord ? h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        showDiscord ? h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: toDiscord,
@@ -149,7 +149,7 @@
           fontFamily: 'La Belle Aurore, cursive', fontSize: '0.95rem'
         }
       }, author + ' · ' + formatWhen(a.created_at)),
-      h('div', { style: { whiteSpace: 'pre-wrap' } }, a.body)
+      h('div', { className: 'portal-pre' }, a.body)
     );
   }
 
@@ -247,7 +247,7 @@
         flash ? h('div', { className: 'portal-flash success' }, flash) : null,
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
-          ? h('p', { style: { color: 'var(--text-secondary)', margin: 0 } }, 'Loading bulletins…')
+          ? h('p', { className: 'portal-note' }, 'Loading bulletins…')
           : list.length
             ? h('div', { className: 'bulletin-list' },
                 list.map(function (a) {

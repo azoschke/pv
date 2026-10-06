@@ -232,29 +232,25 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+        h('div', { className: 'portal-image-row' },
           h('input', {
             type: 'text',
             value: draft.image_url,
             onChange: function (e) { setField('image_url', e.target.value); },
             placeholder: 'https://…',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           h('label', {
-            className: 'portal-btn is-ghost is-small',
+            className: 'portal-btn is-ghost is-small portal-upload-btn',
             title: uploading ? 'Uploading…' : 'Upload an image.',
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: (uploading || saving) ? 0.55 : 1,
-              cursor: (uploading || saving) ? 'not-allowed' : 'pointer'
-            }
+            style: { opacity: (uploading || saving) ? 0.55 : 1, cursor: (uploading || saving) ? 'not-allowed' : 'pointer' }
           },
             uploading ? 'Uploading…' : 'Upload',
             h('input', {
               type: 'file',
               accept: UPLOAD_ACCEPT,
               disabled: uploading || saving,
-              style: { display: 'none' },
+              className: 'portal-file-input',
               onChange: function (e) {
                 var f = e.target.files && e.target.files[0];
                 e.target.value = '';
@@ -267,17 +263,11 @@
           'Paste a URL or upload a portrait. Shown on the public staff roster card.'
         ),
         uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
+          className: 'portal-field-help is-error'
         }, uploadErr) : null,
         draft.image_url ? h('img', {
           src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
+          className: 'portal-image-preview',
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
       ),
@@ -306,8 +296,7 @@
         }, 'Cancel'),
         (hasProfile && allowDelete) ? h('button', {
           type: 'button',
-          className: 'portal-btn is-danger',
-          style: { marginLeft: 'auto' },
+          className: 'portal-btn is-danger is-end',
           onClick: function () {
             if (confirm('Remove ' + row.member.name + ' from the Medical Division roster? The FC member record is not deleted.')) {
               onDelete(row);
@@ -329,9 +318,9 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+        h('div', { className: 'portal-name-row' },
           !hasProfile ? h('span', { className: 'portal-badge is-pinned' }, 'Needs profile') : null,
-          h('span', { style: { fontWeight: 600 } }, row.member.name)
+          h('span', { className: 'portal-strong' }, row.member.name)
         )
       ),
       h('td', null,
@@ -341,7 +330,7 @@
                 return h('span', { key: p, className: 'portal-faction-tag' }, p);
               })
             )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
       h('td', null,
         tags.length
@@ -350,9 +339,9 @@
                 return h('span', { key: t, className: 'portal-faction-tag' }, t);
               })
             )
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      h('td', { className: 'portal-col-actions' },
         h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
@@ -465,11 +454,11 @@
       window.PVAdminApplicationsCard
         ? h(window.PVAdminApplicationsCard, { division: 'medical', label: 'Medical' })
         : null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Medical Division Roster'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Medical Division Roster'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -478,13 +467,13 @@
             placeholder: 'Search name, position, tag…'
           })
         ),
-        h('p', { style: { margin: '0.6rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+        h('p', { className: 'portal-head-desc' },
           'If you do not see a member of the Medical team within this list, ensure they are tagged with Medical in the primary FC list.'
         ),
-        h('p', { style: { margin: '0.3rem 0 0', color: 'var(--text-secondary)', fontSize: '0.92rem' } },
+        h('p', { className: 'portal-head-desc is-tight' },
           publishedCount + ' published · ' + needsProfileCount + ' awaiting profile'
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -495,7 +484,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading roster…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 rows.length
                   ? 'No members match that search.'
                   : 'No FC members have Faction = Medical yet. Set a member’s Faction to Medical in FC Members to add them here.'
@@ -509,7 +498,7 @@
                       h('th', null, 'Name'),
                       h('th', null, 'Position(s)'),
                       h('th', null, 'Tags'),
-                      h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                      h('th', { className: 'portal-col-actions' }, '')
                     )
                   ),
                   h('tbody', null,

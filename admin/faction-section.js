@@ -159,7 +159,7 @@
       ),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
-        ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading roster…')
+        ? h('p', { className: 'portal-muted' }, 'Loading roster…')
         : members.length
           ? h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table' },
@@ -179,7 +179,7 @@
                           h('td', null,
                             m.ic_rank
                               ? m.ic_rank
-                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                              : h('span', { className: 'portal-muted' }, '—')
                           ),
                           h('td', null,
                             factions.length
@@ -188,20 +188,20 @@
                                     return h('span', { key: f, className: 'portal-faction-tag' }, f);
                                   })
                                 )
-                              : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+                              : h('span', { className: 'portal-muted' }, '—')
                           )
                         );
                       })
                     : h('tr', null,
                         h('td', {
                           colSpan: 3,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                          className: 'portal-empty-cell'
                         }, 'No members match your filter.')
                       )
                 )
               )
             )
-          : h('p', { style: { color: 'var(--text-secondary)' } },
+          : h('p', { className: 'portal-muted' },
               'No ' + faction + ' faction members on the roster yet.')
     );
   }

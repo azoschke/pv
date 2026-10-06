@@ -88,21 +88,21 @@
 
     return h('tr', { className: needsRole ? 'is-needs-role' : null },
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
-          h('span', { style: { fontWeight: 600 } }, u.username),
+        h('div', { className: 'portal-name-row' },
+          h('span', { className: 'portal-strong' }, u.username),
           isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null,
           needsRole ? h('span', { className: 'portal-badge is-warn', title: 'No role assigned yet' }, 'Needs role') : null
         ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
       h('td', null, fmtDate(u.created_at)),
-      h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { style: { color: 'var(--text-secondary)' } }, 'never')),
+      h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { className: 'portal-muted' }, 'never')),
       h('td', null,
         (u.roles && u.roles.length)
           ? roleLabels(u.roles).join(', ')
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { textAlign: 'right', whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-col-actions' },
         h('div', {
           style: { display: 'inline-flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }
         },
@@ -228,8 +228,7 @@
           onClick: function () { copy(result.link, 'link'); }
         }, copied === 'link' ? 'Copied!' : 'Copy link only'),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
-          style: { marginLeft: 'auto' },
+          type: 'button', className: 'portal-btn is-ghost is-end',
           onClick: onClose
         }, 'Done')
       )
@@ -458,7 +457,7 @@
         ),
         err ? h('div', { className: 'portal-flash error' }, err) : null,
         loading
-          ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading users…')
+          ? h('p', { className: 'portal-muted' }, 'Loading users…')
           : h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table' },
                 h('thead', null,
@@ -467,7 +466,7 @@
                     h('th', null, 'Created'),
                     h('th', null, 'Last Login'),
                     h('th', null, 'Roles'),
-                    h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                    h('th', { className: 'portal-col-actions' }, '')
                   )
                 ),
                 h('tbody', null,
@@ -492,7 +491,7 @@
                     : h('tr', null,
                         h('td', {
                           colSpan: 5,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                          className: 'portal-empty-cell'
                         }, q ? 'No users match your filter.' : 'No users yet.')
                       )
                 )

@@ -106,8 +106,8 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit campaign' : 'New campaign'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit campaign' : 'New campaign'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -115,12 +115,12 @@
         h('input', { type: 'text', maxLength: 120, value: name, required: true,
           onChange: function (e) { onNameChange(e.target.value); } })
       ),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'URL slug *'),
           h('input', { type: 'text', maxLength: 60, value: slug,
             onChange: function (e) { setTouched(true); setSlug(e.target.value); } }),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+          h('p', { className: 'cmp-hint' },
             'Used in the link: /view.html?c=' + (deriveSlug(slug || name) || '…') +
             (isEdit ? ' — changing it breaks old links.' : ''))
         ),
@@ -137,7 +137,7 @@
           onChange: function (e) { setBlurb(e.target.value); } })
       ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'cmp-actions' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create campaign')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -211,11 +211,11 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit chapter' : 'New chapter'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit chapter' : 'New chapter'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Title *'),
           h('input', { type: 'text', maxLength: 160, value: title, required: true,
@@ -232,16 +232,16 @@
         h('label', null, 'URL slug *'),
         h('input', { type: 'text', maxLength: 60, value: slug,
           onChange: function (e) { setTouched(true); setSlug(e.target.value); } }),
-        h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+        h('p', { className: 'cmp-hint' },
           'Permalink: ?c=' + (props.campaignSlug || '…') + '&ch=' + (deriveSlug(slug || title) || '…') +
           (isEdit ? ' — changing it breaks old links.' : ''))
       ),
       h('div', { className: 'portal-field' },
         h('label', null, 'Chapter text (Markdown) *'),
         loadingBody
-          ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading chapter text…')
+          ? h('p', { className: 'portal-muted' }, 'Loading chapter text…')
           : h('textarea', { rows: 16, value: body,
-              style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+              className: 'cmp-code',
               placeholder: 'Paste the chapter markdown here.',
               onChange: function (e) { setBody(e.target.value); } })
       ),
@@ -250,12 +250,12 @@
         loadingBody
           ? null
           : h('textarea', { rows: 6, value: tldr,
-              style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+              className: 'cmp-code',
               placeholder: 'Optional short summary. Leave blank for none.',
               onChange: function (e) { setTldr(e.target.value); } })
       ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'cmp-actions' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving || loadingBody },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create chapter')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -335,8 +335,8 @@
       }
     }
 
-    return h('form', { onSubmit: submit, className: 'portal-card', style: { marginBottom: '1rem' } },
-      h('h3', { style: { marginTop: 0 } }, isEdit ? 'Edit codex entry' : 'New codex entry'),
+    return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
+      h('h3', { className: 'cmp-form-title' }, isEdit ? 'Edit codex entry' : 'New codex entry'),
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
@@ -345,7 +345,7 @@
           onChange: function (e) { setField('name', e.target.value); } })
       ),
 
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '0.75rem' } },
+      h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Type *'),
           h('select', { value: draft.type, onChange: function (e) { setField('type', e.target.value); } },
@@ -357,7 +357,7 @@
             h('option', { value: '' }, '— None —'),
             regions.filter(function (r) { return !isEdit || r.id !== initial.id; })
               .map(function (r) { return h('option', { key: r.id, value: String(r.id) }, r.name); })),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+          h('p', { className: 'cmp-hint' },
             'Optional. Tie this entry to a Region-type entry.')
         ) : null,
         h('div', { className: 'portal-field' },
@@ -371,7 +371,7 @@
           h('select', { value: draft.author_member_id, onChange: function (e) { onAuthorChange(e.target.value); } },
             h('option', { value: '' }, '— None —'),
             members.map(function (m) { return h('option', { key: m.id, value: String(m.id) }, m.name); })),
-          h('p', { style: { margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' } },
+          h('p', { className: 'cmp-hint' },
             'Optional attribution.')
         )
       ),
@@ -379,7 +379,7 @@
       h('div', { className: 'portal-field' },
         h('label', null, 'Description (Markdown)'),
         h('textarea', { rows: 8, value: draft.description_md,
-          style: { fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.9rem' },
+          className: 'cmp-code',
           placeholder: 'Describe this entry. Markdown allowed.',
           onChange: function (e) { setField('description_md', e.target.value); } })
       ),
@@ -399,7 +399,7 @@
               onChange: function (e) { setField('image_url', e.target.value); } })
           ),
 
-      h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem' } },
+      h('div', { className: 'cmp-actions' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create entry')),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
@@ -497,7 +497,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
-        h('p', { style: { margin: 0, color: 'var(--text-secondary)' } },
+        h('p', { className: 'portal-note' },
           entries.length + (entries.length === 1 ? ' entry' : ' entries')),
         h('button', { type: 'button', className: 'portal-btn',
           onClick: function () { setForm({ entry: null }); } }, '+ New entry')
@@ -506,14 +506,14 @@
       !entries.length
         ? h('div', { className: 'portal-card' }, 'No codex entries yet. Create one to get started.')
         : groups.map(function (g) {
-            return h('div', { key: g.type, className: 'portal-card', style: { marginBottom: '0.75rem' } },
+            return h('div', { key: g.type, className: 'portal-card cmp-list-card' },
               h('p', { style: { margin: '0 0 0.5rem', fontSize: '0.78rem', letterSpacing: '0.08em',
                 textTransform: 'uppercase', color: 'var(--text-secondary)' } }, g.label + ' · ' + g.items.length),
               g.items.map(function (e, idx) {
                 return h('div', { key: e.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   gap: '0.75rem', padding: '0.45rem 0', borderTop: idx === 0 ? 'none' : '1px solid var(--border-color)' } },
                   h('div', { style: { minWidth: 0 } },
-                    h('div', { style: { fontWeight: 600 } }, e.name,
+                    h('div', { className: 'portal-strong' }, e.name,
                       (function () {
                         var meta = [e.region_name, e.campaign_name].filter(Boolean).join(' · ');
                         return meta ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + meta) : null;
@@ -748,7 +748,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
-        h('p', { style: { margin: 0, color: 'var(--text-secondary)' } },
+        h('p', { className: 'portal-note' },
           campaigns.length + (campaigns.length === 1 ? ' campaign' : ' campaigns')),
         h('button', { type: 'button', className: 'portal-btn',
           onClick: function () { setCampaignForm({ campaign: null }); } }, '+ New campaign')
@@ -758,7 +758,7 @@
         ? h('div', { className: 'portal-card' }, 'No campaigns yet. Create one to get started.')
         : campaigns.map(function (c, idx) {
             var isSelected = selectedSlug === c.slug;
-            return h('div', { key: c.id, className: 'portal-card', style: { marginBottom: '0.75rem' } },
+            return h('div', { key: c.id, className: 'portal-card cmp-list-card' },
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', flexWrap: 'wrap' } },
                 h('div', { style: { flex: '1 1 16rem' } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
@@ -792,14 +792,14 @@
                     onClick: function () { setFullChapter(null); setChapterForm({ campaign: c, chapter: null }); } }, '+ New chapter')
                 ),
                 chaptersLoading
-                  ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading chapters…')
+                  ? h('p', { className: 'portal-muted' }, 'Loading chapters…')
                   : (!chapters.length
-                      ? h('p', { style: { color: 'var(--text-secondary)' } }, 'No chapters yet.')
+                      ? h('p', { className: 'portal-muted' }, 'No chapters yet.')
                       : chapters.map(function (ch, cidx) {
                           return h('div', { key: ch.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             gap: '0.75rem', padding: '0.45rem 0', borderBottom: '1px solid var(--border-color)' } },
                             h('div', null,
-                              h('div', { style: { fontWeight: 600 } }, ch.title,
+                              h('div', { className: 'portal-strong' }, ch.title,
                                 ch.has_tldr ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.7rem', color: 'var(--text-secondary)' } }, '· TL;DR') : null),
                               h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } }, ch.chapter_date || '—')
                             ),

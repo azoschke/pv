@@ -219,20 +219,16 @@
         ? 'Enter the venue name above before uploading an image.'
         : (isUp ? 'Uploading…' : 'Upload an image.');
       return h('label', {
-        className: 'portal-btn is-ghost is-small',
+        className: 'portal-btn is-ghost is-small portal-upload-btn',
         title: title,
-        style: {
-          whiteSpace: 'nowrap',
-          opacity: disabled ? 0.55 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer'
-        }
+        style: { opacity: disabled ? 0.55 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }
       },
         isUp ? 'Uploading…' : 'Upload',
         h('input', {
           type: 'file',
           accept: UPLOAD_ACCEPT,
           disabled: disabled,
-          style: { display: 'none' },
+          className: 'portal-file-input',
           onChange: function (e) {
             var f = e.target.files && e.target.files[0];
             e.target.value = '';
@@ -386,13 +382,13 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Image URL'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+        h('div', { className: 'portal-image-row' },
           h('input', {
             type: 'text',
             value: draft.image_url,
             onChange: function (e) { setField('image_url', e.target.value); },
             placeholder: 'https://…',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           uploadButton('primary')
         ),
@@ -400,17 +396,11 @@
           'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
         ),
         uploadErr.primary ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
+          className: 'portal-field-help is-error'
         }, uploadErr.primary) : null,
         draft.image_url ? h('img', {
           src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
+          className: 'portal-image-preview',
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
       ),
@@ -428,14 +418,14 @@
             style: { marginTop: idx === 0 ? '0.25rem' : '0.4rem' }
           },
             h('div', {
-              style: { display: 'flex', gap: '0.5rem', alignItems: 'center' }
+              className: 'portal-image-row'
             },
               h('input', {
                 type: 'text',
                 value: val,
                 onChange: function (e) { setGalleryImage(idx, e.target.value); },
                 placeholder: 'https://…',
-                style: { flex: 1 }
+                className: 'portal-grow'
               }),
               uploadButton(slot),
               val ? h('img', {
@@ -497,7 +487,7 @@
             },
             maxLength: 32,
             placeholder: 'Press Enter to add',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           h('button', {
             type: 'button',
@@ -536,7 +526,7 @@
       ),
 
       h('div', { className: 'portal-field' },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: draft.featured,
@@ -547,7 +537,7 @@
       ),
 
       menuEligible(draft.tags) ? h('div', { className: 'portal-field' },
-        h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem' } },
+        h('label', { className: 'portal-check-inline' },
           h('input', {
             type: 'checkbox',
             checked: !!draft.has_menu,
@@ -631,9 +621,9 @@
         )
       ),
       h('td', null,
-        h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem' } },
+        h('div', { className: 'portal-name-row' },
           v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
-          h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, v.name)
+          h('span', { className: 'portal-row-title' }, v.name)
         )
       ),
       h('td', null, labelFor(SIZES, v.size)),
@@ -641,9 +631,9 @@
       h('td', null,
         (Array.isArray(v.tags) ? v.tags : [])
           .map(function (t) { return labelFor(TAGS, t); })
-          .join(', ') || h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          .join(', ') || h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(v); }
@@ -735,11 +725,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Venue Directory'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Directory'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -756,7 +746,7 @@
             h('span', null, 'New venue')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -767,7 +757,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading venues…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No venues match that search.' : 'No venues yet. Add the first one.'
               )
             )

@@ -183,7 +183,7 @@
     var head = g ? (g.head || member) : null;
     var hasShared = !!(head && (head.discord_tag || head.date_joined || (g && g.members.length > 1)));
 
-    if (!value && !hasShared) return h('span', { style: { color: 'var(--text-secondary)' } }, '—');
+    if (!value && !hasShared) return h('span', { className: 'portal-muted' }, '—');
 
     return h(React.Fragment, null,
       h('button', {
@@ -312,7 +312,7 @@
             onChange: function (e) { setField('ic_rank', e.target.value); }
           })
         ),
-        h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
+        h('div', { className: 'portal-field is-full' },
           h('label', null, 'Faction *'),
           h('div', { className: 'portal-checkbox-group', role: 'group', 'aria-label': 'Factions' },
             FACTIONS.map(function (v) {
@@ -362,7 +362,7 @@
             h('span', null, draft.talked_to ? 'Yes' : 'No')
           )
         ) : null,
-        h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
+        h('div', { className: 'portal-field is-full' },
           h('label', null, 'Notes'),
           h('textarea', {
             value: draft.notes,
@@ -487,8 +487,7 @@
         }, 'Cancel'),
         (!isNew && allowDelete) ? h('button', {
           type: 'button',
-          className: 'portal-btn is-danger',
-          style: { marginLeft: 'auto' },
+          className: 'portal-btn is-danger is-end',
           onClick: function () {
             if (confirm('Delete "' + (member.name || 'this member') + '"? This cannot be undone.')) {
               onDelete(member);
@@ -512,7 +511,7 @@
     var factions = parseFactions(m.faction);
     return h('tr', null,
       h('td', null, m.name),
-      h('td', null, m.ic_rank || h('span', { style: { color: 'var(--text-secondary)' } }, '—')),
+      h('td', null, m.ic_rank || h('span', { className: 'portal-muted' }, '—')),
       (function () {
         // "NA - No RP" reads as a null field in the grid (the form keeps it).
         var shown = factions.filter(function (f) { return f !== 'NA - No RP'; });
@@ -526,14 +525,14 @@
                   }, f);
                 })
               )
-            : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+            : h('span', { className: 'portal-muted' }, '—')
         );
       })(),
-      h('td', { style: { textAlign: 'center' } },
+      h('td', { className: 'portal-col-center' },
         m.interview === 'NA - No RP'
-          ? h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          ? h('span', { className: 'portal-muted' }, '—')
           : m.interview),
-      h('td', { style: { textAlign: 'center' } },
+      h('td', { className: 'portal-col-center' },
         h('div', { className: 'activity-cell' },
           h('span', null, m.activity),
           showTalkedTo
@@ -549,7 +548,7 @@
         )
       ),
       h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || ''), member: m, allMembers: props.allMembers })),
-      h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      h('td', { className: 'portal-col-actions' },
         canEdit ? h('button', {
           type: 'button',
           className: 'portal-btn is-small is-ghost',
@@ -785,7 +784,7 @@
 
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
-        ? h('p', { style: { color: 'var(--text-secondary)' } }, 'Loading members…')
+        ? h('p', { className: 'portal-muted' }, 'Loading members…')
         : h('div', { className: 'portal-card' },
             h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table members-table' },
@@ -794,11 +793,11 @@
                     h('th', null, 'Name'),
                     h('th', null, 'IC Rank'),
                     h('th', null, 'Faction'),
-                    h('th', { style: { textAlign: 'center' } }, 'IC Interview'),
-                    h('th', { title: 'Activity', 'aria-label': 'Activity', style: { textAlign: 'center' } },
+                    h('th', { className: 'portal-col-center' }, 'IC Interview'),
+                    h('th', { title: 'Activity', 'aria-label': 'Activity', className: 'portal-col-center' },
                       h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '20px', verticalAlign: 'middle' } }, 'search_activity')),
                     h('th', null, 'Notes'),
-                    h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                    h('th', { className: 'portal-col-actions' }, '')
                   )
                 ),
                 h('tbody', null,
@@ -823,7 +822,7 @@
                     : h('tr', null,
                         h('td', {
                           colSpan: 7,
-                          style: { color: 'var(--text-secondary)', textAlign: 'center', padding: '1.5rem' }
+                          className: 'portal-empty-cell'
                         }, anyFilterActive ? 'No members match your filter.' : 'No members yet. Click “Add member” to create the first.')
                       )
                 )

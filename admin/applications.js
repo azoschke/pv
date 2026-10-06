@@ -344,7 +344,7 @@
 
     return h('tr', archived ? { style: { opacity: 0.55 } } : null,
       h('td', null,
-        h('span', { style: { fontWeight: 600 } }, a.member_name),
+        h('span', { className: 'portal-strong' }, a.member_name),
         archived ? h('span', {
           className: 'portal-pill is-muted',
           style: { marginLeft: '0.5rem' }
@@ -353,7 +353,7 @@
       h('td', null, a.job_title),
       h('td', null, labelFor(DIVISIONS, a.division)),
       h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
-      h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+      h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
       h('td', null,
         canEdit ? h('select', {
           className: 'portal-filter-select',
@@ -363,7 +363,7 @@
           return h('option', { key: s.value, value: s.value }, s.label);
         })) : h(StageBadge, { stage: a.stage })
       ),
-      canEdit ? h('td', { style: { whiteSpace: 'nowrap', textAlign: 'right' } },
+      canEdit ? h('td', { className: 'portal-col-actions' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(a); }
@@ -534,11 +534,11 @@
     var anyFilterActive = !!(query || divisionFilter || stageFilter || showArchived);
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Applications'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Applications'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -591,7 +591,7 @@
             onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -602,7 +602,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading applications…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No applications match your filter.' : 'No applications yet. Add the first one.'
               )
             )
@@ -617,7 +617,7 @@
                       h('th', null, 'Type'),
                       h('th', null, 'Date'),
                       h('th', null, 'Stage'),
-                      h('th', { style: { textAlign: 'right', width: '1%', whiteSpace: 'nowrap' } }, '')
+                      h('th', { className: 'portal-col-actions' }, '')
                     )
                   ),
                   h('tbody', null,
@@ -735,7 +735,7 @@
               return h('tr', { key: a.id },
                 h('td', null, a.member_name),
                 h('td', null, a.job_title),
-                h('td', { style: { whiteSpace: 'nowrap' } }, formatDate(a.created_at)),
+                h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
                 h('td', null, h(StageBadge, { stage: a.stage }))
               );
             })

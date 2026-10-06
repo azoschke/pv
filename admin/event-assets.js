@@ -222,7 +222,7 @@
     var uploadDisabled = !topicReady || uploading || saving;
 
     return h('form', { onSubmit: submit, className: 'portal-form' },
-      err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.75rem' } }, err) : null,
+      err ? h('div', { className: 'portal-flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Event *'),
@@ -313,31 +313,27 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+        h('div', { className: 'portal-image-row' },
           h('input', {
             type: 'text',
             value: draft.image_url,
             onChange: function (e) { setField('image_url', e.target.value); },
             placeholder: 'https://…',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           h('label', {
-            className: 'portal-btn is-ghost is-small',
+            className: 'portal-btn is-ghost is-small portal-upload-btn',
             title: !topicReady
               ? 'Enter the event topic above before uploading an image.'
               : (uploading ? 'Uploading…' : 'Upload an image.'),
-            style: {
-              whiteSpace: 'nowrap',
-              opacity: uploadDisabled ? 0.55 : 1,
-              cursor: uploadDisabled ? 'not-allowed' : 'pointer'
-            }
+            style: { opacity: uploadDisabled ? 0.55 : 1, cursor: uploadDisabled ? 'not-allowed' : 'pointer' }
           },
             uploading ? 'Uploading…' : 'Upload',
             h('input', {
               type: 'file',
               accept: UPLOAD_ACCEPT,
               disabled: uploadDisabled,
-              style: { display: 'none' },
+              className: 'portal-file-input',
               onChange: function (e) {
                 var f = e.target.files && e.target.files[0];
                 e.target.value = '';
@@ -350,17 +346,11 @@
           'Paste an image URL, or upload a file. The event topic must be set before uploading.'
         ),
         uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
+          className: 'portal-field-help is-error'
         }, uploadErr) : null,
         draft.image_url ? h('img', {
           src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
+          className: 'portal-image-preview',
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
       ),
@@ -593,11 +583,11 @@
     })();
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Event Assets'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Event Assets'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -638,7 +628,7 @@
         h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
           'Click any text to copy it, and use Download to save an image.'
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -649,7 +639,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading event assets…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length
                   ? 'No event assets match those filters.'
                   : (manage ? 'No event assets yet. Add the first one.' : 'No event assets yet.')

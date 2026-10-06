@@ -286,7 +286,7 @@
             h('div', {
               style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(8rem, 1fr))', gap: '0.5rem' }
             },
-              h('div', { className: 'portal-field', style: { gridColumn: '1 / -1' } },
+              h('div', { className: 'portal-field is-full' },
                 h('label', null, 'Item name'),
                 h('input', {
                   type: 'text', maxLength: 200,
@@ -384,7 +384,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { style: { fontWeight: 600 } }, q.questName || '(unnamed)'),
+        h('div', { className: 'portal-strong' }, q.questName || '(unnamed)'),
         itemNames ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, itemNames) : null
       ),
       h('td', null, q.job || '—'),
@@ -393,9 +393,9 @@
       h('td', null,
         rewardBits.length
           ? rewardBits.join(' · ')
-          : h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+          : h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(q); }
@@ -508,11 +508,11 @@
     var categories = (meta && meta.categories) || [];
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Cosmic Exploration Catalog'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Cosmic Exploration Catalog'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -554,7 +554,7 @@
             h('span', null, 'New quest')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -565,7 +565,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading catalog…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No quests match those filters.' : 'No quests yet. Add the first one.'
               )
             )

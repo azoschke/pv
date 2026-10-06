@@ -157,20 +157,16 @@
         ? 'Enter the job title above before uploading an image.'
         : (uploading ? 'Uploading…' : 'Upload an image.');
       return h('label', {
-        className: 'portal-btn is-ghost is-small',
+        className: 'portal-btn is-ghost is-small portal-upload-btn',
         title: title,
-        style: {
-          whiteSpace: 'nowrap',
-          opacity: disabled ? 0.55 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer'
-        }
+        style: { opacity: disabled ? 0.55 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }
       },
         uploading ? 'Uploading…' : 'Upload',
         h('input', {
           type: 'file',
           accept: UPLOAD_ACCEPT,
           disabled: disabled,
-          style: { display: 'none' },
+          className: 'portal-file-input',
           onChange: function (e) {
             var f = e.target.files && e.target.files[0];
             e.target.value = '';
@@ -250,13 +246,13 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Image'),
-        h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+        h('div', { className: 'portal-image-row' },
           h('input', {
             type: 'text',
             value: draft.image_url,
             onChange: function (e) { setField('image_url', e.target.value); },
             placeholder: 'https://…',
-            style: { flex: 1 }
+            className: 'portal-grow'
           }),
           uploadButton()
         ),
@@ -264,17 +260,11 @@
           'Paste a URL, or upload an image. The posting must be titled before uploading.'
         ),
         uploadErr ? h('p', {
-          className: 'portal-field-help',
-          style: { color: 'var(--danger-color, #c0392b)' }
+          className: 'portal-field-help is-error'
         }, uploadErr) : null,
         draft.image_url ? h('img', {
           src: draft.image_url, alt: '',
-          style: {
-            display: 'block', marginTop: '0.5rem',
-            maxWidth: '320px', maxHeight: '180px',
-            border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-            objectFit: 'cover'
-          },
+          className: 'portal-image-preview',
           onError: function (e) { e.target.style.display = 'none'; }
         }) : null
       ),
@@ -312,7 +302,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('span', { style: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } }, j.title)
+        h('span', { className: 'portal-row-title' }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))
@@ -321,9 +311,9 @@
         h('span', { className: statusCls }, labelFor(STATUSES, j.status))
       ),
       h('td', null,
-        j.contact || h('span', { style: { color: 'var(--text-secondary)' } }, '—')
+        j.contact || h('span', { className: 'portal-muted' }, '—')
       ),
-      h('td', { style: { whiteSpace: 'nowrap' } },
+      h('td', { className: 'portal-nowrap' },
         h('button', {
           type: 'button', className: 'portal-btn is-small is-ghost',
           onClick: function () { onEdit(j); }
@@ -417,11 +407,11 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card', style: { padding: '0.85rem 1.1rem' } },
+      h('div', { className: 'portal-card portal-head' },
         h('div', {
-          style: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }
+          className: 'portal-head-row'
         },
-          h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1 } }, 'Job Board'),
+          h('h2', { className: 'portal-card-title portal-head-title' }, 'Job Board'),
           h('input', {
             type: 'search',
             className: 'portal-search',
@@ -438,7 +428,7 @@
             h('span', null, 'New posting')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem', marginBottom: 0 } }, flash) : null
+        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
@@ -449,7 +439,7 @@
         ? h('div', { className: 'portal-card' }, 'Loading postings…')
         : !filtered.length
           ? h('div', { className: 'portal-card' },
-              h('p', { style: { color: 'var(--text-secondary)', margin: 0 } },
+              h('p', { className: 'portal-note' },
                 list.length ? 'No postings match that search.' : 'No postings yet. Add the first one.'
               )
             )
