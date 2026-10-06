@@ -68,6 +68,7 @@
 
 /* ── Tabbed action card ── */
 .rp-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; margin-bottom: 0; }
+.rp-tabs.is-four { grid-template-columns: repeat(4, 1fr); }  /* class can't heal → no Heal tab */
 .rp-tab { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; background: var(--bg-card); border: 0;
   border-radius: 0.6rem; padding: 0.7rem 0.25rem; cursor: pointer; color: var(--text-primary); font: inherit; }
 .rp-tab-icon { font-size: 1.4rem; color: var(--text-secondary); }
@@ -103,6 +104,11 @@
 
 /* Target read-out + selector. */
 .rp-target-block { display: flex; flex-direction: column; gap: 0.55rem; }
+/* Provoke (tanks, Attack tab) and Share with DM (Defend / Skills): a small
+   button with its note beside it. */
+.rp-provoke, .rp-share { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.6rem; }
+.rp-provoke .rp-note, .rp-share .rp-note { margin: 0; }
+.rp-provoke .material-symbols-outlined, .rp-share .material-symbols-outlined { font-size: 1.1em; }
 .rp-target-label { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
 .rp-target-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .rp-target-name { font-weight: 600; }
@@ -136,6 +142,8 @@
 .rp-boss-name { font-family: 'Stoke', serif; display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .rp-boss-down-tag, .rp-boss-vuln-tag { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
   background: var(--bg-darker); border-radius: 0.3rem; padding: 0.05rem 0.35rem; }
+.rp-boss-vuln-tag .rp-chip-x { font-size: 0.75rem; padding: 0 0 0 0.25rem; }
+.rp-tag-spaced { margin-left: 0.4rem; }
 /* HP row: bar + number, with the DM eye (hides the HP number) inline so it
    clearly toggles HP rather than the whole boss. */
 .rp-boss-hp-line { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; }

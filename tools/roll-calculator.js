@@ -35,9 +35,19 @@
     ],
     damage_tiers: [{ min: 20, damage: 5 }, { min: 16, damage: 4 }, { min: 11, damage: 3 }, { min: 6, damage: 2 }, { min: 0, damage: 1 }],
     attack_die: 20, heal_die: 5, aoe_max_targets: 5, max_damage_per_attack: 15,
-    actions_per_turn: 1, action_types: { attack: true, heal: true, buff: true }
+    actions_per_turn: 1, action_types: { attack: true, heal: true, buff: true },
+    heal: {
+      tank: { single: true, single_scope: 'self', aoe: false },
+      dps: { single: true, single_scope: 'self', aoe: false },
+      healer: { single: true, single_scope: 'party', aoe: true }
+    }
   };
   function rulesOf(data) { return (data && data.rules) || FALLBACK_RULES; }
+  // One class's heal settings from System Rules (same as the worker's healAccess).
+  function healAccess(rules, classRole) {
+    var heal = rules.heal || FALLBACK_RULES.heal;
+    return heal[classRole] || { single: false, single_scope: 'self', aoe: false };
+  }
 
 
   function damageFor(rules, r) {
@@ -77,6 +87,7 @@
       case 'holder_items': return 'the items’ holders';
       case 'party_member': return 'a chosen ally';
       case 'party_members': return 'several chosen allies';
+      case 'players': return 'specific players';
       case 'boss': return 'a chosen enemy';
       case 'some_bosses': return 'several chosen enemies';
       case 'all_bosses': return 'all enemies';
@@ -100,7 +111,7 @@
     if (e.type === 'none') return e.label || 'Special effect';
     var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : e.type === 'skill_roll' ? skillPhrase(e.skill, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
-    if (e.target_kind === 'party_member' || e.target_kind === 'party_members') tp = e.target_label || tp;
+    if (e.target_kind === 'party_member' || e.target_kind === 'party_members' || e.target_kind === 'players') tp = e.target_label || tp;
     if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
     var to = tp ? ' to ' + tp : '';
     var dur = e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
@@ -241,6 +252,7 @@
   }
   function vulnText(b) { var v = bossVulnParts(b); return vulnLabel(v.flat, v.mult, v.turns); }
   function playerVulnText(v) { return v ? vulnLabel(v.flat || 0, v.mult || 1, v.turns != null ? v.turns : null) : null; }
+  function provokeText(pv) { return 'Provoked by ' + (pv.name || 'a tank') + (pv.turn != null ? ' (Turn ' + pv.turn + ')' : ''); }
   function BossCard(props) {
     var b = props.boss;
     var vuln = vulnText(b);
@@ -267,6 +279,7 @@
         h('div', { className: 'rp-boss-name' }, b.name,
           b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
           b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
+          b.provoked ? h('span', { className: 'rp-boss-vuln-tag' }, provokeText(b.provoked)) : null,
           vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
         h('div', { className: 'rp-boss-hp-line' },
           h(BossHpBar, { boss: b }),
@@ -767,7 +780,12 @@
   function Board(props) {
     var data = props.data, ctx = props.ctx, rules = props.rules, c = ctx.character;
     var party = props.party || [], bosses = props.bosses || [];
-    var isHealer = c.class_role === 'healer';
+    // System Rules decide how this class heals: single-target (self only, or
+    // anyone in the party) and/or AOE. Both off hides the Heal tab.
+    var healRules = healAccess(rules, c.class_role);
+    var canHealSingle = !!healRules.single, canHealAoe = !!healRules.aoe;
+    var healAnyone = canHealSingle && healRules.single_scope === 'party';
+    var showHealTab = canHealSingle || canHealAoe;
 
     var tabState = useState('attack'); var tab = tabState[0], setTab = tabState[1];
     // Attack state
@@ -775,6 +793,9 @@
     var atkTargetState = useState(''); var atkTarget = atkTargetState[0], setAtkTarget = atkTargetState[1];
     var atkBusyState = useState(false); var atkBusy = atkBusyState[0], setAtkBusy = atkBusyState[1];
     var atkMsgState = useState(''); var atkMsg = atkMsgState[0], setAtkMsg = atkMsgState[1];
+    // Provoke state (tanks)
+    var provBusyState = useState(false); var provBusy = provBusyState[0], setProvBusy = provBusyState[1];
+    var provMsgState = useState(null); var provMsg = provMsgState[0], setProvMsg = provMsgState[1];
     // Heal state
     var healRollState = useState(''); var healRoll = healRollState[0], setHealRoll = healRollState[1];
     var healModeState = useState('single'); var healMode = healModeState[0], setHealMode = healModeState[1];
@@ -788,6 +809,9 @@
     // Skills state
     var skillSelState = useState('perception'); var skillSel = skillSelState[0], setSkillSel = skillSelState[1];
     var skillRollState = useState(''); var skillRoll = skillRollState[0], setSkillRoll = skillRollState[1];
+    // Share with DM (Defend / Skills)
+    var shareBusyState = useState(''); var shareBusy = shareBusyState[0], setShareBusy = shareBusyState[1];
+    var shareMsgState = useState(null); var shareMsg = shareMsgState[0], setShareMsg = shareMsgState[1];
 
     var locked = props.actionLocked || props.ko;
 
@@ -811,9 +835,21 @@
         .then(function () { setAtkBusy(false); setAtkRoll(''); setAtkMsg('Damage applied.'); setTimeout(function () { setAtkMsg(''); }, 2500); })
         .catch(function (e) { setAtkBusy(false); setAtkMsg(e.message || 'Failed to apply.'); });
     }
+    // Provoke: tanks only, on the players' turn. Doesn't use the action.
+    var isTank = c.class_role === 'tank';
+    var provCan = isTank && !!atkBoss && !props.actionLocked && !props.ko && !props.stunned && !provBusy;
+    function provoke() {
+      if (!atkBoss) return;
+      setProvBusy(true); setProvMsg(null);
+      Promise.resolve(props.onProvoke(atkBoss.id))
+        .then(function () { setProvBusy(false); setProvMsg({ ok: true, text: atkBoss.name + ' is provoked.' }); setTimeout(function () { setProvMsg(null); }, 2500); })
+        .catch(function (e) { setProvBusy(false); setProvMsg({ ok: false, text: e.message || 'Failed to provoke.' }); });
+    }
 
     // ── Heal derived ──
-    var effHealMode = isHealer ? healMode : 'single';
+    var effHealMode = canHealSingle && canHealAoe ? healMode : (canHealAoe ? 'aoe' : 'single');
+    // A self-only single heal always targets the acting player.
+    var healSingleId = healAnyone ? healSingle : String(c.member_id);
     var healCalc = computeRoll('heal', healRoll, ctx); var pool = healCalc.total + healCalc.outputTotal;
     var healLiving = party.filter(function (p) { return !p.eliminated; });
     var maxPeople = Math.max(1, parseInt(healCount, 10) || 1);
@@ -822,15 +858,15 @@
     var healCanApply = !locked && !healBusy && pool > 0 && props.canHeal;
     function resetHeal() { setHealRoll(''); setHealCount(''); setHealAlloc({}); }
     function flashHeal(m) { setHealMsg(m); setTimeout(function () { setHealMsg(''); }, 2500); }
-    function applyHeal(entries) {
+    function applyHeal(entries, mode) {
       var clean = entries.filter(function (e) { return e.amount > 0; });
       if (!clean.length) return;
       setHealBusy(true); setHealMsg('');
-      Promise.resolve(props.onApplyHeal(clean)).then(function () { setHealBusy(false); resetHeal(); flashHeal('Healing applied.'); })
+      Promise.resolve(props.onApplyHeal(clean, mode)).then(function () { setHealBusy(false); resetHeal(); flashHeal('Healing applied.'); })
         .catch(function (e) { setHealBusy(false); setHealMsg(e.message || 'Failed to apply.'); });
     }
-    function applyHealSingle() { var id = isHealer ? Number(healSingle) : c.member_id; applyHeal([{ member_id: id, amount: pool }]); }
-    function applyHealAoe() { applyHeal(allocIds.map(function (id) { return { member_id: id, amount: Number(healAlloc[id]) || 0 }; })); }
+    function applyHealSingle() { applyHeal([{ member_id: Number(healSingleId), amount: pool }], 'single'); }
+    function applyHealAoe() { applyHeal(allocIds.map(function (id) { return { member_id: id, amount: Number(healAlloc[id]) || 0 }; }), 'aoe'); }
     function toggleHealTarget(id) {
       var ids = allocIds.slice();
       if (Object.prototype.hasOwnProperty.call(healAlloc, id)) ids = ids.filter(function (x) { return x !== id; });
@@ -839,19 +875,37 @@
     }
     function setHealAmount(id, raw) { var n = parseInt(raw, 10); if (isNaN(n) || n < 0) n = 0; var next = Object.assign({}, healAlloc); next[id] = n; setHealAlloc(next); }
     // Row / dropdown targeting share one selection (single = set; aoe = toggle).
-    // Non-healers self-heal only — worker rules reject anything else, so keep the
-    // target (and the highlighted party row) locked to the acting player.
-    function onHealRowTarget(id) { if (!isHealer) return; if (effHealMode === 'single') setHealSingle(String(id)); else toggleHealTarget(id); }
-    var healSingleMember = healLiving.filter(function (p) { return String(p.member_id) === String(healSingle); })[0]
-      || party.filter(function (p) { return String(p.member_id) === String(healSingle); })[0];
+    // A self-only single heal keeps the target (and the highlighted party row)
+    // locked to the acting player; the worker rejects anyone else.
+    function onHealRowTarget(id) { if (effHealMode === 'single') { if (healAnyone) setHealSingle(String(id)); } else toggleHealTarget(id); }
+    var healSingleMember = healLiving.filter(function (p) { return String(p.member_id) === String(healSingleId); })[0]
+      || party.filter(function (p) { return String(p.member_id) === String(healSingleId); })[0];
 
     // ── Defend derived ──
     var defCalc = computeRoll('defense', defRoll, ctx);
     // ── Skills derived ──
     var skillCalc = computeSkill(skillSel, skillRoll, ctx.myModifiers);
+    // ── Share with DM (Rolls log). Not turn-limited: defense rolls happen on the boss turn.
+    function shareRoll(kind, raw) {
+      var roll = parseInt(raw, 10);
+      if (!(roll >= 1)) return;
+      setShareBusy(kind); setShareMsg(null);
+      Promise.resolve(props.onShareRoll(kind === 'skill' ? { kind: 'skill', skill: skillSel, roll: roll } : { kind: 'defense', roll: roll }))
+        .then(function (r) { setShareBusy(''); setShareMsg({ kind: kind, ok: true, text: 'Sent ' + (r && r.total != null ? r.total : '') + ' to the DM.' }); setTimeout(function () { setShareMsg(null); }, 2500); })
+        .catch(function (e) { setShareBusy(''); setShareMsg({ kind: kind, ok: false, text: e.message || 'Failed to send.' }); });
+    }
+    function shareButton(kind, raw) {
+      var ready = (parseInt(raw, 10) || 0) >= 1 && !shareBusy;
+      return h('div', { className: 'rp-share' },
+        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !ready, onClick: function () { shareRoll(kind, raw); } },
+          h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'send'),
+          shareBusy === kind ? 'Sending…' : 'Share with DM'),
+        shareMsg && shareMsg.kind === kind ? h('span', { className: 'rp-note ' + (shareMsg.ok ? 'rp-note-ok' : 'rp-note-warn') }, shareMsg.text) : null);
+    }
 
     // Tab availability (for the muted "used" cue). Skill checks aren't turn-gated.
     var avail = { attack: props.canAttack, heal: props.canHeal, buff: props.canBuff, defend: true, skill: true };
+    var curTab = tab === 'heal' && !showHealTab ? 'attack' : tab;
 
     // Composer bodies -------------------------------------------------------
     function attackBody() {
@@ -881,7 +935,13 @@
           h('button', { type: 'button', className: 'rp-commit', disabled: !atkCanApply, onClick: applyAttack },
             atkBusy ? 'Applying…' : 'Deal ' + atkEff + ' damage to ' + (atkBoss ? atkBoss.name : 'target')),
           (atkBoss && (atkV.flat > 0 || atkV.mult > 1)) ? h('p', { className: 'rp-note' }, atkBoss.name + ' is vulnerable — ' + vulnText(atkBoss) + '.') : null,
-          atkMsg ? h('p', { className: 'rp-note rp-note-ok' }, atkMsg) : null)
+          atkMsg ? h('p', { className: 'rp-note rp-note-ok' }, atkMsg) : null,
+          isTank ? h('div', { className: 'rp-provoke' },
+            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !provCan, onClick: provoke },
+              h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'campaign'),
+              provBusy ? 'Provoking…' : 'Provoke ' + (atkBoss ? atkBoss.name : 'target')),
+            h('span', { className: 'rp-note' }, 'Doesn’t use your action.'),
+            provMsg ? h('span', { className: 'rp-note ' + (provMsg.ok ? 'rp-note-ok' : 'rp-note-warn') }, provMsg.text) : null) : null)
           : h('p', { className: 'rp-note' }, 'No enemies on the field.'));
     }
 
@@ -892,7 +952,7 @@
       var newHp = (healSingleMember) ? Math.min(healSingleMember.max_hp, healSingleMember.current_hp + pool) : null;
       return h('div', { className: 'rp-composer' },
         props.blockHeal ? h('p', { className: 'rp-note rp-note-warn' }, props.blockHeal) : null,
-        isHealer ? h('div', { className: 'rp-seg' },
+        canHealSingle && canHealAoe ? h('div', { className: 'rp-seg' },
           h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'single' ? ' is-active' : ''), onClick: function () { setHealMode('single'); } }, 'Single'),
           h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'aoe' ? ' is-active' : ''), onClick: function () { setHealMode('aoe'); } }, 'AOE')) : null,
         h('div', { className: 'rp-roll-line' },
@@ -905,11 +965,11 @@
         effHealMode === 'single' ? h('div', { className: 'rp-target-block' },
           h('h4', { className: 'rp-target-label' }, 'Target'),
           h('div', { className: 'rp-target-row' },
-            isHealer ? h('select', { className: 'rp-select rp-target-select', value: healSingle, disabled: locked, onChange: function (e) { setHealSingle(e.target.value); } },
+            healAnyone ? h('select', { className: 'rp-select rp-target-select', value: healSingle, disabled: locked, onChange: function (e) { setHealSingle(e.target.value); } },
                 healLiving.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); }))
               : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
             (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
-          !isHealer ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
+          !healAnyone ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
           h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
             healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
@@ -932,7 +992,8 @@
           h(RollHero, { value: defRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' roll',
             disabled: false, onChange: function (e) { setDefRoll(clampNum(e.target.value, rules.attack_die)); } }),
           h(ChipExpr, { terms: ['roll ' + defCalc.base].concat(defCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); })), resultText: String(defCalc.total), tone: 'neutral' })),
-        h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'));
+        h('p', { className: 'rp-note' }, 'Provide your final defensive roll number to the DM.'),
+        shareButton('defense', defRoll));
     }
 
     function skillBody() {
@@ -944,7 +1005,8 @@
           h(RollHero, { value: skillRoll, max: rules.attack_die, caption: 'D' + rules.attack_die + ' ROLL', ariaLabel: 'Raw D' + rules.attack_die + ' skill roll',
             disabled: false, onChange: function (e) { setSkillRoll(clampNum(e.target.value, rules.attack_die)); } }),
           h(ChipExpr, { terms: ['roll ' + skillCalc.base].concat(skillCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); })), resultText: String(skillCalc.total), tone: 'neutral' })),
-        h('p', { className: 'rp-note' }, 'Give your ' + skillLabel(skillSel) + ' total to the DM.'));
+        h('p', { className: 'rp-note' }, 'Give your ' + skillLabel(skillSel) + ' total to the DM.'),
+        shareButton('skill', skillRoll));
     }
 
     var bodies = {
@@ -955,24 +1017,25 @@
       skill: skillBody
     };
 
-    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }, { id: 'skill', label: 'Skills', sub: 'CHECK' }];
+    var tabs = [{ id: 'attack', label: 'Attack', sub: 'D' + rules.attack_die }, { id: 'heal', label: 'Heal', sub: 'D' + rules.heal_die }, { id: 'buff', label: 'Buff', sub: 'SELF' }, { id: 'defend', label: 'Defend', sub: 'REACTION' }, { id: 'skill', label: 'Skills', sub: 'CHECK' }]
+      .filter(function (t) { return t.id !== 'heal' || showHealTab; });
 
-    var healShare = { active: tab === 'heal', mode: effHealMode, targetId: healSingle, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget, canRetarget: isHealer };
+    var healShare = { active: curTab === 'heal', mode: effHealMode, targetId: healSingleId, pool: pool, alloc: healAlloc, onTarget: onHealRowTarget, canRetarget: effHealMode === 'aoe' || healAnyone };
 
     return h('div', null,
       h(BossBar, { bosses: bosses, isDM: props.isDM,
-        attackMode: tab === 'attack' && props.canAttack && !locked, targetId: atkSel, onTarget: setAtkTarget,
+        attackMode: curTab === 'attack' && props.canAttack && !locked, targetId: atkSel, onTarget: setAtkTarget,
         onBossVisible: props.onBossVisible, onBossDotRemove: props.onBossDotRemove }),
       props.turnNotice ? h('div', { className: 'rp-turn-notice' + (props.actionLocked ? ' is-locked' : '') }, props.turnNotice) : null,
       h('div', { className: 'rp-grid' },
         h('div', { className: 'rp-col rp-action-col' },
-          h('div', { className: 'rp-tabs' }, tabs.map(function (t) {
-            return h('button', { type: 'button', key: t.id, className: 'rp-tab' + (tab === t.id ? ' is-active' : '') + (!avail[t.id] ? ' is-unavail' : ''), onClick: function () { setTab(t.id); } },
+          h('div', { className: 'rp-tabs' + (tabs.length === 4 ? ' is-four' : '') }, tabs.map(function (t) {
+            return h('button', { type: 'button', key: t.id, className: 'rp-tab' + (curTab === t.id ? ' is-active' : '') + (!avail[t.id] ? ' is-unavail' : ''), onClick: function () { setTab(t.id); } },
               h('span', { className: 'material-symbols-outlined rp-tab-icon', 'aria-hidden': 'true' }, TAB_ICON[t.id]),
               h('span', { className: 'rp-tab-label' }, t.label),
               h('span', { className: 'rp-tab-sub' }, t.sub));
           })),
-          h('div', { className: 'rp-composer-wrap' }, bodies[tab]())),
+          h('div', { className: 'rp-composer-wrap' }, bodies[curTab]())),
         h('div', { className: 'rp-col rp-party-col' },
           h(PartyPanel, { party: party, myId: c.member_id, locked: props.bookLocked, avatars: props.avatars, shieldMax: rules.shield_max,
             heal: healShare, onHp: props.onHp, onShield: props.onShield,
@@ -1129,6 +1192,8 @@
           h('span', { className: 'rp-dm-boss-count' }, skillCount + ' skill' + (skillCount === 1 ? '' : 's'))),
         b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
         b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
+        b.provoked ? h('span', { className: 'rp-boss-vuln-tag' }, provokeText(b.provoked),
+          h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear provoke', 'aria-label': 'Clear provoke', onClick: function () { props.onClearProvoke(b); } }, '✕')) : null,
         h('div', { className: 'rp-effect-ctl' },
           h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
           h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.stunned ? 'Stunned — click to clear' : (b.stun_immune ? 'Stun-immune (DM can still force)' : 'Stun this enemy'),
@@ -1156,7 +1221,7 @@
       (props.bosses || []).map(function (b) {
         return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party,
           onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
-          onSetVuln: props.onSetVuln, onSetStun: props.onSetStun, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
+          onSetVuln: props.onSetVuln, onSetStun: props.onSetStun, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onClearProvoke: props.onClearProvoke });
       }),
       !(props.bosses || []).length ? h('p', { className: 'rp-note' }, 'No bosses on the field.') : null,
 
@@ -1183,6 +1248,7 @@
     var draftBy = {}; (props.buffDrafts || []).forEach(function (b) { draftBy[b.member_id] = b; });
     var vulns = props.playerVulns || {};
     var stuns = props.playerStuns || {};
+    var immune = props.stunImmune || {};
     return h('div', { className: 'rp-dm-section' },
       h('h4', { className: 'rp-dm-sub' }, 'Players'),
       (props.party || []).map(function (p) {
@@ -1191,6 +1257,7 @@
         var vuln = vulns[p.member_id] || vulns[String(p.member_id)];
         var vtag = playerVulnText(vuln);
         var stunned = !!(stuns[p.member_id] || stuns[String(p.member_id)]);
+        var isImmune = !!immune[String(p.member_id)];
         var status = acts.length
           ? 'Action used: ' + acts.join(', ')
           : (draft ? 'Buff pending — ' + (BUFF_LABEL[draft.type] || draft.type) + ' ' + (draft.value >= 0 ? '+' : '') + draft.value : 'Action available');
@@ -1198,10 +1265,11 @@
           h('div', { className: 'rp-effect-info' },
             h('strong', null, p.member_name + (p.eliminated ? ' (KO)' : ''),
               stunned ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, 'Stunned') : null,
-              vtag ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, vtag) : null),
+              vtag ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, vtag) : null,
+              isImmune ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Immune to stun') : null),
             h('span', { className: 'rp-effect-meta' }, status)),
           h('div', { className: 'rp-effect-ctl' },
-            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: stunned ? 'Stunned — click to clear' : 'Stun this player',
+            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: stunned ? 'Stunned — click to clear' : (isImmune ? 'Immune to stun (you can still force it)' : 'Stun this player'),
               onClick: function () { props.onSetStun('player', p.member_id, !stunned); } }, stunned ? 'Unstun' : 'Stun'),
             h(DMPlayerVuln, { vuln: vuln, onSet: function (flat, mult, turns) { props.onSetPlayerVuln(p.member_id, flat, mult, turns); } }),
             h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !acts.length,
@@ -1245,10 +1313,10 @@
   // stay visible when collapsed; everything else lives in the body. Collapsed by
   // default; players never see this.
   function DMDeck(props) {
-    var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || [];
+    var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || []; var rollLog = props.rollLog || [];
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var tabState = useState('bosses'); var tab = tabState[0], setTab = tabState[1];
-    var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }];
+    var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }, { id: 'rolls', label: 'Rolls' }];
     return h('div', { className: 'rp-deck' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
         h('button', { type: 'button', className: 'rp-deck-title', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
@@ -1304,9 +1372,9 @@
 
         tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
           onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln, onSetStun: props.onSetStun,
-          onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove }) : null,
+          onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove, onClearProvoke: props.onClearProvoke }) : null,
 
-        tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction, playerVulns: props.playerVulns, onSetPlayerVuln: props.onSetPlayerVuln, playerStuns: props.playerStuns, onSetStun: props.onSetStun }) : null,
+        tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction, playerVulns: props.playerVulns, onSetPlayerVuln: props.onSetPlayerVuln, playerStuns: props.playerStuns, stunImmune: props.stunImmune, onSetStun: props.onSetStun }) : null,
 
         tab === 'log' ? h('aside', { className: 'rp-dm-log' },
           h('h4', { className: 'rp-dm-sub' }, 'Change log'),
@@ -1322,6 +1390,18 @@
               return h('div', { className: 'rp-log', key: l.id },
                 h('span', { className: 'rp-log-main' }, main),
                 h('span', { className: rightClass }, right));
+            }))) : null,
+
+        // Defense rolls and skill checks players shared with the DM.
+        tab === 'rolls' ? h('aside', { className: 'rp-dm-log' },
+          h('h4', { className: 'rp-dm-sub' }, 'Shared rolls'),
+          !rollLog.length ? h('p', { className: 'rp-note' }, 'No rolls shared yet this session.') :
+            h('div', { className: 'rp-log-list' }, rollLog.map(function (r) {
+              var what = r.kind === 'defense' ? 'Defense' : skillLabel(r.skill);
+              var parts = ['roll ' + r.roll].concat((r.breakdown || []).map(function (b) { return b.label + ' ' + fmt(b.value); }));
+              return h('div', { className: 'rp-log', key: r.id },
+                h('span', { className: 'rp-log-main' }, (r.member_name || 'Someone') + ' · ' + what + (r.turn_number != null ? ' · Turn ' + r.turn_number : '')),
+                h('span', { className: 'rp-log-delta rp-log-note' }, parts.join(' + ') + ' = ', h('strong', null, String(r.total))));
             }))) : null) : null);
   }
 
@@ -1381,6 +1461,7 @@
         campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm, location: s.location || null, time_of_day: s.time_of_day || null }),
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
         player_stuns: s.player_stuns, player_stuns_next: s.player_stuns_next, player_vulns: s.player_vulns,
+        player_stun_immune: s.player_stun_immune || {}, roll_log: s.roll_log || [],
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
         minions: s.minions || [],
@@ -1440,8 +1521,17 @@
     function onEndSession() { if (!confirm('End the session?')) return; setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/session/end', {}).then(function () { window.location.href = '/pv/admin/portal.html?section=rp-rolls'; }).catch(function (e) { setErr(e.message || 'Failed to end.'); }); }
     // Heal apply: one atomic request — additive server-side (no lost heals when two
     // land together) and unable to revive KO'd targets. Then refresh.
-    function onApplyHeal(entries) {
-      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/heal', { entries: entries }).then(refresh);
+    function onApplyHeal(entries, mode) {
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/heal', { entries: entries, mode: mode }).then(refresh);
+    }
+    // Provoke (tanks): marks the boss as provoked; doesn't use the action.
+    function onProvoke(bossId) {
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + bossId + '/provoke', {}).then(refresh);
+    }
+    // Share a defense roll / skill check with the DM's Rolls log. The worker
+    // works out the total and returns it.
+    function onShareRoll(body) {
+      return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/rolls', body).then(function (r) { refresh(); return r; });
     }
     // Attack apply: the capped, computed damage lands on the chosen boss.
     // The raw roll rides along purely so the DM log can show "rolled N".
@@ -1457,7 +1547,20 @@
     function onBossVisible(b, vis) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/bosses/' + b.id, { hp_visible: vis }); }); }
     function onSetVuln(b, flat, mult, turns) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/vulns', { target_type: 'boss', target_id: String(b.id), flat: flat, mult: mult, duration_turns: turns }); }); }
     function onSetPlayerVuln(memberId, flat, mult, turns) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/vulns', { target_type: 'player', target_id: String(memberId), flat: flat, mult: mult, duration_turns: turns }); }); }
-    function onSetStun(targetType, targetId, stunned) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', { target_type: targetType, target_id: String(targetId), stunned: !!stunned }); }); }
+    // A player with "Immune to stun" comes back 409 { immune: true }; the DM
+    // confirms, then it's resent with force.
+    function onSetStun(targetType, targetId, stunned) {
+      var body = { target_type: targetType, target_id: String(targetId), stunned: !!stunned };
+      act(function () {
+        return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', body).catch(function (e) {
+          if (!(e.status === 409 && e.data && e.data.immune)) throw e;
+          var who = (dataRef.current.party || []).filter(function (p) { return String(p.member_id) === String(targetId); })[0];
+          if (!confirm((who ? who.member_name : 'This player') + ' is immune to stun. Stun anyway?')) return null;
+          return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/stuns', Object.assign({}, body, { force: true }));
+        });
+      });
+    }
+    function onClearProvoke(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/provoke'); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + '?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
     function onUseEffect(b, e, targetIds, hits, overrideStun) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
@@ -1480,6 +1583,7 @@
     var c = data.character;
     var isDM = camp.is_dm;
     var ko = !!(c && c.eliminated);
+    var stunned = !!(c && data.player_stuns && (data.player_stuns[c.member_id] || data.player_stuns[String(c.member_id)]));
     // Character actions (attack/heal/buff/items) lock for EVERYONE during turn
     // lock — the DM included. Party bookkeeping stays DM-exempt.
     var actionLocked = camp.turn_locked;
@@ -1528,8 +1632,7 @@
         var vt = playerVulnText(mv);
         return vt ? h('div', { className: 'rp-flash' }, 'You’re vulnerable — ' + vt + '.') : null;
       })(),
-      (c && data.player_stuns && (data.player_stuns[c.member_id] || data.player_stuns[String(c.member_id)]))
-        ? h('div', { className: 'rp-flash rp-ko' }, 'You’re stunned — you skip this turn.') : null,
+      stunned ? h('div', { className: 'rp-flash rp-ko' }, 'You’re stunned — you skip this turn.') : null,
 
       isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
@@ -1539,15 +1642,17 @@
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         playerVulns: data.player_vulns || {}, onSetPlayerVuln: onSetPlayerVuln,
         playerStuns: Object.assign({}, data.player_stuns_next || {}, data.player_stuns || {}), onSetStun: onSetStun,
+        stunImmune: data.player_stun_immune || {}, onClearProvoke: onClearProvoke, rollLog: data.roll_log || [],
         personalBuffs: data.personal_buffs || [], buffDrafts: data.buff_drafts || [], onBuffPatch: onBuffPatch, onBuffRemove: onBuffRemove }) : null,
 
       c ? h(Board, { data: data, ctx: ctx, rules: rules, party: data.party || [], bosses: data.bosses || [], items: data.items || [], avatars: avatars,
-          isDM: isDM, actionLocked: actionLocked, ko: ko, bookLocked: bookLocked, turnNotice: turnNotice,
+          isDM: isDM, actionLocked: actionLocked, ko: ko, stunned: stunned, bookLocked: bookLocked, turnNotice: turnNotice,
           canAttack: canAct(data, 'attack'), canHeal: canAct(data, 'heal'), canBuff: canAct(data, 'buff'),
           blockAttack: actionBlockReason(data, 'attack'), blockHeal: actionBlockReason(data, 'heal'), blockBuff: actionBlockReason(data, 'buff'),
           buffs: data.my_personal_buffs || [],
           skillsUnseen: skillsUnseen, onOpenSkills: openSkills,
           onApplyDamage: onApplyDamage, onApplyHeal: onApplyHeal, onSaveBuffDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff,
+          onProvoke: onProvoke, onShareRoll: onShareRoll,
           onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll,
           minions: data.minions || [], onMinionAttack: onMinionAttack, onMinionRemove: onMinionRemove, onMinionHp: onMinionHp,
           onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove })

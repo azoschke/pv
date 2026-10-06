@@ -287,7 +287,8 @@
       { value: 'attack_mult', label: 'Multiply attack damage' },
       { value: 'heal_output', label: 'Boost healing done' },
       { value: 'damage_reduction', label: 'Reduce damage taken' },
-      { value: 'skill', label: 'Add to a skill check' }
+      { value: 'skill', label: 'Add to a skill check' },
+      { value: 'stun_immune', label: 'Immune to stun' }
     ] },
     { label: 'Debuffs a target', options: [
       { value: 'vulnerability', label: 'Make a target take more damage' },
@@ -309,6 +310,7 @@
     heal_output: 'Makes the holder’s heals restore more HP.',
     damage_reduction: 'Lowers damage the target takes.',
     skill: 'Adds to the holder’s rolls for one skill.',
+    stun_immune: 'Target can’t be stunned by boss skills. The DM can still stun them by hand after confirming.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
     none: ''
@@ -324,7 +326,9 @@
     { value: 'class', label: 'A class' },
     { value: 'party_member', label: 'A chosen ally' },
     { value: 'party_members', label: 'Several chosen allies' },
-    { value: 'holder_items', label: 'Holder of item(s)' }
+    { value: 'holder_items', label: 'Holder of item(s)' },
+    // Players picked here, when the item is set up. Stun immunity only.
+    { value: 'players', label: 'Specific players', only: 'stun_immune' }
   ];
   // ── Conditional activation (Advanced) ───────────────────────────────────────
   // An optional gate on any effect: the holder's HP, or the campaign's scene
@@ -403,7 +407,7 @@
     var sTurnsState = useState(initSummon.turns ? String(initSummon.turns) : ''); var sTurns = sTurnsState[0], setSTurns = sTurnsState[1];
     // One "How it works" choice (per effect) drives mode + duration together, so
     // "always on" can never carry a turn limit and over-time is a named option.
-    var timingState = useState(initTiming(initEffect, m)); var timing = timingState[0], setTiming = timingState[1];
+    var timingState = useState(initTiming(initEffect, m)); var timingRaw = timingState[0], setTiming = timingState[1];
     var initTk = (m.target_kind && m.target_kind !== 'boss' && m.target_kind !== 'all_bosses')
       ? (m.target_kind === 'holder_item' ? 'holder_items' : m.target_kind) : 'self';
     var tkState = useState(initTk); var tk = tkState[0], setTk = tkState[1];
@@ -413,6 +417,9 @@
     var initRefs = m.target_kind === 'holder_items' ? parseRefs(m.target_ref) : (m.target_kind === 'holder_item' && m.target_ref ? [String(m.target_ref)] : []);
     var refsState = useState(initRefs); var refs = refsState[0], setRefs = refsState[1];
     function toggleRef(id) { setRefs(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
+    // "Specific players" targets store an array of member ids in target_ref (JSON).
+    var playersState = useState(m.target_kind === 'players' ? parseRefs(m.target_ref) : []); var players = playersState[0], setPlayers = playersState[1];
+    function togglePlayer(id) { setPlayers(function (cur) { return cur.indexOf(id) !== -1 ? cur.filter(function (x) { return x !== id; }) : cur.concat([id]); }); }
     // Strike can hit one chosen enemy, several chosen enemies, or all of them.
     var enemyScopeState = useState(m.target_kind === 'all_bosses' ? 'all_bosses' : m.target_kind === 'some_bosses' ? 'some_bosses' : m.target_kind === 'minions' ? 'minions' : 'boss'); var enemyScope = enemyScopeState[0], setEnemyScope = enemyScopeState[1];
     // "Several enemies" can cap how many are picked (blank = no cap); stored in target_ref.
@@ -492,6 +499,7 @@
       // Heal over time stores a hidden start_next_turn flag; don't carry it into
       // another effect's "Wait a turn before it starts" box.
       if (next !== effect) setStartNext(false);
+      if (next !== 'stun_immune' && tk === 'players') setTk('self');
       var opts = timingOptions(next).map(function (o) { return o.value; });
       if (wasEmpty || opts.indexOf(timing) === -1) setTiming(opts[0]);
     }
@@ -502,9 +510,13 @@
     var isVuln = effect === 'vulnerability'; // debuff; its own self-contained block
     var isStun = effect === 'stun';           // debuff; its own self-contained block
     var isNone = effect === 'none';
+    var isImmune = effect === 'stun_immune';
+    // Stun immunity on an ally chosen when it's used only works as Temporary.
+    var lockTemp = isImmune && (tk === 'party_member' || tk === 'party_members');
+    var timing = lockTemp ? 'temp' : timingRaw;
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
-    var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
+    var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun && !isImmune;
     var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln && !isStun;
     var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
     var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
@@ -584,7 +596,7 @@
         try { await props.onSubmit(sp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
         return;
       }
-      var payload = { label: label.trim() || null, value: isSummon ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
+      var payload = { label: label.trim() || null, value: (isSummon || isImmune) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
         summon: resolvedSummon(), conditions: conditions,
@@ -594,6 +606,7 @@
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
+      else if (tk === 'players') { if (!players.length) { setErr('Pick at least one player.'); return; } payload.target_ref = JSON.stringify(players.map(Number)); }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -762,7 +775,7 @@
       showTarget ? fieldGrid([
         h('div', { className: 'portal-field', key: 'tk' }, h('label', null, 'Target'),
           h('select', { value: tk, onChange: function (e) { setTk(e.target.value); setRef(''); } },
-            TARGET_OPTIONS.map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
+            TARGET_OPTIONS.filter(function (t) { return !t.only || t.only === effect; }).map(function (t) { return h('option', { key: t.value, value: t.value }, t.label); }))),
         tk === 'class' ? h('div', { className: 'portal-field', key: 'cls' }, h('label', null, 'Which class'),
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null
@@ -777,13 +790,23 @@
                   c.name);
               }))
           : h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'No other items yet.')) : null,
+      (showTarget && tk === 'players') ? h('div', { className: 'portal-field', style: { marginTop: '0.4rem' } }, h('label', null, 'Which players (tick each)'),
+        props.members == null ? h('p', { className: 'portal-field-help', style: { margin: 0 } }, 'Loading roster…')
+          : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem 1rem', paddingTop: '0.2rem' } },
+              props.members.map(function (mb) {
+                var id = String(mb.id);
+                return h('label', { key: id, style: { display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 400 } },
+                  h('input', { type: 'checkbox', checked: players.indexOf(id) !== -1, onChange: function () { togglePlayer(id); } }),
+                  mb.name);
+              }))) : null,
+      (showTarget && lockTemp) ? h('p', { className: 'portal-field-help', style: { margin: '0.3rem 0 0' } }, 'The ally is picked when it’s used, so this one is Temporary.') : null,
 
       // ── How it works ──────────────────────────────────────────────────────
       (showTiming || isSummon) ? secHead('How it works') : null,
       showTiming ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
-            timingOptions(effect).map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+            timingOptions(effect).filter(function (o) { return !lockTemp || o.value === 'temp'; }).map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
       ]) : null,
       showUses ? h('div', { style: { marginTop: '0.5rem' } },
         h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 400 } },
@@ -865,7 +888,7 @@
   // Plain-language summary of a modifier (matches the player-facing wording in
   // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
   // holder, this turn. · 2 uses/session".
-  function modifierSummary(m, catalogue) {
+  function modifierSummary(m, catalogue, members) {
     var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
     if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
     if (m.type === 'summon') {
@@ -883,6 +906,7 @@
       case 'holder_items': { var ids = []; try { ids = JSON.parse(m.target_ref) || []; } catch (_) { ids = m.target_ref ? [m.target_ref] : []; } var names = ids.map(function (id) { var c = (catalogue || []).filter(function (x) { return x.id === id; })[0]; return c ? c.name : null; }).filter(Boolean); t = names.length ? 'holders of ' + names.join(', ') : 'item holders'; break; }
       case 'party_member': t = 'a chosen ally'; break;
       case 'party_members': t = 'several chosen allies'; break;
+      case 'players': { var pids = []; try { pids = JSON.parse(m.target_ref) || []; } catch (_) { pids = []; } var pnames = pids.map(function (id) { var mb = (members || []).filter(function (x) { return String(x.id) === String(id); })[0]; return mb ? mb.name : null; }).filter(Boolean); t = pnames.length ? pnames.join(', ') : 'specific players'; break; }
       case 'boss': t = 'a chosen enemy'; break;
       case 'some_bosses': t = 'several chosen enemies' + (m.target_ref ? ' (up to ' + m.target_ref + ')' : ''); break;
       case 'all_bosses': t = 'all enemies'; break;
@@ -1263,6 +1287,8 @@
 
     function upd(fn) { var next = clone(doc); fn(next); setDoc(next); }
     function num(v) { var n = parseInt(v, 10); return isNaN(n) ? 0 : n; }
+    function healOf(d, role) { return (d.heal && d.heal[role]) || { single: false, single_scope: 'self', aoe: false }; }
+    function setHeal(role, patch) { upd(function (d) { d.heal = d.heal || {}; d.heal[role] = Object.assign({}, healOf(d, role), patch); }); }
 
     async function save() {
       setSaving(true); setErr(''); setSaved('');
@@ -1315,6 +1341,26 @@
             h('input', { type: 'number', min: 1, value: String(doc.heal_die), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.heal_die = v; }); } })),
           h('div', { className: 'portal-field' }, h('label', null, 'AOE heal max targets'),
             h('input', { type: 'number', min: 1, value: String(doc.aoe_max_targets), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.aoe_max_targets = v; }); } })))),
+
+      // Healing per class: a single-target heal (self only, or anyone in the
+      // party) and/or an AOE heal. Both off = that class has no Heal tab.
+      h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
+        h('h3', { style: { marginTop: 0 } }, 'Healing'),
+        CLASS_ROLES.map(function (o) {
+          var hk = healOf(doc, o.value);
+          return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' } },
+            h('strong', null, o.label),
+            h('div', { style: { display: 'flex', gap: '0.5rem 1rem', flexWrap: 'wrap', alignItems: 'center' } },
+              h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+                h('input', { type: 'checkbox', checked: !!hk.single, onChange: function (e) { setHeal(o.value, { single: e.target.checked }); } }), 'Single heal'),
+              h('select', { className: 'portal-select', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
+                'aria-label': o.label + ' single heal target', onChange: function (e) { setHeal(o.value, { single_scope: e.target.value }); } },
+                h('option', { value: 'self' }, 'Self only'),
+                h('option', { value: 'party' }, 'Anyone in the party')),
+              h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+                h('input', { type: 'checkbox', checked: !!hk.aoe, onChange: function (e) { setHeal(o.value, { aoe: e.target.checked }); } }), 'AOE heal (party)')));
+        }),
+        h('p', { className: 'portal-field-help', style: { margin: '0.35rem 0 0' } }, 'A class with both heals off has no Heal tab.')),
 
       // Armor modifiers
       h('div', { className: 'portal-card', style: { marginBottom: '0.6rem' } },
@@ -1520,13 +1566,13 @@
                   h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: function () { deleteAbility(ab); } }, '✕'))),
               h(DragReorder, { items: ab.modifiers || [], onReorder: reorderModifiers, renderRow: function (mod) {
                 return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg-card-light)', border: '1px solid var(--border-color)', borderRadius: '0.35rem', marginTop: '0.3rem' } },
-                  h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue)),
+                  h('span', { style: { fontSize: '0.8rem' } }, (mod.label ? mod.label + ' — ' : '') + modifierSummary(mod, props.catalogue, props.members)),
                   h('span', { style: { display: 'flex', gap: '0.3rem', flexShrink: 0 } },
                     h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: mod }); } }, 'Edit'),
                     h('button', { type: 'button', className: 'portal-btn is-small is-danger', style: { padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { deleteModifier(mod); } }, '✕')));
               } }),
               (modForm && modForm.abilityId === ab.id)
-                ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
+                ? h(ModifierForm, { initial: modForm.modifier, catalogue: props.catalogue, members: props.members, onSubmit: submitModifier, onCancel: function () { setModForm(null); } })
                 : h('button', { type: 'button', className: 'portal-btn is-small is-ghost', style: { marginTop: '0.3rem', padding: '0.12rem 0.4rem', fontSize: '0.72rem' }, onClick: function () { setModForm({ abilityId: ab.id, modifier: null }); } }, '+ Add effect'));
           }))
       ));
@@ -2069,7 +2115,7 @@
         })(),
         editItem ? h(ItemEditorModal, { item: editItem, catalogue: items, members: members,
           onChanged: loadItems, onClose: function () { setEditItem(null); } }) : null,
-        abilitiesItem ? h(ItemAbilitiesModal, { item: abilitiesItem, catalogue: items,
+        abilitiesItem ? h(ItemAbilitiesModal, { item: abilitiesItem, catalogue: items, members: members,
           onClose: function () { setAbilitiesItem(null); } }) : null
       ) : null,
 

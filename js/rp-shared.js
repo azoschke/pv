@@ -54,6 +54,7 @@
       case 'heal': return 'restores ' + value + ' HP';
       case 'damage': return 'deals ' + value + ' damage';
       case 'dot': return value + ' damage per turn';
+      case 'stun_immune': return 'grants stun immunity';
     }
     return v + ' ' + String(type || '').replace(/_/g, ' ');
   }
