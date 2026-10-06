@@ -1685,7 +1685,7 @@
     // the DM. Loaded once; selectCampaign also fills it lazily for non-admins.
     async function loadMembers() {
       if (members !== null) return;
-      try { setMembers(await PVAdminAPI.request('GET', '/members', undefined, true) || []); }
+      try { setMembers(await PVAdminAPI.request('GET', '/members/basic', undefined, true) || []); }
       catch (e) { setErr('Could not load FC members: ' + e.message); }
     }
     async function loadRoster(cid) {
@@ -1738,7 +1738,7 @@
     // The boss library's 'Added By' filter names creators from the FC roster.
     useEffect(function () {
       if (!isStaff || tab !== 'bosses' || members !== null) return;
-      PVAdminAPI.request('GET', '/members', undefined, true)
+      PVAdminAPI.request('GET', '/members/basic', undefined, true)
         .then(function (rows) { setMembers(rows || []); })
         .catch(function () { /* creators fall back to 'Former member' */ });
       /* eslint-disable-next-line */
@@ -1802,7 +1802,7 @@
       if (isAdmin) loadDisabledItems(c.id);
       if (bossesSupported) loadCampBosses(c.id);
       if (members === null) {
-        PVAdminAPI.request('GET', '/members', undefined, true)
+        PVAdminAPI.request('GET', '/members/basic', undefined, true)
           .then(function (rows) { setMembers(rows || []); })
           .catch(function (e) { setErr('Could not load FC members: ' + e.message); });
       }

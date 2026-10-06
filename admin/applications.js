@@ -430,7 +430,7 @@
     // the list still renders; the form just shows empty selects.
     async function loadPickers() {
       try {
-        var m = await PVAdminAPI.request('GET', '/members', undefined, true);
+        var m = await PVAdminAPI.request('GET', '/members/basic', undefined, true);
         setMembers(Array.isArray(m) ? m : []);
       } catch (_e) { /* leave empty */ }
       try {
