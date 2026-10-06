@@ -514,7 +514,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No quests match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or showing past quests.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or showing past quests.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -653,16 +653,16 @@
 
     var descHtml = q.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(q.description)) : "<p>" + escapeHTML(q.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges = "";
     if (q.mission_type) {
       badges += '<span class="job-badge job-badge-category quest-type-' + typeSlug(q.mission_type) +
-        '" style="position:static;">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
+        ' is-static">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
     }
     badges +=
       '<span class="job-badge job-badge-status quest-sched-' + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "") + '" style="position:static;">' +
+      (isPast(q) ? " quest-sched-past" : "") + ' is-static">' +
       escapeHTML(scheduleBadgeText(q)) + '</span>';
 
     modalBody.innerHTML =

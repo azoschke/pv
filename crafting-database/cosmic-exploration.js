@@ -611,7 +611,7 @@
         ),
         h('div', null,
           h('div', { className: 'cdb-searchmode-bar' },
-            h('label', { className: 'cdb-label', style: { marginBottom: 0 } }, 'Items'),
+            h('label', { className: 'cdb-label is-flush' }, 'Items'),
             h('button', {
               type: 'button',
               onClick: addItem,
@@ -619,7 +619,7 @@
             }, 'Add Item')
           ),
           ...formData.items.map((item, index) =>
-            h('div', { key: index, className: 'cdb-form-fields', style: { marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--bg-darker)', borderRadius: '0.375rem' } },
+            h('div', { key: index, className: 'cdb-form-fields is-boxed' },
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
                   h('label', { className: 'cdb-label-xs' }, 'Item Name'),
@@ -660,12 +660,11 @@
                     onChange: (e) => updateItem(index, 'durability', e.target.value)
                   })
                 ),
-                formData.items.length > 1 && h('div', { style: { alignSelf: 'end' } },
+                formData.items.length > 1 && h('div', { className: 'cdb-align-end' },
                   h('button', {
                     type: 'button',
                     onClick: () => removeItem(index),
-                    className: 'cdb-btn cdb-btn-secondary',
-                    style: { backgroundColor: 'var(--accent-red)', color: 'white' }
+                    className: 'cdb-btn cdb-btn-secondary is-delete'
                   }, 'Remove Item')
                 )
               ),
@@ -826,7 +825,7 @@
     const header = h('div', {
       className: `craft-card-header ${isExpanded ? 'expanded' : ''}`,
       onClick: onToggle,
-      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent', paddingRight: '80px', position: 'relative' }
+      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent' }
     },
       h('div', { className: 'craft-title-section' },
         h('h3', { className: 'craft-name' }, entry.questName || '(unnamed)')
@@ -851,15 +850,7 @@
         ),
         h('button', {
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'cdb-btn cdb-btn-secondary',
-          style: {
-            padding: '8px',
-            position: 'absolute',
-            right: '0',
-            top: '50%',
-            transform: 'translateY(-50%) translateX(50%)',
-            zIndex: 10
-          },
+          className: 'cdb-btn cdb-btn-secondary cdb-card-edit',
           title: isExpanded ? 'Collapse' : 'Expand'
         },
           h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
@@ -869,8 +860,7 @@
 
     // Collapsed view: header + per-item copy buttons row
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row',
-      style: { padding: '0 1rem 0.75rem', flexWrap: 'wrap', gap: '0.4rem' }
+      className: 'cdb-inline-row cdb-card-tags'
     },
       h('span', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
       ...(entry.items || []).map((item, idx) => {
@@ -894,7 +884,7 @@
     );
 
     if (!isExpanded) {
-      return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+      return h('div', { className: 'craft-card' },
         header,
         collapsedBody
       );
@@ -980,7 +970,7 @@
       ),
       h('div', null,
         h('div', { className: 'cdb-searchmode-bar' },
-          h('label', { className: 'cdb-label', style: { marginBottom: 0 } }, 'Items'),
+          h('label', { className: 'cdb-label is-flush' }, 'Items'),
           h('button', {
             type: 'button',
             onClick: addEditItem,
@@ -988,7 +978,7 @@
           }, 'Add Item')
         ),
         ...editFormData.items.map((item, idx) =>
-          h('div', { key: idx, className: 'cdb-form-fields', style: { marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--bg-darker)', borderRadius: '0.375rem' } },
+          h('div', { key: idx, className: 'cdb-form-fields is-boxed' },
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
                 h('label', { className: 'cdb-label-xs' }, 'Item Name'),
@@ -1028,12 +1018,11 @@
                   onChange: (e) => updateEditItem(idx, 'durability', e.target.value)
                 })
               ),
-              editFormData.items.length > 1 && h('div', { style: { alignSelf: 'end' } },
+              editFormData.items.length > 1 && h('div', { className: 'cdb-align-end' },
                 h('button', {
                   type: 'button',
                   onClick: () => removeEditItem(idx),
-                  className: 'cdb-btn cdb-btn-secondary',
-                  style: { backgroundColor: 'var(--accent-red)', color: 'white' }
+                  className: 'cdb-btn cdb-btn-secondary is-delete'
                 }, 'Remove Item')
               )
             ),
@@ -1091,7 +1080,7 @@
       )
     );
 
-    return h('div', { className: 'craft-card', style: { overflow: 'visible' } },
+    return h('div', { className: 'craft-card' },
       header,
       h('div', { className: 'cdb-card-body' },
         isEditingInline && editBody,
@@ -1124,7 +1113,7 @@
           h(DataRewardChips, {
             dataReward: entry.dataReward || {},
             mode: 'display'
-          }) || h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, '(none)')
+          }) || h('span', { className: 'cdb-meta' }, '(none)')
         ),
         // Macros
         !isEditingInline && entry.macros && entry.macros.length > 0 && h('div', null,
@@ -1134,9 +1123,9 @@
             const macroText = (macroEntry && macroEntry.macro) || '';
             if (!macroText) return null;
             const chunks = splitMacroIntoChunks(macroText);
-            return h('div', { key: itemIdx, style: { marginBottom: '0.75rem' } },
+            return h('div', { key: itemIdx, className: 'cdb-item-block' },
               entry.items.length > 1 && h('div', {
-                style: { fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }
+                className: 'cdb-item-label'
               }, item.name || `Item ${itemIdx + 1}`),
               h('div', { className: 'cdb-macro-grid' },
                 ...chunks.map((chunk, chunkIdx) => {
@@ -1173,15 +1162,13 @@
         h('span', {
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
           className: 'material-icons cdb-icon-btn',
-          style: { color: 'var(--accent-brown)', fontSize: '24px' },
           title: 'Edit'
         }, 'edit'),
         deleteConfirm
           ? h('div', { className: 'cdb-inline-row', style: { gap: '0.25rem' } },
               h('button', {
                 onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
-                className: 'cdb-btn cdb-btn-secondary',
-                style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' }
+                className: 'cdb-btn cdb-btn-secondary is-danger'
               }, 'Confirm'),
               h('button', {
                 onClick: (e) => { e.stopPropagation(); setDeleteConfirm(false); },
@@ -1190,8 +1177,7 @@
             )
           : h('button', {
               onClick: (e) => { e.stopPropagation(); setDeleteConfirm(true); },
-              className: 'cdb-btn cdb-btn-secondary',
-              style: { color: 'var(--accent-red)', borderColor: 'var(--accent-red)' },
+              className: 'cdb-btn cdb-btn-secondary is-danger',
               title: 'Delete'
             },
               h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
@@ -1427,7 +1413,7 @@
                 }
                 e.target.value = '';
               },
-              style: { display: 'none' }
+              className: 'cdb-file-input'
             })
           )
         )
@@ -1491,12 +1477,12 @@
         onSave: addMacro,
         onCancel: () => setIsAdding(false)
       }),
-      h('div', { style: { margin: '0.5rem 0 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+      h('div', { className: 'cdb-results-count' },
         `Found ${filteredMacros.length} mission${filteredMacros.length !== 1 ? 's' : ''}`,
         searchMode === 'numeric' && (difficultySearch || qualitySearch || durabilitySearch) && h('span', { style: { marginLeft: '0.75rem' } },
-          difficultySearch && h('span', { style: { marginRight: '0.75rem' } }, `Difficulty = ${difficultySearch}`),
-          qualitySearch && h('span', { style: { marginRight: '0.75rem' } }, `Quality = ${qualitySearch}`),
-          durabilitySearch && h('span', { style: { marginRight: '0.75rem' } }, `Durability = ${durabilitySearch}`)
+          difficultySearch && h('span', { className: 'cdb-filter-note' }, `Difficulty = ${difficultySearch}`),
+          qualitySearch && h('span', { className: 'cdb-filter-note' }, `Quality = ${qualitySearch}`),
+          durabilitySearch && h('span', { className: 'cdb-filter-note' }, `Durability = ${durabilitySearch}`)
         )
       ),
       h('div', { className: 'cdb-craft-list' },

@@ -475,7 +475,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No venues match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or two.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or two.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -553,7 +553,7 @@
 
     var descHtml = v.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(v.description)) : "<p>" + escapeHTML(v.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var allTags = []
       .concat(Array.isArray(v.tags) ? v.tags.map(function (t) { return "#" + t.replace(/_/g, " "); }) : [])
@@ -567,8 +567,8 @@
       : "";
 
     var badges =
-      (v.featured ? '<span class="venue-badge venue-badge-featured" style="position:static;"><span aria-hidden="true">&#9733;</span> FEATURED</span>' : "") +
-      '<span class="venue-badge venue-badge-size" style="position:static;">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
+      (v.featured ? '<span class="venue-badge venue-badge-featured is-static"><span aria-hidden="true">&#9733;</span> FEATURED</span>' : "") +
+      '<span class="venue-badge venue-badge-size is-static">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
 
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.

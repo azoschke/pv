@@ -422,7 +422,7 @@
       empty.innerHTML = allMembers.length
         ? '<p>No members match these filters.</p>'
         : '<p>No published profiles yet.</p>' +
-          '<p style="font-size:0.95rem; color:var(--text-secondary);">' +
+          '<p class="venues-empty-hint">' +
           'Members can publish a profile from the portal’s My Profile section.</p>';
       gridEl.appendChild(empty);
       return;
@@ -457,7 +457,7 @@
   function openModal(m) {
     // In the open modal, skills get their own labeled section as plain text.
     var skillsHtml = (m.skills || []).length
-      ? '<p class="venue-modal-location" style="margin-top:1rem;">SKILLS</p>' +
+      ? '<p class="venue-modal-location is-section">SKILLS</p>' +
         '<div class="venue-modal-desc"><p>' +
           m.skills.map(function (s) { return escapeHTML(s); }).join(", ") +
         '</p></div>'
@@ -465,10 +465,10 @@
 
     var descHtml = m.description
       ? '<div class="venue-modal-desc">' + md(m.description) + '</div>'
-      : '<div class="venue-modal-desc"><p style="color:var(--text-secondary);"><em>No description provided.</em></p></div>';
+      : '<div class="venue-modal-desc"><p class="modal-empty-note"><em>No description provided.</em></p></div>';
 
     var hooksHtml = m.rp_hooks
-      ? '<p class="venue-modal-location" style="margin-top:1rem;">RP HOOKS</p>' +
+      ? '<p class="venue-modal-location is-section">RP HOOKS</p>' +
         '<div class="venue-modal-desc">' + md(m.rp_hooks) + '</div>'
       : "";
 
@@ -479,11 +479,11 @@
 
     // Badges: one per faction, then IC rank.
     var badgesHtml = (m.factions || []).map(function (f) {
-      return '<span class="venue-badge venue-badge-size" style="position:static;">' +
+      return '<span class="venue-badge venue-badge-size is-static">' +
         escapeHTML(f.toUpperCase()) + '</span>';
     }).join("");
     if (m.ic_rank) {
-      badgesHtml += '<span class="venue-badge venue-badge-size" style="position:static;">' +
+      badgesHtml += '<span class="venue-badge venue-badge-size is-static">' +
         escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>';
     }
 

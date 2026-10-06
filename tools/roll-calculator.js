@@ -1149,7 +1149,7 @@
       h('label', { className: 'rp-hits', title: 'Damage-taken multiplier' },
         h('span', null, '×'),
         h('input', { className: 'rp-hits-input', type: 'number', min: 1, step: '0.5', inputMode: 'decimal', value: mult, onChange: function (e) { setMult(e.target.value); } })),
-      h('input', { className: 'rp-hits-input', type: 'number', min: 0, inputMode: 'numeric', placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); }, style: { width: '5rem' } }),
+      h('input', { className: 'rp-hits-input is-turns', type: 'number', min: 0, inputMode: 'numeric', placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); } }),
       h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
       active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSetVuln(b, 0, 1, null); } }, 'Clear') : null);
   }
@@ -1172,7 +1172,7 @@
           h('input', { className: 'rp-hits-input', type: 'number', min: 0, value: flat, onChange: function (e) { setFlat(e.target.value); } })),
         h('label', { className: 'rp-hits', title: 'Damage-taken multiplier' }, h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, step: '0.5', value: mult, onChange: function (e) { setMult(e.target.value); } })),
-        h('input', { className: 'rp-hits-input', type: 'number', min: 0, placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); }, style: { width: '5rem' } }),
+        h('input', { className: 'rp-hits-input is-turns', type: 'number', min: 0, placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); } }),
         h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
         active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSet(0, 1, null); setOpen(false); } }, 'Clear') : null) : null);
   }
@@ -1199,7 +1199,7 @@
             onClick: function () { props.onSetStun('boss', b.id, !b.stunned); } }, b.stunned ? 'Unstun' : 'Stun'),
           h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
             onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
-            h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, b.hp_visible ? 'visibility' : 'visibility_off')),
+            h('span', { className: 'material-icons rp-inline-icon' }, b.hp_visible ? 'visibility' : 'visibility_off')),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
       open ? h('div', { className: 'rp-dm-boss-body' },
         h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
@@ -1236,7 +1236,7 @@
               e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onBossEffectPatch(e, { remaining_turns: Math.max(0, v) }); } }) : null,
               h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: e.visible ? 'Hide from players' : 'Reveal to players',
                 onClick: function () { props.onBossEffectPatch(e, { visible: !e.visible }); } },
-                h('span', { className: 'material-icons', style: { fontSize: '1rem', verticalAlign: 'middle' } }, e.visible ? 'visibility' : 'visibility_off')),
+                h('span', { className: 'material-icons rp-inline-icon' }, e.visible ? 'visibility' : 'visibility_off')),
               h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBossEffectPatch(e, { enabled: !e.enabled }); } }, e.enabled ? 'Disable' : 'Enable'),
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBossEffectRemove(e); } }, '✕')));
         })) : null);
@@ -1263,8 +1263,8 @@
         return h('div', { className: 'rp-effect', key: p.member_id },
           h('div', { className: 'rp-effect-info' },
             h('strong', null, p.member_name + (p.eliminated ? ' (KO)' : ''),
-              stunned ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, 'Stunned') : null,
-              vtag ? h('span', { className: 'rp-boss-vuln-tag', style: { marginLeft: '0.4rem' } }, vtag) : null,
+              stunned ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Stunned') : null,
+              vtag ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, vtag) : null,
               isImmune ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Immune to stun') : null),
             h('span', { className: 'rp-effect-meta' }, status)),
           h('div', { className: 'rp-effect-ctl' },

@@ -427,7 +427,7 @@
       var empty = document.createElement("div");
       empty.className = "venues-empty";
       empty.innerHTML = '<p>No postings match these filters.</p>' +
-        '<p style="font-size:0.95rem; color:var(--text-secondary);">Try clearing a filter or showing closed postings.</p>';
+        '<p class="venues-empty-hint">Try clearing a filter or showing closed postings.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -456,12 +456,12 @@
 
     var descHtml = j.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(j.description)) : "<p>" + escapeHTML(j.description) + "</p>")
-      : '<p style="color:var(--text-secondary);"><em>No description provided.</em></p>';
+      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges =
-      '<span class="job-badge job-badge-category job-cat-' + j.category + '" style="position:static;">' +
+      '<span class="job-badge job-badge-category job-cat-' + j.category + ' is-static">' +
         escapeHTML(jobBadgeLabel(j).toUpperCase()) + '</span>' +
-      '<span class="job-badge job-badge-status job-status-' + j.status + '" style="position:static;">' +
+      '<span class="job-badge job-badge-status job-status-' + j.status + ' is-static">' +
         escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
 
     var contactHtml = j.contact
