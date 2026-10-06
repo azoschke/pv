@@ -31,7 +31,6 @@
   // Menu thumbnails render at 64px, so 512 leaves headroom for retina without
   // paying the venue-image cost on a menu with forty items.
   var MENU_IMAGE_SIZE = 512;
-  var UPLOAD_WEBP_QUALITY = 0.82;
 
   // ── Category icons ───────────────────────────────────────────────────────
   //  Must stay in sync with MENU_ICONS in venues/menus.js — the worker stores
@@ -85,89 +84,9 @@
   //  Menu images are square by design: the resize centre-crops to the shorter
   //  edge before scaling, so a wide photo loses its sides rather than being
   //  letterboxed into the thumbnail.
-  async function resizeImageToSquareWebp(file) {
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-
-    var side = Math.min(srcW, srcH);
-    var sx = Math.round((srcW - side) / 2);
-    var sy = Math.round((srcH - side) / 2);
-    var out = Math.min(MENU_IMAGE_SIZE, side);
-
-    var canvas = document.createElement('canvas');
-    canvas.width = out; canvas.height = out;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get a 2D canvas context.');
-    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, out, out);
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Safari has no WebP encoder and silently returns a PNG, which the worker
-    // rejects — fall back to JPEG, as the venue form does.
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
   async function uploadMenuImage(file, venueName) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToSquareWebp(file);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    form.append('venue_name', venueName);
-    var res = await fetch(PVAdminAPI.API_BASE + '/menus/images', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      throw new Error((data && (data.error || data.message)) || ('Upload failed (' + res.status + ')'));
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
+    return PVAdminAPI.uploadImage('/menus/images', file, { venue_name: venueName },
+      { square: true, maxSize: MENU_IMAGE_SIZE, quality: 0.82 });
   }
 
   function formatCost(cost) {

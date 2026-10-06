@@ -3,6 +3,7 @@
  *
  * Add to every page, just before </body>:
  *   <div id="nav-placeholder"></div>
+ *   <script src="/pv/js/pv-session.js"></script>
  *   <script src="/pv/js/nav.js"></script>
  *
  * The script:
@@ -55,25 +56,9 @@
   }
 
   // ── 1b. Admin session (shared with the management portal) ──────────────────
-  // Public pages don't load admin/api.js, so read the session directly. Mirrors
-  // PVAdminAPI.getSession: token must be present and not past expires_at. Falls
-  // back to the legacy sessionStorage slot so a pre-migration login still reads.
-  const SESSION_KEY = 'pv.admin.session';
-
+  // Read through js/pv-session.js, which every page loads before this file.
   function getAdminSession() {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      const s = JSON.parse(raw);
-      if (!s || !s.token) return null;
-      if (s.expires_at) {
-        const exp = new Date(s.expires_at).getTime();
-        if (!isNaN(exp) && exp <= Date.now()) return null;
-      }
-      return s;
-    } catch (_e) {
-      return null;
-    }
+    return window.PVSession ? window.PVSession.get() : null;
   }
 
   // When signed in, the Login button becomes the member's character name and

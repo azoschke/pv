@@ -17,7 +17,6 @@
 
 (function () {
   var API_BASE = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-  var SESSION_KEY = "pv.admin.session";
   var SIDEBAR_KEY = "pv-jobs-sidebar-hidden";
   var FILTER_KEY  = "pv-jobs-filters";
   var SORT_KEY    = "pv-jobs-sort";
@@ -71,49 +70,18 @@
 
   if (window.marked && marked.use) marked.use({ breaks: true });
 
-  // ── Session (shared with the management portal) ──────────────────────────
-  function getSession() {
-    try {
-      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      if (!s || !s.token) return null;
-      if (s.expires_at) {
-        var exp = new Date(s.expires_at).getTime();
-        if (!isNaN(exp) && exp <= Date.now()) return null;
-      }
-      return s;
-    } catch (_e) {
-      return null;
-    }
-  }
+  // ── Session (js/pv-session.js, shared with the management portal) ──────
+  var getSession = PVSession.get;
 
-  // Permission from the stored session (Admin Settings → Permissions). A
-  // session saved before permissions existed has no list; it keeps the
+  // A session saved before permissions existed has no list; it keeps the
   // buttons, and the worker still checks.
-  function sessionCan(session, key) {
-    if (!session) return false;
-    if (!Array.isArray(session.permissions)) return true;
-    return session.permissions.indexOf(key) !== -1;
+  function canUse(key) {
+    return PVSession.can(key, true);
   }
 
-  async function authedRequest(method, path) {
-    var session = getSession();
-    if (!session) throw new Error("You are no longer logged in.");
-    var res = await fetch(API_BASE + path, {
-      method: method,
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer " + session.token
-      }
-    });
-    var text = await res.text();
-    var data = null;
-    if (text) { try { data = JSON.parse(text); } catch (_e) { data = null; } }
-    if (!res.ok) {
-      throw new Error((data && data.error) || ("Request failed (" + res.status + ")"));
-    }
-    return data;
+  function authedRequest(method, path) {
+    if (!getSession()) return Promise.reject(new Error("You are no longer logged in."));
+    return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
   }
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -560,7 +528,7 @@
         encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
         '</div>';
     }
-    if (!sessionCan(getSession(), "jobs.apply")) return "";
+    if (!canUse("jobs.apply")) return "";
     var app = myApplicationFor(j);
     if (!app) {
       if (jobTypeOf(j) === "primary") {
@@ -620,7 +588,7 @@
   }
 
   async function loadMyApplications() {
-    if (!sessionCan(getSession(), "jobs.apply")) { myApplications = []; return; }
+    if (!canUse("jobs.apply")) { myApplications = []; return; }
     try {
       var data = await authedRequest("GET", "/my/applications");
       myApplications = Array.isArray(data) ? data : [];

@@ -12,13 +12,12 @@
 //  (category + search) mirrors the Bounty Board / Job Board pattern.
 //
 //  Load order (see calendar.html):
-//    <script src="/pv/admin/api.js"></script>   (provides PVAdminAPI session)
+//    <script src="/pv/js/pv-session.js"></script>   (provides the session)
 //    <script src="/pv/calendar/calendar.js"></script>
 // ============================================================================
 
 (function () {
   var API_BASE   = "https://pv-med-database-worker.chlorinatorgreen.workers.dev";
-  var SESSION_KEY = "pv.admin.session";
   var FILTER_KEY  = "pv-calendar-filters";
   var SIDEBAR_KEY = "pv-calendar-sidebar-hidden";
   var VIEW_KEY    = "pv-calendar-view";
@@ -97,22 +96,8 @@
   var monthCeil = { year: 0, month: 0 };
   var weekCeilMs = 0;
 
-  // ── Session (shared with the management portal) ────────────────────────────
-  function getSession() {
-    try {
-      var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      if (!s || !s.token) return null;
-      if (s.expires_at) {
-        var exp = new Date(s.expires_at).getTime();
-        if (!isNaN(exp) && exp <= Date.now()) return null;
-      }
-      return s;
-    } catch (_e) {
-      return null;
-    }
-  }
+  // ── Session (js/pv-session.js, shared with the management portal) ────────
+  var getSession = PVSession.get;
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function escapeHTML(str) {
@@ -679,32 +664,18 @@
 
   // ── Data ───────────────────────────────────────────────────────────────────
   function load() {
-    var session = getSession();
-    if (!session) { renderGate(); return; }
+    if (!getSession()) { renderGate(); return; }
 
     renderLoading();
 
-    fetch(API_BASE + "/calendar", {
-      headers: { "Accept": "application/json", "Authorization": "Bearer " + session.token }
-    }).then(function (res) {
-      if (res.status === 401) { renderGate(); return null; }
-      return res.text().then(function (text) {
-        var data = null;
-        if (text) { try { data = JSON.parse(text); } catch (_e) { data = null; } }
-        if (!res.ok) {
-          var msg = (data && (data.error || data.message)) || ("Request failed (" + res.status + ")");
-          throw new Error(msg);
-        }
-        return data;
-      });
-    }).then(function (data) {
-      if (data === null) return;  // gate already shown
+    PVSession.request(API_BASE, "GET", "/calendar", undefined, { auth: "optional" }).then(function (data) {
       allEvents = Array.isArray(data) ? data : [];
       computeBounds();
       showLayout();
       buildFilterUI();
       render();
     }).catch(function (err) {
+      if (err && err.status === 401) { renderGate(); return; }
       renderError(err && err.message);
     });
   }

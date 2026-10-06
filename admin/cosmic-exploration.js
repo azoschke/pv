@@ -56,41 +56,7 @@
   // ── Worker request helper ───────────────────────────────────────────────────
 
   async function cosmicRequest(method, path, body, authed) {
-    var headers = { 'Accept': 'application/json' };
-    if (body !== undefined && body !== null) headers['Content-Type'] = 'application/json';
-    if (authed) {
-      var s = PVAdminAPI.getSession();
-      if (!s) {
-        PVAdminAPI.redirectToLogin();
-        throw new Error('Session expired. Please sign in again.');
-      }
-      headers['Authorization'] = 'Bearer ' + s.token;
-    }
-
-    var res = await fetch(COSMIC_API_BASE + path, {
-      method: method,
-      headers: headers,
-      body: (body === undefined || body === null) ? undefined : JSON.stringify(body)
-    });
-
-    if (res.status === 401 && authed) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Request failed (' + res.status + ')');
-      var e = new Error(msg);
-      e.status = res.status;
-      throw e;
-    }
-    return data;
+    return PVSession.request(COSMIC_API_BASE, method, path, body, { auth: !!authed, loginOn401: !!authed });
   }
 
   // ── Draft helpers ───────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@
  * just forward the token PVAdminAPI already stores.
  *
  * Load order on any page that uses this:
- *   <script src="/pv/admin/api.js"></script>   (provides PVAdminAPI session)
+ *   <script src="/pv/js/pv-session.js"></script>   (provides the session)
  *   <script src="/pv/js/rp-api.js"></script>
  *
  * Exposes a global `PVRollAPI` with { API_BASE, request, getSession }.
@@ -18,7 +18,7 @@
   var RP_API_BASE = 'https://pv-campaign-rolls-worker.chlorinatorgreen.workers.dev';
 
   function getSession() {
-    return (global.PVAdminAPI && global.PVAdminAPI.getSession()) || null;
+    return global.PVSession.get();
   }
 
   // Every RP route requires a session. We attach the bearer whenever one exists
@@ -26,29 +26,7 @@
   // PVAdminAPI.request, this never force-redirects, so the public tool page can
   // show its own "sign in" panel instead of bouncing to the login form.
   async function request(method, path, body) {
-    var headers = { 'Accept': 'application/json' };
-    if (body !== undefined && body !== null) headers['Content-Type'] = 'application/json';
-    var s = getSession();
-    if (s && s.token) headers['Authorization'] = 'Bearer ' + s.token;
-
-    var res = await fetch(RP_API_BASE + path, {
-      method: method,
-      headers: headers,
-      body: (body === undefined || body === null) ? undefined : JSON.stringify(body)
-    });
-
-    var text = await res.text();
-    var data = null;
-    if (text) { try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; } }
-
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Request failed (' + res.status + ')');
-      var err = new Error(msg);
-      err.status = res.status;
-      err.data = data;
-      throw err;
-    }
-    return data;
+    return global.PVSession.request(RP_API_BASE, method, path, body, { auth: 'optional' });
   }
 
   global.PVRollAPI = {

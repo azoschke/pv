@@ -16,8 +16,6 @@
 
   var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
   var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-  var UPLOAD_TARGET_WIDTH = 1400;
-  var UPLOAD_WEBP_QUALITY = 0.8;
 
   var MISSION_TYPES = ['Training', 'Investigation', 'Bounty', 'Escort', 'Gathering'];
 
@@ -88,103 +86,10 @@
     return when || 'Scheduled';
   }
 
-  // ── Image upload (same resize-to-WebP pattern as the other modules) ──────
-  async function resizeImageToWebp(file, opts) {
-    opts = opts || {};
-    var bitmap = null;
-    if (typeof createImageBitmap === 'function') {
-      try { bitmap = await createImageBitmap(file); }
-      catch (_e) { bitmap = null; }
-    }
-    if (!bitmap) {
-      bitmap = await new Promise(function (resolve, reject) {
-        var url = URL.createObjectURL(file);
-        var img = new Image();
-        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read image.')); };
-        img.src = url;
-      });
-    }
-    var srcW = bitmap.width || bitmap.naturalWidth;
-    var srcH = bitmap.height || bitmap.naturalHeight;
-    if (!srcW || !srcH) throw new Error('Could not read image dimensions.');
-    var canvas = document.createElement('canvas');
-    var ctx;
-    if (opts.square) {
-      // Centre-crop to a square, then cap the side length at opts.maxSize.
-      var side = Math.min(srcW, srcH);
-      var sx = Math.floor((srcW - side) / 2);
-      var sy = Math.floor((srcH - side) / 2);
-      var out = Math.min(side, opts.maxSize || UPLOAD_TARGET_WIDTH);
-      canvas.width = out; canvas.height = out;
-      ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get a 2D canvas context.');
-      ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, out, out);
-    } else {
-      var maxW = opts.maxWidth || UPLOAD_TARGET_WIDTH;
-      var w = srcW > maxW ? maxW : srcW;
-      var hgt = Math.max(1, Math.round((w / srcW) * srcH));
-      canvas.width = w; canvas.height = hgt;
-      ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get a 2D canvas context.');
-      ctx.drawImage(bitmap, 0, 0, w, hgt);
-    }
-    if (bitmap.close) { try { bitmap.close(); } catch (_e) {} }
-    var blob = await new Promise(function (resolve, reject) {
-      canvas.toBlob(function (b) {
-        if (!b) reject(new Error('Could not encode the image.'));
-        else resolve(b);
-      }, 'image/webp', UPLOAD_WEBP_QUALITY);
-    });
-    // Browsers without a WebP encoder silently hand back a PNG here, which
-    // the worker would reject. Re-encode as JPEG instead (universally
-    // supported, and far smaller than the PNG fallback).
-    if (blob.type !== 'image/webp') {
-      blob = await new Promise(function (resolve, reject) {
-        canvas.toBlob(function (b) {
-          if (!b) reject(new Error('Could not encode the image.'));
-          else resolve(b);
-        }, 'image/jpeg', UPLOAD_WEBP_QUALITY);
-      });
-    }
-    return blob;
-  }
-
+  // ── Image upload (shared resize + upload in PVAdminAPI) ─────────────────
   // Generic multipart upload to one of the worker's */images endpoints.
   async function uploadImage(path, file, extraFields, resizeOpts) {
-    var session = PVAdminAPI.getSession();
-    if (!session) {
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Session expired. Please sign in again.');
-    }
-    var blob = await resizeImageToWebp(file, resizeOpts);
-    var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
-    Object.keys(extraFields || {}).forEach(function (k) { form.append(k, extraFields[k]); });
-    var res = await fetch(PVAdminAPI.API_BASE + path, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.token,
-        'Accept': 'application/json'
-      },
-      body: form
-    });
-    if (res.status === 401) {
-      PVAdminAPI.clearSession();
-      PVAdminAPI.redirectToLogin();
-      throw new Error('Your session is no longer valid. Please sign in again.');
-    }
-    var text = await res.text();
-    var data = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch (_e) { data = { raw: text }; }
-    }
-    if (!res.ok) {
-      var msg = (data && (data.error || data.message)) || ('Upload failed (' + res.status + ')');
-      throw new Error(msg);
-    }
-    if (!data || !data.url) throw new Error('Upload succeeded but response was missing a URL.');
-    return data.url;
+    return PVAdminAPI.uploadImage(path, file, extraFields, resizeOpts);
   }
 
   // ── Image field (URL input + upload button + preview) ────────────────────
