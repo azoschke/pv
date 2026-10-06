@@ -1310,7 +1310,7 @@
   // ── System rules editor (admin only) ──────────────────────────────────────
   // One global JSON doc on the worker (rp_rules), strictly validated server-side.
   // Missing keys always fall back to code defaults, so this form can never brick
-  // the calculator. History keeps the last 5 saves for one-click restore.
+  // the calculator.
   var PASSIVE_TYPES = [
     { value: 'attack_roll', label: 'Attack roll' },
     { value: 'defense_roll', label: 'Defense roll' },
@@ -1318,19 +1318,16 @@
   ];
   function RulesEditor(props) {
     var docState = useState(null); var doc = docState[0], setDoc = docState[1];
-    var defaultsState = useState(null); var defaults = defaultsState[0], setDefaults = defaultsState[1];
     var metaState = useState(null); var meta = metaState[0], setMeta = metaState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var savedState = useState(''); var saved = savedState[0], setSaved = savedState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
-    var histState = useState(null); var history = histState[0], setHistory = histState[1];
-    var showHistState = useState(false); var showHist = showHistState[0], setShowHist = showHistState[1];
 
     function clone(x) { return JSON.parse(JSON.stringify(x)); }
     async function load() {
       try {
         var r = await PVRollAPI.request('GET', '/rp/rules');
-        setDoc(clone(r.rules)); setDefaults(r.defaults || null); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
+        setDoc(clone(r.rules)); setMeta({ updated_by: r.updated_by, updated_at: r.updated_at });
       } catch (e) { setErr(e.status === 404 ? 'The worker doesn’t support editable rules yet.' : (e.message || 'Failed to load rules.')); }
     }
     useEffect(function () { load(); /* eslint-disable-next-line */ }, []);
@@ -1344,18 +1341,8 @@
         var r = await PVRollAPI.request('PUT', '/rp/rules', doc);
         setDoc(clone(r.rules)); setSaved('Rules saved.');
         setTimeout(function () { setSaved(''); }, 4000);
-        setHistory(null);
       } catch (e) { setErr(e.message || 'Failed to save.'); }
       finally { setSaving(false); }
-    }
-    async function loadHistory() {
-      try { setHistory(await PVRollAPI.request('GET', '/rp/rules/history') || []); }
-      catch (e) { setErr(e.message); setHistory([]); }
-    }
-    async function restore(entry) {
-      if (!confirm('Restore the rules saved by ' + (entry.updated_by || 'unknown') + '? Current rules go into history.')) return;
-      try { var r = await PVRollAPI.request('POST', '/rp/rules/restore', { history_id: entry.id }); setDoc(clone(r.rules)); setHistory(null); setSaved('Rules restored.'); setTimeout(function () { setSaved(''); }, 3000); }
-      catch (e) { setErr(e.message); }
     }
 
     if (!doc) return h('div', { className: 'portal-card' }, err ? h('div', { className: 'portal-flash error' }, err) : 'Loading rules…');
@@ -1449,19 +1436,9 @@
         }),
         h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { upd(function (d) { d.damage_tiers.push({ min: 0, damage: 1 }); }); } }, '+ Add tier')),
 
-      // Save / defaults / history
+      // Save
       h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' } },
-        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save rules'),
-        defaults ? h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { if (confirm('Load the built-in defaults into the form? Nothing is saved until you press Save.')) setDoc(clone(defaults)); } }, 'Load defaults') : null,
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { var next = !showHist; setShowHist(next); if (next && history === null) loadHistory(); } }, (showHist ? '▾ ' : '▸ ') + 'History')),
-      showHist ? h('div', { className: 'portal-card', style: { marginTop: '0.6rem' } },
-        history === null ? h('p', { style: { margin: 0 } }, 'Loading…') :
-          (!history.length ? h('p', { style: { margin: 0, color: 'var(--text-secondary)' } }, 'No previous saves yet.') :
-            history.map(function (e2) {
-              return h('div', { key: e2.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0', borderTop: '1px solid var(--border-color)' } },
-                h('span', { style: { fontSize: '0.85rem' } }, (e2.updated_by || 'unknown') + ' · ' + new Date(e2.updated_at * 1000).toLocaleString()),
-                h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: function () { restore(e2); } }, 'Restore'));
-            }))) : null);
+        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save rules')));
   }
 
   // ── Item card (compact; opens the editor modal) ───────────────────────────

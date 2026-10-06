@@ -1,14 +1,7 @@
+// The proxy worker builds the Discord message (embed + medic/role ping) from
+// the form fields, so the page only sends { name, medic, reason }. When the
+// medic list changes, update the <select> options and the worker's MEDIC_IDS.
 const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy-secure.chlorinatorgreen.workers.dev/';
-const MEDICAL_ROLE_ID = '1283058454373597186';
-const MEDIC_IDS = {
-    'Fiora Acaeus':      '477696368325033984',
-    "Astares De'Ruahn":  '194881867776786451',
-    'Addison Tyrrell':   '271478962964791298',
-    'Lixiss Valra':      '505184303198765060',
-    'Nikita Lynkasch':   '224310874180026378',
-    'Camimi Mili':       '593575045255659520',
-    'Tasha Theja':       '1472340765702225994'
-};
 
 // ── Auth gate ───────────────────────────────────────────────────────────────
 // Requests can only be sent by a logged-in account. When signed out we hide the
@@ -75,31 +68,7 @@ async function submitAppointmentRequest(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
 
-    // Only 'Any Available Medic' pings the Medical role; specific medics ping their user if their ID is known
-    let pingContent = '';
-    if (medic === 'Any Available Medic') {
-        pingContent = `<@&${MEDICAL_ROLE_ID}>`;
-    } else if (MEDIC_IDS[medic]) {
-        pingContent = `<@${MEDIC_IDS[medic]}>`;
-    }
-
-    const payload = {
-        content: pingContent,
-        embeds: [{
-            title: 'New Appointment Request',
-            color: 0xa54d44,
-            thumbnail: {
-                url: 'https://phoenixvanguard-tools.com/assets/pdf-emblem-web.png'
-            },
-            fields: [
-                { name: 'Name', value: name, inline: false },
-                { name: 'Requested Medic', value: medic, inline: false },
-                { name: 'Reason for Appointment', value: reason, inline: false }
-            ],
-            footer: { text: 'Phoenix Vanguard Medical Division' },
-            timestamp: new Date().toISOString()
-        }]
-    };
+    const payload = { name: name, medic: medic, reason: reason };
 
     try {
         const response = await fetch(DISCORD_WEBHOOK_URL, {

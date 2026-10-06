@@ -290,13 +290,12 @@
       h('div', { className: 'rp-hpbar' }, h('div', { className: 'rp-hpbar-fill', style: { width: pct + '%' } })),
       h('span', { className: 'rp-boss-hp-num' }, b.current_hp + ' / ' + b.max_hp));
   }
-  // Unified vulnerability: flat + multiplier (falls back to the legacy
-  // damage_mult window when the aggregate fields aren't present).
+  // Unified vulnerability: flat + multiplier.
   function bossVulnParts(b) {
     if (!b) return { flat: 0, mult: 1, turns: null };
     var flat = b.vuln_flat != null ? b.vuln_flat : 0;
-    var mult = b.vuln_mult != null ? b.vuln_mult : (b.damage_mult != null ? b.damage_mult : 1);
-    var turns = b.vuln_turns != null ? b.vuln_turns : (b.damage_mult_turns != null ? b.damage_mult_turns : null);
+    var mult = b.vuln_mult != null ? b.vuln_mult : 1;
+    var turns = b.vuln_turns != null ? b.vuln_turns : null;
     return { flat: flat, mult: mult, turns: turns, red: b.vuln_red || 0 };
   }
   function vulnLabel(flat, mult, turns) {
@@ -509,10 +508,10 @@
     var d = props.draft;
     var typeState = useState(d ? d.type : ''); var type = typeState[0], setType = typeState[1];
     var valState = useState(d ? String(d.value) : '1'); var val = valState[0], setVal = valState[1];
-    var durState = useState(d ? String(d.duration) : '1'); var dur = durState[0], setDur = durState[1];
+    var durState = useState(d ? String(d.duration) : '3'); var dur = durState[0], setDur = durState[1];
     var timerRef = useRef(null); var pendingRef = useRef(false);
     // Sync from props only when settled, so a debounced edit isn't clobbered mid-typing.
-    useEffect(function () { if (!pendingRef.current) { setType(d ? d.type : ''); setVal(d ? String(d.value) : '1'); setDur(d ? String(d.duration) : '1'); } },
+    useEffect(function () { if (!pendingRef.current) { setType(d ? d.type : ''); setVal(d ? String(d.value) : '1'); setDur(d ? String(d.duration) : '3'); } },
       [d ? d.type : '', d ? d.value : null, d ? d.duration : null]);
     useEffect(function () { return function () { if (timerRef.current) clearTimeout(timerRef.current); }; }, []);
     function fire(nextType, rawV, rawD) {
