@@ -167,6 +167,15 @@
       return PVSession.request(API_BASE, "GET", path, undefined, { auth: "optional" });
     }
 
+    // Whether this account reads only its own characters' records (Patient
+    // Records → "See own characters' records" in the Permissions grid, and
+    // neither "See all records" nor Medical Records view). Only the wording
+    // depends on it; the worker decides which records are sent.
+    function ownRecordsOnly() {
+      return PVSession.can("patient_records.view_own") &&
+        !PVSession.canAny(["patient_records.view_all", "medical.view"]);
+    }
+
     // What to say when the records were refused, or null for any other
     // failure. A refused sign-in is no longer valid, so it is dropped.
     function refusedMessage(err) {
@@ -233,7 +242,8 @@
       patientList.innerHTML = "";
 
       if (!allPatients.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">No patients on file.</li>';
+        patientList.innerHTML = '<li class="patient-empty-msg">' +
+          (ownRecordsOnly() ? "No records on file for your characters." : "No patients on file.") + '</li>';
         buildAzBar({});
         return;
       }
