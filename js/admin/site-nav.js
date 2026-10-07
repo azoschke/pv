@@ -328,6 +328,7 @@
         onDragOver: function (e) {
           if (!accepts(listId)) return;
           e.preventDefault(); e.stopPropagation();
+          setDropEffect(e);
           if (over !== id) setOver(id);
         },
         onDrop: function (e) {
@@ -340,6 +341,15 @@
       };
     }
     function endDrag() { setDrag(null); setOver(''); }
+    // Every drag here is a "move" (start and target must agree, or Safari
+    // refuses the drop).
+    function startDrag(e, next, token) {
+      setDrag(next);
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', token); } catch (_) {}
+    }
+    function setDropEffect(e) {
+      try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+    }
 
     // ── Rows ──
     function iconBtn(icon, label, onClick, disabled) {
@@ -385,8 +395,7 @@
         draggable: !saving,
         onDragStart: function (e) {
           e.stopPropagation();
-          setDrag({ from: { list: listId, index: index } });
-          try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', n.key); } catch (_) {}
+          startDrag(e, { from: { list: listId, index: index } }, n.key);
         },
         onDragEnd: endDrag
       }, dropProps(listId, index)),
@@ -454,6 +463,7 @@
             var n = dragNode();
             if (!n || n.type !== 'link' || !n.page_id) return;
             e.preventDefault();
+            setDropEffect(e);
             if (over !== 'unlisted') setOver('unlisted');
           },
           onDrop: function (e) {
@@ -465,19 +475,19 @@
         },
           unlisted.length
             ? unlisted.map(function (p) {
-                return h('span', {
-                  key: p.id, className: 'nav-ed-chip', draggable: !saving,
-                  onDragStart: function (e) {
-                    setDrag({ pageId: p.id });
-                    try { e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', String(p.id)); } catch (_) {}
-                  },
+                var isDragging = drag && drag.pageId === p.id;
+                return h('div', {
+                  key: p.id, className: 'nav-ed-row' + (isDragging ? ' is-dragging' : ''), draggable: !saving,
+                  onDragStart: function (e) { startDrag(e, { pageId: p.id }, 'page-' + p.id); },
                   onDragEnd: endDrag
                 },
-                  h('span', { className: 'material-symbols-outlined nav-ed-handle', 'aria-hidden': 'true' }, 'drag_indicator'),
-                  h('span', null, p.title),
-                  h('span', { className: 'nav-ed-sub' }, PVAdminSiteShared.fileOf(p.path)),
-                  PVAdminSiteShared.accessBadge(p),
-                  iconBtn('add', 'Add to the nav', function () { setPlacing(p); }));
+                  h('span', { className: 'material-symbols-outlined nav-ed-handle', 'aria-hidden': 'true', title: 'Drag into the nav' }, 'drag_indicator'),
+                  h('span', { className: 'nav-ed-main' },
+                    h('span', null, p.title),
+                    h('span', { className: 'nav-ed-sub' }, PVAdminSiteShared.fileOf(p.path)),
+                    PVAdminSiteShared.accessBadge(p),
+                    p.needs_review ? h('span', { className: 'portal-badge is-warn' }, 'Needs review') : null),
+                  h('span', { className: 'nav-ed-actions' }, iconBtn('add', 'Add to the nav', function () { setPlacing(p); })));
               })
             : h('span', { className: 'portal-muted' }, 'Every page is in the nav.'))),
 

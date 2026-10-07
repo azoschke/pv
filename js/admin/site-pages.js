@@ -55,9 +55,24 @@
   function navGroups(nav) {
     return (nav || []).filter(function (n) { return n.parent_id == null && n.type === 'group'; });
   }
-  function isListed(page, nav) {
-    return (nav || []).some(function (n) { return n.page_id === page.id; });
+  // Page id → position of its first link in the nav: the top level in order,
+  // with each group's links in order where the group sits.
+  function navOrder(nav) {
+    var order = {}, next = 0;
+    function visit(parentId) {
+      (nav || [])
+        .filter(function (n) { return (n.parent_id == null ? null : n.parent_id) === parentId; })
+        .sort(function (a, b) { return a.sort_order - b.sort_order; })
+        .forEach(function (n) {
+          if (n.page_id && !(n.page_id in order)) order[n.page_id] = next++;
+          if (n.type === 'group') visit(n.id);
+        });
+    }
+    visit(null);
+    return order;
   }
+  // The portal and its sign-in pages, listed last.
+  var ACCOUNT_PAGES = ['/portal', '/login', '/register', '/reset'];
 
   function loadSite() {
     return PVAdminAPI.request('GET', '/admin/site', undefined, true);
@@ -399,8 +414,17 @@
       }).then(function () { setDeleting(null); });
     }
 
+    // Nav order first; then unlisted pages (home first); then the portal and
+    // sign-in pages.
+    var order = navOrder(data.nav);
+    function rank(p) {
+      if (p.id in order) return [0, order[p.id]];
+      var acct = ACCOUNT_PAGES.indexOf(p.path);
+      return acct === -1 ? [1, 0] : [2, acct];
+    }
     var pages = data.pages.slice().sort(function (a, b) {
-      return (b.needs_review - a.needs_review) || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+      var ra = rank(a), rb = rank(b);
+      return (ra[0] - rb[0]) || (ra[1] - rb[1]) || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
     });
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
@@ -408,7 +432,7 @@
         h('div', { className: 'portal-card-actions' },
           h('button', { type: 'button', className: 'portal-btn', onClick: props.onAdd },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'), 'Add page'))),
-      h('div', { className: 'portal-table-wrap' },
+      h('div', { className: 'portal-table-wrap site-table-scroll' },
         h('table', { className: 'portal-table' },
           h('thead', null, h('tr', null,
             h('th', null, 'Page'),
@@ -426,7 +450,7 @@
                 h('div', { className: 'portal-muted' }, fileOf(p.path))),
               h('td', null, accessBadge(p) || h('span', { className: 'portal-muted' }, 'Public')),
               h('td', null, hidden ? h('span', { className: 'portal-muted' }, 'Hidden') : 'Shown'),
-              h('td', null, isListed(p, data.nav) ? 'Listed' : h('span', { className: 'portal-muted' }, 'Unlisted')),
+              h('td', null, p.id in order ? 'Listed' : h('span', { className: 'portal-muted' }, 'Unlisted')),
               h('td', { className: 'portal-col-actions' },
                 h('div', { className: 'site-row-actions' },
                   h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(p); } },
