@@ -103,6 +103,8 @@
   function syncEdge() {
     var edge = global.PV_EDGE;
     if (!edge || !edgeHost()) return;
+    // The login page does its own handover (and would race this one).
+    if (/\/login(\.html)?$/.test(global.location.pathname)) return;
     var s = get();
     var mine = s ? String(s.username || '').toLowerCase() : '';
     var theirs = edge.signedIn ? String(edge.username || '').toLowerCase() : '';
