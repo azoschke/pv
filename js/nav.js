@@ -11,7 +11,9 @@
  * current page, campaigns and the sign-in button.
  *  - On the live site it is already in #nav-placeholder (marked data-edge).
  *  - Otherwise (GitHub Pages, or a live page served without it) it is asked
- *    for from the renderer's /_pv/nav, with this browser's sign-in.
+ *    for from the renderer's /_pv/nav, with this browser's sign-in. Links in
+ *    the page to pages this visitor can't open are then taken out, as the
+ *    renderer does on the pages it draws.
  *  - If the renderer can't be reached, the short nav in
  *    components/nav.html is used instead, with the current page marked and
  *    the Login button showing the sign-in.
@@ -291,15 +293,17 @@
   const EDGE_NAV_HOSTS = ['phoenixvanguard-tools.com', 'azoschke.github.io'];
   const EDGE_NAV_TIMEOUT_MS = 4000;
 
-  // This visitor's nav from the renderer, as HTML. Rejects when it can't be
-  // had (renderer down, too slow, or turned the request away).
+  // This visitor's nav from the renderer: { nav: its HTML, blocked: the
+  // pages they can't open (null from a renderer that doesn't list them) }.
+  // Rejects when it can't be had (renderer down, too slow, or turned the
+  // request away).
   function fetchEdgeNav() {
     const host = window.location.hostname;
     if (EDGE_NAV_HOSTS.indexOf(host) === -1) return Promise.reject(new Error('no renderer here'));
     const live = host === 'phoenixvanguard-tools.com';
     let path = window.location.pathname;
     if (BASE_PATH && path.indexOf(BASE_PATH) === 0) path = path.slice(BASE_PATH.length) || '/';
-    let url = (live ? '' : EDGE_ORIGIN) + '/_pv/nav?page=' + encodeURIComponent(path + window.location.search);
+    let url = (live ? '' : EDGE_ORIGIN) + '/_pv/nav?format=json&page=' + encodeURIComponent(path + window.location.search);
     // GitHub Pages serves the .html files, not clean addresses.
     if (!live) url += '&links=html';
     const headers = {};
@@ -310,13 +314,68 @@
     return fetch(url, { headers: headers, signal: controller ? controller.signal : undefined })
       .then(function (res) {
         if (!res.ok) throw new Error('Renderer nav: ' + res.status);
-        return res.text();
+        if ((res.headers.get('Content-Type') || '').indexOf('application/json') !== -1) return res.json();
+        return res.text().then(function (html) { return { nav: html, blocked: null }; });
       })
-      .then(function (html) {
-        if (html.indexOf('class="site-nav"') === -1) throw new Error('Renderer nav: not a nav');
-        return html;
+      .then(function (data) {
+        if (!data || typeof data.nav !== 'string' || data.nav.indexOf('class="site-nav"') === -1) {
+          throw new Error('Renderer nav: not a nav');
+        }
+        return { nav: data.nav, blocked: Array.isArray(data.blocked) ? data.blocked : null };
       })
       .finally(function () { if (timer) clearTimeout(timer); });
+  }
+
+  // The page a link on this site points at, as the Pages list stores it
+  // ("/job-board"; "/" for home), or null for anything else: other sites,
+  // anchors, mailto:, and addresses outside the site's folder.
+  function linkedPage(href) {
+    if (!href || href.charAt(0) === '#') return null;
+    let u;
+    try { u = new URL(href, window.location.href); } catch (_e) { return null; }
+    if (u.origin !== window.location.origin) return null;
+    let p = u.pathname;
+    if (BASE_PATH) {
+      if (p !== BASE_PATH && p.indexOf(BASE_PATH + '/') !== 0) return null;
+      p = p.slice(BASE_PATH.length);
+    }
+    try { p = decodeURIComponent(p); } catch (_e) { /* keep it as is */ }
+    p = p.replace(/\/+$/, '').replace(/\.html?$/i, '');
+    return (p === '' || p === '/index') ? '/' : p;
+  }
+
+  // Takes links to the pages in `blocked` out of the page (never the nav),
+  // by the renderer's rules (lib/links.js): a list item holding such a link
+  // goes entirely; such a link anywhere else keeps its text but stops being a
+  // link; a section that collapses when empty (the home page's .landing-row
+  // sections, or anything marked data-pv-collapse) goes when every link in it
+  // went.
+  function hideClosedLinks(blocked, nav) {
+    const SECTIONS = '.landing-row, [data-pv-collapse]';
+    const closed = new Set(blocked);
+    const counts = new Map(); // section → { links, closed }
+    const drop = [];
+    const unlink = [];
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      if (nav.contains(a)) return;
+      const section = a.closest(SECTIONS);
+      if (section) {
+        if (!counts.has(section)) counts.set(section, { links: 0, closed: 0 });
+        counts.get(section).links++;
+      }
+      const target = linkedPage(a.getAttribute('href'));
+      if (!target || !closed.has(target)) return;
+      if (section) counts.get(section).closed++;
+      const item = a.closest('li');
+      if (item) drop.push(item);
+      else unlink.push(a);
+    });
+    counts.forEach(function (c, section) { if (c.links === c.closed) drop.push(section); });
+    unlink.forEach(function (a) {
+      while (a.firstChild) a.parentNode.insertBefore(a.firstChild, a);
+      a.remove();
+    });
+    drop.forEach(function (el) { el.remove(); });
   }
 
   function loadNav() {
@@ -330,10 +389,18 @@
     }
 
     fetchEdgeNav()
-      .then(function (html) {
-        placeholder.innerHTML = html;
+      .then(function (edge) {
+        placeholder.innerHTML = edge.nav;
         placeholder.setAttribute('data-edge', '');
         wireNav(placeholder);
+        if (!edge.blocked || !edge.blocked.length) return;
+        // Kept apart from the fallback below: a problem here never swaps
+        // the renderer's nav for the last-resort one.
+        try {
+          hideClosedLinks(edge.blocked, placeholder);
+        } catch (err) {
+          console.warn('[nav.js] Could not hide closed links:', err);
+        }
       })
       .catch(function () {
         return fetch(BASE_PATH + '/components/nav.html')
