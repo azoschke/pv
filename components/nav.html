@@ -1,3 +1,8 @@
+<!--
+  The last-resort nav, used only when the edge renderer can't be reached
+  (js/nav.js). The full nav, drawn for each visitor, is managed in
+  Admin Settings → Navigation.
+-->
 <nav class="site-nav" aria-label="Primary">
   <a href="index.html" class="site-brand" aria-label="Phoenix Vanguard Tools">
     <span class="site-logo" role="img" aria-label="Phoenix Vanguard Tools"></span>
@@ -10,65 +15,20 @@
   </button>
 
   <ul class="nav-links" id="nav-links">
-    <li class="nav-dropdown" data-page="campaigns codex view">
-      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-submenu" role="menu" data-campaign-menu>
-        <li role="none"><a role="menuitem" href="campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
-        <!-- individual campaigns injected by nav.js from the campaigns worker -->
-      </ul>
-    </li>
+    <li><a href="index.html" class="nav-link" data-page="index">Home</a></li>
+    <li><a href="campaigns.html" class="nav-link" data-page="campaigns view codex">Campaigns</a></li>
+    <li><a href="calendar.html" class="nav-link" data-page="calendar">Calendar</a></li>
 
-    <li class="nav-dropdown" data-page="venues menus job-board bounty-board company-roster calendar">
-      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Community <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-submenu" role="menu">
-        <li class="nav-submenu-label" role="presentation">Boards</li>
-        <li role="none"><a role="menuitem" href="job-board.html" class="nav-sublink" data-subpage="job-board">Job Board</a></li>
-        <li role="none"><a role="menuitem" href="bounty-board.html" class="nav-sublink" data-subpage="bounty-board">Bounty Board</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Venues</li>
-        <li role="none"><a role="menuitem" href="venues.html" class="nav-sublink" data-subpage="venues">Venues</a></li>
-        <li role="none"><a role="menuitem" href="menus.html" class="nav-sublink" data-subpage="menus">Venue Menus</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Information</li>
-        <li role="none"><a role="menuitem" href="company-roster.html" class="nav-sublink" data-subpage="company-roster">Company Roster</a></li>
-        <li role="none"><a role="menuitem" href="calendar.html" class="nav-sublink" data-subpage="calendar">Calendar</a></li>
-      </ul>
-    </li>
-
-    <li class="nav-dropdown" data-page="patient-intake-form appointment-request staff-roster treatment-report-form med-database">
-      <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-        Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-submenu" role="menu">
-        <li class="nav-submenu-label" role="presentation">Patient Resources</li>
-        <li role="none"><a role="menuitem" href="patient-intake-form.html" class="nav-sublink" data-subpage="patient-intake-form">Patient Intake Form</a></li>
-        <li role="none"><a role="menuitem" href="appointment-request.html" class="nav-sublink" data-subpage="appointment-request">Appointment Request</a></li>
-        <li role="none"><a role="menuitem" href="staff-roster.html" class="nav-sublink" data-subpage="staff-roster">Medical Staff</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Staff</li>
-        <li role="none"><a role="menuitem" href="treatment-report-form.html" class="nav-sublink" data-subpage="treatment-report-form">Treatment Report Form</a></li>
-        <li role="none"><a role="menuitem" href="med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
-      </ul>
-    </li>
-
-    <li class="nav-dropdown" data-page="roll-calculator crafting-database cosmic-exploration cosmic-exploration-v2 atma books">
+    <li class="nav-dropdown" data-page="roll-calculator crafting-database cosmic-exploration-v2">
       <button type="button" class="nav-link nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
         Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-submenu" role="menu">
-        <li class="nav-submenu-label" role="presentation">Roleplay</li>
         <li role="none"><a role="menuitem" href="roll-calculator.html" class="nav-sublink" data-subpage="roll-calculator">Roll Calculator</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Crafting</li>
         <li role="none"><a role="menuitem" href="crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
-        <li role="none"><a role="menuitem" href="cosmic-exploration.html" class="nav-sublink" data-subpage="cosmic-exploration">Cosmic Exploration Database</a></li>
         <li role="none"><a role="menuitem" href="cosmic-exploration-v2.html" class="nav-sublink" data-subpage="cosmic-exploration-v2">Cosmic Exploration Database (v2)</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Zodiac Weapons</li>
-        <li role="none"><a role="menuitem" href="atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
-        <li role="none"><a role="menuitem" href="books.html" class="nav-sublink" data-subpage="books">Books</a></li>
       </ul>
     </li>
-
   </ul>
 
   <a href="login.html" class="nav-login-btn" data-subpage="admin-login" aria-label="Admin login" title="Admin login">
@@ -91,59 +51,23 @@
     <button class="nav-sidebar-close" id="nav-sidebar-close" type="button" aria-label="Close navigation menu">&#10005;</button>
   </div>
   <ul class="nav-sidebar-links">
-    <li class="nav-sidebar-section" data-page="campaigns codex view">
-      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Campaigns <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-sidebar-submenu" data-campaign-menu>
-        <li><a href="campaigns.html" class="nav-sublink" data-subpage="campaigns">All Campaigns</a></li>
-        <!-- individual campaigns injected by nav.js from the campaigns worker -->
-      </ul>
+    <li class="nav-sidebar-section" data-page="index">
+      <a href="index.html" class="nav-link nav-sidebar-link" data-page="index">Home</a>
     </li>
-    <li class="nav-sidebar-section" data-page="venues menus job-board bounty-board company-roster calendar">
-      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Community <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-sidebar-submenu">
-        <li class="nav-submenu-label" role="presentation">Boards</li>
-        <li><a href="job-board.html" class="nav-sublink" data-subpage="job-board">Job Board</a></li>
-        <li><a href="bounty-board.html" class="nav-sublink" data-subpage="bounty-board">Bounty Board</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Venues</li>
-        <li><a href="venues.html" class="nav-sublink" data-subpage="venues">Venues</a></li>
-        <li><a href="menus.html" class="nav-sublink" data-subpage="menus">Venue Menus</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Information</li>
-        <li><a href="company-roster.html" class="nav-sublink" data-subpage="company-roster">Company Roster</a></li>
-        <li><a href="calendar.html" class="nav-sublink" data-subpage="calendar">Calendar</a></li>
-      </ul>
+    <li class="nav-sidebar-section" data-page="campaigns view codex">
+      <a href="campaigns.html" class="nav-link nav-sidebar-link" data-page="campaigns view codex">Campaigns</a>
     </li>
-    <li class="nav-sidebar-section" data-page="patient-intake-form appointment-request staff-roster treatment-report-form med-database">
-      <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
-        Medical <span class="nav-caret" aria-hidden="true">&#9662;</span>
-      </button>
-      <ul class="nav-sidebar-submenu">
-        <li class="nav-submenu-label" role="presentation">Patient Resources</li>
-        <li><a href="patient-intake-form.html" class="nav-sublink" data-subpage="patient-intake-form">Patient Intake Form</a></li>
-        <li><a href="appointment-request.html" class="nav-sublink" data-subpage="appointment-request">Appointment Request</a></li>
-        <li><a href="staff-roster.html" class="nav-sublink" data-subpage="staff-roster">Medical Staff</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Staff</li>
-        <li><a href="treatment-report-form.html" class="nav-sublink" data-subpage="treatment-report-form">Treatment Report Form</a></li>
-        <li><a href="med-database.html" class="nav-sublink" data-subpage="med-database">Patient Records</a></li>
-      </ul>
+    <li class="nav-sidebar-section" data-page="calendar">
+      <a href="calendar.html" class="nav-link nav-sidebar-link" data-page="calendar">Calendar</a>
     </li>
-    <li class="nav-sidebar-section" data-page="roll-calculator crafting-database cosmic-exploration cosmic-exploration-v2 atma books">
+    <li class="nav-sidebar-section" data-page="roll-calculator crafting-database cosmic-exploration-v2">
       <button type="button" class="nav-sidebar-toggle" aria-expanded="false">
         Tools <span class="nav-caret" aria-hidden="true">&#9662;</span>
       </button>
       <ul class="nav-sidebar-submenu">
-        <li class="nav-submenu-label" role="presentation">Roleplay</li>
         <li><a href="roll-calculator.html" class="nav-sublink" data-subpage="roll-calculator">Roll Calculator</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Crafting</li>
         <li><a href="crafting-database.html" class="nav-sublink" data-subpage="crafting-database">Macro Database</a></li>
-        <li><a href="cosmic-exploration.html" class="nav-sublink" data-subpage="cosmic-exploration">Cosmic Exploration Database</a></li>
         <li><a href="cosmic-exploration-v2.html" class="nav-sublink" data-subpage="cosmic-exploration-v2">Cosmic Exploration Database (v2)</a></li>
-        <li class="nav-submenu-label nav-submenu-label--divider" role="presentation">Zodiac Weapons</li>
-        <li><a href="atma.html" class="nav-sublink" data-subpage="atma">Atma</a></li>
-        <li><a href="books.html" class="nav-sublink" data-subpage="books">Books</a></li>
       </ul>
     </li>
     <li class="nav-sidebar-section" data-page="login register reset">

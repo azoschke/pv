@@ -6,17 +6,17 @@
  *   <script src="js/pv-session.js"></script>
  *   <script src="js/nav.js"></script>
  *
- * The script:
- *  1. Fetches <base>/components/nav.html and injects it into #nav-placeholder
- *  2. Marks the current section's dropdown and sub-link as .active
- *  3. Wires click-to-toggle behavior on dropdown menus
- *  4. Manages light/dark theme toggle with localStorage persistence
- *
- * On the live site the edge renderer (pv-site-renderer) has already drawn
- * this visitor's nav into the placeholder (marked data-edge): links they can
- * open, the current page, campaigns and the sign-in button. Then only steps
- * 3 and 4 run. Steps 1 and 2 still serve GitHub Pages, and the live site if
- * the renderer is ever unavailable.
+ * The nav comes from the edge renderer (pv-site-renderer), drawn for this
+ * visitor from Admin Settings → Navigation: the links they can open, the
+ * current page, campaigns and the sign-in button.
+ *  - On the live site it is already in #nav-placeholder (marked data-edge).
+ *  - Otherwise (GitHub Pages, or a live page served without it) it is asked
+ *    for from the renderer's /_pv/nav, with this browser's sign-in.
+ *  - If the renderer can't be reached, the short nav in
+ *    components/nav.html is used instead, with the current page marked and
+ *    the Login button showing the sign-in.
+ * Then the dropdowns, the mobile sidebar and the light/dark theme toggle
+ * (kept in localStorage) are wired up.
  *
  * Base path is derived dynamically from this script's own src, so it works
  * whether the site is served at the domain root or under a project subpath
@@ -87,139 +87,6 @@
       const nameEl = btn.querySelector('.nav-login-name');
       if (nameEl) nameEl.textContent = name; // textContent: never inject the name as HTML
     });
-  }
-
-  // ── 1c. Campaign menus (flooded in from the campaigns worker) ──────────────
-  // The Campaigns dropdown/sidebar list "All Campaigns" statically; every
-  // individual campaign is injected from the worker so new ones appear without
-  // editing nav.html. Cached in sessionStorage for instant render on later
-  // page loads, then refreshed in the background so the list self-heals.
-  const CAMPAIGNS_API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
-  const CAMPAIGNS_CACHE_KEY = 'pv.campaigns.navcache';
-
-  function readCampaignCache() {
-    try {
-      const raw = sessionStorage.getItem(CAMPAIGNS_CACHE_KEY);
-      if (!raw) return null;
-      const c = JSON.parse(raw);
-      return (c && Array.isArray(c.data)) ? c.data : null;
-    } catch (_e) { return null; }
-  }
-
-  function writeCampaignCache(data) {
-    try { sessionStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); }
-    catch (_e) { /* ignore quota */ }
-  }
-
-  // The active campaign slug, when viewing a campaign (view.html?c=<slug>).
-  function currentCampaignSlug() {
-    try {
-      const loc = getCurrentLocation();
-      if (loc.page !== 'view') return null;
-      return new URLSearchParams(window.location.search).get('c');
-    } catch (_e) { return null; }
-  }
-
-  function renderCampaignMenus(placeholder, campaigns) {
-    const activeSlug = currentCampaignSlug();
-
-    // Are we currently on the Codex page? (highlights the Codex link.)
-    let codexActive = false;
-    try {
-      const cloc = getCurrentLocation();
-      codexActive = cloc.page === 'codex';
-    } catch (_e) { codexActive = false; }
-
-    // Are we on the landing filtered to one-shots (the One-Shots menu target)?
-    let oneshotActive = false;
-    try {
-      const loc = getCurrentLocation();
-      if (loc.page === 'campaigns') {
-        oneshotActive = (new URLSearchParams(window.location.search).get('tag') || '').toLowerCase() === 'oneshot';
-      }
-    } catch (_e) { oneshotActive = false; }
-
-    // Main + side campaigns are listed individually so they're always visible;
-    // one-shots collapse into a single "One-Shots" entry that opens the landing
-    // pre-filtered, keeping the dropdown from growing without bound.
-    const mains = campaigns.filter(function (c) { return c && c.slug && c.tag === 'main'; });
-    const sides = campaigns.filter(function (c) { return c && c.slug && c.tag === 'side'; });
-    const listed = mains.concat(sides);
-
-    placeholder.querySelectorAll('[data-campaign-menu]').forEach(function (menu) {
-      // Drop any previously injected items so a background refresh can re-render.
-      menu.querySelectorAll('.nav-campaign-dynamic').forEach(function (el) { el.remove(); });
-      const isDesktop = menu.classList.contains('nav-submenu');
-      const parent = menu.closest('.nav-dropdown, .nav-sidebar-section');
-      const toggle = parent && parent.querySelector('.nav-dropdown-toggle, .nav-sidebar-toggle');
-
-      function activateParent() {
-        if (!parent) return;
-        parent.classList.add('active');
-        if (parent.classList.contains('nav-sidebar-section')) parent.classList.add('open');
-        if (toggle) { toggle.classList.add('active'); toggle.setAttribute('aria-expanded', 'true'); }
-      }
-      function makeItem(href, label, subpage, isActive) {
-        const li = document.createElement('li');
-        li.className = 'nav-campaign-dynamic';
-        if (isDesktop) li.setAttribute('role', 'none');
-        const a = document.createElement('a');
-        if (isDesktop) a.setAttribute('role', 'menuitem');
-        a.className = 'nav-sublink';
-        a.href = href;
-        a.setAttribute('data-subpage', subpage);
-        a.textContent = label; // textContent: never inject names as HTML
-        if (isActive) { a.classList.add('active'); activateParent(); }
-        li.appendChild(a);
-        menu.appendChild(li);
-      }
-
-      listed.forEach(function (c) {
-        makeItem(
-          BASE_PATH + '/view.html?c=' + encodeURIComponent(c.slug),
-          c.name || c.slug,
-          'campaign-' + c.slug,
-          !!(activeSlug && c.slug === activeSlug)
-        );
-      });
-
-      // One-Shots always shows, even with none yet (a known category).
-      makeItem(
-        BASE_PATH + '/campaigns.html?tag=oneshot',
-        'One-Shots',
-        'campaigns-oneshots',
-        oneshotActive
-      );
-
-      // When One-Shots is the active view, drop the implicit "All Campaigns"
-      // highlight so only one item reads as current.
-      if (oneshotActive) {
-        const all = menu.querySelector('.nav-sublink[data-subpage="campaigns"]');
-        if (all) all.classList.remove('active');
-      }
-
-      // Divider, then the Codex — reference material, separated from the story
-      // campaign list above. Appended last so it always sits at the bottom.
-      const divider = document.createElement('li');
-      divider.className = 'nav-campaign-dynamic nav-submenu-divider';
-      divider.setAttribute(isDesktop ? 'role' : 'aria-hidden', isDesktop ? 'separator' : 'true');
-      menu.appendChild(divider);
-      makeItem(BASE_PATH + '/codex.html', 'Codex', 'campaigns-codex', codexActive);
-    });
-  }
-
-  function populateCampaigns(placeholder) {
-    if (!placeholder.querySelector('[data-campaign-menu]')) return;
-    const cached = readCampaignCache();
-    if (cached) renderCampaignMenus(placeholder, cached);
-    fetch(CAMPAIGNS_API_BASE + '/campaigns')
-      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-      .then(function (data) {
-        if (!Array.isArray(data)) return;
-        writeCampaignCache(data);
-        renderCampaignMenus(placeholder, data);
-      })
-      .catch(function (err) { console.warn('[nav.js] Could not load campaigns:', err); });
   }
 
   // ── 2. Theme management ────────────────────────────────────────────────────
@@ -369,9 +236,9 @@
       });
     }
 
-    // Also support any legacy top-level .nav-link[data-page]
+    // Top-level links, each with the pages it covers in data-page
     placeholder.querySelectorAll('.nav-link[data-page]').forEach(function (link) {
-      if (link.dataset.page === loc.page) link.classList.add('active');
+      if (link.dataset.page.split(/\s+/).indexOf(loc.page) !== -1) link.classList.add('active');
     });
 
     // Mark active section in sidebar too (same exact-href-first rule)
@@ -403,9 +270,6 @@
     // Reflect signed-in state on the Login button (name + dashboard link)
     applyAuthState(placeholder);
 
-    // Flood the Campaigns menus with every campaign from the worker
-    populateCampaigns(placeholder);
-
     wireNav(placeholder);
   }
 
@@ -421,24 +285,70 @@
   }
 
   // ── 5. Load the nav ────────────────────────────────────────────────────────
-  // Drawn already by the edge renderer: just wire it.
-  const edgeNav = document.querySelector('#nav-placeholder[data-edge]');
-  if (edgeNav) {
-    wireNav(edgeNav);
-    return;
+  const EDGE_ORIGIN = 'https://phoenixvanguard-tools.com';
+  // Sites the renderer gives its nav to: the live site itself and GitHub
+  // Pages. Anywhere else goes straight to components/nav.html.
+  const EDGE_NAV_HOSTS = ['phoenixvanguard-tools.com', 'azoschke.github.io'];
+  const EDGE_NAV_TIMEOUT_MS = 4000;
+
+  // This visitor's nav from the renderer, as HTML. Rejects when it can't be
+  // had (renderer down, too slow, or turned the request away).
+  function fetchEdgeNav() {
+    const host = window.location.hostname;
+    if (EDGE_NAV_HOSTS.indexOf(host) === -1) return Promise.reject(new Error('no renderer here'));
+    const live = host === 'phoenixvanguard-tools.com';
+    let path = window.location.pathname;
+    if (BASE_PATH && path.indexOf(BASE_PATH) === 0) path = path.slice(BASE_PATH.length) || '/';
+    let url = (live ? '' : EDGE_ORIGIN) + '/_pv/nav?page=' + encodeURIComponent(path + window.location.search);
+    // GitHub Pages serves the .html files, not clean addresses.
+    if (!live) url += '&links=html';
+    const headers = {};
+    const session = getAdminSession();
+    if (session) headers['Authorization'] = 'Bearer ' + session.token;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(function () { controller.abort(); }, EDGE_NAV_TIMEOUT_MS) : null;
+    return fetch(url, { headers: headers, signal: controller ? controller.signal : undefined })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Renderer nav: ' + res.status);
+        return res.text();
+      })
+      .then(function (html) {
+        if (html.indexOf('class="site-nav"') === -1) throw new Error('Renderer nav: not a nav');
+        return html;
+      })
+      .finally(function () { if (timer) clearTimeout(timer); });
   }
 
-  fetch(BASE_PATH + '/components/nav.html')
-    .then(function (res) {
-      if (!res.ok) throw new Error('Nav fetch failed: ' + res.status);
-      return res.text();
-    })
-    .then(function (html) {
-      initNav(html);
-    })
-    .catch(function (err) {
-      console.warn('[nav.js] Could not load nav:', err);
-      // Fail silently — page still works without nav
-    });
+  function loadNav() {
+    const placeholder = document.getElementById('nav-placeholder');
+    if (!placeholder) return;
+
+    // Drawn already by the renderer: just wire it.
+    if (placeholder.hasAttribute('data-edge')) {
+      wireNav(placeholder);
+      return;
+    }
+
+    fetchEdgeNav()
+      .then(function (html) {
+        placeholder.innerHTML = html;
+        placeholder.setAttribute('data-edge', '');
+        wireNav(placeholder);
+      })
+      .catch(function () {
+        return fetch(BASE_PATH + '/components/nav.html')
+          .then(function (res) {
+            if (!res.ok) throw new Error('Nav fetch failed: ' + res.status);
+            return res.text();
+          })
+          .then(initNav);
+      })
+      .catch(function (err) {
+        console.warn('[nav.js] Could not load nav:', err);
+        // Fail silently — page still works without nav
+      });
+  }
+
+  loadNav();
 
 })();
