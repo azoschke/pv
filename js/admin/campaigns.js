@@ -76,6 +76,12 @@
     var tag = tagState[0], setTag = tagState[1];
     var blurbState = useState(initial ? (initial.blurb || '') : '');
     var blurb = blurbState[0], setBlurb = blurbState[1];
+    var imageState = useState(initial ? (initial.image_url || '') : '');
+    var image = imageState[0], setImage = imageState[1];
+    // Advanced Settings is collapsed by default; it opens when the campaign
+    // already has a link preview image so the image isn't hidden.
+    var advState = useState(!!(initial && initial.image_url));
+    var adv = advState[0], setAdv = advState[1];
 
     var savingState = useState(false);
     var saving = savingState[0], setSaving = savingState[1];
@@ -99,7 +105,7 @@
       if (!cleanSlug) { setErr('A URL slug is required.'); return; }
       setSaving(true); setErr('');
       try {
-        await onSubmit({ name: name.trim(), slug: cleanSlug, tag: tag, blurb: blurb.trim() });
+        await onSubmit({ name: name.trim(), slug: cleanSlug, tag: tag, blurb: blurb.trim(), image_url: image.trim() || null });
       } catch (e2) {
         setErr(e2.message || 'Failed to save campaign.');
         setSaving(false);
@@ -136,6 +142,22 @@
           placeholder: 'Short description shown on the campaign card.',
           onChange: function (e) { setBlurb(e.target.value); } })
       ),
+
+      h('button', { type: 'button', className: 'cmp-adv-toggle', 'aria-expanded': adv ? 'true' : 'false',
+        onClick: function () { setAdv(!adv); } },
+        h('span', { 'aria-hidden': 'true' }, adv ? '▾' : '▸'), 'Advanced Settings'),
+      adv
+        ? h(PVAdminImageUpload.ImageField, {
+            label: 'Link preview image',
+            value: image,
+            onChange: setImage,
+            disabled: saving,
+            kind: 'campaign',
+            name: name.trim(),
+            help: 'Shown when a link to this campaign is shared, e.g. on Discord. Uploads are cropped to 1200×630. ' +
+              'Leave empty to use the site\'s default image.'
+          })
+        : null,
 
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'portal-btn', disabled: saving },

@@ -1451,6 +1451,23 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card.cmp-form { margin-bottom: 1rem; }
 .cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
 .cmp-hint { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+/* "Advanced Settings" disclosure in the campaign form (same look as the
+   Combat Toolkit's). */
+.cmp-adv-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0.7rem 0 0.35rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
 textarea.cmp-code,
 .portal-field textarea.cmp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
 .portal-card.cmp-list-card { margin-bottom: 0.75rem; }
