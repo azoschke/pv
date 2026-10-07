@@ -342,10 +342,11 @@
     }
     function endDrag() { setDrag(null); setOver(''); }
     // Every drag here is a "move" (start and target must agree, or Safari
-    // refuses the drop).
+    // refuses the drop). The drag state is set a moment after the drag starts:
+    // re-rendering inside dragstart itself makes Chrome cancel the drag.
     function startDrag(e, next, token) {
-      setDrag(next);
       try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', token); } catch (_) {}
+      setTimeout(function () { setDrag(next); }, 0);
     }
     function setDropEffect(e) {
       try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
@@ -413,11 +414,16 @@
           }))
       );
     }
-    function endZone(listId, length, label) {
+    // The drop zone at the end of a list (holding a group's Add button). It is
+    // the same size whether or not a drag is under way, so nothing on the page
+    // moves when one starts; only its outline and hint appear.
+    function endZone(listId, length, label, extra) {
       var id = listId + ':' + length;
       return h('div', Object.assign({
         className: 'nav-ed-end' + (accepts(listId) ? ' is-active' : '') + (over === id ? ' is-over' : '')
-      }, dropProps(listId, length)), accepts(listId) ? 'Drop here to add to the end of ' + label : null);
+      }, dropProps(listId, length)),
+        extra || null,
+        h('span', { className: 'nav-ed-hint' }, 'Drop here to add to the end of ' + label));
     }
     function addButton(listId, label, types) {
       return h('button', { type: 'button', className: 'portal-btn is-ghost is-small', disabled: saving,
@@ -440,8 +446,8 @@
               row(n, 'top', i, tree.length),
               h('div', { className: 'nav-ed-children' },
                 n.children.map(function (c, j) { return row(c, n.key, j, n.children.length); }),
-                endZone(n.key, n.children.length, n.label),
-                h('div', null, addButton(n.key, n.label, ['link', 'heading', 'divider', 'campaigns']))));
+                endZone(n.key, n.children.length, n.label,
+                  addButton(n.key, n.label, ['link', 'heading', 'divider', 'campaigns']))));
           }),
           tree.length ? null : h('p', { className: 'portal-muted' }, 'The nav is empty.'),
           endZone('top', tree.length, 'the top level')),

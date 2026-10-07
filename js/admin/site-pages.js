@@ -55,24 +55,45 @@
   function navGroups(nav) {
     return (nav || []).filter(function (n) { return n.parent_id == null && n.type === 'group'; });
   }
-  // Page id → position of its first link in the nav: the top level in order,
-  // with each group's links in order where the group sits.
-  function navOrder(nav) {
-    var order = {}, next = 0;
-    function visit(parentId) {
-      (nav || [])
-        .filter(function (n) { return (n.parent_id == null ? null : n.parent_id) === parentId; })
-        .sort(function (a, b) { return a.sort_order - b.sort_order; })
-        .forEach(function (n) {
-          if (n.page_id && !(n.page_id in order)) order[n.page_id] = next++;
-          if (n.type === 'group') visit(n.id);
-        });
-    }
-    visit(null);
-    return order;
-  }
   // The portal and its sign-in pages, listed last.
   var ACCOUNT_PAGES = ['/portal', '/login', '/register', '/reset'];
+
+  // The pages table's sections, in nav order: each group's pages under the
+  // group's name, plain top-level links under "Top level" where they sit,
+  // then unlisted pages (home first) and the portal and sign-in pages. A page
+  // linked more than once is listed where its first link is.
+  function pageSections(pages, nav) {
+    nav = nav || [];
+    var byId = {}, placed = {}, sections = [];
+    pages.forEach(function (p) { byId[p.id] = p; });
+    function bySort(a, b) { return a.sort_order - b.sort_order; }
+    function byPath(a, b) { return a.path < b.path ? -1 : a.path > b.path ? 1 : 0; }
+    function take(n) {
+      var p = n.page_id && byId[n.page_id];
+      if (!p || placed[p.id]) return null;
+      placed[p.id] = true;
+      return p;
+    }
+    nav.filter(function (n) { return n.parent_id == null; }).sort(bySort).forEach(function (n) {
+      if (n.type === 'group') {
+        var inGroup = nav.filter(function (c) { return c.parent_id === n.id; }).sort(bySort).map(take).filter(Boolean);
+        if (inGroup.length) sections.push({ key: 'group-' + n.id, label: n.label, pages: inGroup });
+        return;
+      }
+      var p = take(n);
+      if (!p) return;
+      var last = sections[sections.length - 1];
+      if (last && last.topLevel) last.pages.push(p);
+      else sections.push({ key: 'top-' + n.id, label: 'Top level', topLevel: true, pages: [p] });
+    });
+    var rest = pages.filter(function (p) { return !placed[p.id]; });
+    var unlisted = rest.filter(function (p) { return ACCOUNT_PAGES.indexOf(p.path) === -1; }).sort(byPath);
+    var account = rest.filter(function (p) { return ACCOUNT_PAGES.indexOf(p.path) !== -1; })
+      .sort(function (a, b) { return ACCOUNT_PAGES.indexOf(a.path) - ACCOUNT_PAGES.indexOf(b.path); });
+    if (unlisted.length) sections.push({ key: 'unlisted', label: 'Unlisted', pages: unlisted });
+    if (account.length) sections.push({ key: 'account', label: 'Portal & sign-in', pages: account });
+    return sections;
+  }
 
   function loadSite() {
     return PVAdminAPI.request('GET', '/admin/site', undefined, true);
@@ -414,18 +435,24 @@
       }).then(function () { setDeleting(null); });
     }
 
-    // Nav order first; then unlisted pages (home first); then the portal and
-    // sign-in pages.
-    var order = navOrder(data.nav);
-    function rank(p) {
-      if (p.id in order) return [0, order[p.id]];
-      var acct = ACCOUNT_PAGES.indexOf(p.path);
-      return acct === -1 ? [1, 0] : [2, acct];
+    var sections = pageSections(data.pages, data.nav);
+    function pageRow(p) {
+      var hidden = !p.robots_index || p.access === 'restricted' || p.needs_review;
+      return h('tr', { key: p.id, className: p.needs_review ? 'is-needs-role' : null },
+        h('td', null,
+          h('div', { className: 'portal-name-row' },
+            h('span', { className: 'portal-strong' }, p.title),
+            p.needs_review ? h('span', { className: 'portal-badge is-warn' }, 'Needs review') : null),
+          h('div', { className: 'portal-muted' }, fileOf(p.path))),
+        h('td', null, accessBadge(p) || h('span', { className: 'portal-muted' }, 'Public')),
+        h('td', null, hidden ? h('span', { className: 'portal-muted' }, 'Hidden') : 'Shown'),
+        h('td', { className: 'portal-col-actions' },
+          h('div', { className: 'site-row-actions' },
+            h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(p); } },
+              p.needs_review ? 'Review' : 'Edit'),
+            h('button', { type: 'button', className: 'portal-btn is-small is-danger', disabled: deleting === p.id,
+              onClick: function () { remove(p); } }, deleting === p.id ? 'Deleting…' : 'Delete'))));
     }
-    var pages = data.pages.slice().sort(function (a, b) {
-      var ra = rank(a), rb = rank(b);
-      return (ra[0] - rb[0]) || (ra[1] - rb[1]) || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
-    });
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, 'Pages'),
@@ -438,25 +465,13 @@
             h('th', null, 'Page'),
             h('th', null, 'Access'),
             h('th', null, 'Search'),
-            h('th', null, 'Nav'),
             h('th', { className: 'portal-col-actions' }, ''))),
-          h('tbody', null, pages.map(function (p) {
-            var hidden = !p.robots_index || p.access === 'restricted' || p.needs_review;
-            return h('tr', { key: p.id, className: p.needs_review ? 'is-needs-role' : null },
-              h('td', null,
-                h('div', { className: 'portal-name-row' },
-                  h('span', { className: 'portal-strong' }, p.title),
-                  p.needs_review ? h('span', { className: 'portal-badge is-warn' }, 'Needs review') : null),
-                h('div', { className: 'portal-muted' }, fileOf(p.path))),
-              h('td', null, accessBadge(p) || h('span', { className: 'portal-muted' }, 'Public')),
-              h('td', null, hidden ? h('span', { className: 'portal-muted' }, 'Hidden') : 'Shown'),
-              h('td', null, p.id in order ? 'Listed' : h('span', { className: 'portal-muted' }, 'Unlisted')),
-              h('td', { className: 'portal-col-actions' },
-                h('div', { className: 'site-row-actions' },
-                  h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(p); } },
-                    p.needs_review ? 'Review' : 'Edit'),
-                  h('button', { type: 'button', className: 'portal-btn is-small is-danger', disabled: deleting === p.id,
-                    onClick: function () { remove(p); } }, deleting === p.id ? 'Deleting…' : 'Delete'))));
+          // Nav group breaks, banded like the FC Members ranks.
+          h('tbody', null, sections.map(function (sec) {
+            return [
+              h('tr', { key: sec.key, className: 'portal-group-row' },
+                h('td', { colSpan: 4, className: 'portal-group-cell' }, sec.label + ' · ' + sec.pages.length))
+            ].concat(sec.pages.map(pageRow));
           }))))
     );
   }
