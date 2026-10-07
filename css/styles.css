@@ -198,15 +198,20 @@ pre {
    5. SHARED NAV
    ============================================================================= */
 
+/* Wrapper nav.js injects the nav into. It holds the nav's height before the
+   nav arrives (the 70px logo plus the nav's 0.75rem top and bottom padding)
+   so the page doesn't jump down when it loads, and carries the space below
+   the nav that .site-nav used to. */
 #nav-placeholder {
-  /* Wrapper injected by nav.js — no styles needed; .site-nav inside handles layout */
+  min-height: calc(70px + 1.5rem);
+  margin-bottom: 1.5rem;
 }
 
 .site-nav {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  margin: 0 0 1.5rem;
+  margin: 0;
   padding: 0.75rem 0;
 }
 
