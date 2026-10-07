@@ -1,6 +1,6 @@
 /**
  * rp-shared.js — lists and plain-language helpers shared by the Roll Calculator
- * (tools/roll-calculator.js) and the Combat Toolkit (admin/rp-rolls.js).
+ * (js/roll-calculator.js) and the Combat Toolkit (js/admin/rp-rolls.js).
  *
  * Load before either of those scripts:
  *   <script src="js/rp-shared.js"></script>

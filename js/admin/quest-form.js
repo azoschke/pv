@@ -14,7 +14,7 @@
   var h = React.createElement;
   var useState = React.useState;
 
-  // Image field (URL box + Upload + preview) lives in admin/image-upload.js;
+  // Image field (URL box + Upload + preview) lives in js/admin/image-upload.js;
   // it stays exported here for the sections that use PVAdminQuestUtils.
   var ImageField = window.PVAdminImageUpload.ImageField;
 

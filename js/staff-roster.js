@@ -18,7 +18,7 @@
   var FILTER_KEY  = "pv-staff-filters";
 
   // Authoritative position order — used for the filter list and for sorting
-  // cards on the page. Must mirror admin/medical-staff.js POSITIONS.
+  // cards on the page. Must mirror js/admin/medical-staff.js POSITIONS.
   var POSITION_ORDER = [
     "Medical Lead",
     "Assistant Medical Lead",

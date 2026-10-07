@@ -18,7 +18,7 @@
 //        resize, help, disabled, readOnly, blockedReason (upload is off and
 //        the button's tooltip says why, e.g. "Enter the venue name above…")
 //
-//  Load after admin/api.js and before the section scripts.
+//  Load after js/api.js and before the section scripts.
 // ============================================================================
 
 (function () {

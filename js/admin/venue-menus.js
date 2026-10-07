@@ -1,7 +1,7 @@
 // ============================================================================
 //  PVAdminVenueMenus — per-venue menu editing (venues.menus)
 //
-//  Rendered as the "Menus" tab of the Venues section (see admin/venues.js).
+//  Rendered as the "Menus" tab of the Venues section (see js/admin/venues.js).
 //  Only venues flagged has_menu appear in the picker; the worker enforces the
 //  same rule on write, so an unflagged venue can never gain items.
 //
@@ -31,7 +31,7 @@
   var MENU_IMAGE_SIZE = 512;
 
   // ── Category icons ───────────────────────────────────────────────────────
-  //  Must stay in sync with MENU_ICONS in venues/menus.js — the worker stores
+  //  Must stay in sync with MENU_ICONS in js/menus.js — the worker stores
   //  only the key.
   var DEFAULT_ICON = 'dish';
   var MENU_ICONS = {

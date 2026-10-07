@@ -763,7 +763,7 @@
             ? h(MenusTab, { session: props && props.session })
             : h('div', { className: 'portal-card' },
                 h('div', { className: 'portal-flash error' },
-                  'admin/venue-menus.js failed to load.')))
+                  'js/admin/venue-menus.js failed to load.')))
         : h(VenueDirectory, null)
     );
   }

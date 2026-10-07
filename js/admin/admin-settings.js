@@ -7,7 +7,7 @@
 //    (users.roles) opens a popup whose checkboxes commit the full intended
 //    role set for that user in one request.
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
-//  - The root admin also gets a Permissions tab (admin/permissions.js).
+//  - The root admin also gets a Permissions tab (js/admin/permissions.js).
 //
 //  Worker routes:
 //    GET    /admin/users                      users.view — list users w/ roles

@@ -6,7 +6,7 @@
 //  roles, permissions, is_root, expires_at }). This file reads and writes it,
 //  answers permission checks, and sends requests to the workers.
 //
-//  Load it before admin/api.js, js/rp-api.js, js/nav.js and any page script
+//  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in:
 //    <script src="js/pv-session.js"></script>
 // ============================================================================
