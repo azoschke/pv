@@ -14,7 +14,7 @@
 //    POST   /event-assets          event_assets.edit
 //    PATCH  /event-assets/:id       event_assets.edit
 //    DELETE /event-assets/:id       event_assets.edit
-//    POST   /event-assets/images    event_assets.edit   (multipart, returns {url})
+//    POST   /images                 event_assets.edit   (kind 'event', multipart, returns {url})
 //
 //  An entry is: { id, event_topic, type, location, description, image_url,
 //                 tags: string[], created_at, updated_at }
@@ -281,8 +281,8 @@
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
         blockedReason: topicReady ? null : 'Enter the event topic above before uploading an image.',
-        uploadPath: '/event-assets/images',
-        extraFields: { event_topic: draft.event_topic.trim() },
+        kind: 'event',
+        name: draft.event_topic.trim(),
         help: 'Paste an image URL, or upload a file. The event topic must be set before uploading.'
       }),
 

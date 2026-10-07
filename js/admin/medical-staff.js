@@ -205,8 +205,8 @@
         value: draft.image_url,
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
-        uploadPath: '/medical-staff/images',
-        extraFields: { member_name: row.member.name },
+        kind: 'medic',
+        name: row.member.name,
         help: 'Paste a URL or upload a portrait. Shown on the public staff roster card.'
       }),
 

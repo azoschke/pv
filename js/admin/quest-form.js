@@ -258,8 +258,8 @@
         value: draft.image_url,
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
-        uploadPath: '/quests/images',
-        extraFields: { quest_title: draft.title.trim() || 'quest' },
+        kind: 'quest',
+        name: draft.title.trim(),
         help: 'Paste a URL or upload an image. Shown on the public bounty board card.'
       }),
 

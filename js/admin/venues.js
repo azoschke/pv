@@ -154,8 +154,8 @@
   // One gallery image: URL box, Upload and a small thumbnail on one row.
   function GallerySlot(props) {
     var up = PVAdminImageUpload.useImageUpload({
-      path: '/venues/images',
-      fields: { venue_name: props.venueName },
+      kind: 'venue',
+      name: props.venueName,
       onUploaded: props.onChange
     });
     var val = props.value;
@@ -358,8 +358,8 @@
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
         blockedReason: uploadBlocked,
-        uploadPath: '/venues/images',
-        extraFields: { venue_name: draft.name.trim() },
+        kind: 'venue',
+        name: draft.name.trim(),
         help: 'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
       }),
 

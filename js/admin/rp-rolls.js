@@ -1161,9 +1161,8 @@
             value: image,
             readOnly: ro,
             onChange: function (v) { setImage(v); },
-            uploadPath: '/venues/images',
-            extraFields: { venue_name: name.trim() || 'boss' },
-            resize: { square: true, maxSize: 600 }
+            kind: 'boss',
+            name: name.trim()
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),
             h('input', { type: 'text', value: image, placeholder: 'https://…', disabled: ro, onChange: function (e) { setImage(e.target.value); } })),
@@ -1633,9 +1632,8 @@
         ? h(PVAdminQuestUtils.ImageField, {
             value: image,
             onChange: function (v) { setImage(v); },
-            uploadPath: '/venues/images',
-            extraFields: { venue_name: name.trim() || 'item' },
-            resize: { square: true, maxSize: 600 },
+            kind: 'item',
+            name: name.trim(),
             help: 'Paste a URL or upload an image.'
           })
         : h('div', { className: 'portal-field' }, h('label', null, 'Image URL'),

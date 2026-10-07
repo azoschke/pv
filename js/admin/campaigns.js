@@ -389,8 +389,8 @@
             value: draft.image_url,
             onChange: function (v) { setField('image_url', v); },
             disabled: saving,
-            uploadPath: '/venues/images',
-            extraFields: { venue_name: draft.name.trim() || 'codex' },
+            kind: 'codex',
+            name: draft.name.trim(),
             help: 'Optional. Paste a URL or upload an image.'
           })
         : h('div', { className: 'portal-field' },

@@ -18,7 +18,7 @@
 //    PATCH  /menus/:id               venues.menus
 //    DELETE /menus/:id               venues.menus
 //    POST   /menus/reorder           venues.menus  { category_id, ids: [] }
-//    POST   /menus/images            venues.menus  (multipart -> { url })
+//    POST   /images                  venues.menus  (kind 'menu', multipart -> { url })
 // ============================================================================
 
 (function () {
@@ -26,9 +26,9 @@
   var useState = React.useState;
   var useEffect = React.useEffect;
 
-  // Menu thumbnails render at 64px, so 512 leaves headroom for retina without
-  // paying the venue-image cost on a menu with forty items.
-  var MENU_IMAGE_SIZE = 512;
+  // Menu images are cropped square at this size (set with the other upload
+  // sizes in js/admin/image-upload.js, KINDS.menu).
+  var MENU_IMAGE_SIZE = PVAdminImageUpload.KINDS.menu.maxSize;
 
   // ── Category icons ───────────────────────────────────────────────────────
   //  Must stay in sync with MENU_ICONS in js/menus.js — the worker stores
@@ -77,12 +77,6 @@
       dangerouslySetInnerHTML: { __html: MENU_ICONS[key] }
     });
   }
-
-  // ── Image upload ─────────────────────────────────────────────────────────
-  //  Menu images are square by design: the resize centre-crops to the shorter
-  //  edge before scaling, so a wide photo loses its sides rather than being
-  //  letterboxed into the thumbnail.
-  var MENU_IMAGE_RESIZE = { square: true, maxSize: MENU_IMAGE_SIZE, quality: 0.82 };
 
   function formatCost(cost) {
     if (cost == null || cost === '') return '—';
@@ -207,9 +201,8 @@
     }
 
     var up = PVAdminImageUpload.useImageUpload({
-      path: '/menus/images',
-      fields: { venue_name: props.venueName },
-      resize: MENU_IMAGE_RESIZE,
+      kind: 'menu',
+      name: props.venueName,
       onUploaded: function (url) { setField('image_url', url); }
     });
     var uploading = up.uploading;

@@ -9,7 +9,7 @@
 //  for whichever factions officers have assigned in FC Members.
 //
 //  Worker routes (authed, no special role):
-//    GET  /my-profile    PUT /my-profile    POST /my-profile/images
+//    GET  /my-profile    PUT /my-profile    POST /images (kind 'profile')
 // ============================================================================
 
 (function () {
@@ -125,8 +125,7 @@
           value: draft.image_url,
           onChange: function (v) { setField('image_url', v); },
           disabled: saving,
-          uploadPath: '/my-profile/images',
-          extraFields: {},
+          kind: 'profile',
           help: 'Paste a URL or upload an image for your roster portrait.'
         }),
 
