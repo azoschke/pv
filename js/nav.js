@@ -12,8 +12,9 @@
  *  - On the live site it is already in #nav-placeholder (marked data-edge).
  *  - Otherwise (GitHub Pages, or a live page served without it) it is asked
  *    for from the renderer's /_pv/nav, with this browser's sign-in. Links in
- *    the page to pages this visitor can't open are then taken out, as the
- *    renderer does on the pages it draws.
+ *    the page to pages this visitor can't open are then taken out, and the
+ *    footer (#site-footer) filled in, as the renderer does on the pages it
+ *    draws.
  *  - If the renderer can't be reached, the short nav in
  *    components/nav.html is used instead, with the current page marked and
  *    the Login button showing the sign-in.
@@ -294,7 +295,9 @@
   const EDGE_NAV_TIMEOUT_MS = 4000;
 
   // This visitor's nav from the renderer: { nav: its HTML, blocked: the
-  // pages they can't open (null from a renderer that doesn't list them) }.
+  // pages they can't open (null from a renderer that doesn't list them),
+  // footer: the footer's HTML, "" for no footer, or undefined from a renderer
+  // that doesn't send it }.
   // Rejects when it can't be had (renderer down, too slow, or turned the
   // request away).
   function fetchEdgeNav() {
@@ -315,13 +318,17 @@
       .then(function (res) {
         if (!res.ok) throw new Error('Renderer nav: ' + res.status);
         if ((res.headers.get('Content-Type') || '').indexOf('application/json') !== -1) return res.json();
-        return res.text().then(function (html) { return { nav: html, blocked: null }; });
+        return res.text().then(function (html) { return { nav: html, blocked: null, footer: undefined }; });
       })
       .then(function (data) {
         if (!data || typeof data.nav !== 'string' || data.nav.indexOf('class="site-nav"') === -1) {
           throw new Error('Renderer nav: not a nav');
         }
-        return { nav: data.nav, blocked: Array.isArray(data.blocked) ? data.blocked : null };
+        return {
+          nav: data.nav,
+          blocked: Array.isArray(data.blocked) ? data.blocked : null,
+          footer: typeof data.footer === 'string' ? data.footer : undefined
+        };
       })
       .finally(function () { if (timer) clearTimeout(timer); });
   }
@@ -378,6 +385,16 @@
     drop.forEach(function (el) { el.remove(); });
   }
 
+  // The footer from Admin Settings → Pages → Site Defaults, as the renderer
+  // sends it: its HTML, or "" when there is none. Pages without a footer
+  // (#site-footer) are left alone.
+  function applyFooter(html) {
+    const footer = document.getElementById('site-footer');
+    if (!footer) return;
+    if (html) footer.innerHTML = html;
+    else footer.remove();
+  }
+
   function loadNav() {
     const placeholder = document.getElementById('nav-placeholder');
     if (!placeholder) return;
@@ -393,6 +410,7 @@
         placeholder.innerHTML = edge.nav;
         placeholder.setAttribute('data-edge', '');
         wireNav(placeholder);
+        if (edge.footer !== undefined) applyFooter(edge.footer);
         if (!edge.blocked || !edge.blocked.length) return;
         // Kept apart from the fallback below: a problem here never swaps
         // the renderer's nav for the last-resort one.

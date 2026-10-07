@@ -2,8 +2,8 @@
 //  PVAdminSitePages — Admin Settings → Pages (root admin only)
 //
 //  Site Defaults: the site name, title template, default description and
-//  preview image, favicon, theme color and extra robots.txt lines used for
-//  every page.
+//  preview image, favicon, theme color, extra robots.txt lines and footer
+//  used for every page.
 //
 //  Pages: every HTML page the site serves, with its title, description, link
 //  preview, search-engine settings and access:
@@ -110,7 +110,7 @@
 
   // ── Site Defaults ─────────────────────────────────────────────────────────
   var SETTINGS_FIELDS = ['site_name', 'title_template', 'default_description', 'default_og_image',
-    'favicon_url', 'theme_color', 'robots_extra'];
+    'favicon_url', 'theme_color', 'robots_extra', 'footer_text'];
   function settingsDraft(s) {
     var d = {};
     SETTINGS_FIELDS.forEach(function (k) { d[k] = (s && s[k]) || ''; });
@@ -128,10 +128,15 @@
     var saved = settingsDraft(props.settings);
     var dirty = SETTINGS_FIELDS.some(function (k) { return draft[k] !== saved[k]; });
     function setField(k, v) { setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; }); }
+    // The footer box appears once the med worker has the setting (v30), and
+    // only then is the footer sent with a save.
+    var hasFooter = !!props.settings && Object.prototype.hasOwnProperty.call(props.settings, 'footer_text');
 
     function save() {
       setSaving(true); setErr('');
-      PVAdminAPI.request('PUT', '/admin/site/settings', draft, true).then(function (data) {
+      var body = Object.assign({}, draft);
+      if (!hasFooter) delete body.footer_text;
+      PVAdminAPI.request('PUT', '/admin/site/settings', body, true).then(function (data) {
         props.onSaved(data, 'Site defaults saved.');
       }, function (e) {
         setErr(e.message || 'Failed to save site defaults.');
@@ -192,6 +197,12 @@
             className: 'site-mono',
             onChange: function (e) { setField('robots_extra', e.target.value); } }),
           h('p', { className: 'portal-field-help' }, 'Added to robots.txt as written. The sitemap line is added for you.'))),
+      hasFooter ? h('div', { className: 'portal-field' },
+        h('label', null, 'Footer'),
+        h('textarea', { rows: 3, maxLength: 1000, value: draft.footer_text, disabled: saving,
+          onChange: function (e) { setField('footer_text', e.target.value); } }),
+        h('p', { className: 'portal-field-help' },
+          'Plain text at the bottom of every page, line for line (10 lines at most). Leave empty for no footer.')) : null,
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'button', className: 'portal-btn', disabled: saving || !dirty, onClick: save },
           saving ? 'Saving…' : 'Save defaults'),

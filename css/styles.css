@@ -6,7 +6,7 @@
      3. Base / Body
      4. Scrollbar
      5. Shared Nav
-     6. Shared Utilities (progress bars, info cards, disclaimers)
+     6. Shared Utilities (progress bars, info cards, site footer)
      7. Zodiac Weapons — Book Farm & Atma Farm
      8. Phoenix Vanguard — shared (parchment, header, forms)
      9. (removed — old medical records sidebar; now uses campaign-sidebar)
@@ -595,15 +595,21 @@ pre {
 
 .top-controls-right { justify-content: flex-end; }
 
-/* --- Disclaimer (FFXIV copyright) --- */
-.disclaimer {
+/* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
+   Outside .container, so the top border runs the full width of the window;
+   the text keeps to the same 1100px column as the page. */
+.site-footer {
+  padding: 1rem 1.25rem 3rem;
+  border-top: 1px solid var(--border-color);
   text-align: center;
   font-size: 0.72rem;
-  color: var(--text-secondary);
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
   line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.site-footer-text {
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 /* --- Star ratings (Crafting DB) --- */
