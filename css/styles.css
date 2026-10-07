@@ -20,13 +20,52 @@
    ============================================================================= */
 
 /*
-  In each HTML <head>, include:
-  <link href="https://fonts.googleapis.com/css2?family=Stoke:wght@300;400&family=La+Belle+Aurore&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  The text fonts are served from assets/ as WOFF2. The .ttf originals stay
+  alongside them because js/med-forms.js embeds those in its PDFs. Each page
+  preloads the two used everywhere (Crimson Pro and Stoke Regular) in its
+  <head>.
 
-  Crimson Pro is the universal body font across all pages.
+  Crimson Pro is the universal body font across all pages (one variable file
+  per style covers weights 200–900).
   Stoke is used for headings, nav, and UI labels.
   La Belle Aurore is used for decorative subtitles and signatures.
 */
+
+@font-face {
+  font-family: 'Crimson Pro';
+  src: url('../assets/CrimsonPro-VariableFont_wght.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Crimson Pro';
+  src: url('../assets/CrimsonPro-Italic-VariableFont_wght.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Stoke';
+  src: url('../assets/Stoke-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Stoke';
+  src: url('../assets/Stoke-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'La Belle Aurore';
+  src: url('../assets/LaBelleAurore-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
