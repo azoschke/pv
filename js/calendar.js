@@ -13,7 +13,7 @@
 //
 //  Load order (see calendar.html):
 //    <script src="js/pv-session.js"></script>   (provides the session)
-//    <script src="calendar/calendar.js"></script>
+//    <script src="js/calendar.js"></script>
 // ============================================================================
 
 (function () {

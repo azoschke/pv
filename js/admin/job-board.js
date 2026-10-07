@@ -9,7 +9,7 @@
 //    POST   /jobs          jobs.postings
 //    PATCH  /jobs/:id      jobs.postings
 //    DELETE /jobs/:id      jobs.postings
-//    POST   /jobs/images   jobs.postings  (single image upload)
+//    POST   /images        jobs.postings  (kind 'job', single image upload)
 //
 // ============================================================================
 
@@ -197,8 +197,8 @@
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
         blockedReason: titleReady ? null : 'Enter the job title above before uploading an image.',
-        uploadPath: '/jobs/images',
-        extraFields: { job_title: draft.title.trim() },
+        kind: 'job',
+        name: draft.title.trim(),
         help: 'Paste a URL, or upload an image. The posting must be titled before uploading.'
       }),
 

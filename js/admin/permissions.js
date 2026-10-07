@@ -11,9 +11,6 @@
 //  refused while any account still has the role (the worker names those
 //  accounts).
 //
-//  The preview shows what one account's combined roles allow, including any
-//  pending changes.
-//
 //  Worker routes (root only):
 //    GET    /admin/permissions   { permissions, roles, grants }
 //    PUT    /admin/permissions   { changes: [{ role_id, permission_key, effect }] }
@@ -21,7 +18,6 @@
 //    POST   /admin/roles/reorder { ids }
 //    PATCH  /admin/roles/:id     { label }
 //    DELETE /admin/roles/:id
-//  and GET /admin/users for the preview's account list.
 // ============================================================================
 
 (function () {
@@ -55,24 +51,6 @@
       if (p.kind === 'tab' && !tb.view) tb.view = p; else tb.actions.push(p);
     });
     return groups;
-  }
-
-  // What a set of roles allows: allowed keys, plus keys some role allows but
-  // another role denies (Deny wins).
-  function effective(roleIds, perms, valueOf) {
-    var allowed = [];
-    var blocked = [];
-    perms.forEach(function (p) {
-      var allowBy = [], denyBy = [];
-      roleIds.forEach(function (rid) {
-        var v = valueOf(rid, p.key);
-        if (v === 'allow') allowBy.push(rid);
-        else if (v === 'deny') denyBy.push(rid);
-      });
-      if (denyBy.length) { if (allowBy.length) blocked.push({ perm: p, denyBy: denyBy }); }
-      else if (allowBy.length) allowed.push(p);
-    });
-    return { allowed: allowed, blocked: blocked };
   }
 
   function PermCell(props) {
@@ -158,69 +136,10 @@
         h('button', { type: 'submit', className: 'portal-btn', disabled: busy || !slug.trim() || !label.trim() }, 'Add role')));
   }
 
-  function PreviewCard(props) {
-    var users = props.users;
-    var roles = props.roles;
-    var pickState = useState(''); var pick = pickState[0], setPick = pickState[1];
-    var user = users.filter(function (u) { return String(u.id) === pick; })[0] || null;
-    var roleBySlug = {}; roles.forEach(function (r) { roleBySlug[r.slug] = r; });
-    var labelOfRole = {}; roles.forEach(function (r) { labelOfRole[r.id] = r.label; });
-    var userRoleIds = user ? (user.roles || []).map(function (s) { return roleBySlug[s] ? roleBySlug[s].id : null; }).filter(function (x) { return x != null; }) : [];
-    var result = user && !user.is_root ? effective(userRoleIds, props.perms, props.valueOf) : null;
-
-    function grouped(list) {
-      var pages = [], byPage = {};
-      list.forEach(function (item) {
-        var p = item.perm || item;
-        var name = p.page + (p.tab ? ' → ' + p.tab : '');
-        if (!byPage[name]) { byPage[name] = []; pages.push(name); }
-        byPage[name].push(item);
-      });
-      return pages.map(function (name) { return { name: name, items: byPage[name] }; });
-    }
-
-    return h('div', { className: 'portal-card' },
-      h('div', { className: 'portal-card-header' },
-        h('h2', { className: 'portal-card-title' }, 'Effective access'),
-        h('div', { className: 'portal-card-actions' },
-          h('select', { className: 'portal-select', value: pick, 'aria-label': 'Account', onChange: function (e) { setPick(e.target.value); } },
-            h('option', { value: '' }, '— pick an account —'),
-            users.map(function (u) { return h('option', { key: u.id, value: String(u.id) }, (u.display_name || u.username) + ' (' + u.username + ')'); })))),
-      !user ? null
-        : h('div', null,
-            h('p', { className: 'perm-preview-roles' },
-              (user.roles && user.roles.length)
-                ? user.roles.map(function (s) { return roleBySlug[s] ? roleBySlug[s].label : s; }).join(', ')
-                : 'No roles'),
-            user.is_root ? h('p', { className: 'perm-preview-root' }, 'Root: every permission.')
-              : h('div', { className: 'perm-preview' },
-                  h('div', null,
-                    h('h3', { className: 'perm-preview-title' }, 'Allowed (' + result.allowed.length + ')'),
-                    result.allowed.length
-                      ? grouped(result.allowed).map(function (g) {
-                          return h('div', { className: 'perm-preview-group', key: g.name },
-                            h('div', { className: 'perm-preview-page' }, g.name),
-                            h('ul', null, g.items.map(function (p) { return h('li', { key: p.key }, p.label); })));
-                        })
-                      : h('p', { className: 'perm-preview-empty' }, 'Nothing')),
-                  h('div', null,
-                    h('h3', { className: 'perm-preview-title is-deny' }, 'Blocked by Deny (' + result.blocked.length + ')'),
-                    result.blocked.length
-                      ? grouped(result.blocked).map(function (g) {
-                          return h('div', { className: 'perm-preview-group', key: g.name },
-                            h('div', { className: 'perm-preview-page' }, g.name),
-                            h('ul', null, g.items.map(function (b) {
-                              return h('li', { key: b.perm.key }, b.perm.label + ' — denied by ' + b.denyBy.map(function (id) { return labelOfRole[id]; }).join(', '));
-                            })));
-                        })
-                      : h('p', { className: 'perm-preview-empty' }, 'Nothing')))));
-  }
-
   function PermissionsSection() {
     var dataState = useState(null); var data = dataState[0], setData = dataState[1];
     var draftState = useState({}); var draft = draftState[0], setDraft = draftState[1];
     var collapsedState = useState({}); var collapsed = collapsedState[0], setCollapsed = collapsedState[1];
-    var usersState = useState([]); var users = usersState[0], setUsers = usersState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var flashState = useState(''); var flash = flashState[0], setFlash = flashState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
@@ -229,16 +148,7 @@
       return PVAdminAPI.request('GET', '/admin/permissions', undefined, true)
         .then(function (d) { setData(d); }, function (e) { setErr(e.message || 'Failed to load permissions.'); });
     }
-    useEffect(function () {
-      load();
-      PVAdminAPI.request('GET', '/admin/users', undefined, true).then(function (rows) {
-        setUsers((rows || []).map(function (u) {
-          return Object.assign({}, u, { is_root: String(u.username || '').toLowerCase() === 'fiora' });
-        }).sort(function (a, b) {
-          return String(a.display_name || a.username).localeCompare(String(b.display_name || b.username));
-        }));
-      }, function () {});
-    }, []);
+    useEffect(function () { load(); }, []);
 
     var base = useMemo(function () {
       var m = {};
@@ -381,8 +291,7 @@
               h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: discard }, 'Discard'),
               h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
           : null),
-      h(RolesCard, { roles: roles, onCreate: createRole, onRename: renameRole, onMove: moveRole, onDelete: deleteRole, onError: fail }),
-      h(PreviewCard, { users: users, roles: roles, perms: data.permissions, valueOf: valueOf }));
+      h(RolesCard, { roles: roles, onCreate: createRole, onRename: renameRole, onMove: moveRole, onDelete: deleteRole, onError: fail }));
   }
 
   window.PVAdminPermissions = PermissionsSection;

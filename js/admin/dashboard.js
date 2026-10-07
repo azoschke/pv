@@ -20,7 +20,7 @@
   var useEffect = React.useEffect;
 
   // ── Eorzean calendar ──────────────────────────────────────────────────────
-  // Ported from vanguard-medical/med-forms.js so the portal date matches the
+  // Ported from js/med-forms.js so the portal date matches the
   // convention used across the medical forms. Months map 1:1 to moons; certain
   // real-world days split into two Eorzean "suns" — we take the earlier sun.
   var SPLIT_DAYS = {

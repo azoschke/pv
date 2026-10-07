@@ -14,7 +14,7 @@
   var h = React.createElement;
   var useState = React.useState;
 
-  // Image field (URL box + Upload + preview) lives in admin/image-upload.js;
+  // Image field (URL box + Upload + preview) lives in js/admin/image-upload.js;
   // it stays exported here for the sections that use PVAdminQuestUtils.
   var ImageField = window.PVAdminImageUpload.ImageField;
 
@@ -258,8 +258,8 @@
         value: draft.image_url,
         onChange: function (v) { setField('image_url', v); },
         disabled: saving,
-        uploadPath: '/quests/images',
-        extraFields: { quest_title: draft.title.trim() || 'quest' },
+        kind: 'quest',
+        name: draft.title.trim(),
         help: 'Paste a URL or upload an image. Shown on the public bounty board card.'
       }),
 

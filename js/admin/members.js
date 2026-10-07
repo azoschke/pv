@@ -162,7 +162,7 @@
   // A member "needs attention" if their IC interview is Not Started or
   // Scheduled, or they are Inactive and haven't been talked to yet.
   // NOTE: keep this rule in sync with the dashboard's member-derived
-  // attention items (admin/dashboard.js).
+  // attention items (js/admin/dashboard.js).
   function needsAttention(m) {
     var interviewPending = m.interview === 'Not Started' || m.interview === 'Scheduled';
     var untalkedInactive = m.activity === 'Inactive' && !m.talked_to;

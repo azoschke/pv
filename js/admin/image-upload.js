@@ -1,24 +1,25 @@
 // ============================================================================
 //  PVAdminImageUpload — image uploads shared by the portal sections
 //
-//  Every section uploads through PVAdminAPI.uploadImage to its own worker
-//  route, with its own naming fields (venue_name, job_title, …) and, where it
-//  needs one, its own resize (square menu thumbnails, 600px item art). Those
-//  stay with each section; this file holds the parts that were copied:
+//  Every upload goes to the worker's POST /images with a kind (venue, menu,
+//  boss, …) and a name the stored file is named after. KINDS below holds each
+//  kind's sizing, applied in the browser before upload; the worker's matching
+//  table (routes/images.js) decides who may upload each kind and how the file
+//  is named.
 //
+//    KINDS                 kind → resize options for PVAdminAPI.uploadImage
 //    useImageUpload(opts)  → { uploading, error, upload(file) }
-//        opts.path        worker route, e.g. '/venues/images'
-//        opts.fields      extra form fields sent with the file
-//        opts.resize      resize options for PVAdminAPI.uploadImage (optional)
+//        opts.kind        one of KINDS
+//        opts.name        what the file is named after (venue name, title, …)
 //        opts.onUploaded  called with the new image URL
 //    UploadButton(props)  the "Upload" button wrapping a hidden file input
-//        busy, disabled, title (null = no tooltip), onFile(file)
+//        busy, disabled, title (null = no tooltip), accept, onFile(file)
 //    ImageField(props)    label + URL box + Upload + help + error + preview
-//        label ('Image'), value, onChange(url), uploadPath, extraFields,
-//        resize, help, disabled, readOnly, blockedReason (upload is off and
-//        the button's tooltip says why, e.g. "Enter the venue name above…")
+//        label ('Image'), value, onChange(url), kind, name, help, disabled,
+//        readOnly, blockedReason (upload is off and the button's tooltip says
+//        why, e.g. "Enter the venue name above…")
 //
-//  Load after admin/api.js and before the section scripts.
+//  Load after js/api.js and before the section scripts.
 // ============================================================================
 
 (function () {
@@ -27,6 +28,28 @@
 
   var UPLOAD_ACCEPT = 'image/jpeg,image/png,image/webp';
   var UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+
+  // Sizing per kind. Empty means the default: at most 1400px wide, WebP.
+  var KINDS = {
+    venue:    {},
+    // Menu thumbnails render at 64px, so 512 leaves headroom for retina
+    // without paying the venue-image cost on a menu with forty items. Square
+    // by design: a wide photo loses its sides rather than being letterboxed.
+    menu:     { square: true, maxSize: 512, quality: 0.82 },
+    quest:    {},
+    job:      {},
+    event:    {},
+    medic:    {},
+    profile:  {},
+    boss:     { square: true, maxSize: 600 },
+    item:     { square: true, maxSize: 600 },
+    codex:    {},
+    // Link previews: cropped to 1200×630 and saved as JPEG.
+    campaign: { width: 1200, height: 630, jpeg: true },
+    site:     { width: 1200, height: 630, jpeg: true },
+    // Favicons go up untouched, PNG only.
+    favicon:  { raw: true, accept: 'image/png' }
+  };
 
   function useImageUpload(opts) {
     var uploadingState = useState(false);
@@ -43,7 +66,8 @@
       setError('');
       setUploading(true);
       try {
-        var url = await PVAdminAPI.uploadImage(opts.path, file, opts.fields, opts.resize);
+        var url = await PVAdminAPI.uploadImage('/images', file,
+          { kind: opts.kind, name: opts.name || '' }, KINDS[opts.kind]);
         opts.onUploaded(url);
       } catch (e) {
         setError(e.message || 'Upload failed.');
@@ -65,7 +89,7 @@
       props.busy ? 'Uploading…' : 'Upload',
       h('input', {
         type: 'file',
-        accept: UPLOAD_ACCEPT,
+        accept: props.accept || UPLOAD_ACCEPT,
         disabled: off,
         className: 'portal-file-input',
         onChange: function (e) {
@@ -81,9 +105,8 @@
     var value = props.value;
     var blocked = props.blockedReason || null;
     var up = useImageUpload({
-      path: props.uploadPath,
-      fields: props.extraFields,
-      resize: props.resize,
+      kind: props.kind,
+      name: props.name,
       onUploaded: props.onChange
     });
 
@@ -103,6 +126,7 @@
           // readOnly: show the image without letting it change.
           disabled: props.disabled || props.readOnly || !!blocked,
           title: blocked || undefined,
+          accept: (KINDS[props.kind] || {}).accept,
           onFile: up.upload
         })
       ),
@@ -119,6 +143,7 @@
   window.PVAdminImageUpload = {
     UPLOAD_ACCEPT: UPLOAD_ACCEPT,
     UPLOAD_MAX_BYTES: UPLOAD_MAX_BYTES,
+    KINDS: KINDS,
     useImageUpload: useImageUpload,
     UploadButton: UploadButton,
     ImageField: ImageField

@@ -11,8 +11,9 @@
 //  logout() clears it explicitly.
 //
 //  Image uploads: uploadImage() shrinks the picked file and re-encodes it as
-//  WebP (JPEG where the browser can't encode WebP) before posting it to one
-//  of the worker's */images routes.
+//  WebP (JPEG where the browser can't encode WebP, or where the kind asks for
+//  JPEG) before posting it to the worker's /images route. Each kind's sizing
+//  lives in js/admin/image-upload.js.
 // ============================================================================
 
 (function (global) {
@@ -50,9 +51,15 @@
   // hands back a PNG the worker would reject). opts:
   //   maxWidth   cap on the width, height follows (default 1400)
   //   square     centre-crop to a square, side capped at opts.maxSize
+  //   width, height
+  //              centre-crop to that shape, at most that size (link previews)
+  //   jpeg       always encode JPEG (link previews, which not every site reads
+  //              as WebP)
+  //   raw        send the file as picked, untouched (PNG favicons)
   //   quality    encoder quality (default 0.8)
   async function resizeImage(file, opts) {
     opts = opts || {};
+    if (opts.raw) return file;
     var quality = opts.quality || UPLOAD_QUALITY;
     var bitmap = null;
     if (typeof createImageBitmap === 'function') {
@@ -82,6 +89,18 @@
       ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Could not get a 2D canvas context.');
       ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, out, out);
+    } else if (opts.width && opts.height) {
+      var aspect = opts.width / opts.height;
+      var cropW = srcW, cropH = srcH;
+      if (srcW / srcH > aspect) cropW = Math.round(srcH * aspect);
+      else cropH = Math.round(srcW / aspect);
+      var outW = Math.min(opts.width, cropW);
+      var outH = Math.max(1, Math.round(outW / aspect));
+      canvas.width = outW; canvas.height = outH;
+      ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get a 2D canvas context.');
+      ctx.drawImage(bitmap, Math.round((srcW - cropW) / 2), Math.round((srcH - cropH) / 2), cropW, cropH,
+        0, 0, outW, outH);
     } else {
       var maxW = opts.maxWidth || UPLOAD_TARGET_WIDTH;
       var w = srcW > maxW ? maxW : srcW;
@@ -100,13 +119,14 @@
         }, type, quality);
       });
     }
+    if (opts.jpeg) return encode('image/jpeg');
     var blob = await encode('image/webp');
     if (blob.type !== 'image/webp') blob = await encode('image/jpeg');
     return blob;
   }
 
-  // POST an image to one of the worker's */images routes, with any extra
-  // form fields it expects (e.g. { venue_name }). Returns the stored URL.
+  // POST an image to a worker upload route with the form fields it expects
+  // (for /images: { kind, name }). Returns the stored URL.
   async function uploadImage(path, file, extraFields, resizeOpts) {
     if (!Session.get()) {
       Session.redirectToLogin();
@@ -114,7 +134,8 @@
     }
     var blob = await resizeImage(file, resizeOpts);
     var form = new FormData();
-    form.append('file', blob, blob.type === 'image/jpeg' ? 'upload.jpg' : 'upload.webp');
+    var ext = { 'image/jpeg': 'jpg', 'image/png': 'png' }[blob.type] || 'webp';
+    form.append('file', blob, 'upload.' + ext);
     Object.keys(extraFields || {}).forEach(function (k) { form.append(k, extraFields[k]); });
     var data = await Session.request(API_BASE, 'POST', path, form,
       { auth: true, loginOn401: true, failText: 'Upload failed' });
