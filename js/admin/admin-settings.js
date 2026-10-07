@@ -7,7 +7,8 @@
 //    (users.roles) opens a popup whose checkboxes commit the full intended
 //    role set for that user in one request.
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
-//  - The root admin also gets a Permissions tab (js/admin/permissions.js).
+//  - The root admin also gets the Permissions, Pages and Navigation tabs
+//    (js/admin/permissions.js, site-pages.js, site-nav.js).
 //
 //  Worker routes:
 //    GET    /admin/users                      users.view — list users w/ roles
@@ -430,12 +431,20 @@
       selfId = self ? self.id : null;
     }
 
-    var tabs = [{ id: 'accounts', label: 'Accounts' }]
-      .concat(callerIsRoot && window.PVAdminPermissions ? [{ id: 'permissions', label: 'Permissions' }] : []);
-    if (tab === 'permissions' && callerIsRoot && window.PVAdminPermissions) {
+    // Root-only tabs, each shown when its script has loaded.
+    var rootTabs = [
+      { id: 'permissions', label: 'Permissions', component: window.PVAdminPermissions },
+      { id: 'pages', label: 'Pages', component: window.PVAdminSitePages },
+      { id: 'navigation', label: 'Navigation', component: window.PVAdminSiteNav }
+    ].filter(function (t) { return callerIsRoot && t.component; });
+    var tabs = [{ id: 'accounts', label: 'Accounts' }].concat(rootTabs.map(function (t) {
+      return { id: t.id, label: t.label };
+    }));
+    var rootTab = rootTabs.find(function (t) { return t.id === tab; });
+    if (rootTab) {
       return h('div', null,
         h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
-        h(window.PVAdminPermissions));
+        h(rootTab.component));
     }
 
     return h('div', null,
