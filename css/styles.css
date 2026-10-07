@@ -67,6 +67,20 @@
   font-display: swap;
 }
 
+/* The one icon font, used by both .material-icons and .material-symbols-outlined
+   (see "Icons" in section 6). MaterialSymbolsOutlined-trimmed.woff2 is cut down
+   from the full MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf with fontTools'
+   instancer, keeping fill 0–1 and weight 400–600 and fixing grade at 0 and
+   optical size at 24 (4 MB down to 756 KB). "block" keeps icon names from
+   showing as words while the font loads. */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  src: url('../assets/MaterialSymbolsOutlined-trimmed.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: block;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -596,8 +610,32 @@ pre {
 .star-filled { color: var(--star-filled); }
 .star-empty  { color: var(--star-empty); }
 
-/* --- Material Icons --- */
+/* --- Icons --- */
+/* Both icon classes draw from the self-hosted Material Symbols font (section 1).
+   The base mirrors what Google's icon stylesheets used to supply, including the
+   24px default size. .material-icons keeps the solid look of the classic Material
+   Icons font by turning fill on; .material-symbols-outlined stays outlined unless
+   a rule fills it. */
+.material-icons,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 .material-icons {
+  font-variation-settings: 'FILL' 1;
   vertical-align: middle;
   user-select: none;
 }
@@ -4635,20 +4673,4 @@ body.nav-sidebar-open {
   border: 1px solid var(--border-color);
   border-radius: 0.35rem;
   font-size: 0.92rem;
-}
-
-/* Material Symbols base (portal uses this alongside classic Material Icons). */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
 }
