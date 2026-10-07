@@ -78,10 +78,28 @@
       return 'portal.html';
     })();
 
-    // If we already hold a valid-looking session, skip the form.
+    // Already signed in (e.g. sent here by the live site's page gate before it
+    // had this browser's sign-in): hand the sign-in to the renderer, then go
+    // on. A sign-in it turns down has expired, so show the form. If this page
+    // has already sent the visitor on twice in the last 30 seconds, stop and
+    // say so rather than bounce between the two pages.
     if (PVAdminAPI.getSession()) {
-      window.location.replace(redirectTarget);
-      return;
+      var bounces = [];
+      try { bounces = JSON.parse(sessionStorage.getItem('pv.login.bounces') || '[]'); } catch (_e) { bounces = []; }
+      bounces = bounces.filter(function (t) { return Date.now() - t < 30000; });
+      if (bounces.length >= 2) {
+        showFlash('error', 'That page could not be opened with your current sign-in. Sign out from your ' +
+          'dashboard and sign in again, or contact an officer.');
+      } else {
+        bounces.push(Date.now());
+        try { sessionStorage.setItem('pv.login.bounces', JSON.stringify(bounces)); } catch (_e) { /* ignore */ }
+        PVSession.handoff().then(function (ok) {
+          // Turned down: clear it and reload into the sign-in form.
+          if (ok === false) { PVSession.clear(); window.location.reload(); return; }
+          window.location.replace(redirectTarget);
+        });
+        return;
+      }
     }
 
     form.addEventListener('submit', async function (e) {
@@ -111,6 +129,7 @@
           expires_at: data.expires_at || null
         });
         document.getElementById('login-password').value = '';
+        await PVSession.handoff();
         window.location.replace(redirectTarget);
       } catch (err) {
         showFlash('error', err.status === 401 ? 'Incorrect Password' : (err.message || 'Login failed.'));

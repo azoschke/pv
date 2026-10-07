@@ -12,6 +12,12 @@
  *  3. Wires click-to-toggle behavior on dropdown menus
  *  4. Manages light/dark theme toggle with localStorage persistence
  *
+ * On the live site the edge renderer (pv-site-renderer) has already drawn
+ * this visitor's nav into the placeholder (marked data-edge): links they can
+ * open, the current page, campaigns and the sign-in button. Then only steps
+ * 3 and 4 run. Steps 1 and 2 still serve GitHub Pages, and the live site if
+ * the renderer is ever unavailable.
+ *
  * Base path is derived dynamically from this script's own src, so it works
  * whether the site is served at the domain root or under a project subpath
  * (e.g. GitHub Pages at /pv/).
@@ -400,13 +406,13 @@
     // Flood the Campaigns menus with every campaign from the worker
     populateCampaigns(placeholder);
 
-    // Wire up dropdown toggles
+    wireNav(placeholder);
+  }
+
+  // Dropdown toggles, the hamburger sidebar and the theme toggle.
+  function wireNav(placeholder) {
     wireDropdowns(placeholder);
-
-    // Wire up hamburger sidebar
     wireSidebar();
-
-    // Wire up theme toggle
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', toggleTheme);
@@ -414,7 +420,14 @@
     }
   }
 
-  // ── 5. Fetch nav.html ──────────────────────────────────────────────────────
+  // ── 5. Load the nav ────────────────────────────────────────────────────────
+  // Drawn already by the edge renderer: just wire it.
+  const edgeNav = document.querySelector('#nav-placeholder[data-edge]');
+  if (edgeNav) {
+    wireNav(edgeNav);
+    return;
+  }
+
   fetch(BASE_PATH + '/components/nav.html')
     .then(function (res) {
       if (!res.ok) throw new Error('Nav fetch failed: ' + res.status);
