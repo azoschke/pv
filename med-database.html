@@ -74,6 +74,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/pv-session.js"></script>
 
   <script>
   (function () {
@@ -160,10 +161,25 @@
       return '<div class="record-field"><div class="record-field-label">' + escapeHTML(label) + '</div><div class="record-field-value">' + renderMd(value) + '</div></div>';
     }
 
-    async function apiGet(path) {
-      var res = await fetch(API_BASE + path, { method: "GET", headers: { "Accept": "application/json" } });
-      if (!res.ok) throw new Error("Request failed (" + res.status + ")");
-      return res.json();
+    // Patient records need a sign-in, so it goes with every request.
+    // Errors carry .status (401: not signed in, 403: no access).
+    function apiGet(path) {
+      return PVSession.request(API_BASE, "GET", path, undefined, { auth: "optional" });
+    }
+
+    // What to say when the records were refused, or null for any other
+    // failure. A refused sign-in is no longer valid, so it is dropped.
+    function refusedMessage(err) {
+      if (!err) return null;
+      if (err.status === 401) {
+        if (PVSession.get()) PVSession.clear();
+        var back = encodeURIComponent(window.location.pathname + window.location.search);
+        return 'Patient records are open to signed-in members only. <a href="login.html?redirect=' + back + '">Sign in</a> to view them.';
+      }
+      if (err.status === 403) {
+        return escapeHTML(err.message && err.message !== "Forbidden" ? err.message : "Your account doesn't have access to patient records.");
+      }
+      return null;
     }
 
     // ── Patient list ───────────────────────────────────────────────────
@@ -179,9 +195,12 @@
         renderPatientList();
       } catch(err) {
         console.error("Error loading patients:", err);
-        patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state v2-state-msg error">Failed to load patients.</div></li>';
+        var refused = refusedMessage(err);
+        patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state v2-state-msg error">' +
+          (refused ? "No patients to show." : "Failed to load patients.") + '</div></li>';
         azBar.innerHTML = "";
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">Could not reach the medical database. Please try again shortly.</p></div>';
+        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+          (refused || "Could not reach the medical database. Please try again shortly.") + '</p></div>';
       }
     }
 
@@ -293,7 +312,8 @@
         renderPatient(data);
       } catch(err) {
         console.error("Error loading patient:", err);
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">Could not load this patient\'s records.</p></div>';
+        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+          (refusedMessage(err) || "Could not load this patient's records.") + '</p></div>';
       }
     }
 
@@ -464,7 +484,6 @@
     loadPatientList();
   })();
   </script>
-  <script src="js/pv-session.js"></script>
   <script src="js/nav.js"></script>
 </body>
 </html>
