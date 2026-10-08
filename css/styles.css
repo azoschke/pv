@@ -1718,6 +1718,33 @@ button.nav-sublink {
   padding-top: 2.5rem;
   border-top: 1px solid var(--border-color);
 }
+.about-section .landing-row-desc + .landing-row-desc { margin-top: 1rem; }
+/* Officer Core's groups (Leaders, Phoenix Council...) and the people in them. */
+.about-subtitle {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin: 2rem 0 1rem;
+}
+.about-person { margin-bottom: 1.25rem; }
+.about-person-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.3rem;
+}
+/* Bulleted lists (Phoenix Guard, Hooks), in the paragraphs' type. */
+.about-list {
+  max-width: 38rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.about-list li + li { margin-top: 0.4rem; }
 
 /* ── Image slot ──────────────────────────────────────────────────────────── */
 
