@@ -17,7 +17,7 @@
  *    draws.
  *  - If the renderer can't be reached, the short nav in
  *    components/nav.html is used instead, with the current page marked and
- *    the Login button showing the sign-in.
+ *    the account button showing the sign-in.
  * Then the dropdowns, the mobile sidebar and the light/dark theme toggle
  * (kept in localStorage) are wired up.
  *
@@ -62,34 +62,66 @@
     return window.PVSession ? window.PVSession.get() : null;
   }
 
-  // When signed in, the Login button becomes the member's character name and
-  // points at the portal dashboard. Logged out, the injected default is left
-  // untouched. Both the desktop and the sidebar button carry .nav-login-btn.
+  function escapeHtml(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  const CARET = '<span class="nav-caret" aria-hidden="true">&#9662;</span>';
+  const ACCOUNT_PAGES = ['login', 'register', 'reset'];
+
+  // The account's picture in a circle over its initial, shown when there is
+  // no picture or it can't be loaded (the edge renderer draws the same).
+  function avatarHtml(name, url) {
+    const initial = (Array.from(String(name || '').trim())[0] || '?').toUpperCase();
+    return '<span class="nav-avatar" aria-hidden="true"><span class="nav-avatar-initial">' + escapeHtml(initial) + '</span>' +
+      (url ? '<img class="nav-avatar-img" src="' + escapeHtml(url) + '" alt="">' : '') + '</span>';
+  }
+
+  // The account button on the last-resort nav (components/nav.html), as the
+  // renderer draws it. Signed out, "Sign In" comes back to this page
+  // afterwards. Signed in, it becomes the account's picture and name, opening
+  // Dashboard and Sign Out (wired in wireNav).
   function applyAuthState(placeholder) {
     const session = getAdminSession();
-    if (!session) return;
+    if (!session) {
+      if (ACCOUNT_PAGES.indexOf(getCurrentLocation().page) !== -1) return;
+      const back = encodeURIComponent(window.location.pathname + window.location.search);
+      placeholder.querySelectorAll('.nav-login-btn').forEach(function (a) {
+        a.setAttribute('href', 'login.html?redirect=' + back);
+      });
+      return;
+    }
     const name = String(session.display_name || session.username || 'Account').trim();
-    const portalUrl = BASE_PATH + '/portal.html';
-    placeholder.querySelectorAll('.nav-login-btn').forEach(function (btn) {
-      btn.href = portalUrl;
-      btn.setAttribute('data-subpage', 'admin-portal');
-      btn.setAttribute('aria-label', 'Go to dashboard (' + name + ')');
-      btn.setAttribute('title', 'Go to dashboard');
-      btn.classList.add('is-authed');
-      // "Dashboard" with the same user icon the signed-out Login button uses,
-      // and the character name small beneath — keeps a long name from driving
-      // the button width.
-      btn.innerHTML =
-        '<svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">' +
-          '<path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>' +
-        '</svg>' +
-        '<span class="nav-login-stack">' +
-          '<span class="nav-login-primary">Dashboard</span>' +
-          '<span class="nav-login-name"></span>' +
-        '</span>';
-      const nameEl = btn.querySelector('.nav-login-name');
-      if (nameEl) nameEl.textContent = name; // textContent: never inject the name as HTML
-    });
+    const who = avatarHtml(name, session.avatar_url) + '<span class="nav-account-name">' + escapeHtml(name) + '</span>';
+    const label = escapeHtml('Account: ' + name);
+    const signOut = '<button type="button" class="nav-sublink nav-signout" data-pv-signout>Sign Out</button>';
+    const bar = placeholder.querySelector('.site-nav > .nav-login-btn');
+    if (bar) {
+      bar.outerHTML =
+        '<div class="nav-dropdown nav-account">' +
+          '<button type="button" class="nav-account-btn nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true" aria-label="' + label + '">' +
+            who + CARET + '</button>' +
+          '<ul class="nav-submenu nav-account-menu" role="menu">' +
+            '<li role="none"><a role="menuitem" href="portal.html" class="nav-sublink">Dashboard</a></li>' +
+            '<li role="none">' + signOut.replace('<button ', '<button role="menuitem" ') + '</li>' +
+          '</ul>' +
+        '</div>';
+    }
+    const side = placeholder.querySelector('.nav-login-btn-sidebar');
+    const section = side && side.closest('.nav-sidebar-section');
+    if (section) {
+      section.outerHTML =
+        '<li class="nav-sidebar-section nav-account-section">' +
+          '<button type="button" class="nav-sidebar-toggle nav-account-btn" aria-expanded="false" aria-label="' + label + '">' +
+            '<span class="nav-account-who">' + who + '</span> ' + CARET + '</button>' +
+          '<ul class="nav-sidebar-submenu">' +
+            '<li><a href="portal.html" class="nav-sublink">Dashboard</a></li>' +
+            '<li>' + signOut + '</li>' +
+          '</ul>' +
+        '</li>';
+    }
   }
 
   // ── 2. Theme management ────────────────────────────────────────────────────
@@ -97,8 +129,12 @@
 
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    // The dashboard's icons: a sun to switch to light, a moon to switch to dark.
     const icon = document.getElementById('theme-icon');
-    if (icon) icon.innerHTML = theme === 'dark' ? '&#9788;' : '&#9790;';
+    if (icon) {
+      icon.classList.add('material-icons');
+      icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
   }
 
   function getSavedTheme() {
@@ -276,10 +312,27 @@
     wireNav(placeholder);
   }
 
-  // Dropdown toggles, the hamburger sidebar and the theme toggle.
+  // Dropdown toggles, the hamburger sidebar, Sign Out, account pictures and
+  // the theme toggle.
   function wireNav(placeholder) {
     wireDropdowns(placeholder);
     wireSidebar();
+    // Sign Out ends the sign-in, then shows this page again (the renderer
+    // sends a page that needs a sign-in on to the sign-in page).
+    placeholder.querySelectorAll('[data-pv-signout]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        const reload = function () { window.location.reload(); };
+        if (window.PVSession && window.PVSession.signOut) window.PVSession.signOut().then(reload, reload);
+        else reload();
+      });
+    });
+    // A picture that can't be loaded gives way to the initial beneath it.
+    placeholder.querySelectorAll('.nav-avatar-img').forEach(function (img) {
+      const drop = function () { img.remove(); };
+      if (img.complete && !img.naturalWidth) drop();
+      else img.addEventListener('error', drop);
+    });
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', toggleTheme);

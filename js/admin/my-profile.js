@@ -94,6 +94,13 @@
           image_url: draft.image_url.trim() || null,
           published: draft.published
         }, true);
+        // The profile picture is also the account's picture (the dashboard
+        // sidebar and the site's account button).
+        var saved = PVAdminAPI.getSession();
+        if (saved) {
+          PVAdminAPI.setSession(Object.assign({}, saved, { avatar_url: draft.image_url.trim() || null }));
+          window.dispatchEvent(new Event('pv:session'));
+        }
         setFlash(draft.published
           ? 'Profile saved and published.'
           : 'Profile saved. It will not be added to the public roster until you publish it.');

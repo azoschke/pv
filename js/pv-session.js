@@ -3,8 +3,9 @@
 //
 //  The management portal and the public pages share one sign-in, stored in
 //  localStorage under "pv.admin.session" ({ token, username, display_name,
-//  roles, permissions, is_root, expires_at }). This file reads and writes it,
-//  answers permission checks, and sends requests to the workers.
+//  avatar_url, roles, permissions, is_root, expires_at }). This file reads
+//  and writes it, answers permission checks, signs out, and sends requests to
+//  the workers.
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in:
@@ -60,6 +61,32 @@
     // Also drop any leftover from the old sessionStorage-based build.
     sessionStorage.removeItem(SESSION_KEY);
     dropEdge();
+  }
+
+  // ── Signing out ──────────────────────────────────────────────────────────
+  var MED_API = 'https://pv-med-database-worker.chlorinatorgreen.workers.dev';
+  var SIGN_OUT_WAIT_MS = 4000;
+
+  // Ends the sign-in everywhere: the session at the med worker, this
+  // browser's copy and the edge renderer's. Resolves once the renderer has
+  // let go of it (or after a few seconds at most), so a reload shows the
+  // page signed out.
+  function signOut() {
+    var s = get();
+    var server = s
+      ? fetch(MED_API + '/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.token },
+          body: '{}'
+        }).catch(function () {})
+      : Promise.resolve();
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    var edge = edgeHost()
+      ? fetch(EDGE_SESSION_PATH, { method: 'DELETE', credentials: 'same-origin' }).catch(function () {})
+      : Promise.resolve();
+    var wait = new Promise(function (resolve) { setTimeout(resolve, SIGN_OUT_WAIT_MS); });
+    return Promise.race([Promise.all([server, edge]), wait]).then(function () {});
   }
 
   // ── Edge renderer sign-in ────────────────────────────────────────────────
@@ -206,7 +233,8 @@
     canAny: canAny,
     redirectToLogin: redirectToLogin,
     request: request,
-    handoff: handoff
+    handoff: handoff,
+    signOut: signOut
   };
 
   syncEdge();
