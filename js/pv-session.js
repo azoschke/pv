@@ -3,12 +3,20 @@
 //
 //  The management portal and the public pages share one sign-in, stored in
 //  localStorage under "pv.admin.session" ({ token, username, display_name,
-//  roles, permissions, is_root, expires_at }). This file reads and writes it,
-//  answers permission checks, and sends requests to the workers.
+//  avatar_url, roles, permissions, is_root, expires_at }). This file reads
+//  and writes it, answers permission checks, signs out, and sends requests to
+//  the workers.
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in:
 //    <script src="js/pv-session.js"></script>
+//
+//  On the live site the edge renderer (pv-site-renderer) keeps its own copy
+//  of the sign-in as a cookie: it draws each visitor's nav and decides who
+//  may open each page. handoff() gives it the browser's sign-in, clear()
+//  drops it, and every page it served (window.PV_EDGE) is checked once on
+//  load so the two always agree. Elsewhere (GitHub Pages, local files) these
+//  do nothing.
 // ============================================================================
 
 (function (global) {
@@ -52,6 +60,96 @@
     localStorage.removeItem(SESSION_KEY);
     // Also drop any leftover from the old sessionStorage-based build.
     sessionStorage.removeItem(SESSION_KEY);
+    dropEdge();
+  }
+
+  // ── Signing out ──────────────────────────────────────────────────────────
+  var MED_API = 'https://pv-med-database-worker.chlorinatorgreen.workers.dev';
+  var SIGN_OUT_WAIT_MS = 4000;
+
+  // Ends the sign-in everywhere: the session at the med worker, this
+  // browser's copy and the edge renderer's. Resolves once the renderer has
+  // let go of it (or after a few seconds at most), so a reload shows the
+  // page signed out.
+  function signOut() {
+    var s = get();
+    var server = s
+      ? fetch(MED_API + '/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.token },
+          body: '{}'
+        }).catch(function () {})
+      : Promise.resolve();
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    var edge = edgeHost()
+      ? fetch(EDGE_SESSION_PATH, { method: 'DELETE', credentials: 'same-origin' }).catch(function () {})
+      : Promise.resolve();
+    var wait = new Promise(function (resolve) { setTimeout(resolve, SIGN_OUT_WAIT_MS); });
+    return Promise.race([Promise.all([server, edge]), wait]).then(function () {});
+  }
+
+  // ── Edge renderer sign-in ────────────────────────────────────────────────
+  var EDGE_HOSTS = ['phoenixvanguard-tools.com'];
+  var EDGE_SESSION_PATH = '/_pv/session';
+  var EDGE_SYNC_KEY = 'pv.edge.synced';
+
+  function edgeHost() {
+    return EDGE_HOSTS.indexOf(global.location.hostname) !== -1;
+  }
+
+  // Gives the renderer this browser's sign-in. Resolves true when it took it,
+  // false when the sign-in was turned down (no longer valid), and null when
+  // there is nothing to hand over or the renderer can't be reached.
+  function handoff() {
+    var s = get();
+    if (!edgeHost() || !s) return Promise.resolve(null);
+    return fetch(EDGE_SESSION_PATH, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: s.token })
+    }).then(function (res) {
+      if (res.ok) return true;
+      return res.status === 401 ? false : null;
+    }, function () { return null; });
+  }
+
+  function dropEdge() {
+    if (!edgeHost()) return;
+    try {
+      fetch(EDGE_SESSION_PATH, { method: 'DELETE', credentials: 'same-origin', keepalive: true })
+        .catch(function () {});
+    } catch (_e) { /* ignore */ }
+  }
+
+  // A page the renderer drew for a different sign-in than this browser holds
+  // (signed in before the renderer existed, signed out elsewhere, or another
+  // account) hands over or drops the renderer's copy and reloads, so the nav
+  // matches. At most once every 30 seconds, so it can never loop.
+  function syncEdge() {
+    var edge = global.PV_EDGE;
+    if (!edge || !edgeHost()) return;
+    // The login page does its own handover (and would race this one).
+    if (/\/login(\.html)?$/.test(global.location.pathname)) return;
+    var s = get();
+    var mine = s ? String(s.username || '').toLowerCase() : '';
+    var theirs = edge.signedIn ? String(edge.username || '').toLowerCase() : '';
+    if (mine === theirs) return;
+    try {
+      var last = Number(sessionStorage.getItem(EDGE_SYNC_KEY) || 0);
+      if (Date.now() - last < 30000) return;
+      sessionStorage.setItem(EDGE_SYNC_KEY, String(Date.now()));
+    } catch (_e) { return; }
+    if (!s) {
+      fetch(EDGE_SESSION_PATH, { method: 'DELETE', credentials: 'same-origin' })
+        .then(function () { global.location.reload(); }, function () {});
+      return;
+    }
+    handoff().then(function (ok) {
+      if (ok === false) clear();       // the browser's sign-in has expired
+      if (ok !== null) global.location.reload();
+    });
   }
 
   // Permission keys from the permission grid (Admin Settings → Permissions),
@@ -73,10 +171,12 @@
     return false;
   }
 
+  // To the sign-in page, which brings the visitor back to this page after
+  // signing in.
   function redirectToLogin() {
-    if (!/\/login(\.html)?$/.test(window.location.pathname)) {
-      window.location.replace(LOGIN_PAGE);
-    }
+    var path = window.location.pathname;
+    if (/\/login(\.html)?$/.test(path)) return;
+    window.location.replace(LOGIN_PAGE + '?redirect=' + encodeURIComponent(path + window.location.search));
   }
 
   // One request helper for every worker. `body` is sent as JSON, or as-is
@@ -134,6 +234,10 @@
     can: can,
     canAny: canAny,
     redirectToLogin: redirectToLogin,
-    request: request
+    request: request,
+    handoff: handoff,
+    signOut: signOut
   };
+
+  syncEdge();
 })(window);

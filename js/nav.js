@@ -6,11 +6,20 @@
  *   <script src="js/pv-session.js"></script>
  *   <script src="js/nav.js"></script>
  *
- * The script:
- *  1. Fetches <base>/components/nav.html and injects it into #nav-placeholder
- *  2. Marks the current section's dropdown and sub-link as .active
- *  3. Wires click-to-toggle behavior on dropdown menus
- *  4. Manages light/dark theme toggle with localStorage persistence
+ * The nav comes from the edge renderer (pv-site-renderer), drawn for this
+ * visitor from Admin Settings → Navigation: the links they can open, the
+ * current page, campaigns and the sign-in button.
+ *  - On the live site it is already in #nav-placeholder (marked data-edge).
+ *  - Otherwise (GitHub Pages, or a live page served without it) it is asked
+ *    for from the renderer's /_pv/nav, with this browser's sign-in. Links in
+ *    the page to pages this visitor can't open are then taken out, and the
+ *    footer (#site-footer) filled in, as the renderer does on the pages it
+ *    draws.
+ *  - If the renderer can't be reached, the short nav in
+ *    components/nav.html is used instead, with the current page marked and
+ *    the account button showing the sign-in.
+ * Then the dropdowns, the mobile sidebar and the light/dark theme toggle
+ * (kept in localStorage) are wired up.
  *
  * Base path is derived dynamically from this script's own src, so it works
  * whether the site is served at the domain root or under a project subpath
@@ -53,167 +62,66 @@
     return window.PVSession ? window.PVSession.get() : null;
   }
 
-  // When signed in, the Login button becomes the member's character name and
-  // points at the portal dashboard. Logged out, the injected default is left
-  // untouched. Both the desktop and the sidebar button carry .nav-login-btn.
+  function escapeHtml(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  const CARET = '<span class="nav-caret" aria-hidden="true">&#9662;</span>';
+  const ACCOUNT_PAGES = ['login', 'register', 'reset'];
+
+  // The account's picture in a circle over its initial, shown when there is
+  // no picture or it can't be loaded (the edge renderer draws the same).
+  function avatarHtml(name, url) {
+    const initial = (Array.from(String(name || '').trim())[0] || '?').toUpperCase();
+    return '<span class="nav-avatar" aria-hidden="true"><span class="nav-avatar-initial">' + escapeHtml(initial) + '</span>' +
+      (url ? '<img class="nav-avatar-img" src="' + escapeHtml(url) + '" alt="">' : '') + '</span>';
+  }
+
+  // The account button on the last-resort nav (components/nav.html), as the
+  // renderer draws it. Signed out, "Sign In" comes back to this page
+  // afterwards. Signed in, it becomes the account's picture and name, opening
+  // Dashboard and Sign Out (wired in wireNav).
   function applyAuthState(placeholder) {
     const session = getAdminSession();
-    if (!session) return;
-    const name = String(session.display_name || session.username || 'Account').trim();
-    const portalUrl = BASE_PATH + '/portal.html';
-    placeholder.querySelectorAll('.nav-login-btn').forEach(function (btn) {
-      btn.href = portalUrl;
-      btn.setAttribute('data-subpage', 'admin-portal');
-      btn.setAttribute('aria-label', 'Go to dashboard (' + name + ')');
-      btn.setAttribute('title', 'Go to dashboard');
-      btn.classList.add('is-authed');
-      // "Dashboard" with the same user icon the signed-out Login button uses,
-      // and the character name small beneath — keeps a long name from driving
-      // the button width.
-      btn.innerHTML =
-        '<svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true">' +
-          '<path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/>' +
-        '</svg>' +
-        '<span class="nav-login-stack">' +
-          '<span class="nav-login-primary">Dashboard</span>' +
-          '<span class="nav-login-name"></span>' +
-        '</span>';
-      const nameEl = btn.querySelector('.nav-login-name');
-      if (nameEl) nameEl.textContent = name; // textContent: never inject the name as HTML
-    });
-  }
-
-  // ── 1c. Campaign menus (flooded in from the campaigns worker) ──────────────
-  // The Campaigns dropdown/sidebar list "All Campaigns" statically; every
-  // individual campaign is injected from the worker so new ones appear without
-  // editing nav.html. Cached in sessionStorage for instant render on later
-  // page loads, then refreshed in the background so the list self-heals.
-  const CAMPAIGNS_API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
-  const CAMPAIGNS_CACHE_KEY = 'pv.campaigns.navcache';
-
-  function readCampaignCache() {
-    try {
-      const raw = sessionStorage.getItem(CAMPAIGNS_CACHE_KEY);
-      if (!raw) return null;
-      const c = JSON.parse(raw);
-      return (c && Array.isArray(c.data)) ? c.data : null;
-    } catch (_e) { return null; }
-  }
-
-  function writeCampaignCache(data) {
-    try { sessionStorage.setItem(CAMPAIGNS_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); }
-    catch (_e) { /* ignore quota */ }
-  }
-
-  // The active campaign slug, when viewing a campaign (view.html?c=<slug>).
-  function currentCampaignSlug() {
-    try {
-      const loc = getCurrentLocation();
-      if (loc.page !== 'view') return null;
-      return new URLSearchParams(window.location.search).get('c');
-    } catch (_e) { return null; }
-  }
-
-  function renderCampaignMenus(placeholder, campaigns) {
-    const activeSlug = currentCampaignSlug();
-
-    // Are we currently on the Codex page? (highlights the Codex link.)
-    let codexActive = false;
-    try {
-      const cloc = getCurrentLocation();
-      codexActive = cloc.page === 'codex';
-    } catch (_e) { codexActive = false; }
-
-    // Are we on the landing filtered to one-shots (the One-Shots menu target)?
-    let oneshotActive = false;
-    try {
-      const loc = getCurrentLocation();
-      if (loc.page === 'campaigns') {
-        oneshotActive = (new URLSearchParams(window.location.search).get('tag') || '').toLowerCase() === 'oneshot';
-      }
-    } catch (_e) { oneshotActive = false; }
-
-    // Main + side campaigns are listed individually so they're always visible;
-    // one-shots collapse into a single "One-Shots" entry that opens the landing
-    // pre-filtered, keeping the dropdown from growing without bound.
-    const mains = campaigns.filter(function (c) { return c && c.slug && c.tag === 'main'; });
-    const sides = campaigns.filter(function (c) { return c && c.slug && c.tag === 'side'; });
-    const listed = mains.concat(sides);
-
-    placeholder.querySelectorAll('[data-campaign-menu]').forEach(function (menu) {
-      // Drop any previously injected items so a background refresh can re-render.
-      menu.querySelectorAll('.nav-campaign-dynamic').forEach(function (el) { el.remove(); });
-      const isDesktop = menu.classList.contains('nav-submenu');
-      const parent = menu.closest('.nav-dropdown, .nav-sidebar-section');
-      const toggle = parent && parent.querySelector('.nav-dropdown-toggle, .nav-sidebar-toggle');
-
-      function activateParent() {
-        if (!parent) return;
-        parent.classList.add('active');
-        if (parent.classList.contains('nav-sidebar-section')) parent.classList.add('open');
-        if (toggle) { toggle.classList.add('active'); toggle.setAttribute('aria-expanded', 'true'); }
-      }
-      function makeItem(href, label, subpage, isActive) {
-        const li = document.createElement('li');
-        li.className = 'nav-campaign-dynamic';
-        if (isDesktop) li.setAttribute('role', 'none');
-        const a = document.createElement('a');
-        if (isDesktop) a.setAttribute('role', 'menuitem');
-        a.className = 'nav-sublink';
-        a.href = href;
-        a.setAttribute('data-subpage', subpage);
-        a.textContent = label; // textContent: never inject names as HTML
-        if (isActive) { a.classList.add('active'); activateParent(); }
-        li.appendChild(a);
-        menu.appendChild(li);
-      }
-
-      listed.forEach(function (c) {
-        makeItem(
-          BASE_PATH + '/view.html?c=' + encodeURIComponent(c.slug),
-          c.name || c.slug,
-          'campaign-' + c.slug,
-          !!(activeSlug && c.slug === activeSlug)
-        );
+    if (!session) {
+      if (ACCOUNT_PAGES.indexOf(getCurrentLocation().page) !== -1) return;
+      const back = encodeURIComponent(window.location.pathname + window.location.search);
+      placeholder.querySelectorAll('.nav-login-btn').forEach(function (a) {
+        a.setAttribute('href', 'login.html?redirect=' + back);
       });
-
-      // One-Shots always shows, even with none yet (a known category).
-      makeItem(
-        BASE_PATH + '/campaigns.html?tag=oneshot',
-        'One-Shots',
-        'campaigns-oneshots',
-        oneshotActive
-      );
-
-      // When One-Shots is the active view, drop the implicit "All Campaigns"
-      // highlight so only one item reads as current.
-      if (oneshotActive) {
-        const all = menu.querySelector('.nav-sublink[data-subpage="campaigns"]');
-        if (all) all.classList.remove('active');
-      }
-
-      // Divider, then the Codex — reference material, separated from the story
-      // campaign list above. Appended last so it always sits at the bottom.
-      const divider = document.createElement('li');
-      divider.className = 'nav-campaign-dynamic nav-submenu-divider';
-      divider.setAttribute(isDesktop ? 'role' : 'aria-hidden', isDesktop ? 'separator' : 'true');
-      menu.appendChild(divider);
-      makeItem(BASE_PATH + '/codex.html', 'Codex', 'campaigns-codex', codexActive);
-    });
-  }
-
-  function populateCampaigns(placeholder) {
-    if (!placeholder.querySelector('[data-campaign-menu]')) return;
-    const cached = readCampaignCache();
-    if (cached) renderCampaignMenus(placeholder, cached);
-    fetch(CAMPAIGNS_API_BASE + '/campaigns')
-      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-      .then(function (data) {
-        if (!Array.isArray(data)) return;
-        writeCampaignCache(data);
-        renderCampaignMenus(placeholder, data);
-      })
-      .catch(function (err) { console.warn('[nav.js] Could not load campaigns:', err); });
+      return;
+    }
+    const name = String(session.display_name || session.username || 'Account').trim();
+    const who = avatarHtml(name, session.avatar_url) + '<span class="nav-account-name">' + escapeHtml(name) + '</span>';
+    const label = escapeHtml('Account: ' + name);
+    const signOut = '<button type="button" class="nav-sublink nav-signout" data-pv-signout>Sign Out</button>';
+    const bar = placeholder.querySelector('.site-nav > .nav-login-btn');
+    if (bar) {
+      bar.outerHTML =
+        '<div class="nav-dropdown nav-account">' +
+          '<button type="button" class="nav-account-btn nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true" aria-label="' + label + '">' +
+            who + CARET + '</button>' +
+          '<ul class="nav-submenu nav-account-menu" role="menu">' +
+            '<li role="none"><a role="menuitem" href="portal.html" class="nav-sublink">Dashboard</a></li>' +
+            '<li role="none">' + signOut.replace('<button ', '<button role="menuitem" ') + '</li>' +
+          '</ul>' +
+        '</div>';
+    }
+    const side = placeholder.querySelector('.nav-login-btn-sidebar');
+    const section = side && side.closest('.nav-sidebar-section');
+    if (section) {
+      section.outerHTML =
+        '<li class="nav-sidebar-section nav-account-section">' +
+          '<button type="button" class="nav-sidebar-toggle nav-account-btn" aria-expanded="false" aria-label="' + label + '">' +
+            '<span class="nav-account-who">' + who + '</span> ' + CARET + '</button>' +
+          '<ul class="nav-sidebar-submenu">' +
+            '<li><a href="portal.html" class="nav-sublink">Dashboard</a></li>' +
+            '<li>' + signOut + '</li>' +
+          '</ul>' +
+        '</li>';
+    }
   }
 
   // ── 2. Theme management ────────────────────────────────────────────────────
@@ -221,8 +129,12 @@
 
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    // The dashboard's icons: a sun to switch to light, a moon to switch to dark.
     const icon = document.getElementById('theme-icon');
-    if (icon) icon.innerHTML = theme === 'dark' ? '&#9788;' : '&#9790;';
+    if (icon) {
+      icon.classList.add('material-icons');
+      icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
   }
 
   function getSavedTheme() {
@@ -363,9 +275,9 @@
       });
     }
 
-    // Also support any legacy top-level .nav-link[data-page]
+    // Top-level links, each with the pages it covers in data-page
     placeholder.querySelectorAll('.nav-link[data-page]').forEach(function (link) {
-      if (link.dataset.page === loc.page) link.classList.add('active');
+      if (link.dataset.page.split(/\s+/).indexOf(loc.page) !== -1) link.classList.add('active');
     });
 
     // Mark active section in sidebar too (same exact-href-first rule)
@@ -397,16 +309,30 @@
     // Reflect signed-in state on the Login button (name + dashboard link)
     applyAuthState(placeholder);
 
-    // Flood the Campaigns menus with every campaign from the worker
-    populateCampaigns(placeholder);
+    wireNav(placeholder);
+  }
 
-    // Wire up dropdown toggles
+  // Dropdown toggles, the hamburger sidebar, Sign Out, account pictures and
+  // the theme toggle.
+  function wireNav(placeholder) {
     wireDropdowns(placeholder);
-
-    // Wire up hamburger sidebar
     wireSidebar();
-
-    // Wire up theme toggle
+    // Sign Out ends the sign-in, then shows this page again (the renderer
+    // sends a page that needs a sign-in on to the sign-in page).
+    placeholder.querySelectorAll('[data-pv-signout]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        const reload = function () { window.location.reload(); };
+        if (window.PVSession && window.PVSession.signOut) window.PVSession.signOut().then(reload, reload);
+        else reload();
+      });
+    });
+    // A picture that can't be loaded gives way to the initial beneath it.
+    placeholder.querySelectorAll('.nav-avatar-img').forEach(function (img) {
+      const drop = function () { img.remove(); };
+      if (img.complete && !img.naturalWidth) drop();
+      else img.addEventListener('error', drop);
+    });
     const toggleBtn = document.getElementById('theme-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', toggleTheme);
@@ -414,18 +340,153 @@
     }
   }
 
-  // ── 5. Fetch nav.html ──────────────────────────────────────────────────────
-  fetch(BASE_PATH + '/components/nav.html')
-    .then(function (res) {
-      if (!res.ok) throw new Error('Nav fetch failed: ' + res.status);
-      return res.text();
-    })
-    .then(function (html) {
-      initNav(html);
-    })
-    .catch(function (err) {
-      console.warn('[nav.js] Could not load nav:', err);
-      // Fail silently — page still works without nav
+  // ── 5. Load the nav ────────────────────────────────────────────────────────
+  const EDGE_ORIGIN = 'https://phoenixvanguard-tools.com';
+  // Sites the renderer gives its nav to: the live site itself and GitHub
+  // Pages. Anywhere else goes straight to components/nav.html.
+  const EDGE_NAV_HOSTS = ['phoenixvanguard-tools.com', 'azoschke.github.io'];
+  const EDGE_NAV_TIMEOUT_MS = 4000;
+
+  // This visitor's nav from the renderer: { nav: its HTML, blocked: the
+  // pages they can't open (null from a renderer that doesn't list them),
+  // footer: the footer's HTML, "" for no footer, or undefined from a renderer
+  // that doesn't send it }.
+  // Rejects when it can't be had (renderer down, too slow, or turned the
+  // request away).
+  function fetchEdgeNav() {
+    const host = window.location.hostname;
+    if (EDGE_NAV_HOSTS.indexOf(host) === -1) return Promise.reject(new Error('no renderer here'));
+    const live = host === 'phoenixvanguard-tools.com';
+    let path = window.location.pathname;
+    if (BASE_PATH && path.indexOf(BASE_PATH) === 0) path = path.slice(BASE_PATH.length) || '/';
+    let url = (live ? '' : EDGE_ORIGIN) + '/_pv/nav?format=json&page=' + encodeURIComponent(path + window.location.search);
+    // GitHub Pages serves the .html files, not clean addresses.
+    if (!live) url += '&links=html';
+    const headers = {};
+    const session = getAdminSession();
+    if (session) headers['Authorization'] = 'Bearer ' + session.token;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(function () { controller.abort(); }, EDGE_NAV_TIMEOUT_MS) : null;
+    return fetch(url, { headers: headers, signal: controller ? controller.signal : undefined })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Renderer nav: ' + res.status);
+        if ((res.headers.get('Content-Type') || '').indexOf('application/json') !== -1) return res.json();
+        return res.text().then(function (html) { return { nav: html, blocked: null, footer: undefined }; });
+      })
+      .then(function (data) {
+        if (!data || typeof data.nav !== 'string' || data.nav.indexOf('class="site-nav"') === -1) {
+          throw new Error('Renderer nav: not a nav');
+        }
+        return {
+          nav: data.nav,
+          blocked: Array.isArray(data.blocked) ? data.blocked : null,
+          footer: typeof data.footer === 'string' ? data.footer : undefined
+        };
+      })
+      .finally(function () { if (timer) clearTimeout(timer); });
+  }
+
+  // The page a link on this site points at, as the Pages list stores it
+  // ("/job-board"; "/" for home), or null for anything else: other sites,
+  // anchors, mailto:, and addresses outside the site's folder.
+  function linkedPage(href) {
+    if (!href || href.charAt(0) === '#') return null;
+    let u;
+    try { u = new URL(href, window.location.href); } catch (_e) { return null; }
+    if (u.origin !== window.location.origin) return null;
+    let p = u.pathname;
+    if (BASE_PATH) {
+      if (p !== BASE_PATH && p.indexOf(BASE_PATH + '/') !== 0) return null;
+      p = p.slice(BASE_PATH.length);
+    }
+    try { p = decodeURIComponent(p); } catch (_e) { /* keep it as is */ }
+    p = p.replace(/\/+$/, '').replace(/\.html?$/i, '');
+    return (p === '' || p === '/index') ? '/' : p;
+  }
+
+  // Takes links to the pages in `blocked` out of the page (never the nav),
+  // by the renderer's rules (lib/links.js): a list item holding such a link
+  // goes entirely; such a link anywhere else keeps its text but stops being a
+  // link; a section that collapses when empty (the home page's .landing-row
+  // sections, or anything marked data-pv-collapse) goes when every link in it
+  // went.
+  function hideClosedLinks(blocked, nav) {
+    const SECTIONS = '.landing-row, [data-pv-collapse]';
+    const closed = new Set(blocked);
+    const counts = new Map(); // section → { links, closed }
+    const drop = [];
+    const unlink = [];
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      if (nav.contains(a)) return;
+      const section = a.closest(SECTIONS);
+      if (section) {
+        if (!counts.has(section)) counts.set(section, { links: 0, closed: 0 });
+        counts.get(section).links++;
+      }
+      const target = linkedPage(a.getAttribute('href'));
+      if (!target || !closed.has(target)) return;
+      if (section) counts.get(section).closed++;
+      const item = a.closest('li');
+      if (item) drop.push(item);
+      else unlink.push(a);
     });
+    counts.forEach(function (c, section) { if (c.links === c.closed) drop.push(section); });
+    unlink.forEach(function (a) {
+      while (a.firstChild) a.parentNode.insertBefore(a.firstChild, a);
+      a.remove();
+    });
+    drop.forEach(function (el) { el.remove(); });
+  }
+
+  // The footer from Admin Settings → Pages → Site Defaults, as the renderer
+  // sends it: its HTML, or "" when there is none. Pages without a footer
+  // (#site-footer) are left alone.
+  function applyFooter(html) {
+    const footer = document.getElementById('site-footer');
+    if (!footer) return;
+    if (html) footer.innerHTML = html;
+    else footer.remove();
+  }
+
+  function loadNav() {
+    const placeholder = document.getElementById('nav-placeholder');
+    if (!placeholder) return;
+
+    // Drawn already by the renderer: just wire it.
+    if (placeholder.hasAttribute('data-edge')) {
+      wireNav(placeholder);
+      return;
+    }
+
+    fetchEdgeNav()
+      .then(function (edge) {
+        placeholder.innerHTML = edge.nav;
+        placeholder.setAttribute('data-edge', '');
+        wireNav(placeholder);
+        if (edge.footer !== undefined) applyFooter(edge.footer);
+        if (!edge.blocked || !edge.blocked.length) return;
+        // Kept apart from the fallback below: a problem here never swaps
+        // the renderer's nav for the last-resort one.
+        try {
+          hideClosedLinks(edge.blocked, placeholder);
+        } catch (err) {
+          console.warn('[nav.js] Could not hide closed links:', err);
+        }
+      })
+      .catch(function () {
+        return fetch(BASE_PATH + '/components/nav.html')
+          .then(function (res) {
+            if (!res.ok) throw new Error('Nav fetch failed: ' + res.status);
+            return res.text();
+          })
+          .then(initNav);
+      })
+      .catch(function (err) {
+        console.warn('[nav.js] Could not load nav:', err);
+        // Fail silently — page still works without nav
+      });
+  }
+
+  loadNav();
 
 })();

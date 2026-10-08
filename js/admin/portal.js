@@ -4,7 +4,7 @@
 //  Responsibilities:
 //    - Load /me (refreshes roles and permissions on mount in case they
 //      changed server-side)
-//    - Render the ink-dark sidebar (logo, brand, user, nav, theme, logout)
+//    - Render the ink-dark sidebar (logo, brand, user, nav, theme, sign out)
 //    - On mobile/tablet the sidebar collapses to a slide-in drawer opened by
 //      a top bar with a hamburger button (mirrors the main site nav)
 //    - Gate sidebar items and tabs by permission via PAGE_ACCESS
@@ -121,6 +121,19 @@
     try { localStorage.setItem(THEME_KEY, t); } catch (_e) {}
   }
 
+  // --------- Account picture ----------
+  // My Profile's picture in a circle, or the name's initial when there is none
+  // or it can't be loaded (as on the Roll Calculator and the site's nav).
+  function Avatar(props) {
+    var errState = useState(false); var imgErr = errState[0], setImgErr = errState[1];
+    useEffect(function () { setImgErr(false); }, [props.url]);
+    var initial = (Array.from(String(props.name || '').trim())[0] || '?').toUpperCase();
+    return h('span', { className: 'sidebar-avatar', 'aria-hidden': 'true' },
+      props.url && !imgErr
+        ? h('img', { src: props.url, alt: '', onError: function () { setImgErr(true); } })
+        : initial);
+  }
+
   // --------- Sidebar body (shared between desktop rail + mobile drawer) ----
   function SidebarBody(props) {
     var session = props.session;
@@ -131,6 +144,7 @@
     var theme = props.theme;
     var roles = (session && session.roles) || [];
     var permissions = (session && session.permissions) || [];
+    var userName = (session && (session.display_name || session.username)) || 'Unknown';
 
     // Build groups with only the items this account may see; drop empty groups
     // so the section header never shows above an empty list.
@@ -151,11 +165,12 @@
         )
       ),
       h('div', { className: 'sidebar-user' },
-        h('p', { className: 'sidebar-user-name' },
-          (session && (session.display_name || session.username)) || 'Unknown'
-        ),
-        h('p', { className: 'sidebar-user-roles' },
-          roles.length ? roles.join(' · ') : 'no roles assigned'
+        h(Avatar, { name: userName, url: session && session.avatar_url }),
+        h('div', { className: 'sidebar-user-text' },
+          h('p', { className: 'sidebar-user-name' }, userName),
+          h('p', { className: 'sidebar-user-roles' },
+            roles.length ? roles.join(' · ') : 'no roles assigned'
+          )
         )
       ),
       h('nav', { className: 'sidebar-nav' },
@@ -188,7 +203,7 @@
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' },
             theme === 'dark' ? 'light_mode' : 'dark_mode'),
-          h('span', null, theme === 'dark' ? 'Light mode' : 'Dark mode')
+          h('span', null, theme === 'dark' ? 'Light Mode' : 'Dark Mode')
         ),
         h('button', {
           type: 'button',
@@ -196,7 +211,7 @@
           onClick: onLogout
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'logout'),
-          h('span', null, 'Log out')
+          h('span', null, 'Sign Out')
         )
       )
     );
@@ -455,6 +470,7 @@
         var merged = Object.assign({}, current, {
           username: data.username || current.username,
           display_name: data.display_name || current.display_name,
+          avatar_url: data.avatar_url !== undefined ? data.avatar_url : (current.avatar_url || null),
           roles: Array.isArray(data.roles) ? data.roles : current.roles,
           permissions: Array.isArray(data.permissions) ? data.permissions : (current.permissions || []),
           is_root: !!data.is_root,
@@ -480,6 +496,14 @@
       });
       return function () { cancelled = true; };
     // eslint-disable-next-line
+    }, []);
+
+    // The saved sign-in changed elsewhere in the portal (My Profile's picture):
+    // show it in the sidebar.
+    useEffect(function () {
+      function onSession() { var s = PVAdminAPI.getSession(); if (s) setSession(s); }
+      window.addEventListener('pv:session', onSession);
+      return function () { window.removeEventListener('pv:session', onSession); };
     }, []);
 
     // Close drawer with ESC

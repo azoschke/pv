@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Registry</title>
-  <meta property="og:image" content="https://images.phoenixvanguard-tools.com/pv-fc-share.jpg">
   <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
   <link rel="preload" href="assets/CrimsonPro-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -66,14 +65,15 @@
 
     <!-- Mobile overlay -->
     <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
-
-    <div class="disclaimer">
-      FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
-      FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.
-    </div>
   </div>
 
+  <footer class="site-footer" id="site-footer">
+    <p class="site-footer-text">FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+    FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.</p>
+  </footer>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/pv-session.js"></script>
 
   <script>
   (function () {
@@ -160,28 +160,79 @@
       return '<div class="record-field"><div class="record-field-label">' + escapeHTML(label) + '</div><div class="record-field-value">' + renderMd(value) + '</div></div>';
     }
 
-    async function apiGet(path) {
-      var res = await fetch(API_BASE + path, { method: "GET", headers: { "Accept": "application/json" } });
-      if (!res.ok) throw new Error("Request failed (" + res.status + ")");
-      return res.json();
+    // Patient records need a sign-in, so it goes with every request.
+    // Errors carry .status (401: not signed in, 403: no access).
+    function apiGet(path) {
+      return PVSession.request(API_BASE, "GET", path, undefined, { auth: "optional" });
+    }
+
+    // Whether this account sees every record (Patient Records → "See all
+    // records" in the Permissions grid, or Medical Records view) rather than
+    // only its own characters'. The full list gets the A–Z bar and letter
+    // headers; the worker decides which records are sent either way. A
+    // sign-in saved without a permission list gets the full layout.
+    function seesAllRecords() {
+      var s = PVSession.get();
+      if (!s || !Array.isArray(s.permissions)) return true;
+      return PVSession.canAny(["patient_records.view_all", "medical.view"]);
+    }
+
+    // The account's current permissions from /me, saved with the sign-in so
+    // seesAllRecords() matches what the worker sends even after a role
+    // change. If /me can't be reached, the saved ones stand.
+    function refreshPermissions() {
+      if (!PVSession.get()) return Promise.resolve();
+      return PVSession.request(API_BASE, "GET", "/me", undefined, { auth: "optional" }).then(function (me) {
+        var s = PVSession.get();
+        if (!s || !me || !Array.isArray(me.permissions)) return;
+        PVSession.set(Object.assign({}, s, {
+          permissions: me.permissions,
+          roles: Array.isArray(me.roles) ? me.roles : s.roles,
+          is_root: !!me.is_root
+        }));
+      }, function () {});
+    }
+
+    var NO_OWN_RECORDS = "You do not have any records associated with your character. " +
+      "Find a member of the Medical team if you believe this is incorrect.";
+
+    // What to say when the records were refused, or null for any other
+    // failure. A refused sign-in is no longer valid, so it is dropped.
+    function refusedMessage(err) {
+      if (!err) return null;
+      if (err.status === 401) {
+        if (PVSession.get()) PVSession.clear();
+        var back = encodeURIComponent(window.location.pathname + window.location.search);
+        return 'Patient records are open to signed-in members only. <a href="login.html?redirect=' + back + '">Sign in</a> to view them.';
+      }
+      if (err.status === 403) {
+        return escapeHTML(err.message && err.message !== "Forbidden" ? err.message : "Your account doesn't have access to patient records.");
+      }
+      return null;
     }
 
     // ── Patient list ───────────────────────────────────────────────────
     async function loadPatientList() {
       patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state"><span class="v2-state-msg">Loading&hellip;</span></div></li>';
       try {
-        var patients = await apiGet("/patients");
+        var patients = (await Promise.all([apiGet("/patients"), refreshPermissions()]))[0];
         allPatients = (Array.isArray(patients) ? patients : [])
           .filter(function(p) { return p && p.patient_id != null && p.patient_name; })
           .sort(function(a, b) {
             return String(a.patient_name).localeCompare(String(b.patient_name), undefined, { sensitivity: "base" });
           });
         renderPatientList();
+        if (!allPatients.length && !seesAllRecords()) {
+          patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg">' + escapeHTML(NO_OWN_RECORDS) + '</p></div>';
+        }
       } catch(err) {
         console.error("Error loading patients:", err);
-        patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state v2-state-msg error">Failed to load patients.</div></li>';
+        var refused = refusedMessage(err);
+        patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state v2-state-msg error">' +
+          (refused ? "No patients to show." : "Failed to load patients.") + '</div></li>';
         azBar.innerHTML = "";
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">Could not reach the medical database. Please try again shortly.</p></div>';
+        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+          (refused || "Could not reach the medical database. Please try again shortly.") + '</p></div>';
       }
     }
 
@@ -212,15 +263,19 @@
         : allPatients;
 
       patientList.innerHTML = "";
+      // Only the full list is long enough for the A–Z bar and letter headers.
+      var full = seesAllRecords();
+      azBar.style.display = full ? "" : "none";
+      if (!full) azBar.innerHTML = "";
 
       if (!allPatients.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">No patients on file.</li>';
-        buildAzBar({});
+        patientList.innerHTML = '<li class="patient-empty-msg">' + (full ? "No patients on file." : "No records on file.") + '</li>';
+        if (full) buildAzBar({});
         return;
       }
       if (!filtered.length) {
         patientList.innerHTML = '<li class="patient-empty-msg">No patients match your search.</li>';
-        buildAzBar({});
+        if (full) buildAzBar({});
         return;
       }
 
@@ -230,7 +285,7 @@
       filtered.forEach(function(p) {
         var letter = firstLetter(p.patient_name);
         present[letter] = true;
-        if (letter !== lastLetter) {
+        if (full && letter !== lastLetter) {
           var header = document.createElement("li");
           header.className = "patient-group-header" + (isFirst ? " is-first" : "");
           header.dataset.group = letter;
@@ -242,7 +297,7 @@
         patientList.appendChild(makePatientItem(p));
       });
 
-      buildAzBar(present);
+      if (full) buildAzBar(present);
     }
 
     function buildAzBar(present) {
@@ -293,7 +348,8 @@
         renderPatient(data);
       } catch(err) {
         console.error("Error loading patient:", err);
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">Could not load this patient\'s records.</p></div>';
+        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+          (refusedMessage(err) || "Could not load this patient's records.") + '</p></div>';
       }
     }
 
@@ -464,7 +520,6 @@
     loadPatientList();
   })();
   </script>
-  <script src="js/pv-session.js"></script>
   <script src="js/nav.js"></script>
 </body>
 </html>

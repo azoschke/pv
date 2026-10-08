@@ -6,7 +6,7 @@
      3. Base / Body
      4. Scrollbar
      5. Shared Nav
-     6. Shared Utilities (progress bars, info cards, disclaimers)
+     6. Shared Utilities (progress bars, info cards, site footer)
      7. Zodiac Weapons — Book Farm & Atma Farm
      8. Phoenix Vanguard — shared (parchment, header, forms)
      9. (removed — old medical records sidebar; now uses campaign-sidebar)
@@ -425,7 +425,7 @@ pre {
   pointer-events: none;
 }
 
-/* --- Admin login pill (user icon + "Login") --- */
+/* --- Sign-in pill (user icon + "Sign In") --- */
 .nav-login-btn {
   display: inline-flex;
   align-items: center;
@@ -444,32 +444,86 @@ pre {
 }
 .nav-login-btn:hover  { background-color: var(--bg-darker); }
 .nav-login-btn:active { transform: scale(0.97); }
-/* Signed-in: button reads "Dashboard" with the character name small beneath. */
-.nav-login-btn.is-authed {
-  height: auto;
-  padding: 0.3rem 0.9rem;
-  gap: 0.6rem;
-}
-.nav-login-stack {
+
+/* --- Account (signed in): picture and name, opening Dashboard / Sign Out --- */
+.nav-account { flex-shrink: 0; }
+/* Plain, like the nav links beside it: no box, brightening on hover. (The
+   sidebar copy is styled as a .nav-sidebar-toggle.) */
+.nav-account > .nav-account-btn {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.2;
-}
-.nav-login-btn-sidebar .nav-login-stack { align-items: center; }
-.nav-login-primary { font-size: 0.95rem; }
-.nav-login-name {
-  font-size: 0.72rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: none;
   color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.nav-account > .nav-account-btn:hover,
+.nav-account.open > .nav-account-btn {
+  color: var(--text-primary);
 }
 /* Keep a long character name from stretching the top nav; the full-width
    sidebar copy has room, so it shows the name in full. */
-.nav-login-btn.is-authed:not(.nav-login-btn-sidebar) .nav-login-name {
+.nav-account .nav-account-name {
   max-width: 14ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* The menu opens under the button's right edge, by the edge of the page. */
+.nav-account .nav-submenu {
+  left: auto;
+  right: 0;
+  min-width: 10rem;
+}
+/* Sign Out is a button that looks like the menu's links. */
+button.nav-sublink {
+  width: 100%;
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  text-align: left;
+  cursor: pointer;
+}
+/* Sidebar copy: picture and name on the left, caret on the right. */
+.nav-account-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+/* The account's picture in a circle; the initial beneath shows when there is
+   no picture or it can't be loaded (as on the Roll Calculator). */
+.nav-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--accent-brown);
+  color: #ffffff;
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+[data-theme="dark"] .nav-avatar { color: #241d17; }
+.nav-avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .nav-login-icon {
   width: 18px;
@@ -482,7 +536,7 @@ pre {
   width: calc(100% - 2rem);
 }
 
-/* --- Theme toggle (icon only) --- */
+/* --- Theme toggle (icon only: the dashboard's sun and moon) --- */
 .theme-toggle {
   font-size: 1rem;
   line-height: 1;
@@ -499,6 +553,8 @@ pre {
   margin-left: auto;
   flex-shrink: 0;
 }
+
+.theme-toggle .material-icons { font-size: 1.15rem; }
 
 .theme-toggle:hover   { background-color: var(--bg-darker); }
 .theme-toggle:active  { transform: scale(0.97); }
@@ -595,15 +651,21 @@ pre {
 
 .top-controls-right { justify-content: flex-end; }
 
-/* --- Disclaimer (FFXIV copyright) --- */
-.disclaimer {
+/* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
+   Outside .container, so the top border runs the full width of the window;
+   the text keeps to the same 1100px column as the page. */
+.site-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
   text-align: center;
   font-size: 0.72rem;
-  color: var(--text-secondary);
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
   line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.site-footer-text {
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 /* --- Star ratings (Crafting DB) --- */
@@ -1247,9 +1309,6 @@ pre {
   margin-bottom: 1rem;
 }
 
-/* The sign-in lock follows the theme's red. */
-.confirmation-panel .check-icon.is-lock { color: var(--accent-red); }
-
 .confirmation-panel h2 {
   font-family: 'Stoke', serif;
   font-size: 1.5rem;
@@ -1616,6 +1675,77 @@ pre {
   max-width: 38rem;
 }
 
+/* "Sign In" under the landing tagline: the nav's Sign In button
+   (.nav-login-btn) with room above it. It and the tagline's sign-in note are
+   hidden once signed in (the page marks <html> with .pv-signed-in before it
+   paints). */
+.landing-signin { margin-top: 1.25rem; }
+.pv-signed-in .landing-signin,
+.pv-signed-in .landing-signin-note { display: none; }
+
+/* A landing row's photo: fills the image box (as tall as the text beside it,
+   280px at least), cropped to fit. */
+.landing-row-image--photo {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: var(--bg-darker);
+}
+.landing-row-image--photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The campaign photo's subject sits right of centre: keep it in frame as the
+   column narrows (desktop 85%, tablet 75%); stacked on phones it is centred. */
+.landing-row--campaigns .landing-row-image--photo img { object-position: 85%; }
+@media (max-width: 900px) {
+  .landing-row--campaigns .landing-row-image--photo img { object-position: 75%; }
+}
+@media (max-width: 720px) {
+  .landing-row--campaigns .landing-row-image--photo img { object-position: 50%; }
+}
+
+/* ── About page sections (about.html) ──────────────────────────────────── */
+.about-section {
+  max-width: 46rem;
+  margin: 0 auto 2.5rem;
+}
+.about-section + .about-section {
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.about-section .landing-row-desc + .landing-row-desc { margin-top: 1rem; }
+/* Officer Core's groups (Leaders, Phoenix Council...) and the people in them. */
+.about-subtitle {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin: 2rem 0 1rem;
+}
+.about-person { margin-bottom: 1.25rem; }
+.about-person-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.3rem;
+}
+/* Bulleted lists (Phoenix Guard, Hooks), in the paragraphs' type. */
+.about-list {
+  max-width: 38rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.about-list li + li { margin-top: 0.4rem; }
+
 /* ── Image slot ──────────────────────────────────────────────────────────── */
 
 .img-slot {
@@ -1754,7 +1884,8 @@ pre {
   .landing-row:nth-of-type(even) .landing-row-image {
     order: 0;
   }
-  .img-slot {
+  .img-slot,
+  .landing-row-image--photo {
     min-height: 200px;
   }
   .landing-row-title {
@@ -1982,8 +2113,10 @@ body.nav-sidebar-open {
     display: none;
   }
 
-  /* Hide the top-nav copy so it isn't duplicated. The sidebar copy keeps `.nav-login-btn-sidebar`. */
-  .site-nav > .nav-login-btn:not(.nav-login-btn-sidebar) {
+  /* Hide the top-nav copy so it isn't duplicated. The sidebar keeps its own
+     (`.nav-login-btn-sidebar`, or the account section when signed in). */
+  .site-nav > .nav-login-btn:not(.nav-login-btn-sidebar),
+  .site-nav > .nav-account {
     display: none;
   }
 

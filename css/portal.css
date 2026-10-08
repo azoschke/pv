@@ -97,9 +97,37 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 .portal-sidebar .sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   padding: 0.25rem 1.25rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
   font-family: 'Crimson Pro', serif;
   color: var(--text-secondary);
+}
+.portal-sidebar .sidebar-user-text { min-width: 0; }
+/* The account's picture in a circle, or its initial (as on the Roll
+   Calculator and the site's account button). */
+.portal-sidebar .sidebar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--accent-brown);
+  color: #ffffff;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  line-height: 1;
+}
+[data-theme="dark"] .portal-sidebar .sidebar-avatar { color: #241d17; }
+.portal-sidebar .sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .portal-sidebar .sidebar-user .sidebar-user-name {
   color: var(--text-primary);
@@ -131,9 +159,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin-top: 0.9rem;
 }
 /* The headerless pinned group (Dashboard + My Profile) is set off from the
-   titled groups below it with a divider instead of a small-caps label. */
+   titled groups below it with a divider instead of a small-caps label. The
+   group reaches out over the nav's side padding so the divider spans the
+   sidebar, like the ones under the brand and the account. */
 .portal-sidebar .sidebar-nav-group.is-pinned {
-  padding-bottom: 0.9rem;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem 0.9rem;
   border-bottom: 1px solid var(--border-color);
 }
 .portal-sidebar .sidebar-nav-group-title {

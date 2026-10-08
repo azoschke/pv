@@ -80,7 +80,7 @@
   }
 
   function authedRequest(method, path) {
-    if (!getSession()) return Promise.reject(new Error("You are no longer logged in."));
+    if (!getSession()) return Promise.reject(new Error("You are no longer signed in."));
     return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
   }
 
@@ -525,7 +525,7 @@
       // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
         '<a class="quest-action-btn" href="login.html?redirect=' +
-        encodeURIComponent(window.location.pathname) + '">Log in to apply</a>' +
+        encodeURIComponent(window.location.pathname) + '">Sign in to apply</a>' +
         '</div>';
     }
     if (!canUse("jobs.apply")) return "";

@@ -22,9 +22,9 @@
   }
 
   // Every RP route requires a session. We attach the bearer whenever one exists
-  // and leave it to the caller (page) to render a locked state on 401 — unlike
-  // PVAdminAPI.request, this never force-redirects, so the public tool page can
-  // show its own "sign in" panel instead of bouncing to the login form.
+  // and leave a 401 to the caller (page) — unlike PVAdminAPI.request, this
+  // never redirects by itself; the Roll Calculator sends the visitor to sign in
+  // again and come back.
   async function request(method, path, body) {
     return global.PVSession.request(RP_API_BASE, method, path, body, { auth: 'optional' });
   }

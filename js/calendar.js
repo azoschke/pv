@@ -3,9 +3,9 @@
 //
 //  Reads GET /calendar from pv-med-database-worker, which live-proxies the
 //  guild's Discord scheduled events (prefix parsed into a category, title
-//  stripped, times normalized to UTC "YYYY-MM-DD HH:MM:SS"). The route is
-//  session-gated, so this page soft-gates: logged-out or expired sessions see
-//  a "sign in" panel rather than a redirect (mirrors the roll calculator).
+//  stripped, times normalized to UTC "YYYY-MM-DD HH:MM:SS"). The route needs a
+//  sign-in, and so does the page (Admin Settings → Pages): without a valid
+//  sign-in the visitor is sent to the sign-in page and brought back here.
 //
 //  No storage, no RSVP, no Discord links — the site is the display layer.
 //  Events are grouped by local day and rendered as an agenda; a filter sidebar
@@ -268,17 +268,6 @@
 
   function renderLoading() {
     showPanel('<div class="cal-panel"><p>Loading events&hellip;</p></div>');
-  }
-
-  function renderGate() {
-    var back = encodeURIComponent(window.location.pathname);
-    showPanel(
-      '<div class="cal-panel">' +
-        '<h2>Members only</h2>' +
-        '<p>The event calendar is available to signed-in Phoenix Vanguard members.</p>' +
-        '<a class="cal-panel-btn" href="login.html?redirect=' + back + '">Sign in</a>' +
-      '</div>'
-    );
   }
 
   function renderError(message) {
@@ -664,7 +653,7 @@
 
   // ── Data ───────────────────────────────────────────────────────────────────
   function load() {
-    if (!getSession()) { renderGate(); return; }
+    if (!getSession()) { PVSession.redirectToLogin(); return; }
 
     renderLoading();
 
@@ -675,7 +664,8 @@
       buildFilterUI();
       render();
     }).catch(function (err) {
-      if (err && err.status === 401) { renderGate(); return; }
+      // A sign-in the worker no longer accepts: sign in again, then come back.
+      if (err && err.status === 401) { PVSession.clear(); PVSession.redirectToLogin(); return; }
       renderError(err && err.message);
     });
   }
