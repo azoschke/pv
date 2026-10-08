@@ -1709,6 +1709,16 @@ button.nav-sublink {
   .landing-row--campaigns .landing-row-image--photo img { object-position: 50%; }
 }
 
+/* ── About page sections (about.html) ──────────────────────────────────── */
+.about-section {
+  max-width: 46rem;
+  margin: 0 auto 2.5rem;
+}
+.about-section + .about-section {
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 /* ── Image slot ──────────────────────────────────────────────────────────── */
 
 .img-slot {
