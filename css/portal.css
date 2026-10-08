@@ -1,0 +1,1670 @@
+/* ============================================================================
+   Phoenix Vanguard — Admin Portal styles
+   ----------------------------------------------------------------------------
+   Layout shell only: ink-dark sidebar + flexible main area. All colors
+   reference the existing CSS variables from css/styles.css so the site's
+   light/dark theme toggle works for the portal without extra JS.
+   The sidebar scopes `data-theme="dark"` onto itself so its text colors
+   resolve against the dark-mode variable branch regardless of the site theme
+   — the sidebar surface is always dark by design.
+   ============================================================================ */
+
+html, body { height: 100%; }
+body { overflow: hidden; } /* shell scrolls inside .portal-main */
+
+.portal-boot {
+  padding: 2rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* --------------- Shell grid --------------- */
+.portal-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: "side main";
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* use dynamic viewport height on mobile so the topbar
+                     doesn't slip out of the visible area when the address
+                     bar / virtual keyboard resizes the viewport */
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* --------------- Sidebar (desktop rail) ---------------
+   Light theme: parchment-darker panel, dark text.
+   Dark theme:  card-dark panel, light text. Both resolve via the
+   scoped variables below so the site theme toggle drives them. */
+.portal-sidebar {
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+}
+[data-theme="dark"] .portal-sidebar {
+  background: var(--bg-card);
+  border-right-color: var(--border-color);
+}
+.portal-sidebar-rail {
+  grid-area: side;
+  padding: 1.25rem 0 0;
+}
+
+.portal-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+}
+
+.portal-sidebar .sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+  text-decoration: none;
+}
+.portal-sidebar .sidebar-logo {
+  height: 44px;
+  width: 44px;
+}
+.portal-sidebar .sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal-sidebar .sidebar-brand-title {
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.portal-sidebar .sidebar-brand-subtitle {
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  margin-top: 0.15rem;
+}
+
+.portal-sidebar .sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 1.25rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+}
+.portal-sidebar .sidebar-user-text { min-width: 0; }
+/* The account's picture in a circle, or its initial (as on the Roll
+   Calculator and the site's account button). */
+.portal-sidebar .sidebar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--accent-brown);
+  color: #ffffff;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  line-height: 1;
+}
+[data-theme="dark"] .portal-sidebar .sidebar-avatar { color: #241d17; }
+.portal-sidebar .sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.portal-sidebar .sidebar-user .sidebar-user-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0 0 0.15rem;
+}
+.portal-sidebar .sidebar-user .sidebar-user-roles {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+  margin: 0;
+}
+
+.portal-sidebar .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.5rem 0.5rem;
+  flex: 1;
+}
+.portal-sidebar .sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-sidebar .sidebar-nav-group + .sidebar-nav-group {
+  margin-top: 0.9rem;
+}
+/* The headerless pinned group (Dashboard + My Profile) is set off from the
+   titled groups below it with a divider instead of a small-caps label. The
+   group reaches out over the nav's side padding so the divider spans the
+   sidebar, like the ones under the brand and the account. */
+.portal-sidebar .sidebar-nav-group.is-pinned {
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.portal-sidebar .sidebar-nav-group-title {
+  margin: 0;
+  padding: 0.3rem 0.85rem 0.35rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.portal-sidebar .sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.portal-sidebar .sidebar-nav-item .material-icons {
+  font-size: 18px;
+  color: var(--text-primary);
+}
+.portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
+.portal-sidebar .sidebar-nav-item.is-active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .portal-sidebar .sidebar-nav-item:hover { background: var(--bg-card-light); }
+[data-theme="dark"] .portal-sidebar .sidebar-nav-item.is-active { background: var(--bg-darker); }
+.portal-sidebar .sidebar-nav-item.is-active .material-icons { color: var(--accent-red); }
+
+.portal-sidebar .sidebar-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 0.75rem 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-sidebar .sidebar-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: .85rem;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+}
+.portal-sidebar .sidebar-footer-btn .material-icons {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+.portal-sidebar .sidebar-footer-btn:hover {
+  background: var(--bg-card-light);
+  color: var(--text-primary);
+}
+
+/* --------------- Main --------------- */
+.portal-main {
+  grid-area: main;
+  overflow-y: auto;
+  padding: 1.75rem 2rem 3rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.05rem;
+}
+.portal-main .portal-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.portal-main .portal-section-header > .material-icons {
+  font-size: 32px;
+  color: var(--accent-red);
+}
+.portal-main .portal-section-header h1 {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+/* --------------- Top bar (mobile/tablet) --------------- */
+.portal-topbar {
+  display: none;
+  grid-area: topbar;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+[data-theme="dark"] .portal-topbar { background: var(--bg-card); }
+.portal-topbar-hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 34px;
+  height: 28px;
+  padding: 5px 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+}
+[data-theme="dark"] .portal-topbar-hamburger { background: var(--bg-darker); }
+.portal-topbar-hamburger:hover { filter: brightness(0.95); }
+.portal-topbar-hamburger span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+}
+.portal-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.portal-topbar-logo {
+  height: 32px;
+  width: 32px;
+}
+.portal-topbar-title {
+  font-family: 'Stoke', serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-left: auto;
+}
+
+/* --------------- Mobile drawer --------------- */
+.portal-sidebar-drawer {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  width: min(320px, 86vw);
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+  z-index: 50;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+  display: none;  /* hidden on desktop */
+}
+.portal-sidebar-drawer.is-open { transform: translateX(0); }
+.portal-drawer-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0.75rem 0;
+}
+.portal-drawer-close {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+.portal-drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.portal-drawer-overlay.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --------------- Cards --------------- */
+.portal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1.25rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.portal-card .portal-card-title {
+  font-family: 'Stoke', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+}
+.portal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.portal-card-header > .portal-card-title { flex: 1; }
+.portal-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.portal-search {
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
+  min-width: 16rem;
+}
+
+.portal-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+  align-items: center;
+  margin: 0.35rem 0 0.85rem;
+}
+/* Dropdown chevron in the text colour (--text-primary per theme); a data-URI
+   SVG can't read CSS variables, so each theme sets its own. */
+:root { --portal-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%233E3832' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); }
+[data-theme="dark"] { --portal-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23ebe3d0' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); }
+.portal-filter-select {
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  /* Same box as .portal-search so dropdowns line up with inputs. Safari's
+     native select ignores padding/height, so drop it and draw the chevron
+     the way .form-group select does (css/styles.css). */
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: var(--portal-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  padding: 0.5rem 2rem 0.5rem 0.55rem;
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.25;
+  box-sizing: border-box;
+  min-width: 11rem;
+}
+
+/* --------------- Tables --------------- */
+.portal-table-wrap { overflow-x: auto; }
+.portal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.05rem;
+}
+.portal-table thead th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card-light);
+}
+.portal-table tbody td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+.portal-table tbody tr:hover { background: var(--bg-card-light); }
+
+/* Accounts awaiting a role assignment, floated to the top of the list. */
+.portal-table tbody tr.is-needs-role { background: rgba(165, 77, 68, 0.12); }
+.portal-table tbody tr.is-needs-role:hover { background: rgba(165, 77, 68, 0.2); }
+.portal-table tbody tr.is-needs-role td:first-child {
+  box-shadow: inset 4px 0 0 var(--accent-red);
+}
+
+/* Tables sit flush to the card edges. Any header / subtitle / filter content
+   above the table keeps the card's normal padding; the table itself breaks
+   out to the card border so its banded header and rows run edge-to-edge.
+   First/last cell content is re-inset to line up with the padded content. */
+.portal-card:has(> .portal-table-wrap) { overflow: hidden; }
+.portal-card > .portal-table-wrap {
+  margin: 0 -1.25rem -1.25rem;
+}
+.portal-card > .portal-table-wrap:first-child { margin-top: -1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:first-child,
+.portal-card > .portal-table-wrap .portal-table td:first-child { padding-left: 1.25rem; }
+.portal-card > .portal-table-wrap .portal-table th:last-child,
+.portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
+
+/* --------------- Inline buttons --------------- */
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent-brown);
+  color: #fff;
+  border: 1px solid var(--accent-brown);
+  border-radius: 4px;
+  font-family: 'Stoke', serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.portal-btn:hover { filter: brightness(1.05); }
+.portal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.portal-btn.is-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.portal-btn.is-ghost:hover { background: var(--bg-card-light); }
+.portal-btn.is-danger {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+}
+.portal-btn.is-small {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+}
+/* Icon-only buttons: square, no text, just the glyph (used for compact
+   row actions like Edit/Delete in the Event Assets table). */
+.portal-btn.is-icon {
+  gap: 0;
+  padding: 0.3rem;
+  line-height: 1;
+}
+.portal-btn.is-icon.is-small { padding: 0.3rem; }
+.portal-btn .material-icons { font-size: 18px; }
+
+/* --------------- Form fields --------------- */
+.portal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+.portal-field label {
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+   .portal-field label.portal-checkbox-option {
+       font-size: 0.8rem;
+       letter-spacing: 0;
+       text-transform: none;
+   }
+.portal-field input[type="text"],
+.portal-field input[type="date"],
+.portal-field input[type="number"],
+.portal-field textarea,
+.portal-field select, .portal-select {
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.55rem 0.65rem;
+  border-radius: 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+}
+/* Same line-height on inputs and dropdowns so equal padding gives equal
+   heights. Safari's native select ignores padding, so drop it and draw the
+   chevron as .portal-filter-select does. */
+.portal-field input[type="text"],
+.portal-field input[type="date"],
+.portal-field input[type="number"],
+.portal-field select, .portal-select {
+  line-height: 1.25;
+}
+.portal-field select, .portal-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: var(--portal-select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  padding-right: 2rem;
+}
+/* Standalone section-title style (Stoke, uppercase) — used only on the specific
+   campaign-panel titles, never grouped with the form inputs above. */
+.portal-block-label {
+  display: block;
+  margin: 0 0 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.portal-field textarea { min-height: 5rem; resize: vertical; }
+.portal-field-help {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0.35rem 0 0.85rem;
+}
+.portal-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+.portal-field-row-triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.portal-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* --------------- Grouped form sections ---------------
+   Used by sectioned RecordForm (e.g. patient edit form mirrors the
+   patient intake form: Patient Information → Emergency Contact →
+   Pre-Existing Conditions). */
+.portal-form-section {
+  margin-bottom: 1.25rem;
+}
+.portal-form-section + .portal-form-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.portal-form-section-title {
+  margin: 0 0 0.65rem;
+  font-family: 'Stoke', serif;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-brown);
+}
+
+/* --------------- Flash --------------- */
+.portal-flash {
+  padding: 0.7rem 0.9rem;
+  border-radius: 4px;
+  margin: 0.5rem 0 0.75rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+}
+.portal-flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
+.portal-flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+
+/* Keep multi-word member column headers (e.g. "IC Interview") on one line. */
+.members-table thead th { white-space: nowrap; }
+/* Vertically center row content against the tallest cell (e.g. the Activity
+   status + inline talked-to line). */
+.members-table tbody td { vertical-align: middle; }
+.bounties-table tbody td,
+.job-board-table tbody td,
+.member-profiles-table tbody td { vertical-align: middle; }
+/* Member name (first column) and IC rank (second). Group/empty rows span all
+   columns and keep their own style. */
+.members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.9rem; }
+.members-table tbody td:nth-child(2) { font-style: italic; }
+
+/* --------------- Activity cell (status + inline talked-to) --------------- */
+.activity-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.activity-cell .talked-to-cell {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.activity-cell .talked-to-cell input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+}
+
+/* --------------- Talked-to checkbox cell --------------- */
+.talked-to-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+}
+.talked-to-cell input[type="checkbox"] {
+  accent-color: var(--check-color);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* --------------- My Profile two-column layout --------------- */
+/* My Items — reuses the public venue card + modal look (.venue-card,
+   .venue-modal, .contrast-border from styles.css) for a consistent grid and
+   detail view. Item art is square (600x600 uploads), so the card media and the
+   modal image are overridden to a 1:1 ratio here. */
+.my-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+.pv-item-card .venue-card-media {
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
+}
+.pv-item-card .venue-card-location { text-transform: uppercase; letter-spacing: 0.1em; }
+
+.venue-modal.pv-item-modal { max-width: 460px; }
+.pv-item-modal .venue-modal-img { aspect-ratio: 1 / 1; }
+.pv-item-abilities {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.pv-item-ability {
+   padding: 0.75rem;
+   background-color: var(--bg-card-light);
+   border-radius: 5px;
+}
+.pv-item-ability strong {
+  font-family: 'Stoke', serif;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+.pv-item-ability p {
+  margin: 0.15rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+/* --------------- Faction tag chips (read-only display) --------------- */
+.portal-faction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.portal-faction-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  line-height: 1;
+}
+.portal-faction-tag.is-nodata {
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+}
+
+/* --------------- Checkbox group (multi-select form field) --------------- */
+.portal-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--form-input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.portal-checkbox-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-primary);
+}
+.portal-checkbox-option input[type="checkbox"] {
+  accent-color: var(--check-color);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.portal-checkbox-option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.portal-checkbox-option.is-disabled input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* --------------- Coming soon --------------- */
+.portal-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+}
+.portal-coming-soon .material-icons {
+  font-size: 64px;
+  color: var(--accent-brown);
+  margin-bottom: 0.75rem;
+}
+.portal-coming-soon h2 {
+  font-family: 'Stoke', serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+.portal-coming-soon p {
+  margin: 0;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.15rem;
+}
+
+/* --------------- Badges --------------- */
+.portal-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.portal-badge.is-pinned { background: rgba(165, 77, 68, 0.15); color: var(--accent-red); }
+.portal-badge.is-ok     { background: rgba(90, 138, 60, 0.15); color: var(--check-color); }
+.portal-badge.is-warn   { background: var(--accent-red); color: #fff; }
+
+/* --------------- Admin Settings role checkboxes --------------- */
+.admin-role-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
+}
+.admin-role-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  user-select: none;
+}
+.admin-role-checkbox input[type="checkbox"] {
+  accent-color: var(--check-color);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* --------------- Modal --------------- */
+.portal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3vh 1rem 1rem;
+  overflow-y: auto;
+}
+.portal-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  max-height: 94vh;
+}
+.portal-modal-lg { max-width: 880px; }
+.portal-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card-light);
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.portal-modal-title {
+  margin: 0;
+  flex: 1;
+  font-family: 'Stoke', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.portal-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+.portal-modal-close:hover { color: var(--text-primary); }
+.portal-modal-body {
+  padding: 1rem 1.1rem 1.25rem;
+  overflow-y: auto;
+}
+
+/* --------------- Dashboard --------------- */
+.dashboard-header .dashboard-date {
+  margin-left: auto;
+  font-family: 'La Belle Aurore', cursive;
+  font-size: 1.2rem;
+  color: var(--accent-brown);
+  white-space: nowrap;
+}
+
+.dash-loading {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Pending / Scheduled groups side by side on wide views, stacking when the
+   row can no longer fit two groups. Each group grows in proportion to how many
+   tiles it holds (Pending: 3, Scheduled: 2 — set inline in dashboard.js), so a
+   tile is the same width regardless of which group it lives in. */
+.dash-stat-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1.5rem 2rem;
+  margin-bottom: 1.25rem;
+}
+.dash-stat-section {
+  flex: 1 1 auto;
+  min-width: min(100%, 16rem);
+}
+.dash-stat-heading {
+  margin: 0 0 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.dash-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dash-stat {
+  flex: 1 1 0;
+  min-width: 8.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.dash-stat:hover { background: var(--bg-card-light); }
+.dash-stat.is-alert { border-color: var(--accent-red); }
+.dash-stat-num {
+  font-family: 'Stoke', serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.dash-stat.is-alert .dash-stat-num { color: var(--accent-red); }
+.dash-stat-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.dash-attention-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.dash-attention-head .portal-card-title { flex: 1; }
+.dash-attention-meta {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.dash-attention-list { display: flex; flex-direction: column; }
+.dash-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border-color);
+}
+.dash-attention-row:first-child { border-top: none; }
+.dash-attention-text {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  color: var(--text-primary);
+}
+.dash-attention-source {
+  font-family: 'La Belle Aurore', cursive;
+  font-style: normal;
+  color: var(--text-secondary);
+  margin-left: 0.2rem;
+}
+.dash-attention-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0.4rem 0 0;
+}
+.dash-open { white-space: nowrap; }
+.dash-open .material-icons { font-size: 16px; }
+
+/* --------------- Pills ---------------
+   Outlined status chips shared by the dashboard, division cards, and the
+   applications/job stage badges. Variants: red-fill (action), red / gold /
+   green / muted outlines. */
+.portal-pill {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+.portal-pill.is-red-fill { background: var(--accent-red); color: #fff; border-color: var(--accent-red); }
+.portal-pill.is-red      { color: var(--accent-red);    border-color: var(--accent-red); }
+.portal-pill.is-gold     { color: var(--accent-brown);  border-color: var(--accent-brown); }
+.portal-pill.is-green    { color: var(--check-color);   border-color: var(--check-color); }
+.portal-pill.is-muted    { color: var(--text-secondary); border-color: var(--border-color); }
+
+/* --------------- Division layout --------------- */
+.division-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.division-col { min-width: 0; }
+
+.portal-card-subtitle {
+  margin: -0.25rem 0 0.9rem;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.98rem;
+}
+.portal-card-count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-family: 'Crimson Pro', serif;
+  white-space: nowrap;
+}
+
+/* IC Interview card */
+.ic-interview-list { display: flex; flex-direction: column; }
+.ic-interview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-color);
+}
+.ic-interview-row:first-child { border-top: none; }
+.ic-interview-name {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Bulletins (shared board) */
+.bulletin-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.bulletin-item {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  background: var(--bg-card-light);
+}
+.bulletin-item.is-pinned { border-color: var(--accent-red); }
+
+/* Dashed empty state */
+.portal-empty {
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+}
+
+/* --------------- FC Members directory --------------- */
+.members-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Segmented All / Needs attention toggle */
+.portal-chip-group {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.portal-chip {
+  padding: 0.45rem 0.95rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.portal-chip:last-child { border-right: none; }
+.portal-chip:hover { background: var(--bg-card-light); color: var(--text-primary); }
+.portal-chip.is-active { background: var(--accent-brown); color: #fff; }
+
+/* --------------- Section subnav (unified underline tabs) ---------------
+   Rendered as the first element of a section body, so it tucks up under the
+   section header (which carries margin-bottom) and the two read as one block.
+   The full-width hairline anchors it as chrome, distinct from card content. */
+.portal-subnav {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin: -0.25rem 0 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  /* Scroll horizontally when tabs overflow on narrow screens, but never
+     vertically — without this the -1px tab overlap spawns a stray vertical
+     scrollbar on the bar itself. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.portal-subnav .subnav-tab {
+  padding: 0.5rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.portal-subnav .subnav-tab:hover { color: var(--text-primary); }
+.portal-subnav .subnav-tab.is-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-red);
+}
+
+/* Notes inline link (replaces a bordered button in the Notes column) */
+.notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent-brown);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.notes-link:hover { text-decoration: underline; }
+
+/* Rank group banding */
+/* Table row banding for grouped tables (FC Members ranks, Job Board divisions) */
+.portal-table .portal-group-row td {
+  background: var(--bg-darker);
+  padding: 0.45rem 0.75rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* --------------- Venues directory --------------- */
+/* Center every cell vertically so the row text lines up with the thumbnail. */
+.venues-table tbody td { vertical-align: middle; }
+/* First-column thumbnail runs flush to the card edge (like Event Assets),
+   overriding the generic first-child inset padding. */
+.venues-table .venues-thumb-cell {
+  width: 132px;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* --------------- Event Assets --------------- */
+/* Bordered cells so each copyable section reads as its own bounded area. */
+.event-assets-table th,
+.event-assets-table td {
+  border: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+/* Download control overlaid on the image's top-right corner, in the brand
+   accent so it stands out against the artwork. */
+.event-assets-table .ea-download-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: var(--accent-brown);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.event-assets-table .ea-download-btn:hover {
+  transform: translateY(-1px);
+}
+.event-assets-table .ea-download-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+/* Highlight only the hovered cell (the row/column intersection), not the whole
+   row — so override the shared row-hover background for this table. */
+.event-assets-table tbody tr:hover { background: transparent; }
+.event-assets-table tbody tr:not(.portal-group-row) td:hover {
+  background: var(--bg-card-light);
+}
+/* The click-to-copy block fills its cell so the whole copyable area responds. */
+.event-assets-table .ea-copy {
+  cursor: pointer;
+  padding: 0.6rem 0.75rem;
+  transition: background 0.12s ease;
+}
+.event-assets-table .ea-copy:focus-visible {
+  background: var(--bg-card-light);
+  outline: none;
+}
+.event-assets-table .ea-cell-empty {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-secondary);
+}
+/* Show more/less toggle for long descriptions (does not trigger the copy). */
+.event-assets-table .ea-expand {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+  color: var(--accent-brown, var(--text-secondary));
+  text-decoration: underline;
+}
+
+/* --------------- Permissions (root only) --------------- */
+/* Matrix: roles across the top, Page → Tab → Action down the side. The header
+   row and the label column stay put while the grid scrolls inside its box. */
+.perm-grid-wrap {
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.perm-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+}
+.perm-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-card-light);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0.4rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.perm-grid thead th.perm-corner { left: 0; z-index: 3; }
+.perm-grid .perm-role-col { text-align: center; min-width: 4.25rem; }
+.perm-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg-card);
+  text-align: left;
+  font-weight: 400;
+  padding: 0.2rem 0.75rem;
+  min-width: 15rem;
+  max-width: 22rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+.perm-row-label.is-action { padding-left: 2.2rem; }
+.perm-row-label.is-tab { padding-left: 2.2rem; }
+.perm-row-label.is-tab-action { padding-left: 3.4rem; }
+.perm-row-sub { display: block; font-size: 0.85rem; color: var(--text-secondary); }
+.perm-page-row .perm-row-label { background: var(--bg-card-light); }
+.perm-page-name { font-family: 'Stoke', serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.perm-tab-name { font-style: italic; }
+.perm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.perm-toggle .material-icons { font-size: 1.1rem; }
+.perm-group-row td {
+  background: var(--bg-darker);
+  padding: 0.4rem 0;
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.perm-group-row td > span { position: sticky; left: 0.75rem; padding: 0 0.75rem; }
+.perm-cell-td { text-align: center; padding: 0.15rem 0.2rem; border-bottom: 1px solid var(--border-color); }
+.perm-page-row .perm-cell-td { background: var(--bg-card-light); }
+.perm-cell {
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: transparent;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.perm-cell.is-allow { color: var(--check-color); background: rgba(90, 138, 60, 0.15); border-color: rgba(90, 138, 60, 0.5); }
+.perm-cell.is-deny  { color: var(--accent-red); background: rgba(165, 77, 68, 0.15); border-color: rgba(165, 77, 68, 0.5); }
+.perm-cell.is-warn  { background: rgba(212, 165, 116, 0.35); border-color: var(--star-filled); }
+.perm-cell.is-pending { box-shadow: 0 0 0 2px var(--accent-brown); }
+.perm-cell:disabled { cursor: wait; opacity: 0.6; }
+.perm-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0.75rem -1.25rem -1.25rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card-light);
+  border-top: 1px solid var(--border-color);
+}
+.perm-savebar-count { margin-right: auto; font-family: 'Crimson Pro', serif; color: var(--text-primary); }
+.perm-loading { color: var(--text-secondary); margin: 0; }
+
+/* Roles list + add form */
+.perm-roles { display: flex; flex-direction: column; }
+.perm-role {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Crimson Pro', serif;
+}
+.perm-role-label { font-weight: 600; min-width: 9rem; }
+.perm-role-input { min-width: 9rem; }
+.perm-role-slug { font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); }
+.perm-role-count { color: var(--text-secondary); }
+.perm-role-actions { display: inline-flex; gap: 0.4rem; margin-left: auto; }
+.perm-role-add { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.perm-role-add .portal-field { margin: 0; }
+
+@media (max-width: 900px) {
+  .perm-row-label { min-width: 11rem; }
+  .perm-role-actions { margin-left: 0; }
+}
+
+/* --------------- Shared section pieces --------------- */
+/* Layouts most sections repeat. These replace identical inline styles that
+   were copied between the section scripts. */
+
+/* Header card at the top of a section: title with search / buttons, an
+   optional description, and the "saved" message. */
+.portal-card.portal-head { padding: 0.85rem 1.1rem; }
+.portal-head-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.portal-head-title { margin: 0; flex: 1; }
+.portal-head-desc { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.92rem; }
+.portal-head-desc.is-tight { margin-top: 0.3rem; }
+.portal-flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
+
+/* Text */
+.portal-muted { color: var(--text-secondary); }
+.portal-note { margin: 0; color: var(--text-secondary); }   /* empty / loading notes */
+.portal-strong { font-weight: 600; }
+.portal-pre { white-space: pre-wrap; }
+.portal-gap-top { margin-top: 0.85rem; }
+.portal-card > .portal-table-wrap.portal-gap-top { margin-top: 0.85rem; }
+
+/* Tables */
+.portal-table .portal-col-actions { text-align: right; white-space: nowrap; }
+.portal-table th.portal-col-actions { width: 1%; }
+.portal-table .portal-col-center { text-align: center; }
+.portal-table .portal-nowrap { white-space: nowrap; }
+/* "Nothing here yet" row spanning the table (beats the edge-cell inset). */
+.portal-table td.portal-empty-cell,
+.portal-card > .portal-table-wrap .portal-table td.portal-empty-cell {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 1.5rem;
+}
+/* First cell: the row's name, with any badges beside it. */
+.portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
+.portal-row-title { font-family: Stoke, serif; font-size: 0.9rem; }
+
+/* Forms */
+.portal-field.is-full { grid-column: 1 / -1; }
+.portal-field.is-tight { margin-bottom: 0.6rem; }
+.portal-btn.is-end { margin-left: auto; }
+.portal-form-title { margin-top: 0; }   /* "New … / Edit …" heading of a form card */
+.portal-btn-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }   /* Save / Cancel */
+.portal-card.is-tight { margin-bottom: 0.6rem; }
+.portal-card.is-inset { background: var(--bg-card-light); margin-bottom: 0.5rem; }   /* card inside a card */
+.portal-btn.is-spaced { margin-left: 0.4rem; }
+.portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Image fields: URL box + Upload button, hidden file input, error, preview. */
+.portal-image-row { display: flex; gap: 0.5rem; align-items: center; }
+.portal-grow { flex: 1; }
+.portal-upload-btn { white-space: nowrap; }
+.portal-file-input { display: none; }
+.portal-field-help.is-error { color: var(--danger-color, #c0392b); }
+.portal-image-preview {
+  display: block;
+  margin-top: 0.5rem;
+  max-width: 320px;
+  max-height: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  object-fit: cover;
+}
+
+/* Campaigns section: campaign / chapter / codex editors. */
+.portal-card.cmp-form { margin-bottom: 1rem; }
+.cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+.cmp-hint { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+/* "Advanced Settings" disclosure in the campaign form (same look as the
+   Combat Toolkit's). */
+.cmp-adv-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0.7rem 0 0.35rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+textarea.cmp-code,
+.portal-field textarea.cmp-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+.portal-card.cmp-list-card { margin-bottom: 0.75rem; }
+
+/* --------------- Responsive --------------- */
+@media (max-width: 1100px) {
+  .division-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .dash-attention-row { flex-wrap: wrap; }
+  .dash-attention-text { flex-basis: 100%; order: 2; }
+  .dash-open { margin-left: auto; }
+  .portal-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "topbar"
+      "main";
+  }
+  .portal-sidebar-rail { display: none; }
+  .portal-topbar {
+    display: flex;
+    /* Keep the top bar pinned so it stays visible after modal saves / form
+       rerenders on mobile — without this, some viewport changes (virtual
+       keyboard, momentum scroll) could leave the shell scrolled with the
+       topbar out of view. */
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .portal-sidebar-drawer { display: flex; flex-direction: column; }
+  /* Use dynamic viewport height so the drawer matches the visible area when
+     mobile browser chrome (address bar) is shown — 100vh overshoots it. */
+  .portal-sidebar-drawer { height: 100dvh; }
+  /* The shared sidebar body pins its footer to the bottom via min-height:100%
+     and a flex:1 nav, which on the drawer (offset by the close-button header)
+     forced the footer below the fold. Let the body and nav size to their
+     content so the drawer itself scrolls and Log out + theme toggle stay
+     reachable. */
+  .portal-sidebar-drawer .portal-sidebar-body { min-height: 0; flex: 0 0 auto; }
+  .portal-sidebar-drawer .sidebar-nav { flex: 0 0 auto; }
+  .portal-drawer-overlay { display: block; }
+  .portal-main { padding: 1rem 1rem 3rem; }
+  .portal-field-row,
+  .portal-field-row-triple { grid-template-columns: 1fr; }
+  .portal-search { min-width: 0; width: 100%; }
+  .portal-card-actions { width: 100%; }
+  /* Section headers with extra content (dashboard date, FC Members search +
+     add button) wrap instead of overflowing the viewport. */
+  .portal-main .portal-section-header { flex-wrap: wrap; }
+  .dashboard-header .dashboard-date {
+    flex-basis: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+  .members-header-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}
+
+/* --------------- Admin Settings → Pages --------------- */
+.site-swatch {
+  width: 2.1rem;
+  height: 2.1rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+.site-mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+.site-subhead { margin: 1rem 0 0.25rem; }
+.site-row-actions { display: inline-flex; gap: 0.4rem; align-items: center; justify-content: flex-end; }
+
+/* The pages list scrolls inside its own box so the column headers stay in
+   view. Collapsed table borders don't travel with a sticky header, so its
+   bottom line is drawn as an inset shadow. */
+.site-table-scroll { max-height: 70vh; overflow: auto; }
+.site-table-scroll .portal-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: inset 0 -1px 0 var(--border-color);
+}
+
+/* --------------- Admin Settings → Navigation --------------- */
+.nav-ed-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.nav-ed-group {
+  padding: 0.4rem;
+  background: var(--bg-card-light);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+}
+.nav-ed-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.2rem 1.6rem;
+}
+.nav-ed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font-family: 'Crimson Pro', serif;
+}
+.nav-ed-row.is-dragging { opacity: 0.45; }
+.nav-ed-row.is-over { box-shadow: 0 -3px 0 0 var(--accent-gold); }
+.nav-ed-handle { color: var(--text-secondary); cursor: grab; flex-shrink: 0; font-size: 1.15rem; }
+.nav-ed-type {
+  flex-shrink: 0;
+  min-width: 6.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.nav-ed-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+}
+.nav-ed-sub { color: var(--text-secondary); font-size: 0.85rem; }
+.nav-ed-heading {
+  font-family: 'Stoke', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nav-ed-actions { display: inline-flex; gap: 0.15rem; flex-shrink: 0; }
+/* Same size with or without a drag under way: only the outline and hint
+   show, so nothing moves when a drag starts. */
+.nav-ed-end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.1rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px dashed transparent;
+  border-radius: 0.375rem;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.85rem;
+}
+.nav-ed-end .nav-ed-hint { visibility: hidden; }
+.nav-ed-end.is-active { border-color: var(--border-color); }
+.nav-ed-end.is-active .nav-ed-hint { visibility: visible; }
+.nav-ed-end.is-over { border-color: var(--accent-gold); background: var(--bg-card-light); }
+.nav-ed-unlisted {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 0.375rem;
+  min-height: 3rem;
+}
+.nav-ed-unlisted.is-over { border-color: var(--accent-gold); background: var(--bg-card-light); }
+@media (max-width: 640px) {
+  .nav-ed-type { display: none; }
+  .nav-ed-children { margin-left: 0.6rem; }
+}
