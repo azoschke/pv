@@ -98,7 +98,7 @@
       submitBtn.href = PORTAL_SUBMIT_URL;
     } else {
       submitBtn.href = LOGIN_URL + encodeURIComponent(PORTAL_SUBMIT_URL);
-      submitBtn.title = "Log in to submit a quest";
+      submitBtn.title = "Sign in to submit a quest";
     }
   })();
 
@@ -599,7 +599,7 @@
       // Round-trip through login and come back to the board to finish the signup.
       return '<div class="quest-modal-actions">' +
         '<a class="quest-action-btn" href="' + LOGIN_URL +
-        encodeURIComponent(window.location.pathname) + '">Log in to sign up</a>' +
+        encodeURIComponent(window.location.pathname) + '">Sign in to register</a>' +
         '</div>';
     }
     if (!canUse("quests.signup")) return "";
@@ -616,7 +616,7 @@
   }
 
   function authedFetch(method, path) {
-    if (!getSession()) return Promise.reject(new Error("You are no longer logged in."));
+    if (!getSession()) return Promise.reject(new Error("You are no longer signed in."));
     return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
   }
 

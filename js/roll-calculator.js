@@ -200,7 +200,7 @@
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'lock'),
       h('h2', null, 'Members only'),
       h('p', null, 'Sign in with your account to use the Roll Calculator.'),
-      h('a', { className: 'rp-btn', href: 'login.html?redirect=' + encodeURIComponent(window.location.pathname) }, 'Sign in'));
+      h('a', { className: 'rp-btn', href: 'login.html?redirect=' + encodeURIComponent(window.location.pathname) }, 'Sign In'));
   }
   function PausedCard(props) {
     return h('div', { className: 'rp-gate' },
@@ -1562,7 +1562,7 @@
     if (loading) return h('div', { className: 'rp-gate' }, h('p', null, 'Loading…'));
     if (err && !data) return h('div', { className: 'rp-gate' }, h('p', { className: 'rp-flash error' }, err));
     if (!data || !data.active) {
-      if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your login isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
+      if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your account isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
       if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session.',
         onResume: data.can_resume ? function () { setErr(''); PVRollAPI.request('POST', '/rp/campaigns/' + data.campaign_id + '/session/resume', {}).then(bootstrap).catch(function (e) { setErr(e.message || 'Failed to resume.'); }); } : null });
       return h(PausedCard, {});

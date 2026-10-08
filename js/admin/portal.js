@@ -203,7 +203,7 @@
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' },
             theme === 'dark' ? 'light_mode' : 'dark_mode'),
-          h('span', null, theme === 'dark' ? 'Light mode' : 'Dark mode')
+          h('span', null, theme === 'dark' ? 'Light Mode' : 'Dark Mode')
         ),
         h('button', {
           type: 'button',

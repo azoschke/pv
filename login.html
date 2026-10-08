@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Portal — Sign In</title>
+  <title>Sign In — Phoenix Vanguard</title>
   <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
   <link rel="preload" href="assets/CrimsonPro-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -116,7 +116,7 @@
           username: username,
           password: password
         }, false);
-        if (!data || !data.token) throw new Error('Login failed: no token returned.');
+        if (!data || !data.token) throw new Error('Sign in failed: no token returned.');
 
         PVAdminAPI.setSession({
           token: data.token,
@@ -132,7 +132,7 @@
         await PVSession.handoff();
         window.location.replace(redirectTarget);
       } catch (err) {
-        showFlash('error', err.status === 401 ? 'Incorrect Password' : (err.message || 'Login failed.'));
+        showFlash('error', err.status === 401 ? 'Incorrect Password' : (err.message || 'Sign in failed.'));
         btn.disabled = false;
         btn.textContent = 'Sign In';
       }

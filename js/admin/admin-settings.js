@@ -473,7 +473,7 @@
                   h('tr', null,
                     h('th', null, 'User'),
                     h('th', null, 'Created'),
-                    h('th', null, 'Last Login'),
+                    h('th', null, 'Last Sign In'),
                     h('th', null, 'Roles'),
                     h('th', { className: 'portal-col-actions' }, '')
                   )
