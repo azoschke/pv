@@ -9,6 +9,8 @@
   <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+  <!-- Signed in (an unexpired sign-in saved by js/pv-session.js): hide "Member Sign In" before the page paints. -->
+  <script>(function(){try{var s=JSON.parse(localStorage.getItem('pv.admin.session')||'null');if(s&&s.token&&!(s.expires_at&&new Date(s.expires_at)<=new Date()))document.documentElement.classList.add('pv-signed-in');}catch(e){}})()</script>
 </head>
 <body>
 
@@ -19,18 +21,16 @@
       <p class="app-subtitle">Welcome to</p>
       <h1 class="app-title">The Phoenix Vanguard</h1>
       <p class="landing-tagline">Tools, recaps, and resources for the free company.</p>
+      <a class="landing-signin" href="login.html?redirect=./">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
+        Member Sign In
+      </a>
     </header>
 
     <!-- ── Campaigns ─────────────────────────────────────────────────────────── -->
     <section class="landing-row landing-row--campaigns">
-      <div class="landing-row-image">
-        <div class="img-slot tone-camp">
-          <svg class="img-slot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M2 4.5A1.5 1.5 0 0 1 3.5 3H10a2 2 0 0 1 2 2v15a1.5 1.5 0 0 0-1.5-1.5H2z"/>
-            <path d="M22 4.5A1.5 1.5 0 0 0 20.5 3H14a2 2 0 0 0-2 2v15a1.5 1.5 0 0 1 1.5-1.5H22z"/>
-          </svg>
-          <span class="img-slot-label">Campaigns</span>
-        </div>
+      <div class="landing-row-image landing-row-image--photo">
+        <img src="https://images.phoenixvanguard-tools.com/campaign-symphony-of-the-eclipse-1791402475539.jpg" alt="">
       </div>
       <div class="landing-row-content">
         <p class="landing-row-eyebrow">A continuing chronicle</p>
@@ -77,16 +77,8 @@
 
     <!-- ── Medical ───────────────────────────────────────────────────────────── -->
     <section class="landing-row landing-row--medical">
-      <div class="landing-row-image">
-        <div class="img-slot tone-med">
-          <svg class="img-slot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 7.5h18v12.5H3z"/>
-            <path d="M8 7.5V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5v2"/>
-            <path d="M12 11v5"/>
-            <path d="M9.5 13.5h5"/>
-          </svg>
-          <span class="img-slot-label">Medical Division</span>
-        </div>
+      <div class="landing-row-image landing-row-image--photo">
+        <img src="https://images.phoenixvanguard-tools.com/infirmary-1779211929695.webp" alt="">
       </div>
       <div class="landing-row-content">
         <p class="landing-row-eyebrow">Patient &amp; Staff Resources</p>
