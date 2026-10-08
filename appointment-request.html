@@ -25,26 +25,7 @@
             Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a> <br><em>All fields are required</em>.
         </p>
 
-        <!-- Login gate: shown when no valid session. Mirrors the job board's
-             "log in to apply" round-trip — sign in, then land back here. -->
-        <div id="login-gate" style="display: none;">
-            <div class="parchment">
-                <div class="confirmation-panel is-shown">
-                    <span class="material-icons check-icon is-lock">lock</span>
-                    <h2>Sign in to request an appointment</h2>
-                    <p>
-                        Appointment requests are tied to your Phoenix Vanguard account, please
-                        sign in to request an appointment.
-                    </p>
-                    <a href="#" id="login-redirect-btn" class="intake-btn">
-                        <span class="material-icons">login</span>
-                        Sign in to continue
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Request Form (revealed only once logged in) -->
+        <!-- Request form (shown once the sign-in is confirmed) -->
         <div id="form-wrapper" style="display: none;">
             <div class="form-container active" id="form-appointment">
                 <form id="appointmentForm" onsubmit="submitAppointmentRequest(event)">

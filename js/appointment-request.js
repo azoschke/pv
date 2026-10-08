@@ -3,29 +3,21 @@
 // medic list changes, update the <select> options and the worker's MEDIC_IDS.
 const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy-secure.chlorinatorgreen.workers.dev/';
 
-// ── Auth gate ───────────────────────────────────────────────────────────────
-// Requests can only be sent by a logged-in account. When signed out we hide the
-// form and show a "log in to continue" panel that round-trips through the admin
-// login and returns here (same pattern as the job board's apply button). When
-// signed in we prefill the Name field from the account's display name and lock
-// it so the request always matches the logged-in identity.
-function initAppointmentGate() {
+// ── Signed-in form ──────────────────────────────────────────────────────────
+// Requests are tied to the signed-in account, and the page needs a sign-in
+// (Admin Settings → Pages). Without one the visitor is sent to the sign-in
+// page and brought back here; the form stays hidden meanwhile. Signed in, the
+// Name field is filled from the account's display name and locked so the
+// request always matches the signed-in account.
+function initAppointmentForm() {
     const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
     const formWrapper = document.getElementById('form-wrapper');
-    const loginGate = document.getElementById('login-gate');
 
     if (!session) {
-        if (formWrapper) formWrapper.style.display = 'none';
-        if (loginGate) loginGate.style.display = 'block';
-        const btn = document.getElementById('login-redirect-btn');
-        if (btn) {
-            btn.href = 'login.html?redirect=' +
-                encodeURIComponent(window.location.pathname);
-        }
+        PVAdminAPI.redirectToLogin();
         return;
     }
 
-    if (loginGate) loginGate.style.display = 'none';
     if (formWrapper) formWrapper.style.display = 'block';
 
     const accountName = (session.display_name || session.username || '').trim();
@@ -40,17 +32,16 @@ function initAppointmentGate() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initAppointmentGate);
+document.addEventListener('DOMContentLoaded', initAppointmentForm);
 
 async function submitAppointmentRequest(event) {
     event.preventDefault();
 
     // Reassert the session at submit time — a token can expire while the form
-    // sits open. If it has, bounce back through login rather than sending.
+    // sits open. If it has, sign in again (and come back) rather than sending.
     const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
     if (!session) {
-        window.location.href = 'login.html?redirect=' +
-            encodeURIComponent(window.location.pathname);
+        PVAdminAPI.redirectToLogin();
         return;
     }
 

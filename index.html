@@ -9,7 +9,7 @@
   <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
-  <!-- Signed in (an unexpired sign-in saved by js/pv-session.js): hide "Member Sign In" before the page paints. -->
+  <!-- Signed in (an unexpired sign-in saved by js/pv-session.js): hide "Sign In" and its note before the page paints. -->
   <script>(function(){try{var s=JSON.parse(localStorage.getItem('pv.admin.session')||'null');if(s&&s.token&&!(s.expires_at&&new Date(s.expires_at)<=new Date()))document.documentElement.classList.add('pv-signed-in');}catch(e){}})()</script>
 </head>
 <body>
@@ -20,10 +20,10 @@
     <header class="app-header">
       <p class="app-subtitle">Welcome to</p>
       <h1 class="app-title">The Phoenix Vanguard</h1>
-      <p class="landing-tagline">Tools, recaps, and resources for the free company.</p>
+      <p class="landing-tagline">Tools, recaps, and resources for the free company.<span class="landing-signin-note"> Some resources may not be visible to unauthenticated users, sign in to continue.</span></p>
       <a class="nav-login-btn landing-signin" href="login.html?redirect=./">
         <svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg>
-        <span>Member Sign In</span>
+        <span>Sign In</span>
       </a>
     </header>
 
@@ -101,6 +101,7 @@
           Crafting macro databases to organize your grind and Zodiac Weapon questline tools to help you finish your ARR relics.
         </p>
         <ul class="tool-list">
+          <li><a href="roll-calculator.html"><span class="tool-list-name">Roll Calculator</span><span class="tool-list-arrow">&rarr;</span></a></li>
           <li><a href="crafting-database.html"><span class="tool-list-name">Macro Database</span><span class="tool-list-arrow">&rarr;</span></a></li>
           <li><a href="cosmic-exploration.html"><span class="tool-list-name">Cosmic Exploration Database</span><span class="tool-list-arrow">&rarr;</span></a></li>
           <li><a href="atma.html"><span class="tool-list-name">Zodiac Weapon Atma</span><span class="tool-list-arrow">&rarr;</span></a></li>

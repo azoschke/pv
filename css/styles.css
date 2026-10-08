@@ -1309,9 +1309,6 @@ button.nav-sublink {
   margin-bottom: 1rem;
 }
 
-/* The sign-in lock follows the theme's red. */
-.confirmation-panel .check-icon.is-lock { color: var(--accent-red); }
-
 .confirmation-panel h2 {
   font-family: 'Stoke', serif;
   font-size: 1.5rem;
@@ -1678,11 +1675,13 @@ button.nav-sublink {
   max-width: 38rem;
 }
 
-/* "Member Sign In" under the landing tagline: the nav's Sign In button
-   (.nav-login-btn) with room above it; hidden once signed in (the page marks
-   <html> with .pv-signed-in before it paints). */
+/* "Sign In" under the landing tagline: the nav's Sign In button
+   (.nav-login-btn) with room above it. It and the tagline's sign-in note are
+   hidden once signed in (the page marks <html> with .pv-signed-in before it
+   paints). */
 .landing-signin { margin-top: 1.25rem; }
-.pv-signed-in .landing-signin { display: none; }
+.pv-signed-in .landing-signin,
+.pv-signed-in .landing-signin-note { display: none; }
 
 /* A landing row's photo: fills the image box (as tall as the text beside it,
    280px at least), cropped to fit. */

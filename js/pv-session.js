@@ -171,10 +171,12 @@
     return false;
   }
 
+  // To the sign-in page, which brings the visitor back to this page after
+  // signing in.
   function redirectToLogin() {
-    if (!/\/login(\.html)?$/.test(window.location.pathname)) {
-      window.location.replace(LOGIN_PAGE);
-    }
+    var path = window.location.pathname;
+    if (/\/login(\.html)?$/.test(path)) return;
+    window.location.replace(LOGIN_PAGE + '?redirect=' + encodeURIComponent(path + window.location.search));
   }
 
   // One request helper for every worker. `body` is sent as JSON, or as-is

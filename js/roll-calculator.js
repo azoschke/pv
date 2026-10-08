@@ -195,13 +195,6 @@
   }
 
   // ── Gate cards ────────────────────────────────────────────────────────────
-  function LockedCard() {
-    return h('div', { className: 'rp-gate' },
-      h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'lock'),
-      h('h2', null, 'Members only'),
-      h('p', null, 'Sign in with your account to use the Roll Calculator.'),
-      h('a', { className: 'rp-btn', href: 'login.html?redirect=' + encodeURIComponent(window.location.pathname) }, 'Sign In'));
-  }
   function PausedCard(props) {
     return h('div', { className: 'rp-gate' },
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'pause_circle'),
@@ -1407,11 +1400,15 @@
     var seenState = useState({}); var seen = seenState[0], setSeen = seenState[1];
     var dataRef = useRef(null); dataRef.current = data;
 
+    // The page needs a sign-in (Admin Settings → Pages): without a valid one,
+    // sign in and come back. It stays on "Loading…" meanwhile.
     async function bootstrap() {
-      if (!session) { setLoading(false); return; }
-      try { var d = await PVRollAPI.request('GET', '/rp/me/active'); setData(d); setErr(''); }
-      catch (e) { if (e.status === 401) setData(null); else setErr(e.message || 'Failed to load.'); }
-      finally { setLoading(false); }
+      if (!session) { PVSession.redirectToLogin(); return; }
+      try { var d = await PVRollAPI.request('GET', '/rp/me/active'); setData(d); setErr(''); setLoading(false); }
+      catch (e) {
+        if (e.status === 401) { PVSession.clear(); PVSession.redirectToLogin(); return; }
+        setErr(e.message || 'Failed to load.'); setLoading(false);
+      }
     }
     useEffect(function () { bootstrap(); /* eslint-disable-next-line */ }, []);
 
@@ -1558,7 +1555,6 @@
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
 
-    if (!session) return h(LockedCard);
     if (loading) return h('div', { className: 'rp-gate' }, h('p', null, 'Loading…'));
     if (err && !data) return h('div', { className: 'rp-gate' }, h('p', { className: 'rp-flash error' }, err));
     if (!data || !data.active) {
