@@ -447,22 +447,27 @@ pre {
 
 /* --- Account (signed in): picture and name, opening Dashboard / Sign Out --- */
 .nav-account { flex-shrink: 0; }
-.nav-account-btn {
+/* Plain, like the nav links beside it: no box, brightening on hover. (The
+   sidebar copy is styled as a .nav-sidebar-toggle.) */
+.nav-account > .nav-account-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 2.1rem;
-  padding: 0 0.7rem 0 0.3rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
   font-family: 'Stoke', serif;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
-.nav-account-btn:hover { background-color: var(--bg-darker); }
+.nav-account > .nav-account-btn:hover,
+.nav-account.open > .nav-account-btn {
+  color: var(--text-primary);
+}
 /* Keep a long character name from stretching the top nav; the full-width
    sidebar copy has room, so it shows the name in full. */
 .nav-account .nav-account-name {
