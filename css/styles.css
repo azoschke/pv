@@ -1678,36 +1678,10 @@ button.nav-sublink {
   max-width: 38rem;
 }
 
-/* "Member Sign In" under the landing tagline; hidden once signed in (the
-   page marks <html> with .pv-signed-in before it paints). */
-.landing-signin {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  padding: 0.6rem 1.4rem;
-  border-radius: 6px;
-  background: var(--accent-red);
-  color: #ffffff;
-  font-family: 'Stoke', serif;
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  box-shadow: 0 4px 15px var(--shadow-color);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-[data-theme="dark"] .landing-signin { color: #1a1614; }
-.landing-signin:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--shadow-color);
-  filter: brightness(1.08);
-}
-.landing-signin:active { transform: translateY(0); }
-.landing-signin svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
+/* "Member Sign In" under the landing tagline: the nav's Sign In button
+   (.nav-login-btn) with room above it; hidden once signed in (the page marks
+   <html> with .pv-signed-in before it paints). */
+.landing-signin { margin-top: 1.25rem; }
 .pv-signed-in .landing-signin { display: none; }
 
 /* A landing row's photo: fills the image box (as tall as the text beside it,
@@ -1725,6 +1699,15 @@ button.nav-sublink {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* The campaign photo's subject sits right of centre: keep it in frame as the
+   column narrows (desktop 85%, tablet 75%); stacked on phones it is centred. */
+.landing-row--campaigns .landing-row-image--photo img { object-position: 85%; }
+@media (max-width: 900px) {
+  .landing-row--campaigns .landing-row-image--photo img { object-position: 75%; }
+}
+@media (max-width: 720px) {
+  .landing-row--campaigns .landing-row-image--photo img { object-position: 50%; }
 }
 
 /* ── Image slot ──────────────────────────────────────────────────────────── */
