@@ -101,9 +101,9 @@ a {
    2. CSS VARIABLES
    ============================================================================= */
 
-/* Torchlight palette. Every neutral sits at one hue (about 88° in OKLCH) at low
-   chroma, so layers never drift yellow or pink. Use these tokens rather than
-   new colour values.
+/* Torchlight palette. Within each theme every neutral sits at one hue at low
+   chroma (light about 88° in OKLCH; dark warmer, toward red-brown), so layers
+   never drift. Use these tokens rather than new colour values.
 
    Three surface tones, each with one job:
      --bg-primary  page: the grained ground, and recessed trays inside cards
@@ -152,9 +152,9 @@ a {
   /* Staff panel (Medical Division landing) */
   --bg-staff-panel: #faf7f0;
 
-  /* Group rows in grouped tables: between card and well, a step past the
-     row hover */
-  --bg-group-row: #e7e3d8;
+  /* Table rows: the hover tint, and group rows a step past it */
+  --bg-row-hover: #efebe2;
+  --bg-group-row: #eae6dc;
 
   /* Focus and selection ring, scrim behind modals and drawers, and the one
      shadow (things that float over content: dropdown menus) */
@@ -186,16 +186,16 @@ a {
 
 [data-theme="dark"] {
   /* Surfaces */
-  --bg-primary:    #191712;
-  --bg-card:       #25231e;
-  --bg-darker:     #34312a;
-  --bg-card-light: #34312a;
+  --bg-primary:    #1a1614;
+  --bg-card:       #231f1d;
+  --bg-darker:     #2b2724;
+  --bg-card-light: #2b2724;
 
   /* Text */
   --text-primary:   #ece7dc;
   --text-body:      #cdc2b2;
   --text-secondary: #c1b5a6;
-  --label:          #191712;
+  --label:          #1a1614;
 
   /* Lines & accents */
   --border-color:  rgba(236, 231, 220, 0.10);
@@ -205,7 +205,7 @@ a {
   --gold:          #d6b676;
 
   /* Progress */
-  --progress-bg:   #34312a;
+  --progress-bg:   #2b2724;
   --progress-fill: #b8a082;
 
   /* Completion */
@@ -213,17 +213,18 @@ a {
 
   /* Stars */
   --star-filled: #d6b676;
-  --star-empty:  #4a463d;
+  --star-empty:  #4b4541;
 
   /* Form inputs */
-  --form-input-bg:          #34312a;
+  --form-input-bg:          #2b2724;
   --form-input-placeholder: #c1b5a6;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #25231e;
+  --bg-staff-panel: #231f1d;
 
-  /* Group rows in grouped tables */
-  --bg-group-row: #302d26;
+  /* Table rows */
+  --bg-row-hover: #272320;
+  --bg-group-row: #2e2925;
 
   /* Ring, scrim, float shadow */
   --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
@@ -272,7 +273,7 @@ h1, h2, h3, h4 {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 3rem;
 }
@@ -1022,7 +1023,7 @@ button.nav-sublink {
 .top-controls-right { justify-content: flex-end; }
 
 /* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
-   Outside .container; the text keeps to the same 1100px column as the page. */
+   Outside .container; the text keeps to the same 1300px column as the page. */
 .site-footer {
   padding: 2.5rem 1.25rem 3rem;
   text-align: center;
@@ -1032,7 +1033,7 @@ button.nav-sublink {
 }
 
 .site-footer-text {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 

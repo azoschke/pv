@@ -168,11 +168,11 @@
       return c.assigned_member_id == null || Number(c.assigned_member_id) === Number(ch.member_id);
     });
 
-    return h('div', { className: 'portal-card rp-roster-card' },
+    return h('div', { className: 'portal-card is-inset rp-roster-card' },
       // Portrait pulled from the member's roster profile when they have one;
       // otherwise the placeholder field. Full-bleed media with a torn bottom
       // edge, matching the item cards.
-      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
+      h('div', { className: 'rp-card-media sketch-wash media-ph is-tone-3 tear-half' },
         (props.imageUrl && !imgErr)
           ? h('img', { src: props.imageUrl, alt: '', onError: function () { setImgErr(true); } })
           : null),
@@ -1186,7 +1186,7 @@
     var copyable = props.canCopy;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
+      h('div', { className: 'rp-card-media sketch-wash media-ph is-tone-3 tear-half' },
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
           : null,
@@ -1465,7 +1465,7 @@
     var owner = ownerInfo(it, props.members);
 
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
+      h('div', { className: 'rp-card-media sketch-wash media-ph is-tone-3 tear-half' },
         (it.image_url && !imgErr)
           ? h('img', { src: it.image_url, alt: '', onError: function () { setImgErr(true); } })
           : null),

@@ -337,6 +337,14 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no venue has (unless it is ticked, so it can still be
+      // cleared).
+      var anyone = allVenues.some(function (v) {
+        if (kind === "sizes") return v.size === value;
+        return (Array.isArray(v.tags) ? v.tags : []).indexOf(value) !== -1;
+      });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 

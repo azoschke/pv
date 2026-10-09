@@ -329,6 +329,14 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no listed job has (closed jobs count only while Show
+      // closed is on), unless it is ticked, so it can still be cleared.
+      var anyone = allJobs.some(function (j) {
+        if (!filters.showClosed && j.status !== "open") return false;
+        return kind === "categories" ? j.category === value : jobTypeOf(j) === value;
+      });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 

@@ -448,7 +448,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   vertical-align: top;
 }
 .portal-table tbody tr:not(.portal-group-row):hover td {
-  background-color: color-mix(in srgb, var(--bg-darker) 50%, var(--bg-card));
+  background-color: var(--bg-row-hover);
 }
 
 /* Tables sit flush to the card edges. Any header / subtitle / filter content
