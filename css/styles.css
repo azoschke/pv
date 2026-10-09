@@ -1971,18 +1971,15 @@ button.nav-sublink {
   font-style: italic;
 }
 
-/* Rows of photo and text, the photo alternating sides: photo 5, text 6. */
+/* Rows of photo and text, half and half, the photo alternating sides. The
+   text runs the full width of its column. */
 .landing-row {
   --tear-h: 30px;
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 3rem;
   align-items: center;
   padding: 2.25rem 0;
-}
-
-.landing-row:nth-of-type(even) {
-  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
 }
 
 .landing-row:nth-of-type(even) .landing-row-image {
@@ -2009,7 +2006,6 @@ button.nav-sublink {
   font-size: 1em;
   color: var(--text-body);
   margin: 0;
-  max-width: 52ch;
 }
 
 /* "Sign In" under the lead, a primary button. It and the sign-in note are
@@ -2213,7 +2209,6 @@ button.nav-sublink {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 440px;
 }
 
 .tool-list a {
@@ -2254,8 +2249,7 @@ button.nav-sublink {
 /* ── Responsive: stack rows on narrow viewports ──────────────────────────── */
 
 @media (max-width: 820px) {
-  .landing-row,
-  .landing-row:nth-of-type(even) {
+  .landing-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
@@ -2267,9 +2261,6 @@ button.nav-sublink {
   }
   .landing-row-content {
     padding-bottom: 0;
-  }
-  .tool-list {
-    max-width: none;
   }
 }
 
