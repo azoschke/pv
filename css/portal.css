@@ -120,10 +120,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   object-fit: cover;
 }
 .portal-sidebar .sidebar-user .sidebar-user-name {
+  font-family: 'Stoke', serif;
   color: var(--text-primary);
-  font-weight: 600;
-  font-size: 1.05rem;
-  margin: 0 0 0.15rem;
+  font-weight: 500;
+  font-size: .9rem;
+  line-height: 1;
+  margin: 0;
 }
 .portal-sidebar .sidebar-user .sidebar-user-roles {
   font-size: 0.95rem;
@@ -1090,17 +1092,19 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .notes-link:hover { text-decoration: underline; }
 
-/* Group rows in grouped tables (FC Members ranks, Job Board divisions): ink
-   small caps with a rule underneath, no fill. */
+/* Group rows in grouped tables (FC Members ranks, Job Board divisions, Event
+   Assets types): ink small caps on a page-tone band, like the table header,
+   with even padding. */
 .portal-table .portal-group-row td {
-  padding: 1.4rem 0.75rem 0.45rem;
+  padding: 0.65rem 0.75rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
   font-family: 'Stoke', serif;
   font-size: 0.84rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-primary);
 }
-.portal-table tbody .portal-group-row:first-child td { padding-top: 0.9rem; }
 
 /* --------------- Venues directory --------------- */
 /* Center every cell vertically so the row text lines up with the thumbnail. */

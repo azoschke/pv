@@ -882,6 +882,8 @@ button.nav-sublink {
    New, Pinned...). Work in progress gets a brown dot and plain text
    (.status-dot.is-brown), a neutral state a muted dot (.status-dot), and
    settled states (Done, Active) plain muted text (.status-dot.is-quiet).
+   In grids, a state that needs action is a red dot (.status-dot.is-red) and
+   a lapsed or unknown one (Inactive, No Data) a gold dot (.status-dot.is-gold).
    Category labels are italic text or a small square tag in the well. */
 .pill {
   display: inline-block;
@@ -915,6 +917,8 @@ button.nav-sublink {
   background-color: var(--text-secondary);
 }
 .status-dot.is-brown::before { background-color: var(--accent-brown); }
+.status-dot.is-red::before { background-color: var(--accent-red); }
+.status-dot.is-gold::before { background-color: var(--gold); }
 .status-dot.is-quiet { color: var(--text-secondary); }
 .status-dot.is-quiet::before { display: none; }
 

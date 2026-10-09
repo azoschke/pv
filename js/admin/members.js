@@ -499,16 +499,17 @@
     );
   }
 
-  // Status styles: a red pill where someone has to act, a brown dot while in
-  // progress, a muted dot for a neutral state, muted text once settled.
+  // Status styles: a red dot where someone has to act, a brown dot while in
+  // progress, a gold dot for lapsed or unknown, a muted dot for a neutral
+  // state, muted text once settled.
   function interviewStatusClass(v) {
-    if (v === 'Not Started') return 'pill';
+    if (v === 'Not Started') return 'status-dot is-red';
     if (v === 'Scheduled')   return 'status-dot is-brown';
     if (v === 'Completed')   return 'status-dot is-quiet';
-    return 'status-dot'; // No Data
+    return 'status-dot is-gold'; // No Data
   }
   function activityStatusClass(v) {
-    if (v === 'Inactive') return 'status-dot is-brown';
+    if (v === 'Inactive') return 'status-dot is-gold';
     if (v === 'LOA')      return 'status-dot';
     return 'status-dot is-quiet'; // Active
   }
@@ -536,7 +537,7 @@
                   // A missing faction reads as a neutral status, not a tag.
                   return h('span', {
                     key: f,
-                    className: f === 'No Data' ? 'status-dot' : 'tag'
+                    className: f === 'No Data' ? 'status-dot is-gold' : 'tag'
                   }, f);
                 })
               )

@@ -49,7 +49,7 @@
   function interviewPillClass(status) {
     if (status === 'Not Started') return 'pill';
     if (status === 'Scheduled')   return 'status-dot is-brown';
-    return 'status-dot'; // No Data
+    return 'status-dot is-gold'; // No Data
   }
 
   // Display order for the Faction tag list — mirrors members.js FACTIONS.

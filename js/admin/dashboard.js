@@ -149,7 +149,7 @@
     // Cross-feature attention feed, ordered: applications → job interviews →
     // IC interviews → inactive members. Each row leads with its state: a red
     // pill where someone has to act, a brown dot while it is in progress, a
-    // muted dot otherwise.
+    // gold dot for inactive members.
     var attention = [];
     newApps.forEach(function (a) {
       var name = a.member_name || a.name || 'Unknown';
@@ -207,7 +207,7 @@
     });
     inactive.forEach(function (m) {
       attention.push({
-        key: 'inactive-' + m.id, tag: 'Inactive', statusCls: 'status-dot',
+        key: 'inactive-' + m.id, tag: 'Inactive', statusCls: 'status-dot is-gold',
         name: m.name || 'Unknown',
         desc: 'marked inactive',
         source: 'FC Members', target: 'members',
