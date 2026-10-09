@@ -334,14 +334,6 @@
       media.appendChild(img);
     }
 
-    // Badge pulls in the member's actual faction(s).
-    if ((m.factions || []).length) {
-      var badge = document.createElement("span");
-      badge.className = "venue-badge venue-badge-size";
-      badge.textContent = m.factions.join(" · ").toUpperCase();
-      media.appendChild(badge);
-    }
-
     card.appendChild(media);
 
     var body = document.createElement("div");
@@ -360,7 +352,7 @@
     if (m.ic_rank) {
       var rank = document.createElement("p");
       rank.className = "venue-card-location";
-      rank.textContent = String(m.ic_rank).toUpperCase();
+      rank.textContent = String(m.ic_rank);
       body.appendChild(rank);
     }
 
@@ -441,7 +433,7 @@
 
     var urlHtml = m.url
       ? '<p style="margin-top:1rem;">' +
-        '<a href="' + escapeHTML(m.url) + '" class="venue-modal-btn" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
+        '<a href="' + escapeHTML(m.url) + '" class="btn" target="_blank" rel="noopener noreferrer">Character page &nearr;</a></p>'
       : "";
 
     // Badges: one per faction, then IC rank.
