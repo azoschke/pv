@@ -1773,15 +1773,14 @@ button.nav-sublink {
    (React-rendered; most layout is handled in JS — only shared overrides here)
    ============================================================================= */
 
+/* Database cards are denser than regular cards: tighter padding, a smaller
+   title, 8px between them in the list. */
 .craft-card {
-  background-color: var(--bg-card);
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.2);
-  transition: all 0.2s ease-in-out;
   position: relative;
-  border-radius: 6px;
+  padding: 10px 16px 12px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
 }
-
-.craft-card:hover { box-shadow: 0 2px 8px rgba(62, 56, 50, 0.2); }
 
 .craft-name {
   font-family: 'Stoke', serif;
@@ -1790,6 +1789,11 @@ button.nav-sublink {
   color: var(--text-primary);
   margin-top: .5rem;
   margin-bottom: .5rem;
+}
+
+.craft-card .craft-name {
+  font-size: 1.05rem;
+  margin: 0;
 }
 
 .search-section {
@@ -2915,48 +2919,55 @@ body.nav-sidebar-open {
 .cdb-file-input { display: none; }
 
 /* Search section */
+/* Search panel: a raised card. */
 .cdb-search-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 14px;
+  padding: 20px 22px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
 }
 
 .cdb-search-bar { width: 100%; }
 
-.cdb-input {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
+/* Inputs and selects sit in the well, with no outline of their own. */
+.cdb-input,
+.cdb-select {
+  min-height: 40px;
+  padding: 0 0.8rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--bg-darker);
   color: var(--text-primary);
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
-.cdb-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25); }
+.cdb-input { width: 100%; }
+.cdb-select { cursor: pointer; }
+.cdb-input::placeholder { color: var(--text-secondary); }
+textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-input-mono { font-family: monospace; font-size: 0.85rem; }
-.cdb-input-sm   { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+.cdb-input-sm   { min-height: 30px; padding: 0 0.5rem; font-size: 0.85rem; }
 
-.cdb-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
+/* A checkbox with its label (filters, Food Required). */
+.cdb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-left: 4px;
+  font-size: 1rem;
   color: var(--text-primary);
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.875rem;
   cursor: pointer;
 }
-
-.cdb-select:focus { outline: none; box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25); }
 
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 10px;
   align-items: center;
 }
 
@@ -2974,25 +2985,23 @@ body.nav-sidebar-open {
 .cdb-craft-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
   padding-bottom: 2rem;
 }
 
-/* Craft card header */
+/* Card header: title, then the meta and the expand button, wrapping on
+   narrow screens. */
 .craft-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 1rem;
-  padding-right: 80px;
+  gap: 6px 16px;
   cursor: pointer;
-  position: relative;
-  transition: opacity 0.15s ease;
 }
 
-.craft-card-header:hover { opacity: 0.95; }
-.craft-card-header.expanded { border-bottom: 1px solid var(--border-color); }
-
 .craft-title-section {
+  flex: 1 1 280px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3001,7 +3010,7 @@ body.nav-sidebar-open {
 .craft-meta-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 6px 16px;
   margin-left: auto;
 }
 
@@ -3065,7 +3074,7 @@ body.nav-sidebar-open {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
@@ -3082,12 +3091,12 @@ body.nav-sidebar-open {
   background-color: var(--bg-darker);
 }
 
-/* Card body */
+/* Card body (expanded) */
 .cdb-card-body {
-  padding: 1rem;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 14px;
 }
 
 .cdb-craft-stats {
@@ -3109,9 +3118,10 @@ body.nav-sidebar-open {
 }
 
 .cdb-subheading {
-  font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  margin: 0 0 8px;
   color: var(--text-primary);
 }
 
@@ -3131,7 +3141,7 @@ body.nav-sidebar-open {
   margin-bottom: 0.25rem;
 }
 
-.cdb-macro-label { font-size: 0.75rem; color: var(--text-secondary); }
+.cdb-macro-label { font-size: 0.85rem; color: var(--text-secondary); }
 
 .cdb-copy-btn {
   display: inline-flex;
@@ -3150,16 +3160,15 @@ body.nav-sidebar-open {
 
 .cdb-copy-btn:hover { background-color: var(--border-color); }
 
+/* Macro text: a recessed tray (.tray) inside the card. */
 .cdb-macro-pre {
+  margin: 0;
   padding: 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-family: monospace;
   overflow-x: auto;
   white-space: pre-wrap;
-  background-color: var(--bg-card);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
 }
 
 .cdb-notes-text { font-size: 0.875rem; color: var(--text-primary); }
@@ -3211,11 +3220,14 @@ body.nav-sidebar-open {
 /* Card details: stat labels, tags row, item macros, results count. */
 .cdb-stat-label { color: var(--text-secondary); }
 .cdb-stat-text { color: var(--text-primary); }
-.cdb-inline-row.cdb-card-tags { padding: 0 1rem 0.75rem; flex-wrap: wrap; gap: 0.4rem; }
-.cdb-meta { color: var(--text-secondary); font-size: 0.85rem; }
+/* Collapsed card: "Crafts:" and a small quiet button per item. */
+.cdb-inline-row.cdb-card-tags { margin-top: 6px; flex-wrap: wrap; gap: 6px; }
+.cdb-card-tags-label { margin-right: 2px; font-size: 0.9rem; color: var(--text-secondary); }
+.cdb-card-tags .btn .material-icons { color: var(--accent-brown); }
+.cdb-meta { color: var(--text-secondary); font-size: 0.9rem; }
 .cdb-item-block { margin-bottom: 0.75rem; }
 .cdb-item-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
-.cdb-results-count { margin: 0.5rem 0 1rem; color: var(--text-secondary); font-size: 0.9rem; }
+.cdb-results-count { margin: 20px 2px 12px; color: var(--text-secondary); font-style: italic; }
 .cdb-filter-note { margin-right: 0.75rem; }
 
 .cdb-label-xs {
@@ -3231,7 +3243,7 @@ body.nav-sidebar-open {
   gap: 0.5rem;
 }
 
-.cdb-checkbox { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--check-color); }
+.cdb-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--accent-brown); }
 
 .cdb-form-actions {
   display: flex;
@@ -3244,9 +3256,32 @@ body.nav-sidebar-open {
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
 }
+
+/* "No macros saved" and the Add macros button, in a recessed tray. */
+.cdb-empty-macros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* A note above the list (import result, catalog errors): a small raised card. */
+.cdb-notice {
+  margin: 0.5rem 0;
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.cdb-notice.is-error { color: var(--accent-red); }
 
 /* Class stats modal */
 .cdb-modal-overlay {
@@ -3336,20 +3371,27 @@ body.nav-sidebar-open {
   align-items: center;
 }
 
+/* A reward: the level's numeral in brown and the count, in the well. */
 .cdb-data-chip {
   display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 0.35rem;
-  border: 1px solid var(--border-color);
+  align-items: baseline;
+  gap: 6px;
+  padding: 0.22rem 0.65rem;
+  border-radius: 3px;
   background-color: var(--bg-darker);
   font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
 }
 
-.cdb-data-chip-label { font-weight: 700; }
-.cdb-data-chip-count { color: var(--text-secondary); font-size: 0.8rem; }
+.cdb-data-chip-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  color: var(--accent-brown);
+}
+
+.cdb-data-chip-count { color: var(--text-primary); }
 
 .cdb-data-chip--gray  { background: rgba(163, 155, 142, 0.18); border-color: rgba(163, 155, 142, 0.5); }
 .cdb-data-chip--tan   { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
@@ -3361,27 +3403,24 @@ body.nav-sidebar-open {
 .cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
 
 /* Badge row in the card header (location / job / food) */
+/* Card meta: location, job and food as muted text with icons (.cdb-badge),
+   the class as a square .tag. */
 .cdb-badge-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 4px 14px;
   align-items: center;
-  margin-right: 0.5rem;
 }
 
 .cdb-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.75rem;
-  font-family: 'Stoke', serif;
-  line-height: 1;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
+
+.cdb-badge .material-icons { font-size: 15px; }
 
 .cdb-badge--location { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
 .cdb-badge--job      { background: rgba(139, 111,  71, 0.15); border-color: rgba(139, 111,  71, 0.5); }
@@ -3409,37 +3448,44 @@ body.nav-sidebar-open {
 .cdb-cat-badge--critical        { background: rgba(122,  46,  46, 0.25); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.55); }
 
 /* Items grid (3-up in expanded body) */
+/* Items in an expanded card, each a recessed tray (.tray). */
 .cdb-cosmic-item-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
 }
 
 .cdb-cosmic-item-card {
-  background-color: var(--bg-darker);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  padding: 0.75rem;
+  padding: 10px 14px;
 }
 
 .cdb-cosmic-item-name {
-  font-weight: 600;
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
   color: var(--text-primary);
-  margin-bottom: 0.4rem;
+  margin-bottom: 4px;
 }
 
 .cdb-cosmic-item-stat {
-  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
-.cdb-cosmic-item-stat .cdb-stat-value { color: var(--text-primary); }
+.cdb-cosmic-item-stat .cdb-stat-value {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
 
+/* The stat a numeric search matched. */
 .cdb-cosmic-item-stat--match {
-  background: rgba(139, 111, 71, 0.18);
+  margin: 0 -0.25rem;
   padding: 0 0.25rem;
-  border-radius: 0.2rem;
-  font-weight: 600;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--accent-brown) 18%, transparent);
 }
 
 @media (max-width: 768px) {

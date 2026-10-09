@@ -40,16 +40,16 @@
   ];
 
   const FALLBACK_DATA_REWARD_LEVELS = [
-    { key: 'i',   label: 'I',   accent: 'gray'   },
-    { key: 'ii',  label: 'II',  accent: 'tan'    },
-    { key: 'iii', label: 'III', accent: 'olive'  },
-    { key: 'iv',  label: 'IV',  accent: 'plum'   },
-    { key: 'v',   label: 'V',   accent: 'rust'   },
-    { key: 'vi',  label: 'VI',  accent: 'wine'   },
-    { key: 'vii', label: 'VII', accent: 'indigo' }
+    { key: 'i',   label: 'I'   },
+    { key: 'ii',  label: 'II'  },
+    { key: 'iii', label: 'III' },
+    { key: 'iv',  label: 'IV'  },
+    { key: 'v',   label: 'V'   },
+    { key: 'vi',  label: 'VI'  },
+    { key: 'vii', label: 'VII' }
   ];
 
-  const COSMIC_POINTS_META = { key: 'cosmicPoints', label: 'Points', icon: 'public', accent: 'brown' };
+  const COSMIC_POINTS_META = { key: 'cosmicPoints', label: 'Points' };
 
   // --------------------------------------------------------------------------
   // Helpers
@@ -68,10 +68,7 @@
     return chunks.length > 0 ? chunks : [''];
   };
 
-  const categoryBadgeClass = (category) => {
-    const slug = String(category || '').toLowerCase().replace(/\s+/g, '-');
-    return 'cdb-cat-badge cdb-cat-badge--' + slug;
-  };
+  const icon = (name) => h('span', { className: 'material-icons', 'aria-hidden': 'true' }, name);
 
   const normFoodLabel = (label, foodOptions) => {
     if (!label || label === 'None') return 'None';
@@ -440,7 +437,8 @@
   };
 
   // --------------------------------------------------------------------------
-  // DataRewardChips — display-only in v2 (no editing of canonical data)
+  // DataRewardChips — display-only in v2 (no editing of canonical data). Each
+  // chip is just the level's numeral and the count, with no per-level colour.
   // --------------------------------------------------------------------------
 
   const DataRewardChips = ({ dataReward, levels }) => {
@@ -450,13 +448,12 @@
 
     return h('div', { className: 'cdb-data-chip-row' },
       ...nonZero.map(level =>
-        h('span', { key: level.key, className: 'cdb-data-chip cdb-data-chip--' + level.accent },
+        h('span', { key: level.key, className: 'cdb-data-chip' },
           h('span', { className: 'cdb-data-chip-label' }, level.label),
           h('span', { className: 'cdb-data-chip-count' }, '× ' + dataReward[level.key])
         )
       ),
-      hasPoints && h('span', { className: 'cdb-data-chip cdb-data-chip--' + COSMIC_POINTS_META.accent },
-        h('span', { className: 'material-icons cdb-icon-xs' }, COSMIC_POINTS_META.icon),
+      hasPoints && h('span', { className: 'cdb-data-chip' },
         h('span', { className: 'cdb-data-chip-label' }, COSMIC_POINTS_META.label),
         h('span', { className: 'cdb-data-chip-count' }, '× ' + dataReward.cosmicPoints)
       )
@@ -526,36 +523,31 @@
     const rec = userRecord || blankQuestRecord(quest);
     const showFoodBadge = rec.foodRequired && rec.foodType && rec.foodType !== 'None';
 
+    // Location, job and food as muted text with icons; the class as a small
+    // square tag.
     const header = h('div', {
-      className: 'craft-card-header ' + (isExpanded ? 'expanded' : ''),
-      onClick: onToggle,
-      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent' }
+      className: 'craft-card-header',
+      onClick: onToggle
     },
       h('div', { className: 'craft-title-section' },
         h('h3', { className: 'craft-name' }, quest.questName || '(unnamed)')
       ),
       h('div', { className: 'craft-meta-section' },
         h('div', { className: 'cdb-badge-row' },
-          h('span', { className: 'cdb-badge cdb-badge--location' },
-            h('span', { className: 'material-icons cdb-icon-xs' }, 'public'),
-            quest.location || '—'
-          ),
-          h('span', { className: 'cdb-badge cdb-badge--job' },
-            h('span', { className: 'material-icons cdb-icon-xs' }, jobIcon || 'build'),
-            quest.job || '—'
-          ),
-          h('span', { className: categoryBadgeClass(quest.category) }, quest.category || '—'),
-          showFoodBadge && h('span', { className: 'cdb-badge cdb-badge--food' },
-            h('span', { className: 'material-icons cdb-icon-xs' }, 'restaurant'),
-            rec.foodType
-          )
+          h('span', { className: 'cdb-badge' }, icon('public'), quest.location || '—'),
+          h('span', { className: 'cdb-badge' }, icon(jobIcon || 'build'), quest.job || '—'),
+          h('span', { className: 'tag' }, quest.category || '—'),
+          showFoodBadge && h('span', { className: 'cdb-badge' }, icon('restaurant'), rec.foodType)
         ),
         h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'cdb-btn cdb-btn-secondary cdb-card-edit',
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': isExpanded ? 'Collapse' : 'Expand',
+          'aria-expanded': isExpanded ? 'true' : 'false',
           title: isExpanded ? 'Collapse' : 'Expand'
         },
-          h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
+          icon(isExpanded ? 'expand_less' : 'expand_more')
         )
       )
     );
@@ -564,7 +556,7 @@
     const collapsedBody = !isExpanded && h('div', {
       className: 'cdb-inline-row cdb-card-tags'
     },
-      h('span', { style: { fontSize: '0.9rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
+      h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(quest.items || []).flatMap((item) => {
         const userItem = rec.items[item.id];
         const macroText = (userItem && userItem.macro) || '';
@@ -579,25 +571,24 @@
               : (item.name || 'Item');
             return h('button', {
               key: item.id + '-' + chunkIdx,
+              type: 'button',
               onClick: (e) => { e.stopPropagation(); copyText(chunk, setCopiedItemId, markerValue); },
-              className: 'cdb-copy-btn',
+              className: 'btn is-quiet is-small',
               title: 'Copy ' + label
             },
-              h('span', { className: 'material-icons cdb-icon-xs' },
-                copiedItemId === markerValue ? 'check' : 'content_copy'
-              ),
+              icon(copiedItemId === markerValue ? 'check' : 'content_copy'),
               label
             );
           });
         }
         return [h('button', {
           key: item.id,
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); startEdit({ focusItemId: item.id }); },
-          className: 'cdb-copy-btn',
-          title: 'Add macro for ' + (item.name || 'this item'),
-          style: { color: 'var(--accent-brown)', borderColor: 'var(--accent-brown)' }
+          className: 'btn is-quiet is-small',
+          title: 'Add macro for ' + (item.name || 'this item')
         },
-          h('span', { className: 'material-icons cdb-icon-xs' }, 'add'),
+          icon('add'),
           item.name || 'Item'
         )];
       })
@@ -613,23 +604,25 @@
     // Expanded — stat matching for numeric search
     const matches = (val, hl) => hl && val && parseInt(hl) === val;
     const statClass = (m) => 'cdb-cosmic-item-stat' + (m ? ' cdb-cosmic-item-stat--match' : '');
+    const stat = (label, val, hl) => h('div', { className: statClass(matches(val, hl)) },
+      label, h('span', { className: 'cdb-stat-value' }, val || 0)
+    );
 
     const editBody = isEditing && h('div', { className: 'cdb-form-fields' },
       h('div', { className: 'cdb-field-group' },
-        h('div', { className: 'cdb-inline-row' },
+        h('label', { className: 'cdb-check' },
           h('input', {
             type: 'checkbox',
-            id: 'foodRequired-' + quest.id,
             checked: !!draft.foodRequired,
             onChange: (e) => setDraft(d => ({ ...d, foodRequired: e.target.checked })),
             className: 'cdb-checkbox'
           }),
-          h('label', { htmlFor: 'foodRequired-' + quest.id, className: 'cdb-label' }, 'Food Required')
+          'Food Required'
         ),
         draft.foodRequired && h('select', {
           value: draft.foodType,
           onChange: (e) => setDraft(d => ({ ...d, foodType: e.target.value })),
-          className: 'cdb-input'
+          className: 'cdb-select'
         },
           // include current value even if it isn't in the canonical list,
           // so legacy/custom food labels survive editing
@@ -678,8 +671,8 @@
         })
       ),
       h('div', { className: 'cdb-form-actions' },
-        h('button', { type: 'button', onClick: cancelEdit, className: 'cdb-btn cdb-btn-secondary' }, 'Cancel'),
-        h('button', { type: 'button', onClick: saveEdit, className: 'cdb-btn cdb-btn-primary' }, 'Save')
+        h('button', { type: 'button', onClick: cancelEdit, className: 'btn is-quiet' }, 'Cancel'),
+        h('button', { type: 'button', onClick: saveEdit, className: 'btn' }, 'Save')
       )
     );
 
@@ -689,19 +682,14 @@
         isEditing && editBody,
         !isEditing && quest.items && quest.items.length > 0 && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Items'),
+          // Each item's stats sit in a recessed tray inside the card.
           h('div', { className: 'cdb-cosmic-item-grid' },
             ...quest.items.map(item =>
-              h('div', { key: item.id, className: 'cdb-cosmic-item-card' },
+              h('div', { key: item.id, className: 'cdb-cosmic-item-card tray' },
                 h('div', { className: 'cdb-cosmic-item-name' }, item.name || 'Item'),
-                h('div', { className: statClass(matches(item.difficulty, highlightDifficulty)) },
-                  'Difficulty: ', h('span', { className: 'cdb-stat-value' }, item.difficulty || 0)
-                ),
-                h('div', { className: statClass(matches(item.quality, highlightQuality)) },
-                  'Quality: ', h('span', { className: 'cdb-stat-value' }, item.quality || 0)
-                ),
-                h('div', { className: statClass(matches(item.durability, highlightDurability)) },
-                  'Durability: ', h('span', { className: 'cdb-stat-value' }, item.durability || 0)
-                )
+                stat('Difficulty', item.difficulty, highlightDifficulty),
+                stat('Quality', item.quality, highlightQuality),
+                stat('Durability', item.durability, highlightDurability)
               )
             )
           )
@@ -711,23 +699,14 @@
           h(DataRewardChips, { dataReward: quest.dataReward || {}, levels: dataRewardLevels })
             || h('span', { className: 'cdb-meta' }, '(none)')
         ),
-        !isEditing && !questHasMacro(rec) && h('div', {
-          style: {
-            margin: '0.75rem 0', padding: '0.85rem 1rem',
-            background: 'var(--bg-darker)', borderRadius: '0.375rem',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: '0.75rem', flexWrap: 'wrap'
-          }
-        },
-          h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
-            'No macros saved for this quest yet.'
-          ),
+        !isEditing && !questHasMacro(rec) && h('div', { className: 'cdb-empty-macros tray' },
+          h('span', null, 'No macros saved for this quest yet.'),
           h('button', {
+            type: 'button',
             onClick: (e) => { e.stopPropagation(); startEdit(); },
-            className: 'cdb-btn cdb-btn-primary',
-            style: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
+            className: 'btn'
           },
-            h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
+            icon('add'),
             'Add macros'
           )
         ),
@@ -751,16 +730,15 @@
                         chunks.length > 1 ? 'Macro ' + (chunkIdx + 1) : 'Macro'
                       ),
                       h('button', {
+                        type: 'button',
                         onClick: () => copyText(chunk, setCopiedChunkId, markerValue),
-                        className: 'cdb-copy-btn'
+                        className: 'btn is-quiet is-small'
                       },
-                        h('span', { className: 'material-icons cdb-icon-xs' },
-                          copiedChunkId === markerValue ? 'check' : 'content_copy'
-                        ),
+                        icon(copiedChunkId === markerValue ? 'check' : 'content_copy'),
                         copiedChunkId === markerValue ? 'Copied' : 'Copy'
                       )
                     ),
-                    h('pre', { className: 'cdb-macro-pre' }, chunk)
+                    h('pre', { className: 'cdb-macro-pre tray' }, chunk)
                   );
                 })
               )
@@ -773,11 +751,13 @@
         )
       ),
       !isEditing && h('div', { className: 'cdb-card-footer' },
-        h('span', {
+        h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); startEdit(); },
-          className: 'material-icons cdb-icon-btn',
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': questHasUserData(rec) ? 'Edit my macros / notes' : 'Add my macros / notes',
           title: questHasUserData(rec) ? 'Edit my macros / notes' : 'Add my macros / notes'
-        }, 'edit')
+        }, icon('edit'))
       )
     );
   };
@@ -996,11 +976,11 @@
 
     return h('div', { className: 'cdb-root container' },
       h('header', { className: 'app-header' },
-        h('h1', { className: 'app-title craft-name' }, 'FFXIV Cosmic Exploration Database'),
+        h('h1', { className: 'app-title' }, 'FFXIV Cosmic Exploration Database'),
         h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
       ),
 
-      h('div', { className: 'info-card' },
+      h('div', { className: 'info-card tear-half' },
         h('p', null,
           'Recipe stats are provided as they are at level 100. At lower levels, they will scale down.'
         )
@@ -1008,16 +988,16 @@
 
       h('div', { className: 'top-controls top-controls-right' },
         h('div', { className: 'action-buttons-top' },
-          h('button', { onClick: handleImportV1, className: 'cdb-btn cdb-btn-secondary', title: 'Bring over macros/food/notes from the v1 page' },
-            h('span', { className: 'material-icons cdb-icon-sm' }, 'history'),
+          h('button', { type: 'button', onClick: handleImportV1, className: 'btn is-quiet', title: 'Bring over macros/food/notes from the v1 page' },
+            icon('history'),
             'Import from v1'
           ),
-          h('button', { onClick: handleExport, className: 'cdb-btn cdb-btn-secondary' },
-            h('span', { className: 'material-icons cdb-icon-sm' }, 'download'),
+          h('button', { type: 'button', onClick: handleExport, className: 'btn is-quiet' },
+            icon('download'),
             'Export My Data'
           ),
-          h('label', { className: 'cdb-btn cdb-btn-secondary' },
-            h('span', { className: 'material-icons cdb-icon-sm' }, 'upload'),
+          h('label', { className: 'btn is-quiet' },
+            icon('upload'),
             'Import JSON',
             h('input', {
               type: 'file', accept: '.json,application/json',
@@ -1029,27 +1009,19 @@
               className: 'cdb-file-input'
             })
           ),
-          h('button', { onClick: handleClearLocal, className: 'cdb-btn cdb-btn-secondary is-danger' },
-            h('span', { className: 'material-icons cdb-icon-sm' }, 'delete_sweep'),
+          h('button', { type: 'button', onClick: handleClearLocal, className: 'btn is-danger' },
+            icon('delete_sweep'),
             'Clear My Data'
           )
         )
       ),
 
-      migrationMsg && h('div', {
-        style: { margin: '0.5rem 0', padding: '0.5rem 0.75rem', borderRadius: '0.375rem',
-                 background: 'var(--bg-darker)', color: 'var(--text-secondary)', fontSize: '0.9rem' }
-      }, migrationMsg),
+      migrationMsg && h('div', { className: 'cdb-notice' }, migrationMsg),
 
-      loadState === 'error' && h('div', {
-        style: { margin: '0.5rem 0', padding: '0.75rem 1rem', borderRadius: '0.375rem',
-                 background: 'var(--bg-darker)', color: 'var(--accent-red)' }
-      }, 'Could not load catalog: ' + (loadError || 'unknown error')),
+      loadState === 'error' && h('div', { className: 'cdb-notice is-error' },
+        'Could not load catalog: ' + (loadError || 'unknown error')),
 
-      loadError && loadState === 'ready' && h('div', {
-        style: { margin: '0.5rem 0', padding: '0.5rem 0.75rem', borderRadius: '0.375rem',
-                 background: 'var(--bg-darker)', color: 'var(--text-secondary)', fontSize: '0.85rem' }
-      }, loadError),
+      loadError && loadState === 'ready' && h('div', { className: 'cdb-notice' }, loadError),
 
       h('div', { className: 'cdb-search-section' },
         h('div', { className: 'cdb-search-bar' },
@@ -1058,7 +1030,7 @@
             h('button', {
               type: 'button',
               onClick: () => setSearchMode(searchMode === 'numeric' ? 'text' : 'numeric'),
-              className: 'cdb-btn cdb-btn-secondary'
+              className: 'btn is-quiet'
             }, 'Switch to ' + (searchMode === 'numeric' ? 'Text' : 'Numeric') + ' Search')
           ),
           searchMode === 'numeric'
@@ -1072,7 +1044,7 @@
                 h('button', {
                   type: 'button',
                   onClick: () => { setDifficultySearch(''); setQualitySearch(''); setDurabilitySearch(''); },
-                  className: 'cdb-btn cdb-btn-secondary'
+                  className: 'btn is-quiet'
                 }, 'Clear')
               )
             : h('input', {
@@ -1112,10 +1084,7 @@
             h('option', { value: 'all' }, 'All Jobs'),
             ...jobOptions.map(job => h('option', { key: job, value: job }, job))
           ),
-          h('label', {
-            className: 'cdb-inline-row',
-            style: { gap: '0.4rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-secondary)' }
-          },
+          h('label', { className: 'cdb-check' },
             h('input', {
               type: 'checkbox',
               className: 'cdb-checkbox',
