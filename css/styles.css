@@ -955,7 +955,8 @@ button.nav-sublink {
   border-radius: 4px;
 }
 
-.info-card.tear { padding-bottom: calc(1.1rem + var(--tear-h)); }
+.info-card.tear,
+.info-card.tear-half { padding-bottom: calc(1.1rem + var(--tear-h)); }
 
 .info-card p { margin: 0 0 0.6rem; }
 .info-card p:last-child { margin-bottom: 0; }
@@ -1204,21 +1205,54 @@ button.nav-sublink {
   margin-top: 0.15rem;
 }
 
-/* Atma table */
-.atma-table {
+/* Atma table: a torn card (#atma-container) whose header band drops back to
+   the grained page tone. It scrolls sideways on narrow screens, inside the
+   card so the scrollbar stays clear of the tear. */
+.atma-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border-radius: 4px 4px 0 0;
+  padding-bottom: var(--tear-h);
   overflow: hidden;
 }
 
-.atma-table th,
-.atma-table td { padding: 0.55rem 0.75rem; }
+.atma-scroll { overflow-x: auto; }
 
-.atma-table tr.checked td {
-  opacity: 0.6;
-  background-color: rgba(90, 138, 60, 0.08);
+.atma-table { min-width: 560px; }
+
+.atma-table th {
+  padding: 0.75rem 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-bottom: 0;
 }
+
+.atma-table td {
+  padding: 0.5rem 1rem;
+  vertical-align: middle;
+}
+
+.atma-table th:first-child,
+.atma-table td:first-child { padding-left: 26px; width: 60px; }
+
+.atma-table th:last-child,
+.atma-table td:last-child { padding-right: 26px; }
+
+.atma-table .td-num { font-variant-numeric: tabular-nums; }
+
+/* A finished row: muted text, "Complete" in italic before a faded counter.
+   (Overrides the struck-through, faded look of checked task rows.) */
+.atma-table tr.checked td {
+  opacity: 1;
+  text-decoration: none;
+  color: var(--text-secondary);
+}
+
+.atma-table tr:last-child td { border-bottom: 1px solid var(--border-color); }
 
 .td-count-header { text-align: right; }
 
@@ -1228,38 +1262,62 @@ button.nav-sublink {
   white-space: nowrap;
 }
 
+.atma-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.atma-complete {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* The counter: one well-toned −/value/+ group. */
 .count-control {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
 }
+
+.atma-table tr.checked .count-control { opacity: 0.55; }
 
 .count-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  width: 1.9rem;
-  height: 1.9rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  background-color: var(--bg-card);
+  font-size: 1.15rem;
+  line-height: 1;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  line-height: 1;
 }
 
-.count-btn:hover  { background-color: var(--bg-darker); }
-.count-btn:active { transform: scale(0.95); }
+.count-btn:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+}
+
+.count-btn:disabled {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: default;
+}
 
 .count-input {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  width: 3rem;
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
   text-align: center;
-  padding: 0.3rem 0.35rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  background-color: var(--form-input-bg);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text-primary);
   -moz-appearance: textfield;
 }
@@ -2352,14 +2410,10 @@ body.nav-sidebar-open {
 
   .book-progress-bar { width: 50px; }
 
-  .task-table { font-size: 0.8rem; }
-  .task-table th,
-  .task-table td { padding: 0.3rem 0.35rem; }
-
-  .atma-table th,
-  .atma-table td { padding: 0.4rem 0.45rem; }
-
-  .count-input { width: 2.4rem; }
+  /* Book task tables tighten up; the Atma table scrolls sideways instead. */
+  .task-table:not(.atma-table) { font-size: 0.8rem; }
+  .task-table:not(.atma-table) th,
+  .task-table:not(.atma-table) td { padding: 0.3rem 0.35rem; }
 }
 
 
