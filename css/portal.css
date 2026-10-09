@@ -463,46 +463,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card > .portal-table-wrap .portal-table th:last-child,
 .portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
 
-/* --------------- Inline buttons --------------- */
-.portal-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
-  background: var(--accent-brown);
-  color: #fff;
-  border: 1px solid var(--accent-brown);
-  border-radius: 4px;
-  font-family: 'Stoke', serif;
-  font-size: 0.92rem;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-}
-.portal-btn:hover { filter: brightness(1.05); }
-.portal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.portal-btn.is-ghost {
-  background: transparent;
-  color: var(--text-primary);
-  border-color: var(--border-color);
-}
-.portal-btn.is-ghost:hover { background: var(--bg-card-light); }
-.portal-btn.is-danger {
-  background: var(--accent-red);
-  border-color: var(--accent-red);
-}
-.portal-btn.is-small {
-  padding: 0.3rem 0.7rem;
-  font-size: 0.82rem;
-}
-/* Icon-only buttons: square, no text, just the glyph (used for compact
-   row actions like Edit/Delete in the Event Assets table). */
-.portal-btn.is-icon {
-  gap: 0;
-  padding: 0.3rem;
-  line-height: 1;
-}
-.portal-btn.is-icon.is-small { padding: 0.3rem; }
-.portal-btn .material-icons { font-size: 18px; }
+/* --------------- Inline buttons ---------------
+   Portal buttons are the shared .btn (css/styles.css). */
+.btn .material-icons { font-size: 18px; }
 
 /* --------------- Form fields --------------- */
 .portal-field {

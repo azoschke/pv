@@ -200,7 +200,7 @@
       h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'pause_circle'),
       h('h2', null, props.title || 'No active session'),
       h('p', null, props.message || 'There is no live campaign session right now.'),
-      props.onResume ? h('button', { type: 'button', className: 'rp-btn', onClick: props.onResume }, 'Resume session') : null);
+      props.onResume ? h('button', { type: 'button', className: 'btn', onClick: props.onResume }, 'Resume session') : null);
   }
 
   // ── Battlefield (enemies) ──────────────────────────────────────────────────
@@ -213,7 +213,7 @@
     }
     var pct = b.max_hp > 0 ? Math.max(0, Math.min(100, Math.round(b.current_hp / b.max_hp * 100))) : 0;
     return h('div', { className: 'rp-boss-hp' },
-      h('div', { className: 'rp-hpbar' }, h('div', { className: 'rp-hpbar-fill', style: { width: pct + '%' } })),
+      h('div', { className: 'rp-hpbar' }, h('div', { className: 'rp-hpbar-fill' + (pct >= 100 ? ' is-full' : ''), style: { width: pct + '%' } })),
       h('span', { className: 'rp-boss-hp-num' }, b.current_hp + ' / ' + b.max_hp));
   }
   // Unified vulnerability: flat + multiplier.
@@ -336,8 +336,8 @@
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
       var isRunning = m.active && m.remaining_turns != null;
-      if (isRunning) control = h('button', { type: 'button', className: 'rp-btn is-small is-active', disabled: true }, 'Active');
-      else if (spent) control = h('button', { type: 'button', className: 'rp-btn is-small', disabled: true }, 'Used');
+      if (isRunning) control = h('button', { type: 'button', className: 'btn is-quiet is-small is-active', disabled: true }, 'Active');
+      else if (spent) control = h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Used');
       else control = h('div', { className: 'rp-mod-control' },
         needTarget ? h('select', { className: 'rp-select', value: pickTarget, disabled: props.locked, onChange: function (e) { setPickTarget(e.target.value); } },
           h('option', { value: '' }, 'target…'),
@@ -358,7 +358,7 @@
           }))) : null,
         (needBoss && liveBosses.length > 1) ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setBossPick(e.target.value); } },
           liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: disabled,
+        h('button', { type: 'button', className: 'btn is-small', disabled: disabled,
           onClick: function () { props.onActivate(m, { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null, bossId: needBoss ? bossSel : null, bossIds: needBosses ? bossPicks.slice() : null, allBosses: allBosses }); } }, 'Activate'));
     } else {
       // Sliding switch: both states visible, the lit side shows the current state.
@@ -399,7 +399,7 @@
           return h('div', { className: 'rp-item-ability', key: ab.id },
             h('div', { className: 'rp-ability-head' },
               h('strong', null, ab.name),
-              ab.activate_all ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: props.locked,
+              ab.activate_all ? h('button', { type: 'button', className: 'btn is-small is-quiet', disabled: props.locked,
                 onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
             ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
             (ab.modifiers || []).map(function (m) {
@@ -476,7 +476,7 @@
           h('input', { className: 'rp-buff-val rp-buff-dur-input', type: 'number', min: 1, inputMode: 'numeric', value: dur, disabled: props.disabled,
             onChange: onDur, onBlur: commitNow, onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
           h('span', null, 'turns')) : null,
-        type ? h('button', { type: 'button', className: 'rp-btn is-small', disabled: props.disabled, title: 'Lock this buff in as your action for the turn', onClick: applyNow }, 'Apply') : null));
+        type ? h('button', { type: 'button', className: 'btn is-small', disabled: props.disabled, title: 'Lock this buff in as your action for the turn', onClick: applyNow }, 'Apply') : null));
   }
   function buffStatusText(b) {
     if (b.state === 'draft') return 'becomes your action at end of turn';
@@ -561,7 +561,7 @@
     return h('div', { className: 'rp-card rp-party-card' },
       h('div', { className: 'rp-party-head' },
         h('h3', { className: 'rp-section-label' }, 'Party'),
-        props.showSkills ? h('button', { type: 'button', className: 'rp-skills-btn', onClick: props.onOpenSkills },
+        props.showSkills ? h('button', { type: 'button', className: 'btn is-quiet is-small rp-skills-btn', onClick: props.onOpenSkills },
           h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'auto_awesome'),
           h('span', null, 'Active skills'),
           props.skillsUnseen > 0 ? h('span', { className: 'rp-skills-badge' }, String(props.skillsUnseen)) : null) : null),
@@ -722,16 +722,16 @@
     var atkControls;
     if (!canAtk) atkControls = (acted && owner) ? h('span', { className: 'rp-summon-used' }, 'Attacked this round') : null;
     else if (scope === 'all_bosses') atkControls = h('span', { className: 'rp-summon-atk' }, rollInput,
-      h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel + ' · all'));
+      h('button', { type: 'button', className: 'btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel + ' · all'));
     else if (scope === 'some_bosses') atkControls = h('span', { className: 'rp-summon-atk' },
       h('div', { className: 'rp-pick-multi' }, live.map(function (b) { var on = picks.indexOf(String(b.id)) !== -1;
         return h('label', { key: b.id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
           h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && cap && picks.length >= cap), onChange: function () { togglePick(String(b.id)); } }), b.name); })),
-      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
+      rollInput, h('button', { type: 'button', className: 'btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
     else atkControls = h('span', { className: 'rp-summon-atk' },
       live.length > 1 ? h('select', { className: 'rp-select', value: bossSel, disabled: props.locked, onChange: function (e) { setPick(e.target.value); } },
         live.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
-      rollInput, h('button', { type: 'button', className: 'rp-btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
+      rollInput, h('button', { type: 'button', className: 'btn is-small', disabled: btnDisabled, onClick: fire }, btnLabel));
     return h('div', { className: 'rp-summon' },
       h('div', { className: 'rp-summon-top' },
         h('div', { className: 'rp-summon-info' },
@@ -879,7 +879,7 @@
     function shareButton(kind, raw) {
       var ready = (parseInt(raw, 10) || 0) >= 1 && !shareBusy;
       return h('div', { className: 'rp-share' },
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !ready, onClick: function () { shareRoll(kind, raw); } },
+        h('button', { type: 'button', className: 'btn is-small', disabled: !ready, onClick: function () { shareRoll(kind, raw); } },
           h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'send'),
           shareBusy === kind ? 'Sending…' : 'Share with DM'),
         shareMsg && shareMsg.kind === kind ? h('span', { className: 'rp-note ' + (shareMsg.ok ? 'rp-note-ok' : 'rp-note-warn') }, shareMsg.text) : null);
@@ -914,12 +914,12 @@
                   living.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); }))
               : h('span', { className: 'rp-target-name' }, atkBoss ? atkBoss.name : '—'),
             (atkBoss && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(atkBoss.current_hp), ' → ', h('span', { className: 'tone-damage' }, String(newHp))) : null),
-          h('button', { type: 'button', className: 'rp-commit', disabled: !atkCanApply, onClick: applyAttack },
+          h('button', { type: 'button', className: 'btn rp-commit', disabled: !atkCanApply, onClick: applyAttack },
             atkBusy ? 'Applying…' : 'Deal ' + atkEff + ' damage to ' + (atkBoss ? atkBoss.name : 'target')),
           (atkBoss && (atkV.flat > 0 || atkV.mult > 1)) ? h('p', { className: 'rp-note' }, atkBoss.name + ' is vulnerable — ' + vulnText(atkBoss) + '.') : null,
           atkMsg ? h('p', { className: 'rp-note rp-note-ok' }, atkMsg) : null,
           isTank ? h('div', { className: 'rp-provoke' },
-            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !provCan, onClick: provoke },
+            h('button', { type: 'button', className: 'btn is-small is-quiet', disabled: !provCan, onClick: provoke },
               h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'campaign'),
               provBusy ? 'Provoking…' : 'Provoke ' + (atkBoss ? atkBoss.name : 'target')),
             provMsg ? h('span', { className: 'rp-note ' + (provMsg.ok ? 'rp-note-ok' : 'rp-note-warn') }, provMsg.text) : null) : null)
@@ -951,7 +951,7 @@
               : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
             (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
           !healAnyone ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
-          h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
+          h('button', { type: 'button', className: 'btn rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
             healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
           : h('div', { className: 'rp-target-block' },
@@ -963,7 +963,7 @@
                 h('span', null, p.member_name + (p.member_id === c.member_id ? ' (you)' : '')),
                 h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(healAlloc[id]), disabled: locked, onChange: function (e) { setHealAmount(id, e.target.value); } }));
             })) : h('p', { className: 'rp-note' }, 'No targets selected yet.'),
-            h('button', { type: 'button', className: 'rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' targets'),
+            h('button', { type: 'button', className: 'btn rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' targets'),
             healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null));
     }
 
@@ -1088,7 +1088,7 @@
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
+        h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.
@@ -1099,7 +1099,7 @@
     return h('div', { className: 'rp-boss-skill' },
       h('div', { className: 'rp-boss-skill-head' },
         h('strong', null, a.name),
-        h('button', { type: 'button', className: 'rp-btn is-small is-ghost' + (a.revealed ? ' is-active' : ''),
+        h('button', { type: 'button', className: 'btn is-small is-quiet' + (a.revealed ? ' is-active' : ''),
           title: a.revealed ? 'Skill shown to players under the boss — click to hide' : 'Show this skill’s name + description to players under the boss (no damage)',
           onClick: function () { props.onRevealSkill(boss, a, !a.revealed); } },
           h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, a.revealed ? 'visibility' : 'visibility_off'),
@@ -1132,8 +1132,8 @@
         h('span', null, '×'),
         h('input', { className: 'rp-hits-input', type: 'number', min: 1, step: '0.5', inputMode: 'decimal', value: mult, onChange: function (e) { setMult(e.target.value); } })),
       h('input', { className: 'rp-hits-input is-turns', type: 'number', min: 0, inputMode: 'numeric', placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); } }),
-      h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
-      active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSetVuln(b, 0, 1, null); } }, 'Clear') : null);
+      h('button', { type: 'button', className: 'btn is-small', onClick: apply }, 'Set'),
+      active ? h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onSetVuln(b, 0, 1, null); } }, 'Clear') : null);
   }
   // Compact per-player vulnerability control for the DM Players tab.
   function DMPlayerVuln(props) {
@@ -1148,15 +1148,15 @@
       setOpen(false);
     }
     return h('div', null,
-      h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { setOpen(!open); } }, active ? 'Vuln ✎' : '+ Vuln'),
+      h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setOpen(!open); } }, active ? 'Vuln ✎' : '+ Vuln'),
       open ? h('div', { className: 'rp-vuln', style: { marginTop: '0.3rem' } },
         h('label', { className: 'rp-hits', title: 'Flat added damage' }, h('span', null, '+'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 0, value: flat, onChange: function (e) { setFlat(e.target.value); } })),
         h('label', { className: 'rp-hits', title: 'Damage-taken multiplier' }, h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, step: '0.5', value: mult, onChange: function (e) { setMult(e.target.value); } })),
         h('input', { className: 'rp-hits-input is-turns', type: 'number', min: 0, placeholder: '∞ turns', value: turns, onChange: function (e) { setTurns(e.target.value); } }),
-        h('button', { type: 'button', className: 'rp-btn is-small', onClick: apply }, 'Set'),
-        active ? h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onSet(0, 1, null); setOpen(false); } }, 'Clear') : null) : null);
+        h('button', { type: 'button', className: 'btn is-small', onClick: apply }, 'Set'),
+        active ? h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onSet(0, 1, null); setOpen(false); } }, 'Clear') : null) : null);
   }
   // One staged boss in the DM deck — collapsible so a long skill list doesn't
   // bloat the panel. Collapsed by default; the head (name, HP, eye, remove)
@@ -1177,9 +1177,9 @@
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear provoke', 'aria-label': 'Clear provoke', onClick: function () { props.onClearProvoke(b); } }, '✕')) : null,
         h('div', { className: 'rp-effect-ctl' },
           h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
-          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.stunned ? 'Stunned — click to clear' : (b.stun_immune ? 'Stun-immune (DM can still force)' : 'Stun this enemy'),
+          h('button', { type: 'button', className: 'btn is-small is-quiet', title: b.stunned ? 'Stunned — click to clear' : (b.stun_immune ? 'Stun-immune (DM can still force)' : 'Stun this enemy'),
             onClick: function () { props.onSetStun('boss', b.id, !b.stunned); } }, b.stunned ? 'Unstun' : 'Stun'),
-          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
+          h('button', { type: 'button', className: 'btn is-small is-quiet', title: b.hp_visible ? 'HP visible to players — click to hide' : 'HP hidden from players — click to show',
             onClick: function () { props.onBossVisible(b, !b.hp_visible); } },
             h('span', { className: 'material-icons rp-inline-icon' }, b.hp_visible ? 'visibility' : 'visibility_off')),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove boss', onClick: function () { props.onBossRemove(b); } }, '✕'))),
@@ -1198,7 +1198,7 @@
         h('select', { className: 'rp-select', value: pick, onChange: function (e) { setPick(e.target.value); } },
           h('option', { value: '' }, library.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
           library.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
-        h('button', { type: 'button', className: 'rp-btn is-small', disabled: !pick, onClick: function () { props.onBossAdd(pick); setPick(''); } }, 'Add')),
+        h('button', { type: 'button', className: 'btn is-small', disabled: !pick, onClick: function () { props.onBossAdd(pick); setPick(''); } }, 'Add')),
       (props.bosses || []).map(function (b) {
         return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party,
           onBossHp: props.onBossHp, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
@@ -1216,10 +1216,10 @@
               h('span', { className: 'rp-effect-meta' }, detail + ' · ' + (e.visible ? 'visible to players' : 'hidden from players'))),
             h('div', { className: 'rp-effect-ctl' },
               e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onBossEffectPatch(e, { remaining_turns: Math.max(0, v) }); } }) : null,
-              h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: e.visible ? 'Hide from players' : 'Reveal to players',
+              h('button', { type: 'button', className: 'btn is-small is-quiet', title: e.visible ? 'Hide from players' : 'Reveal to players',
                 onClick: function () { props.onBossEffectPatch(e, { visible: !e.visible }); } },
                 h('span', { className: 'material-icons rp-inline-icon' }, e.visible ? 'visibility' : 'visibility_off')),
-              h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBossEffectPatch(e, { enabled: !e.enabled }); } }, e.enabled ? 'Disable' : 'Enable'),
+              h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onBossEffectPatch(e, { enabled: !e.enabled }); } }, e.enabled ? 'Disable' : 'Enable'),
               h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBossEffectRemove(e); } }, '✕')));
         })) : null);
   }
@@ -1250,10 +1250,10 @@
               isImmune ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Immune to stun') : null),
             h('span', { className: 'rp-effect-meta' }, status)),
           h('div', { className: 'rp-effect-ctl' },
-            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', title: stunned ? 'Stunned — click to clear' : (isImmune ? 'Immune to stun (you can still force it)' : 'Stun this player'),
+            h('button', { type: 'button', className: 'btn is-small is-quiet', title: stunned ? 'Stunned — click to clear' : (isImmune ? 'Immune to stun (you can still force it)' : 'Stun this player'),
               onClick: function () { props.onSetStun('player', p.member_id, !stunned); } }, stunned ? 'Unstun' : 'Stun'),
             h(DMPlayerVuln, { vuln: vuln, onSet: function (flat, mult, turns) { props.onSetPlayerVuln(p.member_id, flat, mult, turns); } }),
-            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', disabled: !acts.length,
+            h('button', { type: 'button', className: 'btn is-small is-quiet', disabled: !acts.length,
               onClick: function () { props.onResetAction(p.member_id); } }, 'Reset action')));
       }));
   }
@@ -1280,7 +1280,7 @@
             h('div', { className: 'rp-buff-ctl', title: 'Turns' },
               h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'schedule'),
               h(Stepper, { value: b.remaining_turns, label: String(b.remaining_turns), compact: true, disabled: false, onChange: function (v) { props.onBuffPatch(b, { remaining_turns: Math.max(0, v) }); } })),
-            h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onBuffPatch(b, { enabled: !b.enabled }); } }, b.enabled ? 'Pause' : 'Resume'),
+            h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onBuffPatch(b, { enabled: !b.enabled }); } }, b.enabled ? 'Pause' : 'Resume'),
             h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onBuffRemove(b); } }, '✕')));
       }),
       drafts.map(function (b) {
@@ -1298,24 +1298,26 @@
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var tabState = useState('bosses'); var tab = tabState[0], setTab = tabState[1];
     var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }, { id: 'rolls', label: 'Rolls' }];
-    return h('div', { className: 'rp-deck' + (open ? ' is-open' : '') },
+    // The deck is raised and tears along its bottom edge.
+    return h('div', { className: 'rp-deck tear' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
         h('button', { type: 'button', className: 'rp-deck-title', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
           h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'tune'),
           h('span', null, 'DM Control Deck'),
-          h('span', { className: 'rp-turn-badge' + (c.turn_locked ? ' is-locked' : '') }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
+          // Plain muted text, or a red pill once the turn is locked.
+          h('span', { className: c.turn_locked ? 'pill' : 'rp-turn-badge' }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
         h('div', { className: 'rp-deck-head-ctl' },
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
-          h('button', { type: 'button', className: 'rp-btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'),
-          h('button', { type: 'button', className: 'rp-btn is-small is-ghost rp-deck-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
+          h('button', { type: 'button', className: 'btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
+          h('button', { type: 'button', className: 'btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'),
+          h('button', { type: 'button', className: 'btn is-small is-quiet rp-deck-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_less' : 'expand_more'),
             open ? 'Hide' : 'Show'))),
       open ? h('div', { className: 'rp-deck-body' },
         h('div', { className: 'rp-dm-session' },
-          h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: props.onPauseSession }, 'Pause session'),
-          h('button', { type: 'button', className: 'rp-btn is-small is-danger', onClick: props.onEndSession }, 'End session'),
+          h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onPauseSession }, 'Pause session'),
+          h('button', { type: 'button', className: 'btn is-small is-danger', onClick: props.onEndSession }, 'End session'),
           // Jump straight to the Combat Toolkit admin page (portal RP section).
-          h('a', { className: 'rp-btn is-small is-ghost', href: 'portal.html?section=rp-rolls',
+          h('a', { className: 'btn is-small is-quiet', href: 'portal.html?section=rp-rolls',
             title: 'Open the Combat Toolkit admin page', style: { textDecoration: 'none' } },
             h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true', style: { fontSize: '1.1em', lineHeight: 1, verticalAlign: '-0.18em', marginRight: '0.28rem', fontVariationSettings: "'FILL' 1" } }, 'casino'),
             'Combat Toolkit')),
@@ -1346,7 +1348,7 @@
                     (e.ability_name ? e.ability_name + ' · ' : '') + describeActiveEffect(e))),
                 h('div', { className: 'rp-effect-ctl' },
                   e.remaining_turns != null ? h(Stepper, { value: e.remaining_turns, label: String(e.remaining_turns), disabled: false, onChange: function (v) { props.onSetTurns(e, v); } }) : null,
-                  h('button', { type: 'button', className: 'rp-btn is-small is-ghost', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
+                  h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onToggleEffect(e, !e.enabled); } }, e.enabled ? 'Disable' : 'Enable'),
                   h('button', { type: 'button', className: 'rp-chip-x', title: 'Remove', onClick: function () { props.onRemoveEffect(e); } }, '✕')));
             })),
           h(DMPersonalBuffs, { buffs: props.personalBuffs || [], drafts: props.buffDrafts || [], onBuffPatch: props.onBuffPatch, onBuffRemove: props.onBuffRemove })) : null,
