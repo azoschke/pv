@@ -933,9 +933,9 @@
       var newHp = (healSingleMember) ? Math.min(healSingleMember.max_hp, healSingleMember.current_hp + pool) : null;
       return h('div', { className: 'rp-composer' },
         props.blockHeal ? h('p', { className: 'rp-note rp-note-warn' }, props.blockHeal) : null,
-        canHealSingle && canHealAoe ? h('div', { className: 'rp-seg' },
-          h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'single' ? ' is-active' : ''), onClick: function () { setHealMode('single'); } }, 'Single'),
-          h('button', { type: 'button', className: 'rp-seg-btn' + (healMode === 'aoe' ? ' is-active' : ''), onClick: function () { setHealMode('aoe'); } }, 'AOE')) : null,
+        canHealSingle && canHealAoe ? h('div', { className: 'seg rp-seg', role: 'group' },
+          h('button', { type: 'button', className: 'seg-btn' + (healMode === 'single' ? ' is-active' : ''), onClick: function () { setHealMode('single'); } }, 'Single'),
+          h('button', { type: 'button', className: 'seg-btn' + (healMode === 'aoe' ? ' is-active' : ''), onClick: function () { setHealMode('aoe'); } }, 'AOE')) : null,
         h('div', { className: 'rp-roll-line' },
           h(RollHero, { value: healRoll, max: rules.heal_die, caption: 'D' + rules.heal_die + ' ROLL', ariaLabel: 'Raw D' + rules.heal_die + ' heal roll',
             disabled: locked, onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setHealRoll(v); var nc = computeRoll('heal', v, ctx); setHealAlloc(evenSplit(allocIds, nc.total + nc.outputTotal)); } }),

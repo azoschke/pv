@@ -105,12 +105,8 @@
 .rp-target-newhp { background: var(--bg-card-light); border-radius: 3px; padding: 0.3rem 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
 .rp-target-select { min-width: 12rem; max-width: 100%; }
 
-/* Single / AOE segmented control: a well track with the current segment
-   raised in card tone (as the portal's .portal-chip-group). */
-.rp-seg { display: inline-flex; background: var(--bg-darker); border-radius: 4px; padding: 2px; align-self: flex-start; gap: 2px; }
-.rp-seg-btn { border: 0; background: none; color: var(--text-secondary); padding: 0.3rem 0.85rem; cursor: pointer; font: inherit; border-radius: 4px; }
-.rp-seg-btn:hover { color: var(--text-primary); }
-.rp-seg-btn.is-active { background: var(--bg-card); color: var(--text-primary); }
+/* Single / AOE: the shared segmented control (.seg), kept to its content. */
+.rp-seg { align-self: flex-start; }
 
 /* AOE distribute list: rule-separated rows inside the composer card. */
 .rp-heal-targets { display: flex; flex-direction: column; }

@@ -361,13 +361,13 @@
     }
 
     var catBadge = document.createElement("span");
-    catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
-    catBadge.textContent = jobBadgeLabel(j).toUpperCase();
+    catBadge.className = "job-badge job-badge-category";
+    catBadge.textContent = jobBadgeLabel(j);
     media.appendChild(catBadge);
 
     var statusBadge = document.createElement("span");
-    statusBadge.className = "job-badge job-badge-status job-status-" + j.status;
-    statusBadge.textContent = (STATUS_LABEL[j.status] || "").toUpperCase();
+    statusBadge.className = "job-badge job-badge-status";
+    statusBadge.textContent = STATUS_LABEL[j.status] || "";
     media.appendChild(statusBadge);
 
     card.appendChild(media);
@@ -436,10 +436,8 @@
       : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges =
-      '<span class="job-badge job-badge-category job-cat-' + j.category + ' is-static">' +
-        escapeHTML(jobBadgeLabel(j).toUpperCase()) + '</span>' +
-      '<span class="job-badge job-badge-status job-status-' + j.status + ' is-static">' +
-        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
+      '<span class="tag">' + escapeHTML(jobBadgeLabel(j)) + '</span>' +
+      '<span class="tag">' + escapeHTML(STATUS_LABEL[j.status] || "") + '</span>';
 
     var contactHtml = j.contact
       ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
@@ -501,7 +499,7 @@
     if (!getSession()) {
       // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="login.html?redirect=' +
+        '<a class="btn" href="login.html?redirect=' +
         encodeURIComponent(window.location.pathname) + '">Sign in to apply</a>' +
         '</div>';
     }
@@ -512,7 +510,7 @@
         var conflict = activePrimaryElsewhere(j);
         if (conflict) {
           return '<div class="quest-modal-actions">' +
-            '<button type="button" class="quest-action-btn" id="job-apply-btn" disabled>Apply</button>' +
+            '<button type="button" class="btn" id="job-apply-btn" disabled>Apply</button>' +
             '<span class="quest-action-note">You already have an active application for a primary position (' +
             escapeHTML(conflict.title) + '). Withdraw it before applying to another primary position. ' +
             'Secondary positions have no limit.</span>' +
@@ -520,12 +518,12 @@
         }
       }
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn" id="job-apply-btn">Apply</button>' +
+        '<button type="button" class="btn" id="job-apply-btn">Apply</button>' +
         '</div>';
     }
     if (app.stage === "new") {
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn is-ghost" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
+        '<button type="button" class="btn is-danger" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
         '<span class="quest-action-note">Application submitted.</span>' +
         '</div>';
     }

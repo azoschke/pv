@@ -843,6 +843,40 @@ button.nav-sublink {
 
 .btn svg { width: 16px; height: 16px; flex: none; }
 
+/* --- Segmented control ---
+   A choice of views or filters: a well track with the current segment raised
+   in card tone (.is-active, or aria-pressed="true"). */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+}
+
+.seg-btn {
+  min-height: 34px;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.seg-btn:hover { color: var(--text-primary); }
+
+.seg-btn.is-active,
+.seg-btn[aria-pressed="true"] {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
 /* --- Pills, status, tags ---
    Pills are only for states that need someone to act (Needs role, Pending,
    New, Pinned...). Work in progress gets a brown dot and plain text
@@ -1044,23 +1078,23 @@ button.nav-sublink {
 
 .job-selector select {
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
+  font-size: 1rem;
+  min-height: 38px;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 4px;
   background-color: var(--form-input-bg);
   color: var(--text-primary);
   cursor: pointer;
 }
 
-/* Book sections */
+/* Book sections: raised cards, 8px apart. */
 .book {
-  margin-bottom: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  margin-bottom: 8px;
+  border: 0;
+  border-radius: 4px;
   overflow: hidden;
   background-color: var(--bg-card);
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
 .book-header {
@@ -1118,14 +1152,14 @@ button.nav-sublink {
   width: 80px;
   height: 6px;
   background-color: var(--progress-bg);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .book-progress-bar-fill {
   height: 100%;
   background-color: var(--progress-fill);
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
@@ -1184,9 +1218,9 @@ button.nav-sublink {
 
 .task-table tr:last-child td { border-bottom: none; }
 
+/* A finished task reads muted. */
 .task-table tr.checked td {
-  opacity: 0.5;
-  text-decoration: line-through;
+  color: var(--text-secondary);
 }
 
 .task-table input[type="checkbox"] {
@@ -1246,11 +1280,8 @@ button.nav-sublink {
 
 .atma-table .td-num { font-variant-numeric: tabular-nums; }
 
-/* A finished row: muted text, "Complete" in italic before a faded counter.
-   (Overrides the struck-through, faded look of checked task rows.) */
+/* A finished row: muted text, "Complete" in italic before a faded counter. */
 .atma-table tr.checked td {
-  opacity: 1;
-  text-decoration: none;
   color: var(--text-secondary);
 }
 
@@ -1798,17 +1829,10 @@ button.nav-sublink {
   margin: 0;
 }
 
-.search-section {
-  background-color: var(--bg-darker);
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: inset 0 2px 4px rgba(62, 56, 50, 0.15);
-}
-
 /* Form inputs (shared with Crafting DB) */
 .form-input {
   background-color: var(--form-input-bg);
-  border: 1px solid var(--border-color);
+  border: 0;
   color: var(--text-primary);
 }
 
@@ -1840,21 +1864,20 @@ button.nav-sublink {
   margin-bottom: 0;
 }
 
+/* Campaign cards (campaigns.html): raised, no border or shadow. */
 .landing-card {
   display: block;
   text-decoration: none;
   color: var(--text-primary);
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  border: 0;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
 }
 
 .landing-card:hover {
-  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+  color: var(--text-primary);
   transform: translateY(-2px);
-  border-color: var(--accent-brown);
 }
 
 .landing-card-inner {
@@ -1884,9 +1907,9 @@ button.nav-sublink {
 }
 
 .landing-card-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
+  font-size: 0.98rem;
+  color: var(--text-body);
+  line-height: 1.5;
   flex: 1;
    margin: unset;
    margin-bottom:1rem;
@@ -1906,7 +1929,7 @@ button.nav-sublink {
 }
 
 .landing-card:hover .landing-card-cta {
-  color: var(--accent-red);
+  color: var(--accent-brown-hover);
 }
 
 /* ── Landing rows (alternating image / content) ─────────────────────────────── */
@@ -2427,19 +2450,6 @@ body.nav-sidebar-open {
    12. CAMPAIGNS — Selection page + Chapter viewer
    ============================================================================= */
 
-/* ── Disabled campaign card (campaigns.html) ────────────────────────────────── */
-
-.landing-card--disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: default;
-  color: var(--text-secondary);
-}
-
-.landing-card-cta--muted {
-  color: var(--text-secondary) !important;
-}
-
 /* Breadcrumb under the campaign title: Campaigns / <current> (current disabled) */
 .campaign-breadcrumb {
   display: flex;
@@ -2874,50 +2884,6 @@ body.nav-sidebar-open {
   align-items: center;
 }
 
-/* Buttons */
-.cdb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  border: none;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cdb-btn-primary {
-  background-color: var(--accent-brown);
-  color: #fff;
-}
-
-.cdb-btn-primary:hover { filter: brightness(1.1); }
-
-.cdb-btn-secondary {
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.cdb-btn-secondary:hover { background-color: var(--border-color); }
-
-/* Secondary buttons with a fixed colour: Cancel, Save, Delete (no hover
-   change), and red-outlined remove buttons. */
-.cdb-btn-secondary.is-cancel  { background-color: var(--bg-darker); color: var(--text-primary); }
-.cdb-btn-secondary.is-primary { background-color: var(--accent-brown); color: white; }
-.cdb-btn-secondary.is-delete  { background-color: var(--accent-red); color: white; }
-.cdb-btn-secondary.is-danger  { color: var(--accent-red); border-color: var(--accent-red); }
-/* Edit button sitting on the card's right edge. */
-.cdb-btn.cdb-card-edit {
-  padding: 8px;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(50%);
-  z-index: 10;
-}
 .cdb-file-input { display: none; }
 
 /* Search section */
@@ -3036,40 +3002,23 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .cdb-icon-md { font-size: 20px !important; }
 
 /* Icon colors */
-.cdb-icon-btn    { color: var(--accent-brown); font-size: 24px; cursor: pointer; transition: opacity 0.2s; }
-.cdb-icon-btn:hover { opacity: 0.7; }
 .cdb-icon-food   { color: var(--star-filled); }
 .cdb-icon-potion { color: var(--accent-brown); }
 
 /* Star display */
 .cdb-stars { display: inline-flex; align-items: center; gap: 0.25rem; }
 
-/* Delete button */
-.cdb-delete-btn {
-  background-color: var(--accent-red);
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 8px;
-  cursor: pointer;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(50%);
-  z-index: 10;
-  transition: filter 0.2s;
-}
-
-.cdb-delete-btn:hover { filter: brightness(1.15); }
-
-/* Stats bar (darker inset row below header) */
+/* Stats bar under the header: a recessed tray inside the card. */
 .cdb-stats-row {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  background-color: var(--bg-darker);
+  margin-top: 10px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 
 .cdb-stats-values {
@@ -3084,13 +3033,16 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .cdb-stat-value  { font-weight: 600; color: var(--text-primary); }
 .cdb-hint        { font-size: 0.75rem; margin-left: 0.5rem; color: var(--text-secondary); }
 
-/* Editable stats row */
+/* Editable stats row (a tray, like the stats bar) */
 .cdb-stats-edit-row {
-  padding: 0.75rem 1rem;
+  margin-top: 10px;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background-color: var(--bg-darker);
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 
 /* Card body (expanded) */
@@ -3145,24 +3097,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-macro-label { font-size: 0.85rem; color: var(--text-secondary); }
 
-.cdb-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: inherit;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  border: none;
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.cdb-copy-btn:hover { background-color: var(--border-color); }
-
-/* Macro text: a recessed tray (.tray) inside the card. */
 .cdb-macro-pre {
   margin: 0;
   padding: 0.75rem;
@@ -3177,17 +3111,19 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* Add/Edit form panel */
 .cdb-form-panel {
-  border-radius: 0.5rem;
+  border-radius: 4px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 0;
 }
 
 .cdb-form-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
 }
 
 .cdb-form-fields {
@@ -3210,12 +3146,13 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   color: var(--text-primary);
 }
 .cdb-label.is-flush { margin-bottom: 0; }
-/* Boxed group of fields inside a form (Cosmic Exploration). */
+/* Boxed group of fields inside a form (Cosmic Exploration): a recessed tray. */
 .cdb-form-fields.is-boxed {
   margin-bottom: 0.75rem;
   padding: 0.75rem;
-  background-color: var(--bg-darker);
-  border-radius: 0.375rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 .cdb-align-end { align-self: end; }
 
@@ -3294,18 +3231,18 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   justify-content: center;
   padding: 1rem;
   z-index: 50;
-  background-color: rgba(62, 56, 50, 0.75);
+  background-color: var(--scrim);
 }
 
 .cdb-modal {
-  border-radius: 0.5rem;
+  border-radius: 4px;
   padding: 1.5rem;
   max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 0;
 }
 
 .cdb-modal-desc {
@@ -3316,11 +3253,9 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-modal-body { margin-bottom: 1.5rem; }
 
+/* One class's stats inside the modal: a recessed tray (.tray). */
 .cdb-class-row {
   padding: 1rem;
-  border-radius: 0.375rem;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
 }
 
 .cdb-class-row-title {
@@ -3395,16 +3330,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-data-chip-count { color: var(--text-primary); }
 
-.cdb-data-chip--gray  { background: rgba(163, 155, 142, 0.18); border-color: rgba(163, 155, 142, 0.5); }
-.cdb-data-chip--tan   { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
-.cdb-data-chip--olive { background: rgba(142, 139,  92, 0.18); border-color: rgba(142, 139,  92, 0.5); }
-.cdb-data-chip--plum  { background: rgba(140,  94, 120, 0.18); border-color: rgba(140,  94, 120, 0.5); }
-.cdb-data-chip--rust  { background: rgba(158,  92,  58, 0.18); border-color: rgba(158,  92,  58, 0.5); }
-.cdb-data-chip--wine  { background: rgba(122,  46,  46, 0.18); border-color: rgba(122,  46,  46, 0.5); }
-.cdb-data-chip--indigo{ background: rgba( 74,  78, 122, 0.18); border-color: rgba( 74,  78, 122, 0.5); }
-.cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
-
-/* Badge row in the card header (location / job / food) */
 /* Card meta: location, job and food as muted text with icons (.cdb-badge),
    the class as a square .tag. */
 .cdb-badge-row {
@@ -3424,32 +3349,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-badge .material-icons { font-size: 15px; }
 
-.cdb-badge--location { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
-.cdb-badge--job      { background: rgba(139, 111,  71, 0.15); border-color: rgba(139, 111,  71, 0.5); }
-.cdb-badge--food     { background: rgba(120, 130,  80, 0.18); border-color: rgba(120, 130,  80, 0.5); }
-
-/* Category badge with per-category accent colors */
-.cdb-cat-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.75rem;
-  font-family: 'Stoke', serif;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  line-height: 1;
-}
-
-.cdb-cat-badge--class-a-expert  { background: rgba(122,  46,  46, 0.20); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.5); }
-.cdb-cat-badge--class-a         { background: rgba(140,  94, 120, 0.20); color: #8c5e78; border-color: rgba(140,  94, 120, 0.5); }
-.cdb-cat-badge--class-b         { background: rgba( 94, 110, 140, 0.20); color: #5e6e8c; border-color: rgba( 94, 110, 140, 0.5); }
-.cdb-cat-badge--class-c         { background: rgba(120, 130,  80, 0.20); color: #788250; border-color: rgba(120, 130,  80, 0.5); }
-.cdb-cat-badge--class-d         { background: rgba(163, 155, 142, 0.20); color: #6c655a; border-color: rgba(163, 155, 142, 0.5); }
-.cdb-cat-badge--sequential      { background: rgba(158,  92,  58, 0.20); color: #9e5c3a; border-color: rgba(158,  92,  58, 0.5); }
-.cdb-cat-badge--time-restricted { background: rgba(180, 145,  60, 0.20); color: #b4913c; border-color: rgba(180, 145,  60, 0.5); }
-.cdb-cat-badge--critical        { background: rgba(122,  46,  46, 0.25); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.55); }
-
-/* Items grid (3-up in expanded body) */
 /* Items in an expanded card, each a recessed tray (.tray). */
 .cdb-cosmic-item-grid {
   display: grid;
@@ -3629,8 +3528,8 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-size: 1.1rem;
   color: var(--text-primary);
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 0;
+  border-radius: 4px;
   padding: 2rem 1.5rem;
   text-align: center;
 }
@@ -3662,10 +3561,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   transform: translateY(-2px);
 }
 
-.venue-card.is-featured {
-  box-shadow: 0 6px 18px rgba(62, 56, 50, 0.28);
-}
-
 /* The media box carries .media-ph (the placeholder field under any image)
    and .tear-half (its torn bottom edge into the card body). */
 .venue-card-media {
@@ -3683,34 +3578,31 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   display: block;
 }
 
-.venue-badge {
+/* Labels over a card's image (size, featured, position, category, status):
+   small square tags in the media inks, the same on every card, with no
+   per-category colours. In a popup's text the same labels are plain .tag. */
+.venue-badge,
+.job-badge {
   position: absolute;
+  top: 0.6rem;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 0.25rem;
-  line-height: 1;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--media-5) 85%, transparent);
+  color: var(--media-ink);
 }
 
-.venue-badge-featured {
-  top: 0.6rem;
-  left: 0.6rem;
-  background: var(--accent-red);
-  color: #fff;
-}
+.venue-badge-featured,
+.job-badge-category { left: 0.6rem; }
 
-.venue-badge-size {
-  top: 0.6rem;
-  right: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  color: #f3e9d2;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
+.venue-badge-size,
+.job-badge-status { right: 0.6rem; }
 
 .venue-card-body {
   padding: 12px 18px 20px;
@@ -3761,9 +3653,10 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-card-tag {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: 'Crimson Pro', serif;
   font-size: 0.95rem;
-  color: var(--accent-brown);
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* ── Venue modal ─────────────────────────────────────────────────────────── */
@@ -3942,15 +3835,26 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   color: var(--text-primary);
 }
 
+/* The line under a popup's title (location): muted italic. */
 .venue-modal-location {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  font-style: italic;
   color: var(--text-secondary);
   margin: 0 0 1rem;
 }
-/* A labelled section further down the popup (roster SKILLS / RP HOOKS). */
-.venue-modal-location.is-section { margin-top: 1rem; }
+/* A labelled section further down the popup (roster SKILLS / RP HOOKS): a
+   group header in ink small caps. */
+.venue-modal-location.is-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.84rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
 
 .venue-modal-desc {
   font-family: 'Crimson Pro', serif;
@@ -3980,23 +3884,23 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    ========================================================================== */
 .codex-list { display: flex; flex-direction: column; }
 
+/* Group header: ink small caps. */
 .codex-type-heading {
   font-family: 'Stoke', serif;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 400;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.85;
-  margin: 2rem 0 0.5rem;
+  color: var(--text-primary);
+  margin: 2rem 0 0.6rem;
 }
 .codex-type-heading:first-child { margin-top: 0.25rem; }
 
-/* Each type group is one rounded card; rows fill it edge-to-edge so the
+/* Each type group is one raised card; rows fill it edge-to-edge so the
    hover/focus highlight spans the full width with no inset box. */
 .codex-group {
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--bg-card);
 }
@@ -4036,12 +3940,11 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 .codex-row-sub {
   display: block;
-  margin-top: 0.15rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.02em;
-  color: var(--accent-brown);
-  opacity: 0.85;
+  margin-top: 0.1rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--text-secondary);
 }
 .codex-row-preview {
   display: block;
@@ -4049,7 +3952,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   line-height: 1.4;
-  color: var(--text-secondary);
+  color: var(--text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4072,18 +3975,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   margin-top: 1.35rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
-}
-.codex-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -4118,7 +4009,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex-direction: column;
   background: var(--bg-card);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
   text-align: left;
   padding: 0;
@@ -4142,6 +4033,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* Placeholder field and torn edge as on .venue-card-media. */
 .job-card-media {
+  --tear-h: 22px;
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
@@ -4155,80 +4047,36 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   display: block;
 }
 
-.job-badge {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 0.25rem;
-  line-height: 1;
-}
-
-/* Category badge (top-left), tinted per division. */
-.job-badge-category {
-  top: 0.6rem;
-  left: 0.6rem;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.job-badge-category.job-cat-medical     { background: #2f6b4f; }
-.job-badge-category.job-cat-pirate      { background: #2c5a73; }
-.job-badge-category.job-cat-mercenary   { background: #8b3a3f; }
-.job-badge-category.job-cat-house_staff { background: #6b4f8b; }
-.job-badge-category.job-cat-contractor  { background: #8b6f47; }
-
-/* Status badge (top-right). */
-.job-badge-status {
-  top: 0.6rem;
-  right: 0.6rem;
-  color: #f3e9d2;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.job-badge-status.job-status-open   { background: var(--accent-red); color: #fff; }
-.job-badge-status.job-status-closed { background: rgba(0, 0, 0, 0.62); }
-.job-badge-status.job-status-filled { background: rgba(0, 0, 0, 0.62); }
-
-/* Badges inside a popup sit in the text flow instead of over a card image. */
-.venue-badge.is-static,
-.job-badge.is-static { position: static; }
-
 .job-card-body {
-  padding: 1rem 1.1rem 1.1rem;
+  padding: 12px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
   flex: 1;
 }
 
 .job-card-title {
   font-family: 'Stoke', serif;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 400;
   margin: 0;
   color: var(--text-primary);
 }
 
 .job-card-meta {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .job-card-desc {
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  line-height: 1.45;
-  color: var(--text-primary);
-  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  margin: 4px 0 0;
   flex: 1;
 }
 
@@ -4295,10 +4143,8 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .job-modal-contact-label {
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
   margin-right: 0.5rem;
 }
 
@@ -4322,22 +4168,9 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 /* =============================================================================
    16. BOUNTY BOARD + FACTION ROSTERS — public pages
    Reuses the job-card / job-modal and venue-card / venue-modal patterns; the
-   classes below cover the quest schedule badges and the member action row
-   (sign up / apply) shown inside detail modals.
+   classes below cover the member action row (sign up / apply, shared
+   buttons) shown inside detail modals.
    ========================================================================== */
-
-/* Schedule badge variants (layered on .job-badge.job-badge-status) */
-.job-badge-status.quest-sched-scheduled  { background: var(--accent-red); color: #fff; }
-.job-badge-status.quest-sched-tbd        { background: #8a6d2f; color: #fff; }
-.job-badge-status.quest-sched-repeatable { background: #2f6d62; color: #fff; }
-.job-badge-status.quest-sched-past       { background: rgba(0, 0, 0, 0.62); color: #f3e9d2; }
-
-/* Mission type badge variants (layered on .job-badge.job-badge-category) */
-.job-badge-category.quest-type-training      { background: #2f5d42; color: #f3e9d2; }
-.job-badge-category.quest-type-investigation { background: #4a3566; color: #f3e9d2; }
-.job-badge-category.quest-type-bounty        { background: #6e3a35; color: #f3e9d2; }
-.job-badge-category.quest-type-escort        { background: #2f4d62; color: #f3e9d2; }
-.job-badge-category.quest-type-gathering     { background: #6e5a2f; color: #f3e9d2; }
 
 .quest-card-stats { letter-spacing: 0.05em; }
 
@@ -4357,42 +4190,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex-wrap: wrap;
 }
 
-.quest-action-btn {
-  font-family: 'Stoke', serif;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #fff;
-  background: var(--accent-red);
-  border: 1px solid var(--accent-red);
-  border-radius: 0.3rem;
-  padding: 0.55rem 1.3rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition: filter 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.quest-action-btn:hover { filter: brightness(1.08); }
-
-.quest-action-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.quest-action-btn.is-ghost {
-  background: transparent;
-  color: var(--accent-brown);
-  border-color: var(--border-color);
-}
-
-.quest-action-btn.is-ghost:hover {
-  border-color: var(--accent-brown);
-  color: var(--accent-red);
-  filter: none;
-}
-
 .quest-action-note {
   font-family: 'Crimson Pro', serif;
   color: var(--text-secondary);
@@ -4405,12 +4202,9 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   margin-top: 0.5rem;
 }
 
-/* "Submit a quest" sits at the right edge of the bounty board toolbar */
+/* "Submit a quest" (a .btn) sits at the right edge of the bounty board toolbar */
 .quest-submit-btn {
   margin-left: auto;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -4770,41 +4564,16 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   margin: 0;
 }
 
-/* ── Venue modal "View Menu" link ────────────────────────────────────────── */
-/* A chip, not a button: it sits between the location line and the description
-   in a modal that is mostly reading matter, so it is padded to about half a
-   button's height and kept in the secondary ink until hovered. The pill
-   radius follows the action chips elsewhere in the app. */
+/* ── Venue modal "View Menu" link ──────────────────────────────────────────
+   A small quiet button between the location line and the description; its
+   arrow nudges forward on hover. */
 .venue-modal-menu-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
   /* The location already carries 1rem beneath it, so only a gap below. */
   margin: 0 0 1.1rem;
-  padding: 0.32rem 0.7rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: var(--text-secondary);
-  text-decoration: none;
-  background: var(--bg-darker);
-  border: 1px solid var(--border-color);
-  border-radius: 2rem;
-  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-/* Nudges forward on hover — the one bit of movement the chip makes. */
 .venue-modal-menu-arrow {
   transition: transform 0.18s ease;
-}
-
-.venue-modal-menu-link:hover,
-.venue-modal-menu-link:focus-visible {
-  color: var(--accent-red);
-  border-color: var(--accent-red);
-  background: var(--bg-card-light);
 }
 
 .venue-modal-menu-link:hover .venue-modal-menu-arrow,
@@ -4813,7 +4582,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .venue-modal-menu-link,
   .venue-modal-menu-arrow { transition: none; }
   .venue-modal-menu-link:hover .venue-modal-menu-arrow,
   .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }

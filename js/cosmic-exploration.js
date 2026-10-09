@@ -44,15 +44,15 @@
   // Single source of truth for data-reward levels.
   // Adding VII/VIII later: append one entry; nothing else changes.
   const DATA_REWARD_LEVELS = [
-    { key: 'i',   label: 'I',   accent: 'gray'  },
-    { key: 'ii',  label: 'II',  accent: 'tan'   },
-    { key: 'iii', label: 'III', accent: 'olive' },
-    { key: 'iv',  label: 'IV',  accent: 'plum'  },
-    { key: 'v',   label: 'V',   accent: 'rust'  },
-    { key: 'vi',  label: 'VI',  accent: 'wine'  }
+    { key: 'i',   label: 'I'   },
+    { key: 'ii',  label: 'II'  },
+    { key: 'iii', label: 'III' },
+    { key: 'iv',  label: 'IV'  },
+    { key: 'v',   label: 'V'   },
+    { key: 'vi',  label: 'VI'  }
   ];
 
-  const COSMIC_POINTS_META = { key: 'cosmicPoints', label: 'Points', icon: 'public', accent: 'brown' };
+  const COSMIC_POINTS_META = { key: 'cosmicPoints', label: 'Points' };
 
   // ==========================================================================
   // Helpers
@@ -66,11 +66,6 @@
       chunks.push(lines.slice(i, i + 15).join('\n'));
     }
     return chunks.length > 0 ? chunks : [''];
-  };
-
-  const categoryBadgeClass = (category) => {
-    const slug = String(category || '').toLowerCase().replace(/\s+/g, '-');
-    return 'cdb-cat-badge cdb-cat-badge--' + slug;
   };
 
   const normalizeFoodLabel = (label) => {
@@ -433,16 +428,15 @@
       ...nonZero.map(level =>
         h('span', {
           key: level.key,
-          className: 'cdb-data-chip cdb-data-chip--' + level.accent
+          className: 'cdb-data-chip'
         },
           h('span', { className: 'cdb-data-chip-label' }, level.label),
           h('span', { className: 'cdb-data-chip-count' }, '\u00D7 ' + dataReward[level.key])
         )
       ),
       hasPoints && h('span', {
-        className: 'cdb-data-chip cdb-data-chip--' + COSMIC_POINTS_META.accent
+        className: 'cdb-data-chip'
       },
-        h('span', { className: 'material-icons cdb-icon-xs' }, COSMIC_POINTS_META.icon),
         h('span', { className: 'cdb-data-chip-label' }, COSMIC_POINTS_META.label),
         h('span', { className: 'cdb-data-chip-count' }, '\u00D7 ' + dataReward.cosmicPoints)
       )
@@ -615,7 +609,7 @@
             h('button', {
               type: 'button',
               onClick: addItem,
-              className: 'cdb-btn cdb-btn-secondary'
+              className: 'btn is-quiet'
             }, 'Add Item')
           ),
           ...formData.items.map((item, index) =>
@@ -664,7 +658,7 @@
                   h('button', {
                     type: 'button',
                     onClick: () => removeItem(index),
-                    className: 'cdb-btn cdb-btn-secondary is-delete'
+                    className: 'btn is-danger is-small'
                   }, 'Remove Item')
                 )
               ),
@@ -715,11 +709,11 @@
           h('button', {
             type: 'button',
             onClick: onCancel,
-            className: 'cdb-btn cdb-btn-secondary'
+            className: 'btn is-quiet'
           }, 'Cancel'),
           h('button', {
             type: 'submit',
-            className: 'cdb-btn cdb-btn-primary'
+            className: 'btn'
           }, 'Add Mission')
         )
       )
@@ -823,34 +817,36 @@
     };
 
     const header = h('div', {
-      className: `craft-card-header ${isExpanded ? 'expanded' : ''}`,
-      onClick: onToggle,
-      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent' }
+      className: 'craft-card-header',
+      onClick: onToggle
     },
       h('div', { className: 'craft-title-section' },
         h('h3', { className: 'craft-name' }, entry.questName || '(unnamed)')
       ),
       h('div', { className: 'craft-meta-section' },
         h('div', { className: 'cdb-badge-row' },
-          h('span', { className: 'cdb-badge cdb-badge--location' },
+          h('span', { className: 'cdb-badge' },
             h('span', { className: 'material-icons cdb-icon-xs' }, 'public'),
             entry.location || '—'
           ),
-          h('span', { className: 'cdb-badge cdb-badge--job' },
+          h('span', { className: 'cdb-badge' },
             h('span', { className: 'material-icons cdb-icon-xs' }, JOB_ICONS[entry.job] || 'build'),
             entry.job || '—'
           ),
-          h('span', { className: categoryBadgeClass(entry.category) }, entry.category || '—'),
+          h('span', { className: 'tag' }, entry.category || '—'),
           entry.foodRequired && entry.foodType !== 'None' && h('span', {
-            className: 'cdb-badge cdb-badge--food'
+            className: 'cdb-badge'
           },
             h('span', { className: 'material-icons cdb-icon-xs' }, 'restaurant'),
             entry.foodType
           )
         ),
         h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'cdb-btn cdb-btn-secondary cdb-card-edit',
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': isExpanded ? 'Collapse' : 'Expand',
+          'aria-expanded': isExpanded ? 'true' : 'false',
           title: isExpanded ? 'Collapse' : 'Expand'
         },
           h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
@@ -862,7 +858,7 @@
     const collapsedBody = !isExpanded && h('div', {
       className: 'cdb-inline-row cdb-card-tags'
     },
-      h('span', { style: { fontSize: '0.8rem', color: 'var(--text-secondary)' } }, 'Crafts:'),
+      h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(entry.items || []).map((item, idx) => {
         const macroText = (entry.macros && entry.macros[idx]) ? entry.macros[idx].macro : '';
         const markerValue = entry.id + '-' + idx;
@@ -872,7 +868,7 @@
             e.stopPropagation();
             copyText(macroText, setCopiedItemId, markerValue);
           },
-          className: 'cdb-copy-btn',
+          className: 'btn is-quiet is-small',
           title: macroText ? 'Copy macro' : 'No macro for this item'
         },
           h('span', { className: 'material-icons cdb-icon-xs' },
@@ -974,7 +970,7 @@
           h('button', {
             type: 'button',
             onClick: addEditItem,
-            className: 'cdb-btn cdb-btn-secondary'
+            className: 'btn is-quiet'
           }, 'Add Item')
         ),
         ...editFormData.items.map((item, idx) =>
@@ -1022,7 +1018,7 @@
                 h('button', {
                   type: 'button',
                   onClick: () => removeEditItem(idx),
-                  className: 'cdb-btn cdb-btn-secondary is-delete'
+                  className: 'btn is-danger is-small'
                 }, 'Remove Item')
               )
             ),
@@ -1070,12 +1066,12 @@
         h('button', {
           type: 'button',
           onClick: handleInlineCancel,
-          className: 'cdb-btn cdb-btn-secondary'
+          className: 'btn is-quiet'
         }, 'Cancel'),
         h('button', {
           type: 'button',
           onClick: handleInlineSave,
-          className: 'cdb-btn cdb-btn-primary'
+          className: 'btn'
         }, 'Save')
       )
     );
@@ -1089,7 +1085,7 @@
           h('h4', { className: 'cdb-subheading' }, 'Items'),
           h('div', { className: 'cdb-cosmic-item-grid' },
             ...entry.items.map((item, idx) =>
-              h('div', { key: idx, className: 'cdb-cosmic-item-card' },
+              h('div', { key: idx, className: 'cdb-cosmic-item-card tray' },
                 h('div', { className: 'cdb-cosmic-item-name' }, item.name || `Item ${idx + 1}`),
                 h('div', { className: statClass(matchesDifficulty(item.difficulty)) },
                   'Difficulty: ',
@@ -1137,7 +1133,7 @@
                       ),
                       h('button', {
                         onClick: () => copyText(chunk, setCopiedChunkId, markerValue),
-                        className: 'cdb-copy-btn'
+                        className: 'btn is-quiet is-small'
                       },
                         h('span', { className: 'material-icons cdb-icon-xs' },
                           copiedChunkId === markerValue ? 'check' : 'content_copy'
@@ -1145,7 +1141,7 @@
                         copiedChunkId === markerValue ? 'Copied' : 'Copy'
                       )
                     ),
-                    h('pre', { className: 'cdb-macro-pre' }, chunk)
+                    h('pre', { className: 'cdb-macro-pre tray' }, chunk)
                   );
                 })
               )
@@ -1159,25 +1155,30 @@
         )
       ),
       !isEditingInline && h('div', { className: 'cdb-card-footer' },
-        h('span', {
+        h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
-          className: 'material-icons cdb-icon-btn',
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': 'Edit',
           title: 'Edit'
-        }, 'edit'),
+        }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
         deleteConfirm
           ? h('div', { className: 'cdb-inline-row', style: { gap: '0.25rem' } },
               h('button', {
+                type: 'button',
                 onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
-                className: 'cdb-btn cdb-btn-secondary is-danger'
+                className: 'btn is-destructive is-small'
               }, 'Confirm'),
               h('button', {
                 onClick: (e) => { e.stopPropagation(); setDeleteConfirm(false); },
-                className: 'cdb-btn cdb-btn-secondary'
+                className: 'btn is-quiet'
               }, 'Cancel')
             )
           : h('button', {
+              type: 'button',
               onClick: (e) => { e.stopPropagation(); setDeleteConfirm(true); },
-              className: 'cdb-btn cdb-btn-secondary is-danger',
+              className: 'btn is-danger is-small is-icon',
+              'aria-label': 'Delete',
               title: 'Delete'
             },
               h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
@@ -1203,7 +1204,7 @@
         h('button', {
           type: 'button',
           onClick: () => setSearchMode(searchMode === 'numeric' ? 'text' : 'numeric'),
-          className: 'cdb-btn cdb-btn-secondary'
+          className: 'btn is-quiet'
         }, `Switch to ${searchMode === 'numeric' ? 'Text' : 'Numeric'} Search`)
       ),
       searchMode === 'numeric'
@@ -1236,7 +1237,7 @@
                 setQualitySearch('');
                 setDurabilitySearch('');
               },
-              className: 'cdb-btn cdb-btn-secondary'
+              className: 'btn is-quiet'
             }, 'Clear')
           )
         : h('input', {
@@ -1388,19 +1389,19 @@
 
     return h('div', { className: 'cdb-root container' },
       h('header', { className: 'app-header' },
-        h('h1', { className: 'app-title craft-name' }, 'FFXIV Cosmic Exploration Macro Database'),
+        h('h1', { className: 'app-title' }, 'FFXIV Cosmic Exploration Macro Database'),
         h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
       ),
       h('div', { className: 'top-controls top-controls-right' },
         h('div', { className: 'action-buttons-top' },
           h('button', {
             onClick: exportToCSV,
-            className: 'cdb-btn cdb-btn-secondary'
+            className: 'btn is-quiet'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'download'),
             'Export CSV'
           ),
-          h('label', { className: 'cdb-btn cdb-btn-secondary' },
+          h('label', { className: 'btn is-quiet' },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'upload'),
             'Import CSV',
             h('input', {
@@ -1466,7 +1467,7 @@
         h('div', { className: 'add-new-row' },
           h('button', {
             onClick: () => setIsAdding(true),
-            className: 'add-new-btn cdb-btn cdb-btn-primary'
+            className: 'add-new-btn btn'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
             'Add New Mission'

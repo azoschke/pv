@@ -353,7 +353,7 @@
     if (primary) {
       var posBadge = document.createElement("span");
       posBadge.className = "venue-badge venue-badge-size";
-      posBadge.textContent = primary.toUpperCase();
+      posBadge.textContent = primary;
       media.appendChild(posBadge);
     }
 
@@ -373,7 +373,7 @@
     if (s._positions.length) {
       var loc = document.createElement("p");
       loc.className = "venue-card-location";
-      loc.textContent = s._positions.join(" · ").toUpperCase();
+      loc.textContent = s._positions.join(" · ");
       body.appendChild(loc);
     }
 
@@ -436,8 +436,7 @@
       : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges = s._positions.map(function (p) {
-      return '<span class="venue-badge venue-badge-size is-static">' +
-        escapeHTML(p.toUpperCase()) + '</span>';
+      return '<span class="tag">' + escapeHTML(p) + '</span>';
     }).join("");
 
     var tagsHtml = s._tags.length

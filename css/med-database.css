@@ -7,8 +7,8 @@
 /* ── Patient record cards ──────────────────────────────────────── */
 .record-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 0;
+  border-radius: 4px;
   padding: 1.75rem 2rem;
   margin-bottom: 1rem;
 }
@@ -101,12 +101,15 @@
   gap: 1rem 1.5rem;
 }
 
-/* ── Visit list ────────────────────────────────────────────────── */
+/* ── Visit list ──────────────────────────────────────────────────
+   Each visit is a recessed tray inside the record card; its header is
+   raised again. */
 .visit-card {
-  background: var(--bg-card-light);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  margin-bottom: 0.75rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border: 0;
+  border-radius: 4px;
+  margin-bottom: 8px;
   overflow: hidden;
 }
 .visit-card:last-child { margin-bottom: 0; }
@@ -134,7 +137,7 @@
   font-weight: 400;
   color: var(--text-primary);
 }
-.visit-card.open .visit-card-date { color: var(--accent-red); }
+.visit-card.open .visit-card-date { color: var(--accent-brown); }
 
 .visit-card-meta {
   font-family: 'Crimson Pro', serif;
@@ -199,13 +202,14 @@
 .patient-search {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.45rem 0.6rem;
+  min-height: 38px;
+  padding: 0 0.7rem;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--text-primary);
   background: var(--bg-darker);
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
+  border: 0;
+  border-radius: 4px;
 }
 .patient-search::placeholder { color: var(--text-secondary); }
 /* Fixed 9-column grid: 26 letters + "#" = exactly 3 even rows, so the

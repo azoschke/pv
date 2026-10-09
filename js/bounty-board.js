@@ -146,7 +146,7 @@
     var d = new Date(ms);
     return d.toLocaleString(undefined, {
       month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-    }).toUpperCase();
+    });
   }
 
   function createdTime(q) {
@@ -424,14 +424,13 @@
 
     if (q.mission_type) {
       var typeBadge = document.createElement("span");
-      typeBadge.className = "job-badge job-badge-category quest-type-" + typeSlug(q.mission_type);
-      typeBadge.textContent = q.mission_type.toUpperCase();
+      typeBadge.className = "job-badge job-badge-category";
+      typeBadge.textContent = q.mission_type;
       media.appendChild(typeBadge);
     }
 
     var schedBadge = document.createElement("span");
-    schedBadge.className = "job-badge job-badge-status quest-sched-" + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "");
+    schedBadge.className = "job-badge job-badge-status";
     schedBadge.textContent = scheduleBadgeText(q);
     media.appendChild(schedBadge);
 
@@ -572,7 +571,7 @@
     if (!session) {
       // Round-trip through login and come back to the board to finish the signup.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="' + LOGIN_URL +
+        '<a class="btn" href="' + LOGIN_URL +
         encodeURIComponent(window.location.pathname) + '">Sign in to register</a>' +
         '</div>';
     }
@@ -580,12 +579,12 @@
     var mine = mySignup(q);
     if (mine) {
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn is-ghost" id="quest-withdraw-btn">Withdraw signup</button>' +
+        '<button type="button" class="btn is-danger" id="quest-withdraw-btn">Withdraw signup</button>' +
         '<span class="quest-action-note">You are signed up for this quest.</span>' +
         '</div>';
     }
     return '<div class="quest-modal-actions">' +
-      '<button type="button" class="quest-action-btn" id="quest-signup-btn">Sign up</button>' +
+      '<button type="button" class="btn" id="quest-signup-btn">Sign up</button>' +
       '</div>';
   }
 
@@ -631,13 +630,9 @@
 
     var badges = "";
     if (q.mission_type) {
-      badges += '<span class="job-badge job-badge-category quest-type-' + typeSlug(q.mission_type) +
-        ' is-static">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
+      badges += '<span class="tag">' + escapeHTML(q.mission_type) + '</span>';
     }
-    badges +=
-      '<span class="job-badge job-badge-status quest-sched-' + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "") + ' is-static">' +
-      escapeHTML(scheduleBadgeText(q)) + '</span>';
+    badges += '<span class="tag">' + escapeHTML(scheduleBadgeText(q)) + '</span>';
 
     modalBody.innerHTML =
       imgHtml +

@@ -411,7 +411,7 @@
       if (e.campaign_name) tagItems.push(e.campaign_name);
       var tagsHtml = tagItems.length
         ? '<div class="codex-modal-tags">' + tagItems.map(function (t) {
-            return '<span class="codex-tag">' + escapeHtml(t) + '</span>';
+            return '<span class="tag">' + escapeHtml(t) + '</span>';
           }).join('') + '</div>'
         : '';
       var descHtml = (window.CampaignUtils && CampaignUtils.parseMarkdown)

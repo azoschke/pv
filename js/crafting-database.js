@@ -350,26 +350,26 @@
 
     return h('div', { className: 'cdb-root container' },
       h('header', { className: 'app-header' },
-        h('h1', { className: 'app-title craft-name' }, 'FFXIV Crafting Macro Database'),
+        h('h1', { className: 'app-title' }, 'FFXIV Crafting Macro Database'),
         h('p', { className: 'app-subtitle' }, 'Manage your crafting macros and recipes')
       ),
       h('div', { className: 'top-controls top-controls-right' },
         h('div', { className: 'action-buttons-top' },
           h('button', {
             onClick: () => setIsManagingClassStats(true),
-            className: 'cdb-btn cdb-btn-secondary'
+            className: 'btn is-quiet'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'settings'),
             'Manage Class Stats'
           ),
           h('button', {
             onClick: exportToCSV,
-            className: 'cdb-btn cdb-btn-secondary'
+            className: 'btn is-quiet'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'download'),
             'Export CSV'
           ),
-          h('label', { className: 'cdb-btn cdb-btn-secondary' },
+          h('label', { className: 'btn is-quiet' },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'upload'),
             'Import CSV',
             h('input', {
@@ -429,7 +429,7 @@
         h('div', { className: 'add-new-row' },
           h('button', {
             onClick: () => setIsAddingCraft(true),
-            className: 'add-new-btn cdb-btn cdb-btn-primary'
+            className: 'add-new-btn btn'
           },
             h('span', { className: 'material-icons cdb-icon-sm' }, 'add'),
             'Add New'
@@ -639,11 +639,11 @@
           h('button', {
             type: 'button',
             onClick: onCancel,
-            className: 'cdb-btn cdb-btn-secondary is-cancel'
+            className: 'btn is-quiet'
           }, 'Cancel'),
           h('button', {
             type: 'submit',
-            className: 'cdb-btn cdb-btn-secondary is-primary'
+            className: 'btn'
           }, `${craft ? 'Update' : 'Add'} Craft`)
         )
       )
@@ -720,9 +720,8 @@
 
     // Common header for both collapsed and expanded
     const header = h('div', {
-      className: `craft-card-header ${isExpanded ? 'expanded' : ''}`,
-      onClick: onToggle,
-      style: { borderColor: isExpanded ? '#C5B89A' : 'transparent' }
+      className: 'craft-card-header',
+      onClick: onToggle
     },
       h('div', { className: 'craft-title-section' },
         h('h3', { className: 'craft-name' }, craft.name),
@@ -735,8 +734,11 @@
         ),
         craft.level && h('span', { className: 'craft-level' }, `LVL ${craft.level}`),
         h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); onToggle(); },
-          className: 'cdb-btn cdb-btn-secondary cdb-card-edit',
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': isExpanded ? 'Collapse' : 'Expand',
+          'aria-expanded': isExpanded ? 'true' : 'false',
           title: isExpanded ? 'Collapse' : 'Expand'
         },
           h('span', { className: 'material-icons cdb-icon-md' }, isExpanded ? 'expand_less' : 'expand_more')
@@ -958,11 +960,11 @@
               h('div', { className: 'cdb-form-actions' },
                 h('button', {
                   onClick: handleInlineCancel,
-                  className: 'cdb-btn cdb-btn-secondary is-cancel'
+                  className: 'btn is-quiet'
                 }, 'Cancel'),
                 h('button', {
                   onClick: handleInlineSave,
-                  className: 'cdb-btn cdb-btn-secondary is-primary'
+                  className: 'btn'
                 }, 'Save')
               )
             )
@@ -1007,15 +1009,15 @@
                   h('span', { className: 'cdb-macro-label' }, `Macro ${index + 1}`),
                   h('button', {
                     onClick: () => copyMacroToClipboard(chunk),
-                    className: 'cdb-copy-btn',
-                    style: { backgroundColor: 'var(--bg-darker)', color: 'var(--text-primary)' }
+                    type: 'button',
+                    className: 'btn is-quiet is-small'
                   },
                     h('span', { className: 'material-icons cdb-icon-xs' }, 'content_copy'),
                     'Copy'
                   )
                 ),
                 h('pre', {
-                  className: 'cdb-macro-pre'
+                  className: 'cdb-macro-pre tray'
                 }, chunk)
               )
             )
@@ -1029,14 +1031,18 @@
             )
       ),
       !isEditingInline && h('div', { className: 'cdb-card-footer' },
-        h('span', {
-          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
-          className: 'material-icons cdb-icon-btn',
-          title: 'Edit'
-        }, 'edit'),
         h('button', {
+          type: 'button',
+          onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
+          className: 'btn is-quiet is-small is-icon',
+          'aria-label': 'Edit',
+          title: 'Edit'
+        }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
+        h('button', {
+          type: 'button',
           onClick: (e) => { e.stopPropagation(); onDelete(); },
-          className: 'cdb-btn cdb-btn-secondary is-danger',
+          className: 'btn is-danger is-small is-icon',
+          'aria-label': 'Delete',
           title: 'Delete'
         },
           h('span', { className: 'material-icons cdb-icon-md' }, 'delete')
@@ -1073,8 +1079,7 @@
     };
 
     return h('div', {
-      className: 'cdb-modal-overlay',
-      style: { backgroundColor: 'rgba(62, 56, 50, 0.75)' }
+      className: 'cdb-modal-overlay'
     },
       h('div', {
         className: 'cdb-modal'
@@ -1085,8 +1090,7 @@
           ...CLASSES.map(className =>
             h('div', {
               key: className,
-              className: 'cdb-class-row',
-              style: { backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)' }
+              className: 'cdb-class-row tray'
             },
               h('h3', { className: 'cdb-class-row-title' }, className),
               h('div', { className: 'cdb-grid-3' },
@@ -1124,11 +1128,11 @@
         h('div', { className: 'cdb-form-actions' },
           h('button', {
             onClick: onClose,
-            className: 'cdb-btn cdb-btn-secondary is-cancel'
+            className: 'btn is-quiet'
           }, 'Cancel'),
           h('button', {
             onClick: handleSave,
-            className: 'cdb-btn cdb-btn-secondary is-primary'
+            className: 'btn'
           }, 'Save Stats')
         )
       )

@@ -771,15 +771,15 @@
       ),
 
       h('div', { className: 'portal-filter-row members-filter-row' },
-        h('div', { className: 'portal-chip-group' },
+        h('div', { className: 'seg', role: 'group' },
           h('button', {
             type: 'button',
-            className: 'portal-chip' + (!attentionMode ? ' is-active' : ''),
+            className: 'seg-btn' + (!attentionMode ? ' is-active' : ''),
             onClick: function () { setAttentionMode(false); }
           }, 'All · ' + allCount),
           h('button', {
             type: 'button',
-            className: 'portal-chip' + (attentionMode ? ' is-active' : ''),
+            className: 'seg-btn' + (attentionMode ? ' is-active' : ''),
             onClick: function () { setAttentionMode(true); }
           }, 'Needs attention · ' + attentionCount)
         ),

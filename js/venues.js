@@ -395,12 +395,12 @@
     if (v.featured) {
       var fb = document.createElement("span");
       fb.className = "venue-badge venue-badge-featured";
-      fb.innerHTML = '<span aria-hidden="true">&#9733;</span> FEATURED';
+      fb.innerHTML = '<span aria-hidden="true">&#9733;</span> Featured';
       media.appendChild(fb);
     }
     var sb = document.createElement("span");
     sb.className = "venue-badge venue-badge-size";
-    sb.textContent = (SIZE_LABEL[v.size] || "").toUpperCase();
+    sb.textContent = SIZE_LABEL[v.size] || "";
     media.appendChild(sb);
 
     card.appendChild(media);
@@ -418,7 +418,7 @@
 
     var loc = document.createElement("p");
     loc.className = "venue-card-location";
-    loc.textContent = locationLine(v).toUpperCase();
+    loc.textContent = locationLine(v);
     body.appendChild(loc);
 
     var desc = document.createElement("p");
@@ -542,13 +542,13 @@
       : "";
 
     var badges =
-      (v.featured ? '<span class="venue-badge venue-badge-featured is-static"><span aria-hidden="true">&#9733;</span> FEATURED</span>' : "") +
-      '<span class="venue-badge venue-badge-size is-static">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
+      (v.featured ? '<span class="tag"><span aria-hidden="true">&#9733;</span> Featured</span>' : "") +
+      '<span class="tag">' + escapeHTML(SIZE_LABEL[v.size] || "") + '</span>';
 
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="venue-modal-menu-link" href="menus.html?venue=' +
+      ? '<a class="btn is-quiet is-small venue-modal-menu-link" href="menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
           'View Menu' +
           '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +
@@ -560,7 +560,7 @@
       '<div class="venue-modal-content">' +
         '<div class="venue-modal-badges">' + badges + '</div>' +
         '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
-        '<p class="venue-modal-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</p>' +
+        '<p class="venue-modal-location">' + escapeHTML(locationLine(v)) + '</p>' +
         menuLinkHtml +
         '<div class="venue-modal-desc">' + descHtml + '</div>' +
         tagsHtml +

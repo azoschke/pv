@@ -438,12 +438,10 @@
 
     // Badges: one per faction, then IC rank.
     var badgesHtml = (m.factions || []).map(function (f) {
-      return '<span class="venue-badge venue-badge-size is-static">' +
-        escapeHTML(f.toUpperCase()) + '</span>';
+      return '<span class="tag">' + escapeHTML(f) + '</span>';
     }).join("");
     if (m.ic_rank) {
-      badgesHtml += '<span class="venue-badge venue-badge-size is-static">' +
-        escapeHTML(String(m.ic_rank).toUpperCase()) + '</span>';
+      badgesHtml += '<span class="tag">' + escapeHTML(String(m.ic_rank)) + '</span>';
     }
 
     modalBody.innerHTML =
