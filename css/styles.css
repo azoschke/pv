@@ -4274,13 +4274,12 @@ body.nav-sidebar-open {
 
 /* =============================================================================
    17. VENUE MENUS — public menus page
-   A narrow, centered "menu sheet" rather than the wide card grid used by the
-   venues directory: the constrained reading column is what makes this read as
-   a printed menu instead of a database table. Items flow into two columns on
-   desktop beneath a full-width category heading, and collapse to one on
-   mobile. Placeholder thumbnails reuse the .img-slot recipe from the landing
-   page (parchment texture + centered line icon) so a menu that is only
-   partly photographed still looks deliberate.
+   A "menu sheet" rather than the wide card grid used by the venues directory:
+   a torn card holding the venue's banner, an index of its sections and the
+   items. Items flow into two columns on desktop beneath each section heading,
+   and collapse to one on mobile. Items without a photo keep a placeholder
+   tile in the well with the section's icon, so a menu that is only partly
+   photographed still looks deliberate.
    ============================================================================= */
 
 /* ── Venue chooser ───────────────────────────────────────────────────────── */
@@ -4288,36 +4287,32 @@ body.nav-sidebar-open {
 
 .menu-venue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
 }
 
-/* Lighter than .venue-card: no badges, shorter media, and it navigates
-   rather than opening a modal. */
+/* Lighter than .venue-card: no badges, and it navigates rather than opening a
+   modal. */
 .menu-venue-card {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
   font-family: inherit;
   color: inherit;
 }
 
 .menu-venue-card:hover { transform: translateY(-2px); }
 
-.menu-venue-card:focus-visible {
-  outline: 2px solid var(--accent-brown);
-  outline-offset: 2px;
-}
-
 /* Placeholder field and torn edge as on .venue-card-media. */
 .menu-venue-card-media {
+  --tear-h: 22px;
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
@@ -4335,91 +4330,69 @@ body.nav-sidebar-open {
 .menu-venue-card-body {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.85rem 1rem 1rem;
+  gap: 4px;
+  padding: 12px 18px 20px;
 }
 
 .menu-venue-card-title {
   font-family: 'Stoke', serif;
-  font-size: 1.1rem;
+  font-size: 1.18rem;
   color: var(--text-primary);
 }
 
 .menu-venue-card-location {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-size: 0.95rem;
+  font-style: italic;
   color: var(--text-secondary);
 }
 
 /* ── Menu view ───────────────────────────────────────────────────────────── */
 .menus-view { margin-top: 1.25rem; }
 
-.menu-back-btn {
-  display: inline-block;
-  font-family: 'Stoke', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  padding: 0.35rem 0;
-  margin-bottom: 0.9rem;
-  cursor: pointer;
-}
+/* "← All Menus": a plain button above the sheet. */
+.menu-back { margin-bottom: 10px; }
 
-.menu-back-btn:hover { color: var(--accent-red); }
-
-/* The sheet itself — the menu card. Runs the full content width like any
-   other page; the two-column item flow inside is what keeps line lengths
-   readable, so an outer clamp isn't needed. */
+/* The sheet itself: a torn card. */
 .menu-sheet {
-  /* Inline padding is a variable so the full-bleed bands (the category index
-     and each category heading) can cancel it with a negative margin and stay
-     in step at every breakpoint. */
-  --menu-sheet-pad: 2.5rem;
-  /* The top padding is a variable too, so the hero header can cancel it and
-     sit flush against the sheet's top edge at every breakpoint. */
-  --menu-sheet-pad-top: 2.25rem;
+  /* Inline padding is a variable so the full-bleed banner can cancel it with
+     a negative margin and stay in step at every breakpoint. */
+  --menu-sheet-pad: 2.75rem;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2.75rem;
+  border-radius: 4px 4px 0 0;
+  padding: 0 var(--menu-sheet-pad) calc(2.25rem + var(--tear-h));
   overflow: hidden;
 }
 
+/* The banner: a dark field (.media-ph) that tears into the sheet (.tear),
+   with the venue's own photograph over it when there is one. The type uses
+   the media inks, which read the same on both themes. */
 .menu-sheet-header {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-/* Masthead over the venue's own photograph. The image is texture here, not
-   subject: lightly blurred, overscanned, and sunk under a dark veil.
-   Deliberately theme-independent — the band reads as a dusk-lit signboard in
-   light mode as much as in dark, and one treatment means one set of contrast
-   figures to stand behind instead of two. Its type therefore carries the
-   parchment inks rather than the page's, which invert underneath it. */
-.menu-sheet-header.has-hero {
-  /* The dark-theme ink pair, pinned so light mode gets it too. */
-  --menu-hero-ink:     #ebe3d0;
-  --menu-hero-ink-dim: #c5b89a;
+  --tear-h: 30px;
   position: relative;
   /* Own stacking context, so the negative-z layers below stay above the
-     sheet's background instead of falling behind it. */
+     field instead of falling behind it. */
   isolation: isolate;
   overflow: hidden;
-  margin: calc(var(--menu-sheet-pad-top) * -1) calc(var(--menu-sheet-pad) * -1) 0;
-  padding: 3rem var(--menu-sheet-pad) 2.5rem;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--menu-hero-ink);
-  /* Inherited by the title and location — enough to hold the type together
-     where the veil thins over a bright patch of the photo. */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 230px;
+  margin: 0 calc(var(--menu-sheet-pad) * -1);
+  padding: 2.5rem var(--menu-sheet-pad) calc(2.25rem + var(--tear-h));
+  text-align: center;
+  color: var(--media-ink);
 }
 
-/* Overscanned just past the band so the blur's feathered edge never shows —
-   in pixels, not a percentage, to keep the extra crop off the photo minimal. */
+/* The photograph is texture here, not subject: lightly blurred, overscanned
+   just past the band so the blur's feathered edge never shows (in pixels, to
+   keep the extra crop off the photo minimal), and sunk under a veil. */
+.menu-sheet-header.has-hero {
+  /* Enough to hold the type together where the veil thins over a bright
+     patch of the photo. */
+  text-shadow: 0 1px 3px var(--scrim);
+}
+
 .menu-sheet-header.has-hero::before {
   content: '';
   position: absolute;
@@ -4428,78 +4401,76 @@ body.nav-sidebar-open {
   background-image: var(--menu-hero-img);
   background-size: cover;
   background-position: center;
-  /* Light blur only — enough to soften detail under the type without losing
-     the venue. Brightness comes down a touch first: a photo already sitting
-     near the band's own range needs less covering up, so more of it survives
-     at the same legibility. Saturation is left alone. */
   filter: blur(3px) brightness(0.85);
 }
 
+/* Thinnest at the top edge, where nothing sits over it, and steady from the
+   title down. */
 .menu-sheet-header.has-hero::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* Light-handed: venue photographs are moderately dark to begin with, so the
-     veil only has to settle them. Thinnest at the top edge, where nothing
-     sits over it, and steady from the title down. */
   background: linear-gradient(180deg,
-    rgba(26, 22, 20, 0.3) 0%,
-    rgba(26, 22, 20, 0.5) 42%,
-    rgba(26, 22, 20, 0.5) 100%);
-}
-
-.menu-sheet-header.has-hero .menu-sheet-title { color: var(--menu-hero-ink); }
-.menu-sheet-header.has-hero .menu-sheet-location { color: var(--menu-hero-ink-dim); }
-
-/* The hero already closes with a rule, so the index band below it drops its
-   own top border and butts straight up against it. */
-.menu-sheet-header.has-hero + .menu-index {
-  margin-top: 0;
-  border-top: 0;
+    color-mix(in srgb, var(--scrim) 50%, transparent) 0%,
+    color-mix(in srgb, var(--scrim) 83%, transparent) 42%,
+    color-mix(in srgb, var(--scrim) 83%, transparent) 100%);
 }
 
 .menu-sheet-title {
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   letter-spacing: 0.02em;
-  color: var(--text-primary);
-  margin: 0 0 0.2rem;
+  line-height: 1.15;
+  color: var(--media-ink);
+  margin: 0;
 }
 
 .menu-sheet-location {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 1.15rem;
-  color: var(--text-secondary);
-  margin: 0;
+  font-size: 1.3rem;
+  color: var(--media-ink-dim);
+  margin: 8px 0 0;
 }
 
-/* A full-bleed band across the sheet: the negative inline margin cancels the
-   sheet padding, and the padding is put back inside so the links stay aligned
-   with the content above and below. */
+/* Section index: button-style links in the well, each with its section's
+   icon in brown. */
 .menu-index {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.4rem 1.2rem;
-  margin: 1.4rem calc(var(--menu-sheet-pad) * -1) 0;
-  padding: 1rem var(--menu-sheet-pad);
-  background: var(--bg-staff-panel);
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  padding: 1.4rem 0 0.4rem;
 }
 
 .menu-index-link {
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+  color: var(--text-primary);
   text-decoration: none;
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s ease;
 }
 
-.menu-index-link:hover { color: var(--accent-red); }
+.menu-index-link:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
+}
+
+.menu-index-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--accent-brown);
+}
 
 .menu-empty {
   font-family: 'Crimson Pro', serif;
@@ -4510,43 +4481,29 @@ body.nav-sidebar-open {
   margin: 0;
 }
 
-/* ── Category heading ────────────────────────────────────────────────────── */
-/* Centered label flanked by hairline rules — the strongest "menu" signal on
-   the page, and the reason the heading spans the full sheet rather than
-   sitting inside a column. */
+/* ── Section heading ─────────────────────────────────────────────────────── */
+/* Brown icon, Stoke heading, one faint rule underneath. */
 .menu-cat-heading {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  /* Bleeds to the sheet edges so the flanking rules run the full width. */
-  margin: 2.4rem calc(var(--menu-sheet-pad) * -1) 1.2rem;
+  margin: 2.75rem 0 1.6rem;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1.4rem;
   color: var(--text-primary);
-}
-
-.menu-category:first-of-type .menu-cat-heading { margin-top: 1.8rem; }
-
-.menu-cat-heading::before,
-.menu-cat-heading::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
 }
 
 .menu-cat-heading-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
 .menu-cat-icon {
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
   color: var(--accent-brown);
   flex: 0 0 auto;
 }
@@ -4565,9 +4522,9 @@ body.nav-sidebar-open {
 
 .menu-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0 0.75rem;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 0 1.75rem;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
 }
@@ -4576,10 +4533,10 @@ body.nav-sidebar-open {
    half-photographed menu from looking ragged. */
 .menu-thumb {
   position: relative;
-  flex: 0 0 120px;
-  width: 120px;
-  height: 120px;
-  border-radius: 0.3rem;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 104px;
+  border-radius: 4px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -4594,44 +4551,15 @@ body.nav-sidebar-open {
   display: block;
 }
 
-/* Placeholder: parchment texture under a gold-brown wash, matching the
-   .img-slot treatment on the landing page. */
-.menu-thumb.is-placeholder {
-  background-image: url('../assets/pdf-texture-web.jpg');
-  background-size: cover;
-  background-position: center;
-}
-
-.menu-thumb.is-placeholder::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(140deg, rgba(107, 68, 35, .55), rgba(139, 111, 71, .55));
-  pointer-events: none;
-}
-
-/* The light-mode wash reads as a bright block against the dark sheet, where
-   placeholders would out-shout the real photographs beside them. Sink it. */
-[data-theme="dark"] .menu-thumb.is-placeholder::before {
-  background: linear-gradient(140deg, rgba(38, 22, 14, .82), rgba(74, 66, 57, .8));
-}
-
-[data-theme="dark"] .menu-thumb-icon {
-  color: rgba(235, 227, 208, 0.78);
-  opacity: 0.7;
-}
-
 /* Menu artwork sits on a light sheet at small size and carries the tint
    better than the darker card media does, so it runs above the default. */
 .menu-thumb.sketch-wash { --sketch-wash-alpha: 0.25; }
 
+/* No photo: the section's icon, muted, in the well. */
 .menu-thumb-icon {
-  position: relative;
-  z-index: 1;
-  width: 44px;
-  height: 44px;
-  color: rgba(245, 240, 230, 0.92);
-  opacity: 0.85;
+  width: 38px;
+  height: 38px;
+  color: var(--text-secondary);
 }
 
 .menu-item-body {
@@ -4644,6 +4572,7 @@ body.nav-sidebar-open {
   flex-wrap: nowrap;
   align-items: baseline;
   gap: 0.4rem;
+  margin: 2px 0 4px;
 }
 
 /* Leader and price hold the first line, taking whatever the capped name
@@ -4660,7 +4589,7 @@ body.nav-sidebar-open {
   flex: 0 1 auto;
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1.3;
   color: var(--text-primary);
 }
@@ -4689,10 +4618,10 @@ body.nav-sidebar-open {
 .menu-item-desc {
   font-family: 'Crimson Pro', serif;
   font-style: italic;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 1.5;
   color: var(--text-secondary);
-  margin: 0.2rem 0 0;
+  margin: 0;
 }
 
 /* ── Venue modal "View Menu" link ────────────────────────────────────────── */
@@ -4745,23 +4674,20 @@ body.nav-sidebar-open {
 }
 
 @media (max-width: 1024px) {
-  .menu-sheet  { --menu-sheet-pad: 1.5rem; --menu-sheet-pad-top: 1.75rem;
-                 padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2rem; }
+  .menu-sheet  { --menu-sheet-pad: 1.5rem; }
   .menu-items  { columns: 1; }
-  .menu-sheet-header.has-hero { padding: 2.5rem var(--menu-sheet-pad) 2rem; }
 }
 
-@media (max-width: 600px) {
-  .menu-sheet       { --menu-sheet-pad: 1.1rem; --menu-sheet-pad-top: 1.4rem;
-                      padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 1.75rem; }
-  .menu-sheet-title { font-size: 1.5rem; }
-  .menu-thumb       { flex-basis: 96px; width: 96px; height: 96px; }
-  .menu-thumb-icon  { width: 36px; height: 36px; }
-  .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
-  .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
+@media (max-width: 820px) {
+  .menu-sheet       { --menu-sheet-pad: 1.25rem; }
+  .menu-sheet-header { min-height: 190px; }
+  .menu-sheet-title { font-size: 2rem; }
+  .menu-thumb       { flex-basis: 84px; width: 84px; height: 84px; }
+  .menu-thumb-icon  { width: 32px; height: 32px; }
+  .menu-cat-heading { margin-top: 2rem; }
 }
 
-/* Extra small: a 96px square beside the text leaves the description wrapping
+/* Extra small: an 84px square beside the text leaves the description wrapping
    every three or four words, so the thumb takes a row of its own above the
    name and the item reads straight down. */
 @media (max-width: 480px) {

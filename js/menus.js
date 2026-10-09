@@ -133,7 +133,7 @@
         '</span>' +
         '<span class="menu-venue-card-body">' +
           '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
-          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</span>' +
+          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v)) + '</span>' +
         '</span>' +
       '</button>';
   }
@@ -164,7 +164,7 @@
           '<img src="' + escapeHTML(item.image_url) + '" alt="" ' +
           'loading="lazy" decoding="async" />' +
         '</span>'
-      : '<span class="menu-thumb is-placeholder">' +
+      : '<span class="menu-thumb">' +
           iconSvg(icon, "menu-thumb-icon") +
         '</span>';
 
@@ -222,12 +222,14 @@
     });
 
     // A category index is only worth the space once a menu has enough
-    // sections to be worth jumping around.
+    // sections to be worth jumping around. Each link carries its section's
+    // icon.
     var indexHtml = cats.length > 2
       ? '<nav class="menu-index" aria-label="Menu sections">' +
           cats.map(function (c) {
             return '<a class="menu-index-link" href="#' +
               escapeHTML(slugForAnchor(c.name, c.id)) + '">' +
+              iconSvg(c.icon || DEFAULT_ICON, "menu-index-icon") +
               escapeHTML(c.name || "Menu") + '</a>';
           }).join("") +
         '</nav>'
@@ -237,13 +239,14 @@
       ? cats.map(categoryHtml).join("")
       : '<p class="menu-empty">This menu has not been filled in yet.</p>';
 
-    // The venue's own photograph doubles as the masthead backdrop. The chooser
-    // payload always carries image_url; the menu payload's venue object may
-    // not, so fall back to the card data already in hand.
+    // The venue's own photograph doubles as the masthead backdrop, over the
+    // placeholder field when there is none. The chooser payload always
+    // carries image_url; the menu payload's venue object may not, so fall back
+    // to the card data already in hand.
     var heroUrl = v.image_url || venueImage(v.id != null ? v.id : currentVenueId);
 
     sheetEl.innerHTML = '' +
-      '<header class="menu-sheet-header' + (heroUrl ? ' has-hero' : '') + '">' +
+      '<header class="menu-sheet-header media-ph tear' + (heroUrl ? ' has-hero' : '') + '">' +
         '<h1 class="menu-sheet-title">' + escapeHTML(v.name || "Menu") + '</h1>' +
         '<p class="menu-sheet-location">' + escapeHTML(locationLine(v)) + '</p>' +
       '</header>' +
