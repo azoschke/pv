@@ -108,12 +108,12 @@
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
-          className: 'portal-btn',
+          className: 'btn',
           disabled: saving
         }, saving ? 'Posting…' : 'Post bulletin'),
         onCancel ? h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost',
+          className: 'btn is-quiet',
           onClick: onCancel,
           disabled: saving
         }, 'Cancel') : null
@@ -128,27 +128,22 @@
 
     var author = a.author_display_name || a.author_username || '— former member —';
 
-    return h('article', {
-      className: 'bulletin-item' + (a.pinned ? ' is-pinned' : '')
-    },
-      h('header', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' } },
-        a.pinned ? h('span', { className: 'portal-badge is-pinned' }, 'Pinned') : null,
-        h('h2', { className: 'portal-card-title', style: { margin: 0, flex: 1, textTransform: 'none', letterSpacing: 'normal', fontSize: '1.05rem' } }, a.title),
-        a.discord_posted ? h('span', { className: 'portal-badge is-ok' }, 'Discord') : null,
+    // A recessed tray inside the board's card; a pinned bulletin carries a
+    // red Pinned pill.
+    return h('article', { className: 'bulletin-item tray' },
+      h('header', { className: 'bulletin-head' },
+        h('h2', { className: 'bulletin-title' }, a.title),
+        a.pinned ? h('span', { className: 'pill' }, 'Pinned') : null,
+        a.discord_posted ? h('span', { className: 'status-dot is-quiet' }, 'Discord') : null,
         allowDelete ? h('button', {
           type: 'button',
-          className: 'portal-btn is-small is-danger',
+          className: 'btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete “' + a.title + '”?')) onDelete(a);
           }
         }, 'Delete') : null
       ),
-      h('p', {
-        style: {
-          margin: '0.1rem 0 0.5rem', color: 'var(--text-secondary)',
-          fontFamily: 'La Belle Aurore, cursive', fontSize: '0.95rem'
-        }
-      }, author + ' · ' + formatWhen(a.created_at)),
+      h('p', { className: 'bulletin-by' }, author + ' · ' + formatWhen(a.created_at)),
       h('div', { className: 'portal-pre' }, a.body)
     );
   }
@@ -230,13 +225,13 @@
     }
 
     return h('div', null,
-      h('div', { className: 'portal-card' },
+      h('div', { className: 'portal-card tear' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, heading),
           canPost ? h('div', { className: 'portal-card-actions' },
             h('button', {
               type: 'button',
-              className: 'portal-btn',
+              className: 'btn',
               onClick: function () { setComposeOpen(true); }
             },
               h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),

@@ -38,8 +38,8 @@
     return a ? a.label : value;
   }
   function accessBadge(page) {
-    if (page.access === 'restricted') return h('span', { className: 'portal-badge is-pinned' }, 'Restricted');
-    if (page.access === 'signed_in') return h('span', { className: 'portal-badge' }, 'Signed in');
+    if (page.access === 'restricted') return h('span', { className: 'tag' }, 'Restricted');
+    if (page.access === 'signed_in') return h('span', { className: 'tag' }, 'Signed in');
     return null;
   }
 
@@ -204,9 +204,9 @@
         h('p', { className: 'portal-field-help' },
           'Plain text at the bottom of every page, line for line (10 lines at most). Leave empty for no footer.')) : null,
       h('div', { className: 'portal-btn-row' },
-        h('button', { type: 'button', className: 'portal-btn', disabled: saving || !dirty, onClick: save },
+        h('button', { type: 'button', className: 'btn', disabled: saving || !dirty, onClick: save },
           saving ? 'Saving…' : 'Save defaults'),
-        dirty ? h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving,
+        dirty ? h('button', { type: 'button', className: 'btn is-quiet', disabled: saving,
           onClick: function () { setDraft(saved); } }, 'Discard') : null)
     );
   }
@@ -326,8 +326,8 @@
           help: 'Uploads are cropped to 1200×630.'
         }),
         h('div', { className: 'portal-btn-row' },
-          h('button', { type: 'submit', className: 'portal-btn', disabled: saving }, saving ? 'Saving…' : 'Save page'),
-          h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: props.onClose }, 'Cancel'))
+          h('button', { type: 'submit', className: 'btn', disabled: saving }, saving ? 'Saving…' : 'Save page'),
+          h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: props.onClose }, 'Cancel'))
       )
     );
   }
@@ -423,8 +423,8 @@
             'New pages start Restricted: only you can open them, and their nav link only shows to you, until you ' +
             'grant roles in Permissions → Site Pages or change the access.')),
         h('div', { className: 'portal-btn-row' },
-          h('button', { type: 'submit', className: 'portal-btn', disabled: saving }, saving ? 'Adding…' : 'Add page'),
-          h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: props.onClose }, 'Cancel'))
+          h('button', { type: 'submit', className: 'btn', disabled: saving }, saving ? 'Adding…' : 'Add page'),
+          h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: props.onClose }, 'Cancel'))
       )
     );
   }
@@ -449,26 +449,26 @@
     var sections = pageSections(data.pages, data.nav);
     function pageRow(p) {
       var hidden = !p.robots_index || p.access === 'restricted' || p.needs_review;
-      return h('tr', { key: p.id, className: p.needs_review ? 'is-needs-role' : null },
+      return h('tr', { key: p.id },
         h('td', null,
           h('div', { className: 'portal-name-row' },
             h('span', { className: 'portal-strong' }, p.title),
-            p.needs_review ? h('span', { className: 'portal-badge is-warn' }, 'Needs review') : null),
+            p.needs_review ? h('span', { className: 'pill' }, 'Needs review') : null),
           h('div', { className: 'portal-muted' }, fileOf(p.path))),
         h('td', null, accessBadge(p) || h('span', { className: 'portal-muted' }, 'Public')),
         h('td', null, hidden ? h('span', { className: 'portal-muted' }, 'Hidden') : 'Shown'),
         h('td', { className: 'portal-col-actions' },
           h('div', { className: 'site-row-actions' },
-            h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: function () { props.onEdit(p); } },
+            h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { props.onEdit(p); } },
               p.needs_review ? 'Review' : 'Edit'),
-            h('button', { type: 'button', className: 'portal-btn is-small is-danger', disabled: deleting === p.id,
+            h('button', { type: 'button', className: 'btn is-small is-danger', disabled: deleting === p.id,
               onClick: function () { remove(p); } }, deleting === p.id ? 'Deleting…' : 'Delete'))));
     }
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, 'Pages'),
         h('div', { className: 'portal-card-actions' },
-          h('button', { type: 'button', className: 'portal-btn', onClick: props.onAdd },
+          h('button', { type: 'button', className: 'btn', onClick: props.onAdd },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'), 'Add page'))),
       h('div', { className: 'portal-table-wrap site-table-scroll' },
         h('table', { className: 'portal-table' },

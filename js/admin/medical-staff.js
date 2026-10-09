@@ -226,15 +226,15 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (hasProfile ? 'Save profile' : 'Create profile')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel'),
         (hasProfile && allowDelete) ? h('button', {
           type: 'button',
-          className: 'portal-btn is-danger is-end',
+          className: 'btn is-danger is-end',
           onClick: function () {
             if (confirm('Remove ' + row.member.name + ' from the Medical Division roster? The FC member record is not deleted.')) {
               onDelete(row);
@@ -257,7 +257,7 @@
     return h('tr', null,
       h('td', null,
         h('div', { className: 'portal-name-row' },
-          !hasProfile ? h('span', { className: 'portal-badge is-pinned' }, 'Needs profile') : null,
+          !hasProfile ? h('span', { className: 'pill' }, 'Needs profile') : null,
           h('span', { className: 'portal-strong' }, row.member.name)
         )
       ),
@@ -265,7 +265,7 @@
         positions.length
           ? h('div', { className: 'portal-faction-tags' },
               positions.map(function (p) {
-                return h('span', { key: p, className: 'portal-faction-tag' }, p);
+                return h('span', { key: p, className: 'tag' }, p);
               })
             )
           : h('span', { className: 'portal-muted' }, '—')
@@ -274,7 +274,7 @@
         tags.length
           ? h('div', { className: 'portal-faction-tags' },
               tags.map(function (t) {
-                return h('span', { key: t, className: 'portal-faction-tag' }, t);
+                return h('span', { key: t, className: 'tag' }, t);
               })
             )
           : h('span', { className: 'portal-muted' }, '—')
@@ -282,7 +282,7 @@
       h('td', { className: 'portal-col-actions' },
         h('button', {
           type: 'button',
-          className: 'portal-btn is-small is-ghost',
+          className: 'btn is-small is-quiet',
           onClick: function () { onEdit(row); }
         }, hasProfile ? 'Edit' : 'Add profile')
       )

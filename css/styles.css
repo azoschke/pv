@@ -845,9 +845,10 @@ button.nav-sublink {
 
 /* --- Pills, status, tags ---
    Pills are only for states that need someone to act (Needs role, Pending,
-   New, Pinned...). Work in progress gets a brown dot and plain text; settled
-   states (Done, Active) are plain muted text. Category labels are italic text
-   or a small square tag in the well. */
+   New, Pinned...). Work in progress gets a brown dot and plain text
+   (.status-dot.is-brown), a neutral state a muted dot (.status-dot), and
+   settled states (Done, Active) plain muted text (.status-dot.is-quiet).
+   Category labels are italic text or a small square tag in the well. */
 .pill {
   display: inline-block;
   font-family: 'Stoke', Georgia, serif;
@@ -877,8 +878,9 @@ button.nav-sublink {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: var(--accent-brown);
+  background-color: var(--text-secondary);
 }
+.status-dot.is-brown::before { background-color: var(--accent-brown); }
 .status-dot.is-quiet { color: var(--text-secondary); }
 .status-dot.is-quiet::before { display: none; }
 
@@ -4843,15 +4845,17 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   .menu-item-body { width: 100%; }
 }
 
-/* ── FC Members: shared character block (Discord / Joined / linked alts) ──── */
+/* ── FC Members: shared character block (Discord / Joined / linked alts) ────
+   Both the shared block (in the notes popup) and each linked-alt row (in the
+   member form) sit inside a card, so they are recessed trays. */
 .member-shared-block {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.6rem 0.75rem;
-  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-color);
-  border-radius: 0.4rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 .member-shared-row {
   display: flex;
@@ -4883,8 +4887,8 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-color);
-  border-radius: 0.35rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
   font-size: 0.92rem;
 }

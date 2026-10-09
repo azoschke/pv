@@ -87,12 +87,12 @@
     // account is limited to the root admin (Fiora).
     var resetAllowed = canReset && !isRoot && (!targetIsAdmin || callerIsRoot);
 
-    return h('tr', { className: needsRole ? 'is-needs-role' : null },
+    return h('tr', null,
       h('td', null,
         h('div', { className: 'portal-name-row' },
           h('span', { className: 'portal-strong' }, u.username),
-          isRoot ? h('span', { className: 'portal-badge is-pinned', title: 'Root admin (protected)' }, 'Root') : null,
-          needsRole ? h('span', { className: 'portal-badge is-warn', title: 'No role assigned yet' }, 'Needs role') : null
+          isRoot ? h('span', { className: 'tag', title: 'Root admin (protected)' }, 'Root') : null,
+          needsRole ? h('span', { className: 'pill', title: 'No role assigned yet' }, 'Needs role') : null
         ),
         u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
       ),
@@ -112,14 +112,14 @@
           !isRoot && canRoles
             ? h('button', {
                 type: 'button',
-                className: 'portal-btn is-small is-ghost',
+                className: 'btn is-small is-quiet',
                 onClick: function () { onEditRoles(u); }
               }, 'Edit roles')
             : null,
           resetAllowed
             ? h('button', {
                 type: 'button',
-                className: 'portal-btn is-small is-ghost',
+                className: 'btn is-small is-quiet',
                 disabled: !!resetting,
                 title: 'Generate a one-time password reset link to send the member',
                 onClick: function () { onReset(u); }
@@ -133,7 +133,7 @@
               ? null
               : h('button', {
                   type: 'button',
-                  className: 'portal-btn is-small is-danger',
+                  className: 'btn is-small is-danger',
                   disabled: deleting,
                   onClick: function () {
                     if (confirm('Delete account "' + u.username + '"? This cannot be undone.')) {
@@ -205,10 +205,7 @@
         expiry ? ('It expires around ' + expiry + ' and ') : 'It ',
         'can only be used once.'
       ),
-      h('div', { className: 'portal-flash', style: {
-        background: 'rgba(165, 77, 68, 0.10)', border: '1px solid rgba(165, 77, 68, 0.30)',
-        color: 'var(--accent-red)', marginBottom: '1rem'
-      } },
+      h('div', { className: 'portal-flash error', style: { marginBottom: '1rem' } },
         'This link is shown only once — copy it now. It cannot be retrieved again.'
       ),
       h('div', { className: 'portal-field', style: { marginBottom: '1rem' } },
@@ -221,15 +218,15 @@
       ),
       h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' } },
         h('button', {
-          type: 'button', className: 'portal-btn',
+          type: 'button', className: 'btn',
           onClick: function () { copy(discordMessage, 'message'); }
         }, copied === 'message' ? 'Copied!' : 'Copy Discord message'),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: function () { copy(result.link, 'link'); }
         }, copied === 'link' ? 'Copied!' : 'Copy link only'),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost is-end',
+          type: 'button', className: 'btn is-quiet is-end',
           onClick: onClose
         }, 'Done')
       )
@@ -295,8 +292,8 @@
         })
       ),
       h('div', { style: { display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' } },
-        h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: onClose }, 'Cancel'),
-        h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save },
+        h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: onClose }, 'Cancel'),
+        h('button', { type: 'button', className: 'btn', disabled: saving, onClick: save },
           saving ? 'Saving…' : 'Save roles')
       )
     );

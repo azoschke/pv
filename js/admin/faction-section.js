@@ -47,9 +47,9 @@
   // "Completed" is excluded — the card only lists members still needing one.
   var IC_PENDING = ['Not Started', 'Scheduled', 'No Data'];
   function interviewPillClass(status) {
-    if (status === 'Not Started') return 'portal-pill is-red';
-    if (status === 'Scheduled')   return 'portal-pill is-gold';
-    return 'portal-pill is-muted'; // No Data
+    if (status === 'Not Started') return 'pill';
+    if (status === 'Scheduled')   return 'status-dot is-brown';
+    return 'status-dot'; // No Data
   }
 
   // Display order for the Faction tag list — mirrors members.js FACTIONS.
@@ -185,7 +185,7 @@
                             factions.length
                               ? h('div', { className: 'portal-faction-tags' },
                                   factions.map(function (f) {
-                                    return h('span', { key: f, className: 'portal-faction-tag' }, f);
+                                    return h('span', { key: f, className: 'tag' }, f);
                                   })
                                 )
                               : h('span', { className: 'portal-muted' }, '—')

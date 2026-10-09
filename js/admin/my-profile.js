@@ -222,7 +222,7 @@
         ),
 
         h('div', { className: 'portal-form-actions' },
-          h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
+          h('button', { type: 'submit', className: 'btn', disabled: saving },
             saving ? 'Saving…' : 'Save profile')
         )
       )

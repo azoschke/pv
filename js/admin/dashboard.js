@@ -139,19 +139,22 @@
         { view: 'applications', stage: 'new' }) : null,
       canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null
     ].filter(Boolean);
+    // Scheduled work is in progress, not an alert, so these tiles never go red.
     var scheduledTiles = [
-      canMembers ? statTile(icScheduled.length, 'IC Interviews', 'members', icScheduled.length > 0, { interview: 'Scheduled' }) : null,
-      canApps ? statTile(scheduledApps.length, 'Job Interviews', 'jobs', scheduledApps.length > 0,
+      canMembers ? statTile(icScheduled.length, 'IC Interviews', 'members', false, { interview: 'Scheduled' }) : null,
+      canApps ? statTile(scheduledApps.length, 'Job Interviews', 'jobs', false,
         { view: 'applications', stage: 'scheduled' }) : null
     ].filter(Boolean);
 
     // Cross-feature attention feed, ordered: applications → job interviews →
-    // IC interviews → inactive members.
+    // IC interviews → inactive members. Each row leads with its state: a red
+    // pill where someone has to act, a brown dot while it is in progress, a
+    // muted dot otherwise.
     var attention = [];
     newApps.forEach(function (a) {
       var name = a.member_name || a.name || 'Unknown';
       attention.push({
-        key: 'app-' + a.id, tag: 'Application', pillCls: 'is-red-fill',
+        key: 'app-' + a.id, tag: 'Application', statusCls: 'pill',
         name: name,
         desc: 'applied for ' + (a.job_title || 'a position'),
         source: 'Job Board', target: 'jobs',
@@ -161,7 +164,7 @@
     scheduledApps.forEach(function (a) {
       var name = a.member_name || a.name || 'Unknown';
       attention.push({
-        key: 'sched-' + a.id, tag: 'Job Interview', pillCls: 'is-gold',
+        key: 'sched-' + a.id, tag: 'Job Interview', statusCls: 'status-dot is-brown',
         name: name,
         desc: 'Job interview pending',
         source: 'Job Board', target: 'jobs',
@@ -170,7 +173,7 @@
     });
     pendingQuests.forEach(function (q) {
       attention.push({
-        key: 'quest-' + q.id, tag: 'Bounty Quest', pillCls: 'is-gold',
+        key: 'quest-' + q.id, tag: 'Bounty Quest', statusCls: 'pill',
         name: q.submitted_by_name || 'A member',
         desc: 'submitted “' + (q.title || 'a quest') + '” for review',
         source: 'Bounty Board', target: 'bounties'
@@ -178,7 +181,7 @@
     });
     pendingEdits.forEach(function (item) {
       attention.push({
-        key: 'questedit-' + item.edit.id, tag: 'Bounty Edit', pillCls: 'is-gold',
+        key: 'questedit-' + item.edit.id, tag: 'Bounty Edit', statusCls: 'pill',
         name: item.edit.submitted_by_name || 'A member',
         desc: 'proposed an edit to “' + (item.quest.title || 'a quest') + '”',
         source: 'Bounty Board', target: 'bounties'
@@ -186,7 +189,7 @@
     });
     icPending.forEach(function (m) {
       attention.push({
-        key: 'ic-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
+        key: 'ic-' + m.id, tag: 'IC Interview', statusCls: 'pill',
         name: m.name || 'Unknown',
         desc: 'IC interview not started',
         source: 'FC Members', target: 'members',
@@ -195,7 +198,7 @@
     });
     icScheduled.forEach(function (m) {
       attention.push({
-        key: 'icsched-' + m.id, tag: 'IC Interview', pillCls: 'is-gold',
+        key: 'icsched-' + m.id, tag: 'IC Interview', statusCls: 'status-dot is-brown',
         name: m.name || 'Unknown',
         desc: 'IC interview scheduled',
         source: 'FC Members', target: 'members',
@@ -204,7 +207,7 @@
     });
     inactive.forEach(function (m) {
       attention.push({
-        key: 'inactive-' + m.id, tag: 'Inactive', pillCls: 'is-red',
+        key: 'inactive-' + m.id, tag: 'Inactive', statusCls: 'status-dot',
         name: m.name || 'Unknown',
         desc: 'marked inactive',
         source: 'FC Members', target: 'members',
@@ -232,7 +235,7 @@
       ),
 
       // Needs Attention
-      h('div', { className: 'portal-card dash-attention' },
+      h('div', { className: 'portal-card dash-attention tear-half' },
         h('div', { className: 'dash-attention-head' },
           h('p', { className: 'portal-card-title' }, 'Needs Attention'),
           h('span', { className: 'dash-attention-meta' },
@@ -244,7 +247,7 @@
           : h('div', { className: 'dash-attention-list' },
               attention.map(function (it) {
                 return h('div', { className: 'dash-attention-row', key: it.key },
-                  h('span', { className: 'portal-pill ' + it.pillCls }, it.tag),
+                  h('span', { className: it.statusCls }, it.tag),
                   h('span', { className: 'dash-attention-text' },
                     h('strong', null, it.name), ' ',
                     h('span', null, it.desc), ' ',
@@ -252,7 +255,7 @@
                   ),
                   h('button', {
                     type: 'button',
-                    className: 'portal-btn is-ghost is-small dash-open',
+                    className: 'btn is-quiet is-small dash-open',
                     onClick: function () {
                       onNavigate(it.target, it.params || null);
                     }

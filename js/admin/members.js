@@ -418,7 +418,7 @@
                   h('div', { className: 'member-alt-row' },
                     h('span', null, 'Alt of ', h('strong', null, head.name || '—')),
                     onSetPrimary ? h('button', {
-                      type: 'button', className: 'portal-btn is-small is-ghost',
+                      type: 'button', className: 'btn is-small is-quiet',
                       onClick: function () { onSetPrimary(member.id, null); }
                     }, 'Unlink') : null
                   )
@@ -435,7 +435,7 @@
                             h('span', null, a.name,
                               h('span', { className: 'member-shared-tag' }, ' · ' + (a.ooc_rank || 'Alt'))),
                             onSetPrimary ? h('button', {
-                              type: 'button', className: 'portal-btn is-small is-ghost',
+                              type: 'button', className: 'btn is-small is-quiet',
                               onClick: function () { onSetPrimary(a.id, null); }
                             }, 'Remove') : null
                           );
@@ -459,7 +459,7 @@
                           })
                         ),
                         h('button', {
-                          type: 'button', className: 'portal-btn is-small',
+                          type: 'button', className: 'btn is-small',
                           disabled: !altPick,
                           onClick: function () {
                             if (!altPick || !onSetPrimary) return;
@@ -476,18 +476,18 @@
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
-          className: 'portal-btn',
+          className: 'btn',
           disabled: saving
         }, saving ? 'Saving…' : (isNew ? 'Add member' : 'Save member')),
         h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost',
+          className: 'btn is-quiet',
           onClick: onCancel,
           disabled: saving
         }, 'Cancel'),
         (!isNew && allowDelete) ? h('button', {
           type: 'button',
-          className: 'portal-btn is-danger is-end',
+          className: 'btn is-danger is-end',
           onClick: function () {
             if (confirm('Delete "' + (member.name || 'this member') + '"? This cannot be undone.')) {
               onDelete(member);
@@ -497,6 +497,20 @@
         }, 'Delete') : null
       )
     );
+  }
+
+  // Status styles: a red pill where someone has to act, a brown dot while in
+  // progress, a muted dot for a neutral state, muted text once settled.
+  function interviewStatusClass(v) {
+    if (v === 'Not Started') return 'pill';
+    if (v === 'Scheduled')   return 'status-dot is-brown';
+    if (v === 'Completed')   return 'status-dot is-quiet';
+    return 'status-dot'; // No Data
+  }
+  function activityStatusClass(v) {
+    if (v === 'Inactive') return 'status-dot is-brown';
+    if (v === 'LOA')      return 'status-dot';
+    return 'status-dot is-quiet'; // Active
   }
 
   // --------- Read-only row ----------
@@ -519,9 +533,10 @@
           shown.length
             ? h('div', { className: 'portal-faction-tags' },
                 shown.map(function (f) {
+                  // A missing faction reads as a neutral status, not a tag.
                   return h('span', {
                     key: f,
-                    className: 'portal-faction-tag' + (f === 'No Data' ? ' is-nodata' : '')
+                    className: f === 'No Data' ? 'status-dot' : 'tag'
                   }, f);
                 })
               )
@@ -531,10 +546,10 @@
       h('td', { className: 'portal-col-center' },
         m.interview === 'NA - No RP'
           ? h('span', { className: 'portal-muted' }, '—')
-          : m.interview),
+          : h('span', { className: interviewStatusClass(m.interview) }, m.interview)),
       h('td', { className: 'portal-col-center' },
         h('div', { className: 'activity-cell' },
-          h('span', null, m.activity),
+          h('span', { className: activityStatusClass(m.activity) }, m.activity),
           showTalkedTo
             ? h('label', { className: 'talked-to-cell' },
                 canEdit ? h('input', {
@@ -551,7 +566,7 @@
       h('td', { className: 'portal-col-actions' },
         canEdit ? h('button', {
           type: 'button',
-          className: 'portal-btn is-small is-ghost',
+          className: 'btn is-small is-quiet',
           onClick: function () { onEdit(m); }
         }, 'Edit') : null
       )
@@ -746,7 +761,7 @@
           }),
           allowEdit ? h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setModalMember({}); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
@@ -774,7 +789,7 @@
         filterSelect(activityFilter,  setActivityFilter,  'All Activity',   ACTIVITIES),
         anyFilterActive ? h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost is-small',
+          className: 'btn is-quiet is-small',
           onClick: function () {
             setFilter(''); setRankFilter(''); setFactionFilter('');
             setInterviewFilter(''); setActivityFilter(''); setAttentionMode(false);
@@ -785,7 +800,7 @@
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading members…')
-        : h('div', { className: 'portal-card' },
+        : h('div', { className: 'portal-card tear' },
             h('div', { className: 'portal-table-wrap' },
               h('table', { className: 'portal-table members-table' },
                 h('thead', null,

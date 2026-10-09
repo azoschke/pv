@@ -107,21 +107,21 @@
             h('span', { className: 'perm-role-actions' },
               isEditing
                 ? [
-                    h('button', { key: 's', type: 'button', className: 'portal-btn is-small', disabled: busy, onClick: saveLabel }, 'Save'),
-                    h('button', { key: 'c', type: 'button', className: 'portal-btn is-small is-ghost', disabled: busy, onClick: function () { setEditing(null); } }, 'Cancel')
+                    h('button', { key: 's', type: 'button', className: 'btn is-small', disabled: busy, onClick: saveLabel }, 'Save'),
+                    h('button', { key: 'c', type: 'button', className: 'btn is-small is-quiet', disabled: busy, onClick: function () { setEditing(null); } }, 'Cancel')
                   ]
                 : [
                     h('button', {
-                      key: 'u', type: 'button', className: 'portal-btn is-small is-ghost', 'aria-label': 'Move ' + r.label + ' up',
+                      key: 'u', type: 'button', className: 'btn is-small is-quiet', 'aria-label': 'Move ' + r.label + ' up',
                       disabled: busy || i === 0, onClick: function () { run(function () { return props.onMove(i, -1); }); }
                     }, '↑'),
                     h('button', {
-                      key: 'n', type: 'button', className: 'portal-btn is-small is-ghost', 'aria-label': 'Move ' + r.label + ' down',
+                      key: 'n', type: 'button', className: 'btn is-small is-quiet', 'aria-label': 'Move ' + r.label + ' down',
                       disabled: busy || i === roles.length - 1, onClick: function () { run(function () { return props.onMove(i, 1); }); }
                     }, '↓'),
-                    h('button', { key: 'r', type: 'button', className: 'portal-btn is-small is-ghost', disabled: busy, onClick: function () { setEditing({ id: r.id, label: r.label }); } }, 'Rename'),
+                    h('button', { key: 'r', type: 'button', className: 'btn is-small is-quiet', disabled: busy, onClick: function () { setEditing({ id: r.id, label: r.label }); } }, 'Rename'),
                     h('button', {
-                      key: 'd', type: 'button', className: 'portal-btn is-small is-danger', disabled: busy,
+                      key: 'd', type: 'button', className: 'btn is-small is-danger', disabled: busy,
                       onClick: function () {
                         if (confirm('Delete the ' + r.label + ' role?')) run(function () { return props.onDelete(r); });
                       }
@@ -133,7 +133,7 @@
           h('input', { id: 'perm-new-slug', type: 'text', value: slug, onChange: function (e) { setSlug(e.target.value); } })),
         h('div', { className: 'portal-field' }, h('label', { htmlFor: 'perm-new-label' }, 'Label'),
           h('input', { id: 'perm-new-label', type: 'text', value: label, onChange: function (e) { setLabel(e.target.value); } })),
-        h('button', { type: 'submit', className: 'portal-btn', disabled: busy || !slug.trim() || !label.trim() }, 'Add role')));
+        h('button', { type: 'submit', className: 'btn', disabled: busy || !slug.trim() || !label.trim() }, 'Add role')));
   }
 
   function PermissionsSection() {
@@ -288,8 +288,8 @@
         pendingIds.length
           ? h('div', { className: 'perm-savebar' },
               h('span', { className: 'perm-savebar-count' }, pendingIds.length + (pendingIds.length === 1 ? ' unsaved change' : ' unsaved changes')),
-              h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: discard }, 'Discard'),
-              h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
+              h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: discard }, 'Discard'),
+              h('button', { type: 'button', className: 'btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
           : null),
       h(RolesCard, { roles: roles, onCreate: createRole, onRename: renameRole, onMove: moveRole, onDelete: deleteRole, onError: fail }));
   }

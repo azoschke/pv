@@ -50,15 +50,9 @@
     return val || '';
   }
 
-  // Gradient palette by size — mirrors the public venues page so the admin
-  // thumbnail placeholder matches the card shown on the site.
-  var SIZE_PALETTE = {
-    room:      { from: '#3a2a3d', to: '#1f1424' },
-    apartment: { from: '#3b3727', to: '#211e15' },
-    cottage:   { from: '#3a2a25', to: '#1f1612' },
-    house:     { from: '#1f3340', to: '#101c25' },
-    mansion:   { from: '#3a2c1e', to: '#1f1810' }
-  };
+  // Placeholder tone by size (styles.css .media-ph) — mirrors the public
+  // venues page so the admin thumbnail matches the card shown on the site.
+  var SIZE_TONE = { room: 1, apartment: 3, cottage: 2, house: 5, mansion: 4 };
 
   // First uploaded image for a venue: the primary image, falling back to the
   // first non-empty gallery slot.
@@ -185,7 +179,7 @@
       ),
       up.error ? h('p', {
         className: 'portal-field-help',
-        style: { color: 'var(--danger-color, #c0392b)', marginTop: '0.2rem' }
+        style: { color: 'var(--accent-red)', marginTop: '0.2rem' }
       }, up.error) : null
     );
   }
@@ -427,7 +421,7 @@
           }),
           h('button', {
             type: 'button',
-            className: 'portal-btn is-ghost is-small',
+            className: 'btn is-quiet is-small',
             onClick: addExtraTag
           }, 'Add')
         ),
@@ -495,10 +489,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create venue')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -516,7 +510,7 @@
     if (v.room_number != null) locParts.push('R' + v.room_number);
 
     var thumb = firstVenueImage(v);
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
+    var tone = SIZE_TONE[v.size] || 5;
     // Image fills the cell edge-to-edge (no padding/border/radius), matching
     // the Event Assets grid. Fixed height keeps rows uniform.
     var mediaBase = { display: 'block', width: '100%', height: '78px', objectFit: 'cover' };
@@ -528,37 +522,21 @@
               src: thumb, alt: '',
               style: mediaBase,
               onError: function (e) {
-                // Fall back to the gradient placeholder if the image fails.
+                // Fall back to the placeholder field if the image fails.
                 e.target.style.display = 'none';
-                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
               }
             })
           : null,
         h('div', {
-          style: Object.assign({}, mediaBase, {
-            display: thumb ? 'none' : 'flex',
-            alignItems: 'flex-end',
-            padding: '0.3rem 0.4rem',
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-            background: 'linear-gradient(135deg, ' + palette.from + ' 0%, ' + palette.to + ' 100%)'
-          }),
+          className: 'media-ph' + (tone > 1 ? ' is-tone-' + tone : ''),
+          style: Object.assign({}, mediaBase, { display: thumb ? 'none' : 'block' }),
           'aria-hidden': 'true'
-        },
-          h('span', {
-            style: {
-              fontFamily: '"La Belle Aurore", cursive',
-              fontSize: '0.75rem', lineHeight: 1.1,
-              color: 'rgba(255,255,255,0.85)',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              maxWidth: '100%'
-            }
-          }, (v.name || '').toLowerCase())
-        )
+        })
       ),
       h('td', null,
         h('div', { className: 'portal-name-row' },
-          v.featured ? h('span', { className: 'portal-badge is-pinned' }, '★') : null,
+          v.featured ? h('span', { className: 'tag', title: 'Featured' }, '★') : null,
           h('span', { className: 'portal-row-title' }, v.name)
         )
       ),
@@ -571,12 +549,12 @@
       ),
       h('td', { className: 'portal-nowrap' },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'btn is-small is-quiet',
           onClick: function () { onEdit(v); }
         }, 'Edit'),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger',
+          type: 'button', className: 'btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete venue "' + v.name + '"?')) onDelete(v);
           }
@@ -675,7 +653,7 @@
           }),
           h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setFormOpen({ venue: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),

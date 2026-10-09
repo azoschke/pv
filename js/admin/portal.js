@@ -225,7 +225,7 @@
     return h('header', { className: 'portal-topbar' },
       h('button', {
         type: 'button',
-        className: 'portal-topbar-hamburger',
+        className: 'btn is-quiet is-icon portal-topbar-hamburger',
         'aria-label': 'Open menu',
         onClick: onOpenDrawer
       },
@@ -590,7 +590,7 @@
         h('div', { className: 'portal-drawer-header' },
           h('button', {
             type: 'button',
-            className: 'portal-drawer-close',
+            className: 'btn is-quiet is-small is-icon',
             'aria-label': 'Close menu',
             onClick: function () { setDrawerOpen(false); }
           }, '✕')

@@ -214,10 +214,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create posting')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -230,8 +230,9 @@
     var onEdit = props.onEdit;
     var onDelete = props.onDelete;
 
-    var statusCls = 'portal-badge' + (j.status === 'open' ? ' is-pinned' : '');
-    var typeCls = 'portal-pill ' + (j.job_type === 'secondary' ? 'is-muted' : 'is-gold');
+    // Status is settled (muted text); the job type is a category (square tag).
+    var statusCls = 'status-dot is-quiet';
+    var typeCls = 'tag';
 
     return h('tr', null,
       h('td', null,
@@ -248,12 +249,12 @@
       ),
       h('td', { className: 'portal-nowrap' },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'btn is-small is-quiet',
           onClick: function () { onEdit(j); }
         }, 'Edit'),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger',
+          type: 'button', className: 'btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete posting "' + j.title + '"?')) onDelete(j);
           }
@@ -354,7 +355,7 @@
           }),
           h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setFormOpen({ job: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),

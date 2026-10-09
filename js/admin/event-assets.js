@@ -288,10 +288,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create asset')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -374,7 +374,7 @@
             // Fetch the bytes and save them so it downloads rather than just
             // navigating; the href is the no-JS fallback.
             onClick: function (e) { e.preventDefault(); downloadImage(a); },
-            className: 'ea-download-btn'
+            className: 'btn is-small is-icon ea-download-btn'
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1.2rem' } }, 'download')
           )
@@ -395,13 +395,13 @@
       // Actions (managers only)
       manage ? h('td', { style: { whiteSpace: 'nowrap', verticalAlign: 'middle' } },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost is-icon',
+          type: 'button', className: 'btn is-small is-quiet is-icon',
           title: 'Edit', 'aria-label': 'Edit',
           onClick: function () { onEdit(a); }
         }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger is-icon',
+          type: 'button', className: 'btn is-small is-danger is-icon',
           title: 'Delete', 'aria-label': 'Delete',
           onClick: function () {
             if (confirm('Delete event asset "' + (a.event_topic || 'Untitled') + '"?')) onDelete(a);
@@ -528,7 +528,7 @@
           }),
           manage ? h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setFormOpen({ asset: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
