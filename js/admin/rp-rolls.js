@@ -170,13 +170,12 @@
 
     return h('div', { className: 'portal-card rp-roster-card' },
       // Portrait pulled from the member's roster profile when they have one;
-      // otherwise the venue-style fallback tile (gradient + name in script).
-      // Full-bleed image + torn contrast border, matching the item cards.
-      h('div', { className: 'rp-card-media sketch-wash' },
+      // otherwise the placeholder field. Full-bleed media with a torn bottom
+      // edge, matching the item cards.
+      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
         (props.imageUrl && !imgErr)
           ? h('img', { src: props.imageUrl, alt: '', onError: function () { setImgErr(true); } })
-          : h('span', { className: 'rp-card-sig' }, (ch.member_name || '').toLowerCase()),
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+          : null),
       h('h3', { className: 'rp-roster-name' }, ch.member_name),
       h('div', { className: 'rp-roster-substat' },
         'HP ' + ch.current_hp + '/' + ch.max_hp + (ch.shield_value ? ' · shield ' + ch.shield_value : '') + (ch.eliminated ? ' · KO' : '')),
@@ -1187,12 +1186,11 @@
     var copyable = props.canCopy;
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media sketch-wash' },
+      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
-          : h('span', { className: 'rp-card-sig' }, (b.name || '').toLowerCase()),
-        b.public ? h('span', { className: 'venue-badge venue-badge-featured' }, 'Public') : null,
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+          : null,
+        b.public ? h('span', { className: 'venue-badge venue-badge-featured' }, 'Public') : null),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
       h('div', { className: 'rp-catalogue-owner' },
         h('span', { className: 'rp-owner-key' }, 'Creator: '),
@@ -1467,11 +1465,10 @@
     var owner = ownerInfo(it, props.members);
 
     return h('div', { className: 'portal-card rp-catalogue-card' },
-      h('div', { className: 'rp-card-media sketch-wash' },
+      h('div', { className: 'rp-card-media sketch-wash media-ph tear-half' },
         (it.image_url && !imgErr)
           ? h('img', { src: it.image_url, alt: '', onError: function () { setImgErr(true); } })
-          : h('span', { className: 'rp-card-sig' }, (it.name || '').toLowerCase()),
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+          : null),
       h('h3', { className: 'rp-catalogue-name' }, it.name),
       // Read-only owner line; reassignment happens in the item editor.
       h('div', { className: 'rp-catalogue-owner' },

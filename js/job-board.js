@@ -41,15 +41,16 @@
     return (JOB_TYPE_LABEL[jobTypeOf(j)] + " · " + (CATEGORY_LABEL[j.category] || "")).trim();
   }
 
-  // Per-category palette for the colored card backdrop (used when no image_url).
-  var CATEGORY_PALETTE = {
-    medical:     { from: "#1f3a2e", to: "#10201a" },
-    pirate:      { from: "#1f3340", to: "#101c25" },
-    mercenary:   { from: "#3a2225", to: "#1f1214" },
-    house_staff: { from: "#2e1f3a", to: "#170f20" },
-    recon:       { from: "#2c3327", to: "#161c12" },
-    contractor:  { from: "#3a2c1e", to: "#1f1810" }
+  // Placeholder tone (styles.css .media-ph, 1–5) per category, for a card
+  // without an image.
+  var CATEGORY_TONE = {
+    medical: 3, pirate: 5, mercenary: 2, house_staff: 1, recon: 3, contractor: 4
   };
+
+  function mediaClass(j) {
+    var tone = CATEGORY_TONE[j.category] || 4;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl    = document.getElementById("jobs-sidebar");
@@ -345,9 +346,9 @@
     card.className = "job-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
     card.setAttribute("aria-label", j.title);
 
-    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
+    // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media";
+    media.className = "job-card-media tear-half " + mediaClass(j);
 
     if (j.image_url) {
       var img = document.createElement("img");
@@ -355,25 +356,9 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "job-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "job-card-sig";
-      sig.textContent = (j.title || "").toLowerCase();
-      media.appendChild(sig);
     }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
 
     var catBadge = document.createElement("span");
     catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
@@ -437,18 +422,10 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(j) {
-    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
     if (j.image_url) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img tear">';
     }
-    return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-      '<span class="job-card-sig">' + escapeHTML((j.title || "").toLowerCase()) + '</span>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
-      '</div>';
+    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
   }
 
   function openModal(j) {

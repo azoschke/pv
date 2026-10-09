@@ -22,13 +22,14 @@
     empyreum: "Empyreum", shirogane: "Shirogane"
   };
 
-  var SIZE_PALETTE = {
-    room:      { from: "#3a2a3d", to: "#1f1424" },
-    apartment: { from: "#3b3727", to: "#211e15" },
-    cottage:   { from: "#3a2a25", to: "#1f1612" },
-    house:     { from: "#1f3340", to: "#101c25" },
-    mansion:   { from: "#3a2c1e", to: "#1f1810" }
-  };
+  // Placeholder tone (styles.css .media-ph, 1–5) per size, matching the
+  // venue directory.
+  var SIZE_TONE = { room: 1, apartment: 3, cottage: 2, house: 5, mansion: 4 };
+
+  function mediaClass(v) {
+    var tone = SIZE_TONE[v.size] || 5;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── Category icons ───────────────────────────────────────────────────────
   //  Keyed glyphs, not markup: the worker stores only the key, and anything
@@ -119,21 +120,16 @@
 
   // ── Venue chooser ────────────────────────────────────────────────────────
   function venueCardHtml(v) {
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
     var media = v.image_url
       ? '<img class="menu-venue-card-img" src="' + escapeHTML(v.image_url) +
         '" alt="" loading="lazy" decoding="async" />'
-      : '<span class="menu-venue-card-sig">' +
-        escapeHTML((v.name || "").toLowerCase()) + '</span>';
+      : '';
 
     return '' +
       '<button type="button" class="menu-venue-card" data-venue-id="' + escapeHTML(v.id) + '">' +
-        '<span class="menu-venue-card-media"' +
-          (v.image_url ? '' : ' style="background:linear-gradient(135deg,' +
-            palette.from + ' 0%,' + palette.to + ' 100%)"') + '>' +
+        // Placeholder field and torn edge, same as the venue directory cards.
+        '<span class="menu-venue-card-media tear-half ' + mediaClass(v) + '">' +
           media +
-          // Torn-edge overlay, same as the venue directory cards.
-          '<span class="contrast-border-half" aria-hidden="true"></span>' +
         '</span>' +
         '<span class="menu-venue-card-body">' +
           '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +

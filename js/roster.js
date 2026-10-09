@@ -30,21 +30,17 @@
     'Contractor', 'NA - No RP', 'No Data'
   ];
 
-  // Card backdrop when a member has no portrait — one palette per faction so
-  // the grid still reads with variety. Keyed by the member's primary faction.
-  var FACTION_PALETTE = {
-    'Pirate':      { from: "#1f3340", to: "#101c25" },
-    'Mercenary':   { from: "#3a2225", to: "#1f1214" },
-    'Medical':     { from: "#1f3a2f", to: "#101f18" },
-    'House Staff': { from: "#33291f", to: "#1c1610" },
-    'Recon':       { from: "#2c3327", to: "#161c12" },
-    'Contractor':  { from: "#2d2a3a", to: "#16141f" }
+  // Placeholder tone (styles.css .media-ph, 1–5) when a member has no
+  // portrait — one per faction so the grid still reads with variety. Keyed by
+  // the member's primary faction.
+  var FACTION_TONE = {
+    'Pirate': 5, 'Mercenary': 2, 'Medical': 3, 'House Staff': 4,
+    'Recon': 3, 'Contractor': 1
   };
-  var DEFAULT_PALETTE = { from: "#2a1f1c", to: "#14100e" };
 
-  function paletteFor(m) {
-    var primary = (m.factions || [])[0];
-    return FACTION_PALETTE[primary] || DEFAULT_PALETTE;
+  function mediaClass(m) {
+    var tone = FACTION_TONE[(m.factions || [])[0]] || 1;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
   }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
@@ -319,15 +315,14 @@
   }
 
   function buildCardEl(m) {
-    var palette = paletteFor(m);
-
     var card = document.createElement("button");
     card.type = "button";
     card.className = "venue-card";
     card.setAttribute("aria-label", m.name);
 
+    // The placeholder field shows wherever the portrait is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media";
+    media.className = "venue-card-media tear-half " + mediaClass(m);
 
     if (m.image_url) {
       var img = document.createElement("img");
@@ -335,29 +330,9 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "venue-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-        var sig2 = document.createElement("span");
-        sig2.className = "venue-card-sig";
-        sig2.textContent = (m.name || "").toLowerCase();
-        media.appendChild(sig2);
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "venue-card-sig";
-      sig.textContent = (m.name || "").toLowerCase();
-      media.appendChild(sig);
     }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
 
     // Badge pulls in the member's actual faction(s).
     if ((m.factions || []).length) {
@@ -440,18 +415,10 @@
   }
 
   function buildImageHtml(m) {
-    var palette = paletteFor(m);
     if (m.image_url) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img tear">';
     }
-    return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-      '<span class="venue-card-sig">' + escapeHTML((m.name || "").toLowerCase()) + '</span>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
-      '</div>';
+    return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(m) + '"></div>';
   }
 
   function openModal(m) {

@@ -89,7 +89,11 @@ p {
   margin: 0;
 }
 a {
-   color: var(--accent-brown);
+  color: var(--accent-brown);
+}
+/* Zero specificity, so any link styled by class keeps its own hover colour. */
+:where(a:hover) {
+  color: var(--accent-brown-hover);
 }
 
 
@@ -97,41 +101,78 @@ a {
    2. CSS VARIABLES
    ============================================================================= */
 
+/* Torchlight palette. Every neutral sits at one hue (about 88° in OKLCH) at low
+   chroma, so layers never drift yellow or pink. Use these tokens rather than
+   new colour values.
+
+   Three surface tones, each with one job:
+     --bg-primary  page: the grained ground, and recessed trays inside cards
+     --bg-card     raised: cards, tiles, sidebars, menus (no border, no shadow)
+     --bg-darker   well: controls only (inputs, bars, hover/active, quiet
+                   buttons), never a container
+   Brown leads; red is kept for alerts, danger, HP, attention pills and the
+   drop cap. There is no green: completion is brown or muted text. */
+
 :root {
-  /* Backgrounds */
-  --bg-primary:    #e3ded3;
-  --bg-card:       #f5f3ef;
-  --bg-card-light: #f9f7f4;
-  --bg-darker:     #d3ccbf;
+  /* Surfaces */
+  --bg-primary:    #eee9dd;
+  --bg-card:       #faf7f0;
+  --bg-darker:     #dfdace;
+  /* = well. Every use is a control, hover or selected state. */
+  --bg-card-light: #dfdace;
 
   /* Text */
-  --text-primary:   #3E3832;
-  --text-secondary: #6B6560;
+  --text-primary:   #2b251e;  /* ink: headings, labels, control text */
+  --text-body:      #574e44;  /* running text */
+  --text-secondary: #5f574c;  /* muted: meta, captions, settled statuses */
+  --label:          #fbf8f2;  /* text on brown and red fills */
 
-  /* Borders & accents */
-  --border-color:  #C5B89A;
-  --accent-brown:  #8B6F47;
+  /* Lines & accents */
+  --border-color:  rgba(60, 52, 38, 0.13);  /* faint rules only: row dividers, header underlines */
+  --accent-brown:  #6a573e;
+  --accent-brown-hover: #7c684f;
   --accent-red:    #a54d44;
+  --gold:          #806836;   /* UI gold on raised surfaces (stars, highlights) */
 
   /* Progress */
-  --progress-bg:   #C5B89A;
-  --progress-fill: #8B6F47;
+  --progress-bg:   #dfdace;
+  --progress-fill: #6a573e;
 
-  /* Checkboxes */
-  --check-color:   #5a8a3c;
+  /* Completion */
+  --check-color:   #6a573e;
 
   /* Stars (Crafting DB) */
-  --star-filled: #D4A574;
-  --star-empty:  #C5B89A;
+  --star-filled: #806836;
+  --star-empty:  #cbc4b5;
 
   /* Form inputs */
-  --form-input-bg:          #e3ded3;
-  --form-input-placeholder: #9B8F84;
+  --form-input-bg:          #dfdace;
+  --form-input-placeholder: #5f574c;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #ede9e2;
+  --bg-staff-panel: #faf7f0;
 
-  /* Phoenix Vanguard — parchment world */
+  /* Focus and selection ring, scrim behind modals and drawers, and the one
+     shadow (things that float over content: dropdown menus) */
+  --ring:         color-mix(in srgb, var(--accent-brown) 40%, transparent);
+  --scrim:        rgba(25, 23, 18, 0.6);
+  --shadow-float: 0 2px 4px rgba(60, 52, 38, 0.10), 0 14px 30px rgba(60, 52, 38, 0.12);
+
+  /* Image placeholders: dark fields under grain-dark.svg, the same in both
+     themes. Media ink is for type and controls laid over them. */
+  --media-1: #3b3128;
+  --media-2: #4a2b26;
+  --media-3: #33302a;
+  --media-4: #3d3427;
+  --media-5: #2f2a24;
+  --media-ink:     #ece7dc;
+  --media-ink-dim: #c1b5a6;
+
+  /* Paper grain and the torn edge */
+  --grain:  url("../assets/grain-light.svg");
+  --tear-h: 26px;
+
+  /* Phoenix Vanguard — parchment world (PDF / parchment forms) */
   --parchment-bg:    #e3ded3;
   --parchment-dark:  #d6d0c4;
   --ink-color:       #2c1810;
@@ -140,38 +181,49 @@ a {
 }
 
 [data-theme="dark"] {
-  /* Backgrounds */
-  --bg-primary:    #1a1614;
-  --bg-card:       #2a2521;
-  --bg-card-light: #35302b;
-  --bg-darker:     #3a342f;
+  /* Surfaces */
+  --bg-primary:    #191712;
+  --bg-card:       #25231e;
+  --bg-darker:     #34312a;
+  --bg-card-light: #34312a;
 
   /* Text */
-  --text-primary:   #ebe3d0;
-  --text-secondary: #c5b89a;
+  --text-primary:   #ece7dc;
+  --text-body:      #cdc2b2;
+  --text-secondary: #c1b5a6;
+  --label:          #191712;
 
-  /* Borders & accents */
-  --border-color: #4a4239;
-  --accent-brown: #a88959;
-  --accent-red:   #c9655b;
+  /* Lines & accents */
+  --border-color:  rgba(236, 231, 220, 0.10);
+  --accent-brown:  #b8a082;
+  --accent-brown-hover: #c8b091;
+  --accent-red:    #c9655b;
+  --gold:          #d6b676;
 
   /* Progress */
-  --progress-bg:   #4a4239;
-  --progress-fill: #a88959;
+  --progress-bg:   #34312a;
+  --progress-fill: #b8a082;
 
-  /* Checkboxes */
-  --check-color: #7ab85e;
+  /* Completion */
+  --check-color: #b8a082;
 
   /* Stars */
-  --star-filled: #d4a574;
-  --star-empty:  #6b6560;
+  --star-filled: #d6b676;
+  --star-empty:  #4a463d;
 
   /* Form inputs */
-  --form-input-bg:          #3a342f;
-  --form-input-placeholder: #6b6560;
+  --form-input-bg:          #34312a;
+  --form-input-placeholder: #c1b5a6;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #231e1a;
+  --bg-staff-panel: #25231e;
+
+  /* Ring, scrim, float shadow */
+  --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
+  --shadow-float: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.40);
+
+  /* Paper grain */
+  --grain: url("../assets/grain-dark.svg");
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
@@ -187,20 +239,29 @@ a {
    3. BASE / BODY
    ============================================================================= */
 
+/* Running text is 18px Crimson Pro in the warm body colour; headings carry the
+   ink. The page ground is grained paper, which scrolls with the content (never
+   background-attachment: fixed). overflow-x: clip keeps the full-bleed header
+   band (section 5) from adding a sideways scroll where scrollbars take width. */
 body {
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
+  overflow-x: clip;
   background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-image: var(--grain);
+  color: var(--text-body);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1, h2, h3 {
-   font-family: 'Stoke', serif;
-   font-weight: normal;
+h1, h2, h3, h4 {
+  font-family: 'Stoke', Georgia, serif;
+  font-weight: 400;
+  color: var(--text-primary);
 }
 
 .container {
@@ -219,7 +280,7 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 button {
@@ -251,21 +312,41 @@ pre {
    5. SHARED NAV
    ============================================================================= */
 
-/* Wrapper nav.js injects the nav into. It holds the nav's height before the
-   nav arrives (the 70px logo plus the nav's 0.75rem top and bottom padding)
-   so the page doesn't jump down when it loads, and carries the space below
-   the nav that .site-nav used to. */
+/* The header band. nav.js (or the edge renderer) puts the nav into
+   #nav-placeholder, which sits inside .container, so the band is drawn by a
+   ::before that runs the full width of the window behind it: card tone, with
+   the torn edge cut out of its bottom (the same mask as .tear in section 6).
+   The tear is on the background layer only, so the dropdowns can hang below
+   the band unclipped. The ::before sits at z-index -1 without the placeholder
+   making a stacking context, so the dropdowns still stack against the page.
+   The negative top margin cancels .container's top padding so the band meets
+   the top of the window; min-height holds the nav's space before it arrives
+   (the 70px logo, the nav's padding and the tear). */
 #nav-placeholder {
-  min-height: calc(70px + 1.5rem);
-  margin-bottom: 1.5rem;
+  position: relative;
+  min-height: calc(70px + 0.9rem + var(--tear-h));
+  margin: -1.5rem 0 1.5rem;
+  padding-bottom: var(--tear-h);
+}
+
+#nav-placeholder::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  background-color: var(--bg-card);
 }
 
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.5rem 1.25rem;
   margin: 0;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0 0.15rem;
 }
 
 .site-brand {
@@ -298,7 +379,7 @@ pre {
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 0.25rem;
+  gap: 2px;
   flex: 1;
 }
 
@@ -306,30 +387,36 @@ pre {
   position: relative;
 }
 
+/* Links sit flat in the band: ink text, well behind them on hover, and well
+   with brown text for the current page. */
 .nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.6rem;
+  gap: 0.35rem;
+  min-height: 38px;
+  padding: 0 0.75rem;
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .nav-link:hover {
   color: var(--text-primary);
+  background-color: var(--bg-darker);
 }
 
-.nav-link.active {
-  color: var(--accent-red);
+.nav-link.active,
+.nav-link.active:hover {
+  color: var(--accent-brown);
+  background-color: var(--bg-darker);
 }
 
 /* --- Dropdowns --- */
@@ -338,6 +425,7 @@ pre {
 .nav-caret {
   font-size: 0.7em;
   line-height: 1;
+  color: var(--text-secondary);
   transition: transform 0.2s ease;
 }
 
@@ -347,23 +435,35 @@ pre {
   transform: rotate(180deg);
 }
 
+/* The menus float over the page, so they are the one raised surface with a
+   shadow. They open a little below the link; the ::before bridges that gap so
+   the menu stays open while the pointer crosses it. */
 .nav-submenu {
   list-style: none;
   margin: 0;
-  padding: 0.35rem 0;
+  padding: 8px;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   left: 0;
-  min-width: 12rem;
+  min-width: 15rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  box-shadow: 0 6px 18px rgba(62, 56, 50, 0.18);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--shadow-float);
   opacity: 0;
   transform: translateY(-4px);
   pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 50;
+}
+
+.nav-submenu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 6px;
 }
 
 .nav-dropdown:hover > .nav-submenu,
@@ -375,15 +475,16 @@ pre {
 }
 
 .nav-sublink {
-  display: block;
-  padding: 0.45rem 1rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 10px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  color: var(--text-primary);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .nav-sublink:hover {
@@ -391,82 +492,69 @@ pre {
   color: var(--text-primary);
 }
 
-.nav-sublink.active {
-  color: var(--text-primary);
-  border-left-color: var(--accent-brown);
+.nav-sublink.active,
+.nav-sublink.active:hover {
+  color: var(--accent-brown);
   background-color: var(--bg-darker);
+  font-weight: 600;
 }
 
+/* Group labels: ink small caps, set apart by space and one faint rule. */
 .nav-submenu-label {
-  padding: 0.45rem 1rem 0.2rem;
+  padding: 10px 10px 6px;
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.75;
+  color: var(--text-primary);
   pointer-events: none;
   user-select: none;
   list-style: none;
 }
 
 .nav-submenu-label--divider {
-  margin-top: 0.2rem;
-  padding-top: 0.55rem;
+  margin-top: 8px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-color);
 }
 
 /* Empty separator <li> injected between the campaign list and the Codex link. */
 .nav-submenu-divider {
   height: 0;
-  margin: 0.35rem 0;
+  margin: 8px 0;
   border-top: 1px solid var(--border-color);
   list-style: none;
   pointer-events: none;
 }
 
-/* --- Sign-in pill (user icon + "Sign In") --- */
-.nav-login-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  height: 2.1rem;
-  padding: 0 0.85rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  font-family: 'Stoke', serif;
-  font-size: 0.95rem;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-.nav-login-btn:hover  { background-color: var(--bg-darker); }
-.nav-login-btn:active { transform: scale(0.97); }
+/* --- Sign-in button (user icon + "Sign In") ---
+   A quiet button (section 6); here only its place in the bar. */
+.nav-login-btn { flex-shrink: 0; }
 
 /* --- Account (signed in): picture and name, opening Dashboard / Sign Out --- */
 .nav-account { flex-shrink: 0; }
-/* Plain, like the nav links beside it: no box, brightening on hover. (The
-   sidebar copy is styled as a .nav-sidebar-toggle.) */
+/* Plain, like the nav links beside it. (The sidebar copy is styled as a
+   .nav-sidebar-toggle.) */
 .nav-account > .nav-account-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.4rem 0.6rem;
+  min-height: 38px;
+  padding: 0 0.75rem;
   background: transparent;
-  border: none;
-  color: var(--text-secondary);
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-primary);
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 .nav-account > .nav-account-btn:hover,
 .nav-account.open > .nav-account-btn {
-  color: var(--text-primary);
+  background-color: var(--bg-darker);
 }
 /* Keep a long character name from stretching the top nav; the full-width
    sidebar copy has room, so it shows the name in full. */
@@ -480,14 +568,13 @@ pre {
 .nav-account .nav-submenu {
   left: auto;
   right: 0;
-  min-width: 10rem;
+  min-width: 11rem;
 }
 /* Sign Out is a button that looks like the menu's links. */
 button.nav-sublink {
   width: 100%;
   background: none;
   border: 0;
-  border-left: 3px solid transparent;
   text-align: left;
   cursor: pointer;
 }
@@ -499,8 +586,9 @@ button.nav-sublink {
   min-width: 0;
 }
 
-/* The account's picture in a circle; the initial beneath shows when there is
-   no picture or it can't be loaded (as on the Roll Calculator). */
+/* The account's picture in a circle (avatars are the one round shape); the
+   initial beneath shows when there is no picture or it can't be loaded (as on
+   the Roll Calculator). */
 .nav-avatar {
   position: relative;
   display: inline-flex;
@@ -512,12 +600,11 @@ button.nav-sublink {
   overflow: hidden;
   border-radius: 50%;
   background: var(--accent-brown);
-  color: #ffffff;
+  color: var(--label);
   font-family: 'Stoke', serif;
   font-size: 0.8rem;
   line-height: 1;
 }
-[data-theme="dark"] .nav-avatar { color: #241d17; }
 .nav-avatar-img {
   position: absolute;
   inset: 0;
@@ -526,115 +613,349 @@ button.nav-sublink {
   object-fit: cover;
 }
 .nav-login-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
 }
 .nav-login-btn-sidebar {
   margin: 0.5rem 1rem;
-  justify-content: center;
   width: calc(100% - 2rem);
 }
 
-/* --- Theme toggle (icon only: the dashboard's sun and moon) --- */
+/* --- Theme toggle (icon only: the dashboard's sun and moon) ---
+   A quiet icon button (section 6), pushed to the end of the bar. */
 .theme-toggle {
-  font-size: 1rem;
-  line-height: 1;
-  width: 2.1rem;
-  height: 2.1rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   margin-left: auto;
   flex-shrink: 0;
 }
 
 .theme-toggle .material-icons { font-size: 1.15rem; }
 
-.theme-toggle:hover   { background-color: var(--bg-darker); }
-.theme-toggle:active  { transform: scale(0.97); }
-
 
 /* =============================================================================
    6. SHARED UTILITIES
    ============================================================================= */
 
-/* --- App header (Zodiac pages) --- */
+/* --- Page header: script subtitle, title, lead --- */
 .app-header {
   text-align: center;
+  padding: 1.75rem 0 0.5rem;
   margin-bottom: 1.5rem;
 }
 
 .app-title {
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 2rem;
+  font-size: 2.5rem;
+  line-height: 1.1;
   letter-spacing: 0.02em;
   color: var(--text-primary);
-  margin: 0 0 0.25rem;
+  margin: 0.2rem 0 0.5rem;
 }
 
 .app-subtitle {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 1.25rem;
-  color: var(--text-secondary);
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--accent-brown);
   margin: 0;
+}
+
+/* --- Torn edge ---
+   The textured rip along the bottom of large raised boxes (the header band,
+   page cards, sidebars, image tiles), cut out of the element itself so the
+   tear is the element's own colour and texture with no seam: whatever sits
+   behind shows through. .tear-half uses the narrower vector, so the rip
+   doesn't stretch flat across cards and tiles. Give a torn box enough
+   padding-bottom to clear var(--tear-h); its bottom corners are squared off.
+   The mask clips the box's children too, so anything that must hang below
+   the edge needs the tear on a background layer instead (as the header band
+   in section 5 does). The SVGs carry preserveAspectRatio="none", so the mask
+   stretches flush to both sides. */
+.tear,
+.tear-half,
+#nav-placeholder::before {
+  --tear-img: url("../assets/border-contrast-vector.svg");
+  -webkit-mask: linear-gradient(#000 0 0), var(--tear-img) bottom / 100% var(--tear-h) no-repeat;
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0), var(--tear-img) bottom / 100% var(--tear-h) no-repeat;
+          mask-composite: exclude;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.tear-half {
+  --tear-img: url("../assets/half-border-contrast-vector.svg");
+}
+
+/* --- Recessed tray ---
+   A container nested inside a raised card drops back to the page tone, with
+   the grain. Anything raised inside a tray is card tone again, so no two
+   card-tone surfaces ever touch. */
+.tray {
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border: 0;
+  border-radius: 4px;
+}
+
+/* --- Image placeholder ---
+   A dark field under the dark grain, with no text. The tone classes give a
+   grid some variety; each page keys them to something stable (faction, venue
+   size, job category). Real images cover the field. */
+.media-ph {
+  background-color: var(--media-1);
+  background-image: url("../assets/grain-dark.svg");
+}
+.media-ph.is-tone-2 { background-color: var(--media-2); }
+.media-ph.is-tone-3 { background-color: var(--media-3); }
+.media-ph.is-tone-4 { background-color: var(--media-4); }
+.media-ph.is-tone-5 { background-color: var(--media-5); }
+
+/* --- Buttons ---
+   One button, a few looks:
+     .btn                brown fill: the primary action
+     .btn.is-quiet       well fill, ink text: secondary actions, toolbars
+     .btn.is-danger      well fill, red text: remove, clear, leave
+     .btn.is-destructive red fill: only to confirm something destructive
+     .btn.is-plain       text only, brown: low-key actions like "Reset filters"
+   and two modifiers: .is-small (30px, for dense cards and tables) and
+   .is-icon (square, for an icon on its own). A quiet button that toggles shows
+   brown when it is on (.is-active or aria-pressed="true").
+   The nav's buttons come from the edge renderer, so they keep their own
+   classes and share the quiet rules here. */
+.btn,
+.nav-login-btn,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--accent-brown);
+  color: var(--label);
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: var(--accent-brown-hover);
+  color: var(--label);
+}
+
+.btn.is-quiet,
+.nav-login-btn,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+}
+
+.btn.is-quiet:hover:not(:disabled),
+.nav-login-btn:hover,
+.theme-toggle:hover,
+.hamburger:hover,
+.nav-sidebar-close:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
+}
+
+.btn.is-quiet.is-active,
+.btn.is-quiet[aria-pressed="true"],
+.btn.is-quiet.is-active:hover:not(:disabled),
+.btn.is-quiet[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: var(--accent-brown);
+  color: var(--label);
+}
+
+.btn.is-danger {
+  background-color: var(--bg-darker);
+  color: var(--accent-red);
+}
+
+.btn.is-danger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--bg-darker) 85%, var(--accent-red));
+  color: var(--accent-red);
+}
+
+.btn.is-destructive {
+  background-color: var(--accent-red);
+  color: var(--label);
+}
+
+.btn.is-destructive:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent-red) 88%, var(--text-primary));
+  color: var(--label);
+}
+
+.btn.is-plain {
+  min-height: 0;
+  padding: 0.35rem 0;
+  background: none;
+  color: var(--accent-brown);
+}
+
+.btn.is-plain:hover:not(:disabled) {
+  background: none;
+  color: var(--accent-brown-hover);
+  text-decoration: underline;
+}
+
+.btn.is-small {
+  min-height: 30px;
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+}
+
+.btn.is-icon,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  width: 38px;
+  padding: 0;
+}
+
+.btn.is-small.is-icon { width: 30px; }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn .material-icons,
+.btn .material-symbols-outlined { font-size: 1.15em; }
+
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+/* --- Pills, status, tags ---
+   Pills are only for states that need someone to act (Needs role, Pending,
+   New, Pinned...). Work in progress gets a brown dot and plain text; settled
+   states (Done, Active) are plain muted text. Category labels are italic text
+   or a small square tag in the well. */
+.pill {
+  display: inline-block;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 0;
+  white-space: nowrap;
+  background-color: var(--accent-red);
+  color: var(--label);
+}
+.pill.is-brown { background-color: var(--accent-brown); }
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.status-dot::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-brown);
+}
+.status-dot.is-quiet { color: var(--text-secondary); }
+.status-dot.is-quiet::before { display: none; }
+
+.tag {
+  display: inline-block;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--text-primary);
+  background-color: var(--bg-darker);
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* --- Drop cap ---
+   Stoke, floated, exactly two lines deep. (Not initial-letter: Stoke's tall
+   capitals overrun the line above.) */
+.drop::first-letter {
+  float: left;
+  font-family: 'Stoke', Georgia, serif;
+  font-weight: 400;
+  font-size: 3.05em;
+  line-height: 1;
+  margin: 0.04em 0.22em 0 0;
+  color: var(--accent-red);
 }
 
 /* --- Progress bars --- */
 .overall-progress {
   margin-bottom: 1.25rem;
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
 }
 
 .overall-progress-label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-  font-size: 1rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+  color: var(--text-primary);
 }
 
 .overall-progress-sub {
-  margin-top: 0.4rem;
-  font-size: 0.78rem;
+  margin-top: 0.6rem;
+  font-size: 0.98rem;
   color: var(--text-secondary);
 }
 
 .progress-bar {
   width: 100%;
-  height: 10px;
+  height: 12px;
   background-color: var(--progress-bg);
-  border-radius: 5px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
   background-color: var(--progress-fill);
-  border-radius: 5px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
-/* --- Info card --- */
+/* --- Info card ---
+   A raised card of guidance above a tool. The big ones tear (add .tear). */
 .info-card {
   margin-bottom: 1.25rem;
-  padding: 0.9rem 1.1rem;
+  padding: 1.25rem 1.6rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--accent-brown);
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  border: 0;
+  border-radius: 4px;
 }
+
+.info-card.tear { padding-bottom: calc(1.1rem + var(--tear-h)); }
 
 .info-card p { margin: 0 0 0.6rem; }
 .info-card p:last-child { margin-bottom: 0; }
@@ -652,14 +973,12 @@ button.nav-sublink {
 .top-controls-right { justify-content: flex-end; }
 
 /* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
-   Outside .container, so the top border runs the full width of the window;
-   the text keeps to the same 1100px column as the page. */
+   Outside .container; the text keeps to the same 1100px column as the page. */
 .site-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--border-color);
+  padding: 2.5rem 1.25rem 3rem;
   text-align: center;
-  font-size: 0.72rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
@@ -1437,13 +1756,13 @@ button.nav-sublink {
    11. LANDING PAGE
    ============================================================================= */
 
+/* The lead paragraph under a page's title: body size and colour. */
 .landing-intro {
   text-align: center;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  max-width: 560px;
+  font-size: 1em;
+  color: var(--text-body);
+  max-width: 58ch;
   margin: 0 auto 2.5rem;
-  line-height: 1.65;
 }
 
 .landing-section {
@@ -1898,20 +2217,12 @@ button.nav-sublink {
    12. RESPONSIVE
    ============================================================================= */
 
-/* --- Hamburger button (hidden on desktop) --- */
+/* --- Hamburger button (hidden on desktop) ---
+   A quiet icon button (section 6) holding three bars. */
 .hamburger {
   display: none;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   gap: 5px;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  cursor: pointer;
   flex-shrink: 0;
 }
 
@@ -1919,12 +2230,13 @@ button.nav-sublink {
   display: block;
   width: 18px;
   height: 2px;
-  background-color: var(--text-primary);
+  background-color: currentColor;
   border-radius: 2px;
-  transition: background-color 0.2s ease;
 }
 
-/* --- Mobile sidebar drawer --- */
+/* --- Mobile sidebar drawer ---
+   Card tone, sliding over a scrim; like the dropdowns it floats, so it carries
+   the float shadow while open. */
 .nav-sidebar {
   position: fixed;
   top: 0;
@@ -1932,7 +2244,7 @@ button.nav-sublink {
   width: 280px;
   height: 100%;
   background-color: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  border: 0;
   z-index: 200;
   transform: translateX(-100%);
   transition: transform 0.28s ease;
@@ -1943,14 +2255,14 @@ button.nav-sublink {
 
 .nav-sidebar.open {
   transform: translateX(0);
-  box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
+  box-shadow: var(--shadow-float);
 }
 
 .nav-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(44, 24, 16, 0.45);
+  background: var(--scrim);
   z-index: 199;
   opacity: 0;
   transition: opacity 0.28s ease;
@@ -1974,76 +2286,52 @@ body.nav-sidebar-open {
   flex-shrink: 0;
 }
 
+/* The close button is a quiet icon button (section 6). */
 .nav-sidebar-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-darker);
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
   flex-shrink: 0;
-}
-
-.nav-sidebar-close:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-card);
+  font-size: 0.9rem;
 }
 
 .nav-sidebar-links {
   list-style: none;
   margin: 0;
-  padding: 0.5rem 0;
+  padding: 0.5rem;
   flex: 1;
 }
-
-.nav-sidebar-section {}
 
 .nav-sidebar-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  min-height: 42px;
+  padding: 0 0.75rem;
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   background: transparent;
-  border: none;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
   text-align: left;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .nav-sidebar-toggle:hover {
-  color: var(--text-primary);
   background-color: var(--bg-darker);
 }
 
 /* Non-dropdown sidebar items inherit the desktop .nav-link box; override so
-   they match the spacing of the dropdown toggles above. */
+   they match the dropdown toggles above. */
 .nav-sidebar-link {
   display: flex;
-  align-items: center;
   width: 100%;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  border-bottom: none;
-}
-
-.nav-sidebar-link:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-darker);
+  min-height: 42px;
 }
 
 .nav-sidebar-section.active > .nav-sidebar-toggle {
-  color: var(--accent-red);
+  color: var(--accent-brown);
 }
 
 .nav-sidebar-section .nav-caret {
@@ -2067,44 +2355,19 @@ body.nav-sidebar-open {
   max-height: 500px;
 }
 
-.nav-sidebar-submenu li {}
-
 .nav-sidebar-submenu .nav-submenu-label {
-  padding: 0.5rem 1.25rem 0.2rem 1.5rem;
-}
-
-.nav-sidebar-submenu .nav-submenu-label--divider {
-  margin-top: 0.2rem;
-  padding-top: 0.55rem;
+  padding: 0.6rem 0.75rem 0.3rem 1.25rem;
 }
 
 .nav-sidebar-submenu .nav-sublink {
-  display: block;
-  padding: 0.55rem 1.25rem 0.55rem 2rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.nav-sidebar-submenu .nav-sublink:hover {
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-}
-
-.nav-sidebar-submenu .nav-sublink.active {
-  color: var(--text-primary);
-  border-left-color: var(--accent-brown);
-  background-color: var(--bg-darker);
+  padding-left: 1.5rem;
 }
 
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 @media (max-width: 900px) {
   .hamburger {
-    display: flex;
+    display: inline-flex;
     margin-left: auto;
     order: 2;
   }
@@ -2130,10 +2393,13 @@ body.nav-sidebar-open {
   }
 }
 
+/* --- Page title --- */
+@media (max-width: 820px) {
+  .app-title { font-size: 2rem; }
+}
+
 /* --- Zodiac pages --- */
 @media (max-width: 640px) {
-  .app-title { font-size: 1.5rem; }
-
   .top-controls { flex-direction: column; align-items: stretch; }
 
   .job-selector { justify-content: space-between; }
@@ -2180,11 +2446,11 @@ body.nav-sidebar-open {
   gap: 0.4rem;
   margin: 0.6rem 0 0;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.92rem;
+  font-size: 1em;
 }
 
 .campaign-breadcrumb-link {
-  color: var(--accent-red);
+  color: var(--accent-brown);
   text-decoration: none;
 }
 
@@ -2209,14 +2475,17 @@ body.nav-sidebar-open {
   align-items: flex-start;
 }
 
-/* ── Chapter sidebar ────────────────────────────────────────────────────────── */
+/* ── Sidebar (filters, patient list) ───────────────────────────────────────────
+   A raised card with a torn bottom edge (.tear-half in the markup), sticky
+   beside the content on desktop and a drawer on phones. */
 
 .campaign-sidebar {
   width: 250px;
   flex-shrink: 0;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  padding-bottom: var(--tear-h);
   overflow-y: auto;
   position: sticky;
   top: 1rem;
@@ -2230,41 +2499,20 @@ body.nav-sidebar-open {
   }
 }
 
+/* Title ("Filters") and the close button, a small quiet icon button. */
 .campaign-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1rem 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 0.25rem;
 }
 
 .campaign-sidebar-title {
   font-family: 'Stoke', serif;
-  font-size: 0.78rem;
+  font-size: 1.15rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.campaign-sidebar-close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  padding: 0;
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.campaign-sidebar-close-btn:hover {
   color: var(--text-primary);
-  background-color: var(--bg-darker);
 }
 
 /* ── Chapter list ────────────────────────────────────────────────────────────── */
@@ -2338,26 +2586,6 @@ body.nav-sidebar-open {
    as comfortably below the title as it does on multi-chapter pages. */
 .campaign-main.is-single-chapter {
   margin-top: 2.85rem;
-}
-
-.campaign-sidebar-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.03em;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  color: var(--text-secondary);
-  padding: 0.4rem 0.85rem;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.campaign-sidebar-toggle-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--accent-brown);
 }
 
 /* ── Chapter content card ────────────────────────────────────────────────────── */
@@ -2521,7 +2749,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(44, 24, 16, 0.5);
+  background: var(--scrim);
   z-index: 100;
   cursor: pointer;
 }
@@ -2537,6 +2765,7 @@ body.nav-sidebar-open {
     gap: 0;
   }
 
+  /* A drawer over the scrim, so no torn edge; it floats while open. */
   .campaign-sidebar {
     position: fixed;
     top: 0;
@@ -2545,17 +2774,17 @@ body.nav-sidebar-open {
     z-index: 110;
     width: 280px;
     max-height: 100vh;
+    padding-bottom: 0;
     border-radius: 0;
-    border-top: none;
-    border-bottom: none;
-    border-left: none;
-    border-right: 1px solid var(--border-color);
+    -webkit-mask: none;
+            mask: none;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
 
   .campaign-sidebar.sidebar-open {
     transform: translateX(0);
+    box-shadow: var(--shadow-float);
   }
 
   .chapter-view {
@@ -3188,7 +3417,7 @@ body.nav-sidebar-open {
 }
 
 .venues-filter-body {
-  padding: 0.85rem 1rem 1.25rem;
+  padding: 0.85rem 1.25rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -3202,34 +3431,26 @@ body.nav-sidebar-open {
 
 .venues-filter-label {
   font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
 }
 
+/* Inputs sit in the well, with no outline of their own. */
 .venues-filter-input,
 .venues-filter-select {
   width: 100%;
-  padding: 0.45rem 0.6rem;
+  min-height: 40px;
+  padding: 0 0.75rem;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   background-color: var(--bg-darker);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  outline: none;
-  transition: border-color 0.15s ease;
+  border: 0;
+  border-radius: 4px;
 }
 
 .venues-filter-input::placeholder {
-  font-style: italic;
   color: var(--text-secondary);
-}
-
-.venues-filter-input:focus,
-.venues-filter-select:focus {
-  border-color: var(--accent-brown);
 }
 
 .venues-filter-list {
@@ -3238,7 +3459,6 @@ body.nav-sidebar-open {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .venues-filter-item { padding: 0; }
@@ -3246,8 +3466,8 @@ body.nav-sidebar-open {
 .venues-filter-check {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
+  gap: 10px;
+  min-height: 38px;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   color: var(--text-primary);
@@ -3256,36 +3476,22 @@ body.nav-sidebar-open {
 
 .venues-filter-check input[type="checkbox"] {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   margin: 0;
+  accent-color: var(--accent-brown);
 }
 
 .venues-filter-check-text { flex: 1; }
 
 .venues-filter-count {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.venues-filter-reset {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-brown);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  padding: 0.55rem 0.75rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.venues-filter-reset:hover {
-  border-color: var(--accent-brown);
-  color: var(--accent-red);
-}
+/* "Reset filters" is a plain button (.btn.is-plain) at the foot of the list. */
+.venues-filter-body > .btn.is-plain { align-self: flex-start; }
 
 /* ── Toolbar (count + sort) ──────────────────────────────────────────────── */
 .venues-toolbar {
@@ -3293,13 +3499,12 @@ body.nav-sidebar-open {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .venues-result-count {
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
+  font-style: italic;
   color: var(--text-secondary);
   flex: 1;
 }
@@ -3312,10 +3517,8 @@ body.nav-sidebar-open {
 
 .venues-sort-label {
   font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
 }
 
 .venues-sort .venues-filter-select {
@@ -3374,11 +3577,12 @@ body.nav-sidebar-open {
   box-shadow: 0 6px 18px rgba(62, 56, 50, 0.28);
 }
 
+/* The media box carries .media-ph (the placeholder field under any image)
+   and .tear-half (its torn bottom edge into the card body). */
 .venue-card-media {
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -3387,16 +3591,6 @@ body.nav-sidebar-open {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.venue-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
 }
 
 .venue-badge {
@@ -3486,7 +3680,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 12, 8, 0.7);
+  background: var(--scrim);
   z-index: 200;
   align-items: flex-start;
   justify-content: center;
@@ -3501,30 +3695,18 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.venue-modal-close {
+/* Close button for the detail popups (venue, job, roster, codex...): a small
+   quiet icon button (.btn.is-quiet.is-small.is-icon) pinned top right. */
+.modal-close {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
   z-index: 2;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
 }
-
-.venue-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
 /* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
    work from the moment they appear. That is a focus move, not a focus stop —
@@ -3543,47 +3725,6 @@ body.nav-sidebar-open {
   position: relative;
 }
 
-/* Contrast-vector border overlay. An SVG is used as a mask (same technique as
-   the site logo) and filled with --bg-card so its torn edge reads as a seamless
-   extension of the card body below the media. Full height sits on detail-modal
-   images (.contrast-border); half height sits on unopened grid-card images
-   (.contrast-border-half). Wrap a lone <img> in .contrast-media so the overlay
-   has a positioned box to anchor to; containers that are already positioned
-   (galleries, card media) can hold the overlay directly. */
-.contrast-media {
-  position: relative;
-  display: block;
-  line-height: 0;
-}
-
-.contrast-border,
-.contrast-border-half {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  width: 100%;
-  background-color: var(--bg-card);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.contrast-border {
-  aspect-ratio: 591.84 / 42.48;
-  -webkit-mask: url("../assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-          mask: url("../assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-}
-
-/* The half vector is a narrower (not shorter) torn edge, so its taller aspect
-   ratio keeps the band from stretching thin on the smaller grid-card widths.
-   (The SVGs carry preserveAspectRatio="none" so the 100% mask stretches flush
-   to every edge instead of letterboxing a sliver at the corners.) */
-.contrast-border-half {
-  aspect-ratio: 319.4136 / 42.48;
-  -webkit-mask: url("../assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-          mask: url("../assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-}
-
 /* Sketch wash — the shared tint for the site's illustrations. Put it on the
    box that holds the artwork (a card's media tile, a thumb, a modal image
    wrapper) and it lends that box's contents the parchment hue of the theme.
@@ -3594,10 +3735,8 @@ body.nav-sidebar-open {
    gradient fallback can carry the class unconditionally and only be washed
    when there is something to wash.
 
-   Stays below any torn edge in the same box: .contrast-border/-half carry
-   z-index 1 and this is z-index auto, so they paint after the wash and are
-   not part of the backdrop it blends with. Keep it that way — a z-index here
-   would tint the border along with the art.
+   A torn edge (.tear / .tear-half) on the same box cuts the wash along with
+   the art, so the two can share a box.
 
    --sketch-wash-alpha tunes the strength per surface; the default is the
    subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
@@ -3633,7 +3772,7 @@ body.nav-sidebar-open {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000;
+  background-color: var(--media-5);
   overflow: hidden;
 }
 
@@ -3654,35 +3793,24 @@ body.nav-sidebar-open {
 
 .venue-gallery-slide.is-active { opacity: 1; }
 
+/* Previous / next: quiet icon buttons (.btn.is-quiet.is-icon) over the photo. */
 .venue-gallery-nav {
   position: absolute;
   /* Nudged below center so the arrows sit lower in the frame. */
   top: 58%;
   transform: translateY(-50%);
-  width: 2.25rem;
-  height: 2.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.95rem;
-  cursor: pointer;
   z-index: 2;
 }
 
-.venue-gallery-nav:hover { background: rgba(0, 0, 0, 0.75); }
+.venue-gallery-nav:active { transform: translateY(-50%) scale(0.98); }
 
 .venue-gallery-prev { left: 0.6rem; }
 .venue-gallery-next { right: 0.6rem; }
 
 .venue-gallery-dots {
   position: absolute;
-  /* Lifted clear of the contrast-border torn edge that overlays the gallery
-     bottom (full border is ~46px tall at the 640px modal width). */
-  bottom: 3rem;
+  /* Lifted clear of the gallery's torn bottom edge. */
+  bottom: calc(var(--tear-h) + 0.75rem);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -3695,14 +3823,13 @@ body.nav-sidebar-open {
   height: 0.55rem;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--media-ink);
+  background: transparent;
   cursor: pointer;
 }
 
 .venue-gallery-dot.is-active {
-  background: #f3e9d2;
-  border-color: #f3e9d2;
+  background: var(--media-ink);
 }
 
 .venue-modal-content {
@@ -3942,11 +4069,11 @@ body.nav-sidebar-open {
   opacity: 0.85;
 }
 
+/* Placeholder field and torn edge as on .venue-card-media. */
 .job-card-media {
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -3955,16 +4082,6 @@ body.nav-sidebar-open {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.job-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
 }
 
 .job-badge {
@@ -4049,7 +4166,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 12, 8, 0.7);
+  background: var(--scrim);
   z-index: 200;
   align-items: flex-start;
   justify-content: center;
@@ -4064,30 +4181,9 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
-
-.job-modal-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  z-index: 2;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.job-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
 .job-modal-img {
   width: 100%;
@@ -4295,12 +4391,12 @@ body.nav-sidebar-open {
   outline-offset: 2px;
 }
 
+/* Placeholder field and torn edge as on .venue-card-media. */
 .menu-venue-card-media {
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -4309,16 +4405,6 @@ body.nav-sidebar-open {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.menu-venue-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
 }
 
 .menu-venue-card-body {

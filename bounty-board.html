@@ -28,10 +28,10 @@
     <div class="campaign-layout" id="quests-layout">
 
       <!-- Filter sidebar -->
-      <aside class="campaign-sidebar venues-sidebar" id="quests-sidebar" aria-label="Quest filters">
+      <aside class="campaign-sidebar venues-sidebar tear-half" id="quests-sidebar" aria-label="Quest filters">
         <div class="campaign-sidebar-header">
           <span class="campaign-sidebar-title">Filters</span>
-          <button class="campaign-sidebar-close-btn" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
+          <button class="btn is-quiet is-small is-icon" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
         </div>
 
         <div class="venues-filter-body">
@@ -65,7 +65,7 @@
             </label>
           </div>
 
-          <button type="button" class="venues-filter-reset" id="filter-reset">
+          <button type="button" class="btn is-plain" id="filter-reset">
             Reset filters
           </button>
         </div>
@@ -74,7 +74,7 @@
       <!-- Main content -->
       <main class="campaign-main" id="quests-main">
         <div class="campaign-toolbar venues-toolbar">
-          <button class="campaign-sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
+          <button class="btn is-quiet" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
             &#9776; Filters
           </button>
           <span class="venues-result-count" id="quests-count" aria-live="polite"></span>
@@ -86,7 +86,7 @@
               <option value="title">Title (A &rarr; Z)</option>
             </select>
           </div>
-          <a class="venues-filter-reset quest-submit-btn" id="quest-submit-btn" href="portal.html?section=my-profile&amp;tab=applications">
+          <a class="btn quest-submit-btn" id="quest-submit-btn" href="portal.html?section=my-profile&amp;tab=applications">
             Submit a quest
           </a>
         </div>
@@ -104,7 +104,7 @@
     <!-- Detail modal -->
     <div class="job-modal-overlay" id="quest-modal-overlay" aria-hidden="true">
       <div class="job-modal" role="dialog" aria-modal="true" aria-labelledby="quest-modal-title">
-        <button type="button" class="job-modal-close" id="quest-modal-close" aria-label="Close">&#10005;</button>
+        <button type="button" class="btn is-quiet is-small is-icon modal-close" id="quest-modal-close" aria-label="Close">&#10005;</button>
         <div class="job-modal-body" id="quest-modal-body">
           <!-- populated by JS -->
         </div>

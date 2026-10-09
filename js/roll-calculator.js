@@ -378,16 +378,15 @@
   }
 
   // ── Items — image strip + inline detail (no modal) ─────────────────────────
-  var ITEM_FALLBACK_BG = 'linear-gradient(135deg, #2a1f1c 0%, #14100e 100%)';
   function ItemTile(props) {
     var it = props.item;
     return h('button', { type: 'button', className: 'rp-item-tile' + (props.selected ? ' is-selected' : ''), 'aria-pressed': props.selected ? 'true' : 'false',
         'aria-label': it.name, onClick: props.onSelect },
-      h('span', { className: 'rp-item-thumb sketch-wash' },
+      // Placeholder field under the art, torn into the tile's name below.
+      h('span', { className: 'rp-item-thumb sketch-wash media-ph tear-half' },
         it.image_url
           ? h('img', { className: 'rp-item-thumb-img', src: it.image_url, alt: '', loading: 'lazy', onError: function (e) { e.target.style.display = 'none'; } })
-          : h('span', { className: 'rp-item-thumb-fallback', 'aria-hidden': 'true', style: { background: ITEM_FALLBACK_BG } }),
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })),
+          : null),
       h('span', { className: 'rp-item-tile-name' }, it.name));
   }
   function ItemDetail(props) {

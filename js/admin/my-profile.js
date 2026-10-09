@@ -231,10 +231,9 @@
 
   // --------- My Items (read-only RP loadout) ---------------------------------
   // Reuses the public venue card + modal styling (styles.css) so the loadout
-  // reads the same as the public-facing grids: a card carrying the torn
-  // contrast border, and a detail modal whose title sits in the content rather
-  // than a header bar. Item art is square, so the media/modal image are square.
-  var ITEM_FALLBACK_BG = 'linear-gradient(135deg, #2a1f1c 0%, #14100e 100%)';
+  // reads the same as the public-facing grids: a card whose media tears into
+  // its body, and a detail modal whose title sits in the content rather than a
+  // header bar. Item art is square, so the media/modal image are square.
 
   function ItemModal(props) {
     var it = props.item;
@@ -252,12 +251,8 @@
     }, [onClose]);
 
     var media = it.image_url
-      ? h('div', { className: 'contrast-media' },
-          h('img', { className: 'venue-modal-img', src: it.image_url, alt: '' }),
-          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }))
-      : h('div', { className: 'venue-modal-img venue-modal-img-fallback', style: { background: ITEM_FALLBACK_BG } },
-          h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
-          h('span', { className: 'contrast-border', 'aria-hidden': 'true' }));
+      ? h('img', { className: 'venue-modal-img tear', src: it.image_url, alt: '' })
+      : h('div', { className: 'venue-modal-img venue-modal-img-fallback media-ph tear' });
 
     var abilities = it.abilities || [];
     return h('div', {
@@ -265,7 +260,7 @@
       onMouseDown: function (e) { if (e.target === e.currentTarget && onClose) onClose(); }
     },
       h('div', { className: 'venue-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
-        h('button', { type: 'button', className: 'venue-modal-close', 'aria-label': 'Close', onClick: onClose }, '✕'),
+        h('button', { type: 'button', className: 'btn is-quiet is-small is-icon modal-close', 'aria-label': 'Close', onClick: onClose }, '✕'),
         media,
         h('div', { className: 'venue-modal-content' },
           h('h2', { className: 'venue-modal-title' }, it.name),
@@ -291,14 +286,13 @@
     return h('button', {
       type: 'button', className: 'venue-card pv-item-card', 'aria-label': it.name, onClick: props.onOpen
     },
-      h('div', { className: 'venue-card-media sketch-wash' },
+      h('div', { className: 'venue-card-media sketch-wash media-ph tear-half' },
         it.image_url
           ? h('img', {
               className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy',
               onError: function (e) { e.target.style.display = 'none'; }
             })
-          : h('span', { className: 'venue-card-sig' }, (it.name || '').toLowerCase()),
-        h('span', { className: 'contrast-border-half', 'aria-hidden': 'true' })
+          : null
       ),
       h('div', { className: 'venue-card-body' },
         h('div', { className: 'venue-card-title-row' },

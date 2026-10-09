@@ -683,7 +683,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 /* --------------- My Profile two-column layout --------------- */
 /* My Items — reuses the public venue card + modal look (.venue-card,
-   .venue-modal, .contrast-border from styles.css) for a consistent grid and
+   .venue-modal and the torn edge from styles.css) for a consistent grid and
    detail view. Item art is square (600x600 uploads), so the card media and the
    modal image are overridden to a 1:1 ratio here. */
 .my-items-grid {
@@ -691,10 +691,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.25rem;
 }
-.pv-item-card .venue-card-media {
-  aspect-ratio: 1 / 1;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
-}
+.pv-item-card .venue-card-media { aspect-ratio: 1 / 1; }
 .pv-item-card .venue-card-location { text-transform: uppercase; letter-spacing: 0.1em; }
 
 .venue-modal.pv-item-modal { max-width: 460px; }

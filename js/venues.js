@@ -34,14 +34,14 @@
     restaurant: "Restaurant", fight_club: "Fight Club", shop: "Shop", other: "Other"
   };
 
-  // Per-size palette for the colored card backdrop (used when no image_url).
-  var SIZE_PALETTE = {
-    room:      { from: "#3a2a3d", to: "#1f1424" },
-    apartment: { from: "#3b3727", to: "#211e15" },
-    cottage:   { from: "#3a2a25", to: "#1f1612" },
-    house:     { from: "#1f3340", to: "#101c25" },
-    mansion:   { from: "#3a2c1e", to: "#1f1810" }
-  };
+  // Placeholder tone (styles.css .media-ph, 1–5) per size, for a venue
+  // without an image.
+  var SIZE_TONE = { room: 1, apartment: 3, cottage: 2, house: 5, mansion: 4 };
+
+  function mediaClass(v) {
+    var tone = SIZE_TONE[v.size] || 5;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl    = document.getElementById("venues-sidebar");
@@ -378,9 +378,9 @@
     card.className = "venue-card" + (v.featured ? " is-featured" : "");
     card.setAttribute("aria-label", v.name);
 
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
+    // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media";
+    media.className = "venue-card-media tear-half " + mediaClass(v);
 
     if (v.image_url) {
       var img = document.createElement("img");
@@ -388,25 +388,9 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "venue-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "venue-card-sig";
-      sig.textContent = (v.name || "").toLowerCase();
-      media.appendChild(sig);
     }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
 
     if (v.featured) {
       var fb = document.createElement("span");
@@ -487,22 +471,14 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildGalleryHtml(v) {
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
     var imgs = venueImages(v);
 
     if (!imgs.length) {
-      return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-        palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-        '<span class="venue-card-sig">' + escapeHTML((v.name || "").toLowerCase()) + '</span>' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
     }
 
     if (imgs.length === 1) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img tear">';
     }
 
     var slides = imgs.map(function (src, i) {
@@ -516,12 +492,11 @@
         '" data-index="' + i + '" aria-label="Image ' + (i + 1) + '"></button>';
     }).join("");
 
-    return '<div class="venue-gallery" data-count="' + imgs.length + '">' +
+    return '<div class="venue-gallery tear" data-count="' + imgs.length + '">' +
       '<div class="venue-gallery-track">' + slides + '</div>' +
-      '<button type="button" class="venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
-      '<button type="button" class="venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
+      '<button type="button" class="btn is-quiet is-icon venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
+      '<button type="button" class="btn is-quiet is-icon venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
       '<div class="venue-gallery-dots">' + dots + '</div>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 
