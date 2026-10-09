@@ -493,11 +493,10 @@ pre {
 .nav-sublink {
   display: flex;
   align-items: center;
-  min-height: 42px;
-  padding: 0 10px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  color: var(--text-primary);
+  padding: 5px 10px;
+  font-family: 'Stoke', serif;
+  font-size: .85rem;
+  color: var(--text-body);
   text-decoration: none;
   border-radius: 4px;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -512,7 +511,6 @@ pre {
 .nav-sublink.active:hover {
   color: var(--accent-brown);
   background-color: var(--bg-darker);
-  font-weight: 600;
 }
 
 /* Group labels: ink small caps, set apart by space and one faint rule. */
@@ -1973,25 +1971,29 @@ button.nav-sublink {
   font-style: italic;
 }
 
-/* Rows of photo and text, the photo alternating sides. */
+/* Rows of photo and text, the photo alternating sides: photo 5, text 6. */
 .landing-row {
+  --tear-h: 30px;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 3.5rem;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 3rem;
   align-items: center;
   padding: 2.25rem 0;
 }
 
 .landing-row:nth-of-type(even) {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
 }
 
 .landing-row:nth-of-type(even) .landing-row-image {
   order: 2;
 }
 
+/* The padding matches the photo's torn edge, so the text centres on the
+   photo above the tear rather than on the whole box. */
 .landing-row-content {
   min-width: 0;
+  padding-bottom: var(--tear-h);
 }
 
 .landing-row-title {
@@ -2022,7 +2024,6 @@ button.nav-sublink {
    placeholder field behind it (.media-ph) and a torn bottom edge (.tear-half).
    The text stays centred beside it. */
 .landing-row-image--photo {
-  --tear-h: 30px;
   position: relative;
   align-self: stretch;
   min-height: 280px;
@@ -2263,6 +2264,9 @@ button.nav-sublink {
   }
   .landing-row-image--photo {
     min-height: 200px;
+  }
+  .landing-row-content {
+    padding-bottom: 0;
   }
   .tool-list {
     max-width: none;
