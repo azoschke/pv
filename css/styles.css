@@ -163,7 +163,8 @@ a {
   --shadow-float: 0 2px 4px rgba(60, 52, 38, 0.10), 0 14px 30px rgba(60, 52, 38, 0.12);
 
   /* Image placeholders: dark fields under grain-dark.svg, the same in both
-     themes. Media ink is for type and controls laid over them. */
+     themes except tone 3, which dark sets deeper. Media ink is for type and
+     controls laid over them. */
   --media-1: #3b3128;
   --media-2: #4a2b26;
   --media-3: #33302a;
@@ -171,6 +172,9 @@ a {
   --media-5: #2f2a24;
   --media-ink:     #ece7dc;
   --media-ink-dim: #c1b5a6;
+
+  /* Sketch wash: the colour blended into illustrations (.sketch-wash) */
+  --sketch-wash-color: #636158;
 
   /* Paper grain and the torn edge */
   --grain:  url("../assets/grain-light.svg");
@@ -229,6 +233,10 @@ a {
   /* Ring, scrim, float shadow */
   --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
   --shadow-float: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.40);
+
+  /* Image placeholder tone 3, and the sketch wash colour */
+  --media-3: #2a2823;
+  --sketch-wash-color: #4b4945;
 
   /* Paper grain */
   --grain: url("../assets/grain-dark.svg");
@@ -2009,12 +2017,15 @@ button.nav-sublink {
 .pv-signed-in .landing-signin,
 .pv-signed-in .landing-signin-note { display: none; }
 
-/* A landing row's photo: a 4:3 box with the placeholder field behind it
-   (.media-ph) and a torn bottom edge (.tear-half), the photo cropped to fit. */
+/* A landing row's photo: fills the image box (as tall as the text beside it,
+   280px at least; 200px once the rows stack), cropped to fit, with the
+   placeholder field behind it (.media-ph) and a torn bottom edge (.tear-half).
+   The text stays centred beside it. */
 .landing-row-image--photo {
   --tear-h: 30px;
   position: relative;
-  aspect-ratio: 4 / 3;
+  align-self: stretch;
+  min-height: 280px;
   overflow: hidden;
   border-radius: 4px 4px 0 0;
 }
@@ -2249,6 +2260,9 @@ button.nav-sublink {
   }
   .landing-row:nth-of-type(even) .landing-row-image {
     order: 0;
+  }
+  .landing-row-image--photo {
+    min-height: 200px;
   }
   .tool-list {
     max-width: none;
@@ -3728,7 +3742,8 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* Sketch wash — the shared tint for the site's illustrations. Put it on the
    box that holds the artwork (a card's media tile, a thumb, a modal image
-   wrapper) and it lends that box's contents the parchment hue of the theme.
+   wrapper) and it lends that box's contents the theme's wash colour
+   (--sketch-wash-color).
    Blended on colour, not laid over as a veil: the illustration keeps its own
    luminance, so linework stays exactly as dark as it was drawn.
 
@@ -3739,10 +3754,10 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    A torn edge (.tear / .tear-half) on the same box cuts the wash along with
    the art, so the two can share a box.
 
-   --sketch-wash-alpha tunes the strength per surface; the default is the
-   subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
+   --sketch-wash-alpha sets the strength (0.5 in both themes); a surface can
+   override it. */
 .sketch-wash {
-  --sketch-wash-alpha: 0.1;
+  --sketch-wash-alpha: 0.5;
   position: relative;
   /* Own stacking context, so the blend composites against the artwork inside
      the box and not whatever sits behind it. */
@@ -3753,10 +3768,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   content: '';
   position: absolute;
   inset: 0;
-  /* The theme's own brown pair, so the wash follows light and dark. */
-  background: linear-gradient(140deg,
-    color-mix(in srgb, var(--accent-brown) calc(var(--sketch-wash-alpha) * 100%), transparent),
-    color-mix(in srgb, var(--accent-brown-hover) calc(var(--sketch-wash-alpha) * 100%), transparent));
+  background: color-mix(in srgb, var(--sketch-wash-color) calc(var(--sketch-wash-alpha) * 100%), transparent);
   mix-blend-mode: color;
   pointer-events: none;
 }
@@ -4499,10 +4511,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   object-fit: cover;
   display: block;
 }
-
-/* Menu artwork sits on a light sheet at small size and carries the tint
-   better than the darker card media does, so it runs above the default. */
-.menu-thumb.sketch-wash { --sketch-wash-alpha: 0.25; }
 
 /* No photo: the section's icon, muted, in the well. */
 .menu-thumb-icon {
