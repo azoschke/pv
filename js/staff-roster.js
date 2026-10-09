@@ -317,6 +317,12 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no one on the roster has (unless it is ticked, so it
+      // can still be cleared).
+      var field = kind === "positions" ? "_positions" : "_tags";
+      var anyone = allStaff.some(function (s) { return s[field].indexOf(value) !== -1; });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 
@@ -348,13 +354,6 @@
       img.className = "venue-card-img";
       img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    }
-
-    if (primary) {
-      var posBadge = document.createElement("span");
-      posBadge.className = "venue-badge venue-badge-size";
-      posBadge.textContent = primary;
-      media.appendChild(posBadge);
     }
 
     card.appendChild(media);

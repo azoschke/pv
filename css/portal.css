@@ -1093,12 +1093,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .notes-link:hover { text-decoration: underline; }
 
 /* Group rows in grouped tables (FC Members ranks, Job Board divisions, Event
-   Assets types): ink small caps on a page-tone band, like the table header,
-   with even padding. */
+   Assets types): ink small caps on their own band (--bg-group-row), with even
+   padding. */
 .portal-table .portal-group-row td {
   padding: 0.65rem 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-group-row);
   font-family: 'Stoke', serif;
   font-size: 0.84rem;
   letter-spacing: 0.1em;

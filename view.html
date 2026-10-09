@@ -102,16 +102,16 @@
       return -1;
     }
 
-    function chapterOptionLabel(ch) {
-      return ch.chapter_date ? ch.title + ' · ' + ch.chapter_date : ch.title;
+    function chapterOptionLabel(ch, i) {
+      return 'Chapter ' + (i + 1) + ': ' + ch.title;
     }
 
     function buildChapterBar() {
       chapterSelect.innerHTML = '';
-      chapters.forEach(function (ch) {
+      chapters.forEach(function (ch, i) {
         var opt = document.createElement('option');
         opt.value = ch.slug;
-        opt.textContent = chapterOptionLabel(ch);
+        opt.textContent = chapterOptionLabel(ch, i);
         chapterSelect.appendChild(opt);
       });
     }

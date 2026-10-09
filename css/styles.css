@@ -152,6 +152,10 @@ a {
   /* Staff panel (Medical Division landing) */
   --bg-staff-panel: #faf7f0;
 
+  /* Group rows in grouped tables: between card and well, a step past the
+     row hover */
+  --bg-group-row: #e7e3d8;
+
   /* Focus and selection ring, scrim behind modals and drawers, and the one
      shadow (things that float over content: dropdown menus) */
   --ring:         color-mix(in srgb, var(--accent-brown) 40%, transparent);
@@ -217,6 +221,9 @@ a {
 
   /* Staff panel (Medical Division landing) */
   --bg-staff-panel: #25231e;
+
+  /* Group rows in grouped tables */
+  --bg-group-row: #302d26;
 
   /* Ring, scrim, float shadow */
   --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
@@ -642,6 +649,7 @@ button.nav-sublink {
   padding: 1.75rem 0 0.5rem;
   margin-bottom: 1.5rem;
 }
+.app-header:has(+ .landing-intro:not([hidden])) { margin-bottom: 0; }
 
 .app-title {
   font-family: 'Stoke', serif;
@@ -2735,6 +2743,10 @@ body.nav-sidebar-open {
   line-height: 1.65;
   color: var(--text-body);
 }
+.chapter-body {
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
 
 /*
  * H1 in chapter content is narrative body text (the author uses # for paragraphs).
@@ -2745,7 +2757,7 @@ body.nav-sidebar-open {
   font-family: 'Crimson Pro', serif;
   font-size: 1em;
   font-weight: 400;
-  line-height: 1.65;
+  line-height: 1.6;
   color: var(--text-body);
   max-width: 68ch;
   margin: 0 0 16px;
@@ -3729,8 +3741,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    --sketch-wash-alpha tunes the strength per surface; the default is the
    subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
 .sketch-wash {
-  --sketch-wash-tint-from: 107, 68, 35;
-  --sketch-wash-tint-to:   139, 111, 71;
   --sketch-wash-alpha: 0.1;
   position: relative;
   /* Own stacking context, so the blend composites against the artwork inside
@@ -3742,18 +3752,12 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   content: '';
   position: absolute;
   inset: 0;
+  /* The theme's own brown pair, so the wash follows light and dark. */
   background: linear-gradient(140deg,
-    rgba(var(--sketch-wash-tint-from), var(--sketch-wash-alpha)),
-    rgba(var(--sketch-wash-tint-to), var(--sketch-wash-alpha)));
+    color-mix(in srgb, var(--accent-brown) calc(var(--sketch-wash-alpha) * 100%), transparent),
+    color-mix(in srgb, var(--accent-brown-hover) calc(var(--sketch-wash-alpha) * 100%), transparent));
   mix-blend-mode: color;
   pointer-events: none;
-}
-
-/* The blend carries hue and saturation, so each theme keeps its own pair —
-   dark's is the more muted of the two. */
-[data-theme="dark"] .sketch-wash {
-  --sketch-wash-tint-from: 38, 22, 14;
-  --sketch-wash-tint-to:   74, 66, 57;
 }
 
 .venue-gallery {
