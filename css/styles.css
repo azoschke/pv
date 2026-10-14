@@ -727,6 +727,11 @@ button.nav-sublink {
 .media-ph.is-tone-4 { background-color: var(--media-4); }
 .media-ph.is-tone-5 { background-color: var(--media-5); }
 
+/* Theme-specific images: put both versions in the same box; .light-only
+   shows in light (the default), .dark-only in dark. */
+[data-theme="dark"] .light-only,
+:root:not([data-theme="dark"]) .dark-only { display: none; }
+
 /* --- Buttons ---
    One button, a few looks:
      .btn                brown fill: the primary action
