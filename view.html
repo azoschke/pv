@@ -65,8 +65,11 @@
 
     // Campaign slug comes from ?c=<slug>; the active chapter from ?ch=<slug>.
     // Both live in the URL so every chapter has a permanent, shareable link.
+    // ?tldr=1 (the home page's TL;DR link) opens the first chapter shown on
+    // its summary, when it has one.
     var params         = new URLSearchParams(window.location.search);
     var campaignSlug   = (params.get('c') || '').trim();
+    var openTldr       = params.get('tldr') === '1';
 
     var campaign      = null;   // { id, slug, name, tag, blurb }
     var chapters      = [];     // [{ id, slug, title, chapter_date, has_tldr }]
@@ -225,7 +228,9 @@
           if (showingTldr) { mainBody.hidden = true;  tldrBody.removeAttribute('hidden'); }
           else             { mainBody.removeAttribute('hidden'); tldrBody.hidden = true; }
         });
+        if (openTldr) document.getElementById('tldr-toggle-btn').click();
       }
+      openTldr = false;
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────────
