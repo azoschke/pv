@@ -1956,10 +1956,7 @@ button.nav-sublink {
   color: var(--accent-brown-hover);
 }
 
-/* ── Landing rows (alternating image / content) ─────────────────────────────── */
-
-/* The lead under the Home title: body size and colour, with the small italic
-   sign-in note on its own line. */
+/* The lead under a page's title on the 404 page. */
 .landing-tagline {
   font-family: 'Crimson Pro', serif;
   font-size: 1em;
@@ -1969,30 +1966,235 @@ button.nav-sublink {
   margin: 0 auto;
 }
 
-.landing-signin-note {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.95rem;
-  font-style: italic;
+/* ── Home page (index.html) ──────────────────────────────────────────────────
+   One page, two states. Blocks only for visitors carry .home-for-visitors and
+   hide once signed in (the pre-paint script marks <html> with .pv-signed-in);
+   the member blocks are built by js/home.js after the session check, so a
+   visitor never receives them. Short text that differs between the two
+   states sits in .home-for-visitors / .home-for-members spans. */
+.pv-signed-in .home-for-visitors,
+html:not(.pv-signed-in) .home-for-members { display: none; }
+
+/* Small-caps label over a title or a block. */
+.eyebrow {
+  font-family: 'Stoke', serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
 }
 
-/* Rows of photo and text, half and half, the photo alternating sides. The
-   text runs the full width of its column. */
+/* A group's name over its list: ink small caps on a hairline rule. */
+.group-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Loading, empty and failed lines inside the member blocks. */
+.home-muted {
+  margin: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* Line icons (calendar, book, dice, the done check), drawn in brown. */
+.home-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--accent-brown);
+}
+
+/* ── Hero ── The photo band under the nav runs the full width of the window.
+   It sits behind the nav band (z-index -2, the band's ::before is -1), pulled
+   up under the band's torn edge so the photo shows through the tear, and it
+   tears into the page at the bottom. The negative top margin cancels the nav
+   placeholder's bottom margin and its tear. */
+.home-band {
+  position: relative;
+  z-index: -2;
+  left: 50%;
+  width: 100vw;
+  margin: calc(-1.5rem - var(--tear-h)) 0 0 -50vw;
+}
+
+.home-band-photo {
+  --tear-h: 30px;
+  position: relative;
+  height: 560px;
+  overflow: hidden;
+}
+
+.home-band-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.home-band.is-short .home-band-photo { height: 360px; }
+.home-band.is-short .home-band-photo img { object-position: center 20%; }
+
+/* The raised card that overlaps the bottom of the band: the visitor's
+   welcome, or the member's welcome back with the quick-access cards. */
+.home-hero-card,
+.home-welcome {
+  position: relative;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-hero-card {
+  max-width: 800px;
+  margin-top: -200px;
+  padding: 2rem 2.25rem calc(1.75rem + var(--tear-h));
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.home-hero-card .app-title { font-size: 3.1rem; margin: 0; }
+.home-hero-card .eyebrow { margin: 0; }
+.home-hero-lead { font-size: 1.12rem; margin: 0; }
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  margin-top: 0.4rem;
+}
+
+/* The "opens elsewhere" arrow on the recruitment link. */
+.home-ext-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Buttons js/home.js shows once it has somewhere for them to go. */
+.home-hero-actions .btn[hidden],
+.home-actions .btn[hidden] { display: none; }
+
+.home-welcome {
+  margin-top: -150px;
+  padding: 1.75rem 1.75rem calc(1.5rem + var(--tear-h));
+}
+
+.home-welcome-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem 2rem;
+  margin-bottom: 1.4rem;
+}
+
+.home-welcome-head .app-title { font-size: 2.3rem; margin: 0.15rem 0 0; }
+
+/* Quick access: Calendar, Campaigns, Roll Calculator. */
+.home-quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 1rem;
+}
+
+.home-quick-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.2rem 1.3rem;
+}
+
+.home-quick-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.home-quick-head h2 { font-size: 1.35rem; margin: 0; }
+.home-quick-body { flex: 1; }
+.home-quick-body .eyebrow { margin: 0 0 2px; }
+
+.home-quick-value {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.home-quick-card > .btn { width: 100%; }
+
+/* A tag followed by an italic muted note, e.g. "RP Campaign  Fri · 8:00 PM". */
+.home-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+}
+
+.home-meta-note {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* ── Backstory ── Full width, text only. */
+.home-backstory {
+  margin: 0;
+  padding: 4.5rem 0 3rem;
+  max-width: 64rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pv-signed-in .home-backstory { padding: 2rem 0 2.5rem; }
+.home-backstory .eyebrow { margin: 0; }
+
+.home-backstory blockquote {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.home-backstory figcaption { max-width: 52rem; }
+
+/* ── Image rows ── Photo and text, half and half. The photo comes first in
+   the markup; .is-flipped puts it on the right. The text column carries
+   bottom padding equal to the photo's torn edge, so it centres on the photo
+   above the tear. */
 .landing-row {
   --tear-h: 30px;
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 3rem;
   align-items: center;
-  padding: 2.25rem 0;
+  padding: 2.5rem 0;
 }
 
-.landing-row:nth-of-type(even) .landing-row-image {
+.landing-row.is-flipped .landing-row-image {
   order: 2;
 }
 
-/* The padding matches the photo's torn edge, so the text centres on the
-   photo above the tear rather than on the whole box. */
 .landing-row-content {
   min-width: 0;
   padding-bottom: var(--tear-h);
@@ -2013,24 +2215,19 @@ button.nav-sublink {
   margin: 0;
 }
 
-/* "Sign In" under the lead, a primary button. It and the sign-in note are
-   hidden once signed in (the page marks <html> with .pv-signed-in before it
-   paints). */
-.landing-signin { margin-top: 1.4rem; }
-.pv-signed-in .landing-signin,
-.pv-signed-in .landing-signin-note { display: none; }
+.landing-row-content > .home-meta { margin: 0 0 0.75rem; }
 
-/* A landing row's photo: fills the image box (as tall as the text beside it,
-   280px at least; 200px once the rows stack), cropped to fit, with the
-   placeholder field behind it (.media-ph) and a torn bottom edge (.tear-half).
-   The text stays centred beside it. */
+/* A row's photo: as tall as the text beside it (380px at least), cropped to
+   fit, with the placeholder field behind it (.media-ph) and a torn bottom
+   edge (.tear-half). */
 .landing-row-image--photo {
   position: relative;
   align-self: stretch;
-  min-height: 280px;
+  min-height: 380px;
   overflow: hidden;
   border-radius: 4px 4px 0 0;
 }
+
 .landing-row-image--photo img {
   position: absolute;
   inset: 0;
@@ -2038,15 +2235,452 @@ button.nav-sublink {
   height: 100%;
   object-fit: cover;
 }
-/* The campaign photo's subject sits right of centre: keep it in frame as the
-   column narrows (desktop 85%, tablet 75%); stacked on phones it is centred. */
-.landing-row--campaigns .landing-row-image--photo img { object-position: 85%; }
-@media (max-width: 900px) {
-  .landing-row--campaigns .landing-row-image--photo img { object-position: 75%; }
+
+.landing-row--campaign .landing-row-image--photo img { object-position: 72% center; }
+.landing-row--venues   .landing-row-image--photo img { object-position: 35% center; }
+.landing-row--tools    .landing-row-image--photo img { object-position: 58% center; }
+.landing-row--medical  .landing-row-image--photo img { object-position: 25% center; }
+
+/* Button rows and the campaign's plain links. */
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.25rem;
 }
-@media (max-width: 720px) {
-  .landing-row--campaigns .landing-row-image--photo img { object-position: 50%; }
+
+.home-actions.is-tight { gap: 0.5rem; }
+
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 1rem 0 0;
 }
+
+/* Grouped link lists (Tools: Crafting / Zodiac Weapon; Medical). */
+.home-tool-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.home-tool-groups .tool-list { margin-top: 0.75rem; }
+
+/* Venues & Menus: the photo with a small raised note pinned over its lower
+   right, tilted, with a red pin. */
+.home-pinned {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+  min-height: 400px;
+}
+
+.home-pinned .landing-row-image--photo { flex: 1; }
+
+.home-pin-note {
+  position: absolute;
+  right: 22px;
+  bottom: 54px;
+  width: 250px;
+  padding: 1.5rem 1.25rem calc(1rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  transform: rotate(-1.5deg);
+}
+
+.home-pin-note::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background-color: var(--accent-red);
+}
+
+.home-pin-note h3 { font-size: 1.25rem; margin: 0; }
+
+.home-pin-note-addr {
+  margin: 0.3rem 0 0;
+  font-family: 'Stoke', serif;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.home-pin-note-hours {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* ── Officer Core ── A raised, torn card: two leaders as trays, the council
+   as a list, the guard as a line. */
+.home-officers {
+  margin: 2.5rem 0;
+  padding: 2rem 2rem calc(1.5rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-officers-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-officers-head .landing-row-title { margin: 0; }
+.home-officers-head > p { max-width: 34rem; margin: 0; }
+
+.home-leaders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+
+.home-leader {
+  display: flex;
+  gap: 1.1rem;
+  padding: 1.25rem 1.4rem;
+}
+
+.home-leader h3 { font-size: 1.3rem; margin: 0; }
+
+.home-leader-role {
+  margin: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.home-leader-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+/* Initials in a brown circle. */
+.home-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--accent-brown);
+  color: var(--label);
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.home-avatar.is-small {
+  width: 30px;
+  height: 30px;
+  font-size: 0.62rem;
+}
+
+.home-council-label { margin-top: 2rem; }
+
+.home-council {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 0 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-council li {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.home-council-name {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  color: var(--text-primary);
+}
+
+.home-council-note {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.home-officers-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin-top: 1.25rem;
+}
+
+.home-officers-foot p { margin: 0; }
+.home-officers-foot .eyebrow { margin: 0 0.75rem 0 0; }
+
+.home-officers-recruit {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.98rem;
+}
+
+/* ── Visitor sign-in strip ── */
+.home-signin-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin: 0 0 1rem;
+  padding: 1.2rem 1.5rem;
+}
+
+.home-signin-strip p { margin: 0; }
+
+.home-signin-strip strong {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+/* ── New Aboard (onboarding) ── A raised, torn card: the photo inset on the
+   left, the open steps beside it; a finished step collapses to one row. */
+.home-onboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem 2rem;
+  margin-top: 2.5rem;
+  padding: 1.75rem 1.75rem calc(1.5rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-onboard-photo {
+  position: relative;
+  flex: 1 1 280px;
+  min-height: 320px;
+  align-self: stretch;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+}
+
+.home-onboard-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 40% center;
+}
+
+.home-onboard-body {
+  flex: 999 1 560px;
+  min-width: 0;
+}
+
+.home-onboard-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem 2rem;
+}
+
+.home-onboard-head .landing-row-title { margin: 0; }
+
+.home-onboard-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0 1.4rem;
+}
+
+.home-onboard-progress .progress-bar {
+  flex: 1;
+  max-width: 360px;
+}
+
+.home-onboard-progress span {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.home-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 0.9rem;
+}
+
+.home-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.2rem 1.3rem;
+}
+
+.home-step.is-wide,
+.home-step-done { grid-column: 1 / -1; }
+
+.home-step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-step-top .status-dot { font-size: 0.95rem; }
+
+.home-step-num {
+  font-family: 'Stoke', serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--accent-brown);
+}
+
+.home-step h3 { font-size: 1.2rem; margin: 0; }
+
+.home-step-text {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.home-step-text.is-grow { flex: 1; }
+.home-step > .btn { align-self: flex-start; }
+
+.home-step-rules {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.home-step-rules p {
+  display: flex;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.home-step-rules .tag { flex: none; }
+
+.home-step-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 1.1rem;
+}
+
+.home-step-done .home-icon { width: 22px; height: 22px; }
+
+.home-step-done strong {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.home-step-done span {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.home-onboard-foot {
+  margin: 1.2rem 0 0;
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+}
+
+/* ── Boards ── Job Board and Bounty Board side by side: the three newest or
+   soonest postings, each with a thumbnail. */
+.home-boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 1.5rem;
+  padding: 2.5rem 0;
+}
+
+.home-board {
+  display: flex;
+  flex-direction: column;
+  padding: 1.6rem 1.6rem calc(1.4rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-board-intro { margin: 0 0 1rem; }
+
+.home-board-list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-board-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.home-thumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.home-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-board-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-board-row-title {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.home-board-row .home-meta { margin: 0; }
+
+.home-board-side {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.home-board-side.status-dot { color: var(--text-primary); }
+.home-board .home-actions { margin-top: 1.1rem; }
 
 /* ── About page (about.html) ─────────────────────────────────────────────────
    An "on this page" column of button-style links beside the article: sticky
@@ -2205,7 +2839,8 @@ button.nav-sublink {
 
 /* ── Tool list ───────────────────────────────────────────────────────────────
    Links as full-width buttons in the well, a brown arrow at the end. A note
-   such as "staff only" rides in the button as a muted italic suffix. */
+   such as "staff only" rides in the button as a muted italic suffix, wrapping
+   under the name when there isn't room. */
 
 .tool-list {
   list-style: none;
@@ -2222,13 +2857,14 @@ button.nav-sublink {
   align-items: center;
   gap: 12px;
   min-height: 40px;
-  padding: 0 14px;
+  padding: 0.4rem 14px;
   background-color: var(--bg-darker);
   border-radius: 4px;
   text-decoration: none;
   color: var(--text-primary);
   font-family: 'Stoke', serif;
   font-size: 0.92rem;
+  line-height: 1.3;
   letter-spacing: 0.02em;
   transition: background-color 0.15s ease;
 }
@@ -2238,12 +2874,18 @@ button.nav-sublink {
   color: var(--text-primary);
 }
 
+.tool-list-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+
 .tool-list-arrow {
   color: var(--accent-brown);
 }
 
 .tool-list-note {
-  margin-left: 8px;
   font-family: 'Crimson Pro', serif;
   font-size: 0.95rem;
   font-style: italic;
@@ -2258,15 +2900,50 @@ button.nav-sublink {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
-  .landing-row:nth-of-type(even) .landing-row-image {
+  .landing-row.is-flipped .landing-row-image {
     order: 0;
   }
   .landing-row-image--photo {
-    min-height: 200px;
+    min-height: 240px;
   }
   .landing-row-content {
     padding-bottom: 0;
   }
+  /* The pinned note drops below the photo, still overlapping its edge. */
+  .home-pinned {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .home-pin-note {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    align-self: flex-end;
+    margin: -48px 18px 0 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-band-photo { height: 380px; }
+  .home-band.is-short .home-band-photo { height: 260px; }
+  .home-hero-card {
+    margin-top: -140px;
+    padding: 1.5rem 1.25rem calc(1.25rem + var(--tear-h));
+  }
+  .home-hero-card .app-title { font-size: 2.3rem; }
+  .home-welcome {
+    margin-top: -110px;
+    padding: 1.4rem 1.25rem calc(1.25rem + var(--tear-h));
+  }
+  .home-welcome-head .app-title { font-size: 2rem; }
+  .home-officers,
+  .home-onboard,
+  .home-board {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .home-backstory { padding-top: 3rem; }
+  .home-backstory blockquote { font-size: 1.3rem; }
 }
 
 
