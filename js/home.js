@@ -193,7 +193,7 @@
   function welcomeHtml(name) {
     return '<div class="home-band is-short">' +
         '<div class="home-band-photo media-ph tear">' +
-          '<img src="' + IMAGES + 'campaign-about-us-1791482595190.jpg" alt="Three Phoenix Vanguard officers aboard a ship at sea">' +
+          '<img src="' + IMAGES + 'web-home-banner.jpg" alt="">' +
         "</div>" +
       "</div>" +
       '<section class="home-welcome tear" aria-label="Crew quick access">' +

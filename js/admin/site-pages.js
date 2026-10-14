@@ -209,7 +209,7 @@
           'Plain text at the bottom of every page, line for line (10 lines at most). Leave empty for no footer.')) : null,
       hasRecruitment ? h('div', { className: 'portal-field' },
         h('label', null, 'Recruitment listing URL'),
-        h('input', { type: 'url', maxLength: 500, value: draft.recruitment_url, disabled: saving,
+        h('input', { type: 'text', inputMode: 'url', maxLength: 500, value: draft.recruitment_url, disabled: saving,
           placeholder: 'https://na.finalfantasyxiv.com/lodestone/…',
           onChange: function (e) { setField('recruitment_url', e.target.value.trim()); } }),
         h('p', { className: 'portal-field-help' },
