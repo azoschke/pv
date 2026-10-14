@@ -2198,7 +2198,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   gap: 1rem;
 }
 
-.pv-signed-in .home-backstory { padding: 2rem 0 2.5rem; }
 .home-backstory .eyebrow { margin: 0; }
 
 .home-backstory blockquote {
@@ -2211,7 +2210,9 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .home-backstory figcaption { max-width: 52rem; }
 
 /* ── Image rows ── Photo and text, half and half. The photo comes first in
-   the markup; .is-flipped puts it on the right. The text column carries
+   the markup; .is-flipped puts it on the right. Signed in, Tools follows
+   Medical with its photo on the right, so the rows still alternate. The
+   text column carries
    bottom padding equal to the photo's torn edge, so it centres on the photo
    above the tear. */
 .landing-row {
@@ -2223,7 +2224,8 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   padding: 2.5rem 0;
 }
 
-.landing-row.is-flipped .landing-row-image {
+.landing-row.is-flipped .landing-row-image,
+.pv-signed-in .landing-row--tools .landing-row-image {
   order: 2;
 }
 
@@ -2924,7 +2926,8 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
-  .landing-row.is-flipped .landing-row-image {
+  .landing-row.is-flipped .landing-row-image,
+  .pv-signed-in .landing-row--tools .landing-row-image {
     order: 0;
   }
   .landing-row-image--photo {

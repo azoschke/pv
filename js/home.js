@@ -266,7 +266,7 @@
   }
 
   function medicalHtml() {
-    return '<section class="landing-row landing-row--medical is-flipped" aria-label="Medical">' +
+    return '<section class="landing-row landing-row--medical" aria-label="Medical">' +
         '<div class="landing-row-image landing-row-image--photo media-ph is-tone-4 tear-half">' +
           '<img src="' + IMAGES + 'infirmary-1779211929695.webp" alt="The infirmary: a lamplit room with a bed, hanging plants and red drapes" loading="lazy">' +
         "</div>" +

@@ -1,6 +1,6 @@
 // ============================================================================
 //  officer-avatars.js — profile pictures in the officers' initials circles
-//  (index.html's Officer Core, about.html's Officer Core)
+//  (The Officers on index.html and about.html)
 // ----------------------------------------------------------------------------
 //  Each .avatar with data-avatar-name shows that member's My Profile picture
 //  from the public roster (GET /roster, published profiles only), matched on
