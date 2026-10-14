@@ -1319,7 +1319,8 @@
       setSeenRolls(next);
       writeSeenRolls(seenKey, next);
     }, [viewingRolls, rollLog]);
-    var unseenRolls = !viewingRolls && rollLog.some(function (r) { return !seenRolls[String(r.id)]; });
+    var unseenCount = viewingRolls ? 0 : rollLog.filter(function (r) { return !seenRolls[String(r.id)]; }).length;
+    var unseenRolls = unseenCount > 0;
     // The deck is raised and tears along its bottom edge.
     return h('div', { className: 'rp-deck tear' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
@@ -1328,6 +1329,10 @@
           h('span', null, 'DM Control Deck'),
           // Plain muted text, or a red pill once the turn is locked.
           h('span', { className: c.turn_locked ? 'pill' : 'rp-turn-badge' }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
+        // While collapsed, the count of shared rolls not yet seen.
+        !open && unseenRolls ? h('span', { className: 'rp-deck-notice' },
+          h('span', { className: 'rp-dm-tab-dot', 'aria-hidden': 'true' }),
+          unseenCount + (unseenCount === 1 ? ' New Roll Shared' : ' New Rolls Shared')) : null,
         h('div', { className: 'rp-deck-head-ctl' },
           h('button', { type: 'button', className: 'btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
           h('button', { type: 'button', className: 'btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'),

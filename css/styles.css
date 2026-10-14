@@ -2037,8 +2037,9 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   color: var(--text-secondary);
 }
 
-/* Line icons (calendar, dice, the done check), drawn in brown. The
-   Campaigns card uses the portal's icon (the icon font) at the same size. */
+/* Brown icons: the quick cards' solid glyphs from the icon font (Calendar,
+   and the portal's Campaigns and Combat Toolkit icons), and the line-drawn
+   done check. */
 .home-icon.material-icons { font-size: 24px; }
 
 .home-icon {

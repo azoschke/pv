@@ -385,9 +385,13 @@
 .rp-dm-tabs { display: flex; gap: 0.25rem; margin: 0.75rem 0 0.5rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
 .rp-dm-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-secondary); font: inherit;
   font-family: 'Stoke', serif; font-size: 0.9rem; padding: 0.3rem 0.7rem; cursor: pointer; }
-/* New shared rolls the DM hasn't opened the Rolls tab to see. */
+/* New shared rolls the DM hasn't opened the Rolls tab to see: a red dot on
+   the tab, and with the count in the header while the deck is collapsed. */
 .rp-dm-tab-dot { display: inline-block; width: 7px; height: 7px; margin-left: 0.4rem; border-radius: 50%;
   background-color: var(--accent-red); vertical-align: middle; }
+.rp-deck-notice { display: inline-flex; align-items: center; gap: 0.45rem; margin-right: auto;
+  font-family: 'Stoke', serif; font-size: 0.85rem; color: var(--text-primary); }
+.rp-deck-notice .rp-dm-tab-dot { margin-left: 0; }
 .rp-dm-tab.is-active { color: var(--text-primary); border-bottom-color: var(--accent-brown); }
 .rp-dm-section, .rp-dm-log, .rp-dm-boss { background-color: var(--bg-primary); background-image: var(--grain); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.6rem; }
 .rp-dm-sub { margin: 0.75rem 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.95rem; }

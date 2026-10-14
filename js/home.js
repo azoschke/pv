@@ -177,10 +177,11 @@
   }
 
   // ── Members: markup ──────────────────────────────────────────────────────
-  var ICON_CALENDAR = '<svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  var ICON_CALENDAR = '<span class="material-icons home-icon" aria-hidden="true">calendar_month</span>';
   // The portal's Campaigns icon.
   var ICON_BOOK = '<span class="material-icons home-icon" aria-hidden="true">auto_stories</span>';
-  var ICON_DICE = '<svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></svg>';
+  // The portal's Combat Toolkit icon.
+  var ICON_DICE = '<span class="material-icons home-icon" aria-hidden="true">casino</span>';
   var ICON_CHECK = '<svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>';
 
   function quickCard(icon, title, bodyId, eyebrow, btnId, href, label) {
