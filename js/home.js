@@ -436,10 +436,10 @@
         '<div class="home-step-top"><span class="home-step-num">2</span><span class="pill">To do</span></div>' +
         "<h3>Find your role</h3>" +
         '<p class="home-step-text">Browse the Job Board and filter by division.</p>' +
-        '<div class="home-step-rules">' +
-          '<p><span class="tag">Primary</span><span>Your main role. Hold one active application or role at a time.</span></p>' +
-          '<p><span class="tag">Secondary</span><span>Side work. Apply to as many as you like.</span></p>' +
-        "</div>" +
+        '<dl class="home-step-rules">' +
+          '<dt><span class="tag">Primary</span></dt><dd>Your main role. Hold one active application or role at a time.</dd>' +
+          '<dt><span class="tag">Secondary</span></dt><dd>Side work. Apply to as many as you like.</dd>' +
+        "</dl>" +
         '<a class="btn" href="job-board.html">Browse Job Board</a>' +
       "</div>";
     }

@@ -72,12 +72,12 @@
           <p class="eyebrow">Who to ask for</p>
           <h2 class="landing-row-title" id="home-officers-title">The Officer Core</h2>
         </div>
-        <p><span class="home-for-visitors">Jointly led, IC and OOC. Poke any of us in game, or any member if you can't catch an officer.</span><span class="home-for-members">Jointly led, IC and OOC. Any officer can help.</span></p>
+        <p><span class="home-for-visitors">Jointly led, IC and OOC. Poke any of us in game, or any member if you can't catch an officer.</span><span class="home-for-members">Need help? Find an officer.</span></p>
       </div>
 
       <div class="home-leaders">
         <article class="home-leader tray">
-          <span class="home-avatar" aria-hidden="true">XV</span>
+          <span class="avatar" data-avatar-name="Xyla Vylerni" aria-hidden="true">XV</span>
           <div>
             <h3>Xyla Vylerni</h3>
             <p class="home-leader-role">Leader &middot; Quartermaster</p>
@@ -85,7 +85,7 @@
           </div>
         </article>
         <article class="home-leader tray">
-          <span class="home-avatar" aria-hidden="true">ZB</span>
+          <span class="avatar" data-avatar-name="Z'iro Bloodthorn" aria-hidden="true">ZB</span>
           <div>
             <h3>Z'iro Bloodthorn</h3>
             <p class="home-leader-role">Leader &middot; Captain</p>
@@ -96,10 +96,10 @@
 
       <p class="group-label home-council-label">Phoenix Council</p>
       <ul class="home-council">
-        <li><span class="home-avatar is-small" aria-hidden="true">FA</span><div><p class="home-council-name">Fiora Acaeus</p><p class="home-council-note">PvE completionist. Stuck on niche content? She can probably help.</p></div></li>
-        <li><span class="home-avatar is-small" aria-hidden="true">RF</span><div><p class="home-council-name">Rove Fendewood</p><p class="home-council-note">Humble tradesman. Need an item found or made? Rove is your guy.</p></div></li>
-        <li><span class="home-avatar is-small" aria-hidden="true">CA</span><div><p class="home-council-name">Cassian Acaeus</p><p class="home-council-note">DMs sessions and campaigns; your guide to the mercenary side.</p></div></li>
-        <li><span class="home-avatar is-small" aria-hidden="true">AD</span><div><p class="home-council-name">Astares De'ruahn</p><p class="home-council-note">The friendly HR department. First contact for small issues.</p></div></li>
+        <li><span class="avatar is-small" data-avatar-name="Fiora Acaeus" aria-hidden="true">FA</span><div><p class="home-council-name">Fiora Acaeus</p><p class="home-council-note">PvE completionist. Stuck on niche content? She can probably help.</p></div></li>
+        <li><span class="avatar is-small" data-avatar-name="Rove Fendewood" aria-hidden="true">RF</span><div><p class="home-council-name">Rove Fendewood</p><p class="home-council-note">Humble tradesman. Need an item found or made? Rove is your guy.</p></div></li>
+        <li><span class="avatar is-small" data-avatar-name="Cassian Acaeus" aria-hidden="true">CA</span><div><p class="home-council-name">Cassian Acaeus</p><p class="home-council-note">DMs sessions and campaigns; your guide to the mercenary side.</p></div></li>
+        <li><span class="avatar is-small" data-avatar-name="Astares De'ruahn" aria-hidden="true">AD</span><div><p class="home-council-name">Astares De'ruahn</p><p class="home-council-note">The friendly HR department. First contact for small issues.</p></div></li>
       </ul>
 
       <div class="home-officers-foot">
@@ -117,7 +117,7 @@
         </div>
         <article class="home-pin-note tear-half">
           <p class="eyebrow">Find us</p>
-          <h3>The Tavern</h3>
+          <h3>The Sunset Manor Bar</h3>
           <p class="home-pin-note-addr">Mateus &middot; Mist<br>Ward 25, Plot 1</p>
           <p class="home-pin-note-hours">Open 24 hours to the public.</p>
         </article>
@@ -140,7 +140,7 @@
         <img class="dark-only" src="https://images.phoenixvanguard-tools.com/crafting-resource-dark.jpg" alt="A crafter at work at a wooden table" loading="lazy">
       </div>
       <div class="landing-row-content">
-        <p class="eyebrow"><span class="home-for-visitors">Free to use</span><span class="home-for-members">Crafting &amp; relics</span></p>
+        <p class="eyebrow home-for-members">Crafting &amp; relics</p>
         <h2 class="landing-row-title">Tools</h2>
         <p class="landing-row-desc">Crafting macro databases to organize your grind, and Zodiac Weapon questline tools to help you finish your ARR relics.</p>
         <div class="home-tool-groups">
@@ -167,7 +167,7 @@
     <div id="home-member-bottom"></div>
 
     <!-- ── Visitors: sign in ──────────────────────────────────────────────── -->
-    <section class="home-signin-strip tray home-for-visitors" aria-label="Sign in">
+    <section class="home-signin-strip home-for-visitors" aria-label="Sign in">
       <p><strong>Crew member?</strong> Sign in for the calendar, campaigns, roll calculator and the rest of the company's tools.</p>
       <a class="btn" href="login.html?redirect=./"><svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg><span>Sign In</span></a>
     </section>
@@ -180,6 +180,7 @@
 
   <script src="js/pv-session.js"></script>
   <script src="js/nav.js"></script>
+  <script src="js/officer-avatars.js"></script>
   <script src="js/home.js"></script>
 </body>
 </html>
