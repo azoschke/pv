@@ -452,6 +452,9 @@
         onUpdate: updateClassStats,
         onClose: () => setIsManagingClassStats(false)
       }),
+      h('div', { className: 'cdb-results-count' },
+        `Found ${sortedCrafts.length} craft${sortedCrafts.length !== 1 ? 's' : ''}`
+      ),
       h('div', { className: 'cdb-craft-list' },
         sortedCrafts.length === 0
           ? h('div', { className: 'cdb-empty-state' },

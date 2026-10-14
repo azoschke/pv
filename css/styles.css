@@ -2037,7 +2037,10 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   color: var(--text-secondary);
 }
 
-/* Line icons (calendar, book, dice, the done check), drawn in brown. */
+/* Line icons (calendar, dice, the done check), drawn in brown. The
+   Campaigns card uses the portal's icon (the icon font) at the same size. */
+.home-icon.material-icons { font-size: 24px; }
+
 .home-icon {
   width: 24px;
   height: 24px;

@@ -1293,11 +1293,33 @@
   // The collapsible DM Control Deck. Turn controls live on the header bar and
   // stay visible when collapsed; everything else lives in the body. Collapsed by
   // default; players never see this.
+  // Shared rolls the DM has looked at, per campaign, kept in this browser.
+  function readSeenRolls(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (_e) { return {}; }
+  }
+  function writeSeenRolls(key, seen) {
+    try { localStorage.setItem(key, JSON.stringify(seen)); } catch (_e) { /* not kept */ }
+  }
+
   function DMDeck(props) {
     var c = props.campaign; var effects = props.effects; var hpLog = props.hpLog || []; var rollLog = props.rollLog || [];
     var openState = useState(false); var open = openState[0], setOpen = openState[1];
     var tabState = useState('bosses'); var tab = tabState[0], setTab = tabState[1];
     var tabs = [{ id: 'bosses', label: 'Bosses' }, { id: 'players', label: 'Players' }, { id: 'turn', label: 'Effects' }, { id: 'log', label: 'Log' }, { id: 'rolls', label: 'Rolls' }];
+    // A red dot on the Rolls tab while it holds rolls the DM hasn't opened it
+    // to see. Opening the tab marks everything in it seen.
+    var seenKey = 'pv-rp-seen-rolls-' + c.id;
+    var seenState = useState(function () { return readSeenRolls(seenKey); }); var seenRolls = seenState[0], setSeenRolls = seenState[1];
+    var viewingRolls = open && tab === 'rolls';
+    useEffect(function () {
+      if (!viewingRolls) return;
+      if (rollLog.every(function (r) { return seenRolls[String(r.id)]; })) return;
+      var next = {};
+      rollLog.forEach(function (r) { next[String(r.id)] = true; });
+      setSeenRolls(next);
+      writeSeenRolls(seenKey, next);
+    }, [viewingRolls, rollLog]);
+    var unseenRolls = !viewingRolls && rollLog.some(function (r) { return !seenRolls[String(r.id)]; });
     // The deck is raised and tears along its bottom edge.
     return h('div', { className: 'rp-deck tear' + (open ? ' is-open' : '') },
       h('div', { className: 'rp-deck-head' },
@@ -1334,7 +1356,11 @@
             RP_TIMES.map(function (tod) { return h('option', { key: tod, value: tod }, tod); }))),
 
         h('div', { className: 'rp-dm-tabs' },
-          tabs.map(function (t) { return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } }, t.label); })),
+          tabs.map(function (t) {
+            return h('button', { type: 'button', key: t.id, className: 'rp-dm-tab' + (tab === t.id ? ' is-active' : ''), onClick: function () { setTab(t.id); } },
+              t.label,
+              t.id === 'rolls' && unseenRolls ? h('span', { className: 'rp-dm-tab-dot', role: 'img', 'aria-label': 'new rolls' }) : null);
+          })),
 
         tab === 'turn' ? h('div', null,
           h('div', { className: 'rp-dm-section' },
