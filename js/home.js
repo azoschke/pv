@@ -212,7 +212,6 @@
   function boardsHtml() {
     return '<div class="home-boards">' +
         '<section class="home-board tear-half" aria-labelledby="home-jobs-title">' +
-          '<p class="eyebrow">Boards</p>' +
           '<h2 class="landing-row-title" id="home-jobs-title">Job Board</h2>' +
           '<p class="home-board-intro">Open positions for the company and close allies. Filter by division to find work that suits you.</p>' +
           '<ul class="home-board-list" id="home-jobs"><li class="home-board-row">' + muted("Loading\u2026") + "</li></ul>" +
@@ -222,7 +221,6 @@
           "</div>" +
         "</section>" +
         '<section class="home-board tear-half" aria-labelledby="home-quests-title">' +
-          '<p class="eyebrow">Boards</p>' +
           '<h2 class="landing-row-title" id="home-quests-title">Bounty Board</h2>' +
           '<p class="home-board-intro">Quests and bounties posted by the Phoenix Vanguard and its members. Sign up to join, or express your interest.</p>' +
           '<ul class="home-board-list" id="home-quests"><li class="home-board-row">' + muted("Loading\u2026") + "</li></ul>" +

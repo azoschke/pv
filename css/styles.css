@@ -2079,6 +2079,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .home-band.is-short .home-band-photo { height: 360px; }
+.home-band.is-short .home-band-photo img { object-position: 50% 30%; }
 
 /* The raised card that overlaps the bottom of the band: the visitor's
    welcome, or the member's welcome back with the quick-access cards. */

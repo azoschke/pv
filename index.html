@@ -9,7 +9,6 @@
   <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
-  <!-- Signed in (an unexpired sign-in saved by js/pv-session.js): mark <html> before the page paints, so the visitor-only blocks never show (js/home.js builds the member ones). -->
   <script>(function(){try{var s=JSON.parse(localStorage.getItem('pv.admin.session')||'null');if(s&&s.token&&!(s.expires_at&&new Date(s.expires_at)<=new Date()))document.documentElement.classList.add('pv-signed-in');}catch(e){}})()</script>
 </head>
 <body>
@@ -17,7 +16,7 @@
   <div class="container">
     <div id="nav-placeholder"></div>
 
-    <!-- ── Visitors: the hero ──────────────────────────────────────────────── -->
+    <!-- Hero -->
     <div class="home-band home-for-visitors">
       <div class="home-band-photo media-ph tear">
         <img src="https://images.phoenixvanguard-tools.com/web-home-banner.jpg" alt="">
@@ -36,11 +35,9 @@
       </div>
     </header>
 
-    <!-- ── Members: welcome back, New Aboard, boards and the campaign
-         (built by js/home.js once signed in) ───────────────────────────── -->
     <div id="home-member-top"></div>
 
-    <!-- ── Backstory ──────────────────────────────────────────────────────── -->
+    <!-- Backstory -->
     <section aria-label="Backstory">
       <figure class="home-backstory">
         <p class="eyebrow">The Vengeful Phoenix</p>
@@ -49,7 +46,7 @@
       </figure>
     </section>
 
-    <!-- ── Visitors: the campaign (name and blurb from the campaigns worker) ── -->
+    <!-- Campaign -->
     <section class="landing-row landing-row--campaign home-for-visitors" aria-label="The chronicle">
       <div class="landing-row-image landing-row-image--photo media-ph is-tone-2 tear-half">
         <img src="https://images.phoenixvanguard-tools.com/campaign-symphony-of-the-eclipse-1791402475539.jpg" alt="Campaign art for Symphony of the Eclipse" loading="lazy">
@@ -65,7 +62,7 @@
       </div>
     </section>
 
-    <!-- ── The Officer Core (copy kept in step with about.html) ──────────── -->
+    <!-- Officer Core -->
     <section class="home-officers tear" aria-labelledby="home-officers-title">
       <div class="home-officers-head">
         <div>
@@ -109,7 +106,7 @@
       <p class="home-officers-recruit home-for-visitors" id="home-officers-recruit" hidden>Thinking of joining? Read our <a id="home-officers-recruit-link" href="#" target="_blank" rel="noopener">recruitment listing on the official FINAL FANTASY XIV site</a>, then send any officer a tell.</p>
     </section>
 
-    <!-- ── Venues & Menus ─────────────────────────────────────────────────── -->
+    <!-- Venues & Menus -->
     <section class="landing-row landing-row--venues is-flipped" aria-label="Venues and menus">
       <div class="landing-row-image home-pinned">
         <div class="landing-row-image--photo media-ph is-tone-4 tear-half">
@@ -133,7 +130,7 @@
       </div>
     </section>
 
-    <!-- ── Tools ──────────────────────────────────────────────────────────── -->
+    <!-- Tools -->
     <section class="landing-row landing-row--tools" aria-label="Tools">
       <div class="landing-row-image landing-row-image--photo media-ph is-tone-5 tear-half">
         <img class="light-only" src="https://images.phoenixvanguard-tools.com/crafting-resource-light.jpg" alt="A crafter at work at a wooden table" loading="lazy">
@@ -163,10 +160,9 @@
       </div>
     </section>
 
-    <!-- ── Members: Medical (built by js/home.js once signed in) ──────────── -->
     <div id="home-member-bottom"></div>
 
-    <!-- ── Visitors: sign in ──────────────────────────────────────────────── -->
+    <!-- Sign in -->
     <section class="home-signin-strip home-for-visitors" aria-label="Sign in">
       <p><strong>Crew member?</strong> Sign in for the calendar, campaigns, roll calculator and the rest of the company's tools.</p>
       <a class="btn" href="login.html?redirect=./"><svg class="nav-login-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg><span>Sign In</span></a>
