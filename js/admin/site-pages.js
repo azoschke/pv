@@ -3,7 +3,8 @@
 //
 //  Site Defaults: the site name, title template, default description and
 //  preview image, favicon, theme color, extra robots.txt lines and footer
-//  used for every page.
+//  used for every page, and the recruitment listing URL the home page links
+//  to (empty while the company isn't recruiting).
 //
 //  Pages: every HTML page the site serves, with its title, description, link
 //  preview, search-engine settings and access:
@@ -110,7 +111,7 @@
 
   // ── Site Defaults ─────────────────────────────────────────────────────────
   var SETTINGS_FIELDS = ['site_name', 'title_template', 'default_description', 'default_og_image',
-    'favicon_url', 'theme_color', 'robots_extra', 'footer_text'];
+    'favicon_url', 'theme_color', 'robots_extra', 'footer_text', 'recruitment_url'];
   function settingsDraft(s) {
     var d = {};
     SETTINGS_FIELDS.forEach(function (k) { d[k] = (s && s[k]) || ''; });
@@ -131,11 +132,14 @@
     // The footer box appears once the med worker has the setting (v30), and
     // only then is the footer sent with a save.
     var hasFooter = !!props.settings && Object.prototype.hasOwnProperty.call(props.settings, 'footer_text');
+    // Likewise the recruitment listing URL (v32).
+    var hasRecruitment = !!props.settings && Object.prototype.hasOwnProperty.call(props.settings, 'recruitment_url');
 
     function save() {
       setSaving(true); setErr('');
       var body = Object.assign({}, draft);
       if (!hasFooter) delete body.footer_text;
+      if (!hasRecruitment) delete body.recruitment_url;
       PVAdminAPI.request('PUT', '/admin/site/settings', body, true).then(function (data) {
         props.onSaved(data, 'Site defaults saved.');
       }, function (e) {
@@ -203,6 +207,13 @@
           onChange: function (e) { setField('footer_text', e.target.value); } }),
         h('p', { className: 'portal-field-help' },
           'Plain text at the bottom of every page, line for line (10 lines at most). Leave empty for no footer.')) : null,
+      hasRecruitment ? h('div', { className: 'portal-field' },
+        h('label', null, 'Recruitment listing URL'),
+        h('input', { type: 'url', maxLength: 500, value: draft.recruitment_url, disabled: saving,
+          placeholder: 'https://na.finalfantasyxiv.com/lodestone/…',
+          onChange: function (e) { setField('recruitment_url', e.target.value.trim()); } }),
+        h('p', { className: 'portal-field-help' },
+          'The current recruitment listing on the official FINAL FANTASY XIV site. While it\'s set, the home page says the company is recruiting and links to it. Leave empty when you\'re not recruiting.')) : null,
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'button', className: 'btn', disabled: saving || !dirty, onClick: save },
           saving ? 'Saving…' : 'Save defaults'),
