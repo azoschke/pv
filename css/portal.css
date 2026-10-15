@@ -779,15 +779,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- Modal ---------------
-   Sized to the visible screen (dvh), which on mobile follows the browser's
-   toolbar, where vh is measured as if the toolbar were hidden. That keeps the
-   modal inside the overlay, so its body is the only thing that scrolls and
-   its foot is always in reach. The modal also never outgrows the overlay's
-   own padding (97dvh less the 1rem foot), which a short landscape screen
-   would otherwise push it past. Browsers without dvh keep the vh lines. */
+   The overlay covers the visible part of the window: while a popup is open
+   the scroll lock (js/pv-session.js) keeps --vv-top and --vv-height on the
+   root, which shrink to the space above an on-screen keyboard and follow
+   mobile Safari when it slides the view. Without them it is the full window.
+   The modal never outgrows the overlay (100%, inside its padding), so its
+   body is the only thing that scrolls and its foot is always in reach, and
+   on a large screen it stops at 94dvh. dvh follows mobile browsers' toolbar,
+   where vh is measured as if the toolbar were hidden; browsers without dvh
+   keep the vh lines. */
 .portal-modal-overlay {
   position: fixed;
-  inset: 0;
+  top: var(--vv-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--vv-height, 100%);
   z-index: 60;
   background: var(--scrim);
   display: flex;
@@ -806,7 +812,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   flex-direction: column;
   max-height: 94vh;
-  max-height: min(94dvh, calc(97dvh - 1rem));
+  max-height: min(94dvh, 100%);
 }
 .portal-modal-lg { max-width: 880px; }
 /* Title and a small quiet close button, with a rule under them. */

@@ -242,11 +242,36 @@
   // straight back from a React effect. While locked, the scrollbar's width is
   // also on the locked element as --scroll-lock-gap, so the full-bleed bands
   // (styles.css) can still reach the window's edge where the scrollbar was.
+  //
+  // Two more things hold while locked, both for mobile Safari:
+  //  - A locked main area is held where it was. Safari scrolls it to bring a
+  //    field in a popup into view (the popup sits inside it in the page),
+  //    overflow hidden or not. The body is left alone: snapping the window
+  //    back could fight Safari showing a field above the keyboard.
+  //  - The visible part of the window (above an on-screen keyboard) is on the
+  //    root as --vv-top and --vv-height, so a popup's overlay can fit it
+  //    (portal.css). Otherwise the overlay stays the full window height
+  //    behind the keyboard and Safari lets the view slide over it.
   var scrollOwners = [];
   var scrollSaved = null;
+  var viewport = global.visualViewport || null;
 
   function pageScroller() {
     return document.querySelector('[data-scroll-main]') || document.body;
+  }
+
+  function holdScroll() {
+    var s = scrollSaved;
+    if (s && (s.el.scrollTop !== s.top || s.el.scrollLeft !== s.left)) {
+      s.el.scrollTop = s.top;
+      s.el.scrollLeft = s.left;
+    }
+  }
+
+  function trackViewport() {
+    var root = document.documentElement.style;
+    root.setProperty('--vv-top', viewport.offsetTop + 'px');
+    root.setProperty('--vv-height', viewport.height + 'px');
   }
 
   // The width the element's vertical scrollbar takes (0 for overlay
@@ -270,6 +295,16 @@
           el.style.setProperty('--scroll-lock-gap', gap + 'px');
         }
         el.style.overflow = 'hidden';
+        if (el !== document.body) {
+          scrollSaved.top = el.scrollTop;
+          scrollSaved.left = el.scrollLeft;
+          el.addEventListener('scroll', holdScroll);
+        }
+        if (viewport) {
+          trackViewport();
+          viewport.addEventListener('resize', trackViewport);
+          viewport.addEventListener('scroll', trackViewport);
+        }
       }
       scrollOwners.push(owner);
     }
@@ -282,9 +317,16 @@
     scrollOwners.splice(i, 1);
     if (!scrollOwners.length && scrollSaved) {
       var el = scrollSaved.el;
+      el.removeEventListener('scroll', holdScroll);
       el.style.overflow = scrollSaved.overflow;
       el.style.paddingRight = scrollSaved.paddingRight;
       el.style.removeProperty('--scroll-lock-gap');
+      if (viewport) {
+        viewport.removeEventListener('resize', trackViewport);
+        viewport.removeEventListener('scroll', trackViewport);
+        document.documentElement.style.removeProperty('--vv-top');
+        document.documentElement.style.removeProperty('--vv-height');
+      }
       scrollSaved = null;
     }
   }
