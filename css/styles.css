@@ -3133,17 +3133,33 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   transform: rotate(180deg);
 }
 
+/* Each section is a two-row grid: its toggle, then its submenu in a row that
+   animates between 0fr and 1fr, which is between nothing and the list's own
+   height. Opening and closing so run their full time at the list's real size
+   (and in step, when opening one section closes another), with no cap on how
+   long a list can be. The links fade a little as they go. */
+.nav-sidebar-section {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-sidebar-section.open {
+  grid-template-rows: auto 1fr;
+}
+
 .nav-sidebar-submenu {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 0;
+  min-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease;
+  opacity: 0;
+  transition: opacity 0.22s ease;
 }
 
 .nav-sidebar-section.open > .nav-sidebar-submenu {
-  max-height: 500px;
+  opacity: 1;
 }
 
 .nav-sidebar-submenu .nav-submenu-label {
