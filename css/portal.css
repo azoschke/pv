@@ -780,7 +780,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   cursor: pointer;
 }
 
-/* --------------- Modal --------------- */
+/* --------------- Modal ---------------
+   Sized to the visible screen (dvh), which on mobile follows the browser's
+   toolbar, where vh is measured as if the toolbar were hidden. That keeps the
+   modal inside the overlay, so its body is the only thing that scrolls and
+   its foot is always in reach. The modal also never outgrows the overlay's
+   own padding (97dvh less the 1rem foot), which a short landscape screen
+   would otherwise push it past. Browsers without dvh keep the vh lines. */
 .portal-modal-overlay {
   position: fixed;
   inset: 0;
@@ -790,6 +796,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: flex-start;
   justify-content: center;
   padding: 3vh 1rem 1rem;
+  padding: 3dvh 1rem 1rem;
   overflow-y: auto;
 }
 .portal-modal {
@@ -801,6 +808,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   flex-direction: column;
   max-height: 94vh;
+  max-height: min(94dvh, calc(97dvh - 1rem));
 }
 .portal-modal-lg { max-width: 880px; }
 /* Title and a small quiet close button, with a rule under them. */

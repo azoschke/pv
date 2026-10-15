@@ -229,33 +229,47 @@
   }
 
   // ── Page scroll lock ─────────────────────────────────────────────────────
-  // Popups and drawers stop the page scrolling behind them. Hiding the page's
-  // overflow takes its scrollbar away, which widens the page and shifts it
-  // sideways, so the scrollbar's width goes back on as body padding while
-  // locked: the page stays put, and a tall popup's own scrollbar lands where
-  // the page's was. Each popup locks under its own owner (a name, or a fresh
-  // one when none is given) and the page unlocks once every owner has let go.
-  // Locking or unlocking the same owner twice is harmless. lock() returns a
-  // function that releases that owner, to hand straight back from a React
-  // effect. While locked, the scrollbar's width is also on the body as
-  // --scroll-lock-gap, so the full-bleed bands (styles.css) can still reach
-  // the window's edge where the scrollbar was.
+  // Popups and drawers stop the page scrolling behind them. The page scrolls
+  // on the body, except in the management portal, where the body never
+  // scrolls and the main area does (it carries data-scroll-main); that is the
+  // element locked. Hiding its overflow takes its scrollbar away, which
+  // widens it and shifts the content sideways, so the scrollbar's width goes
+  // back on as padding while locked: the page stays put, and a tall popup's
+  // own scrollbar lands where the page's was. Each popup locks under its own
+  // owner (a name, or a fresh one when none is given) and the page unlocks
+  // once every owner has let go. Locking or unlocking the same owner twice is
+  // harmless. lock() returns a function that releases that owner, to hand
+  // straight back from a React effect. While locked, the scrollbar's width is
+  // also on the locked element as --scroll-lock-gap, so the full-bleed bands
+  // (styles.css) can still reach the window's edge where the scrollbar was.
   var scrollOwners = [];
   var scrollSaved = null;
+
+  function pageScroller() {
+    return document.querySelector('[data-scroll-main]') || document.body;
+  }
+
+  // The width the element's vertical scrollbar takes (0 for overlay
+  // scrollbars, or when there's nothing to scroll).
+  function scrollbarWidth(el, style) {
+    if (el === document.body) return global.innerWidth - document.documentElement.clientWidth;
+    return el.offsetWidth - el.clientWidth -
+      (parseFloat(style.borderLeftWidth) || 0) - (parseFloat(style.borderRightWidth) || 0);
+  }
 
   function lockScroll(owner) {
     if (owner == null) owner = {};
     if (scrollOwners.indexOf(owner) === -1) {
       if (!scrollOwners.length) {
-        var body = document.body;
-        var gap = global.innerWidth - document.documentElement.clientWidth;
-        scrollSaved = { overflow: body.style.overflow, paddingRight: body.style.paddingRight };
+        var el = pageScroller();
+        var style = global.getComputedStyle(el);
+        var gap = scrollbarWidth(el, style);
+        scrollSaved = { el: el, overflow: el.style.overflow, paddingRight: el.style.paddingRight };
         if (gap > 0) {
-          var pad = parseFloat(global.getComputedStyle(body).paddingRight) || 0;
-          body.style.paddingRight = (pad + gap) + 'px';
-          body.style.setProperty('--scroll-lock-gap', gap + 'px');
+          el.style.paddingRight = ((parseFloat(style.paddingRight) || 0) + gap) + 'px';
+          el.style.setProperty('--scroll-lock-gap', gap + 'px');
         }
-        body.style.overflow = 'hidden';
+        el.style.overflow = 'hidden';
       }
       scrollOwners.push(owner);
     }
@@ -267,9 +281,10 @@
     if (i === -1) return;
     scrollOwners.splice(i, 1);
     if (!scrollOwners.length && scrollSaved) {
-      document.body.style.overflow = scrollSaved.overflow;
-      document.body.style.paddingRight = scrollSaved.paddingRight;
-      document.body.style.removeProperty('--scroll-lock-gap');
+      var el = scrollSaved.el;
+      el.style.overflow = scrollSaved.overflow;
+      el.style.paddingRight = scrollSaved.paddingRight;
+      el.style.removeProperty('--scroll-lock-gap');
       scrollSaved = null;
     }
   }
