@@ -352,21 +352,14 @@ pre {
    (the 70px logo, the nav's padding and the tear). While a popup locks the
    page (PVScrollLock, js/pv-session.js) the scrollbar is gone, so the band
    grows by half its width (--scroll-lock-gap) to still reach the edge. */
+/* The nav sits 0.5rem into the tear's band. The rip only ever cuts the band's
+   bottom 45%, so that part is always solid, and the gap from the logo down to
+   the rip then averages the nav's 0.75rem above it. */
 #nav-placeholder {
   position: relative;
-  min-height: calc(70px + 0.9rem + var(--tear-h));
+  min-height: calc(70px + 0.25rem + var(--tear-h));
   margin: -1.5rem 0 1.5rem;
-  padding-bottom: var(--tear-h);
-}
-
-/* On desktop the nav sits 0.5rem into the tear's band. The rip only ever cuts
-   the band's bottom 45%, so that part is always solid, and the gap from the
-   logo down to the rip then averages the nav's 0.75rem above it. */
-@media (min-width: 901px) {
-  #nav-placeholder {
-    min-height: calc(70px + 0.25rem + var(--tear-h));
-    padding-bottom: calc(var(--tear-h) - 0.65rem);
-  }
+  padding-bottom: calc(var(--tear-h) - 0.65rem);
 }
 
 #nav-placeholder::before {
