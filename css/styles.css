@@ -2085,6 +2085,11 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .home-band.is-short .home-band-photo { height: 360px; }
 .home-band.is-short .home-band-photo img { object-position: 50% 30%; }
 
+/* The same band and card heading another page (staff-roster.html): the
+   member band's height, overlapped as far as the member welcome. */
+.home-band.is-page .home-band-photo { height: 360px; }
+.home-band.is-page .home-band-photo img { object-position: 50% 35%; }
+
 /* The raised card that overlaps the bottom of the band: the visitor's
    welcome, or the member's welcome back with the quick-access cards. */
 .home-hero-card,
@@ -2101,6 +2106,11 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+}
+
+.home-hero-card.is-page {
+  margin-top: -150px;
+  margin-bottom: 2rem;
 }
 
 .home-hero-card .app-title { font-size: 3.1rem; margin: 0; }
@@ -2277,7 +2287,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .landing-row--campaign .landing-row-image--photo img { object-position: 72% center; }
 .landing-row--venues   .landing-row-image--photo img { object-position: 35% center; }
 .landing-row--tools    .landing-row-image--photo img { object-position: 58% center; }
-.landing-row--medical  .landing-row-image--photo img { object-position: 25% center; }
+.landing-row--medical  .landing-row-image--photo img { object-position: 50% 50%; }
 
 /* Button rows and the campaign's plain links. */
 .home-actions {
@@ -2959,11 +2969,13 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 @media (max-width: 720px) {
   .home-band-photo { height: 380px; }
-  .home-band.is-short .home-band-photo { height: 260px; }
+  .home-band.is-short .home-band-photo,
+  .home-band.is-page .home-band-photo { height: 260px; }
   .home-hero-card {
     margin-top: -140px;
     padding: 1.5rem 1.25rem calc(1.25rem + var(--tear-h));
   }
+  .home-hero-card.is-page { margin-top: -110px; }
   .home-hero-card .app-title { font-size: 2.3rem; }
   .home-welcome {
     margin-top: -110px;
