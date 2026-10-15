@@ -121,6 +121,7 @@
   // ── Sidebar (campaign pattern) ───────────────────────────────────────────
   function openSidebar() {
     if (isMobile()) {
+      PVScrollLock.lock("filter-drawer");
       sidebarEl.classList.add("sidebar-open");
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
@@ -130,6 +131,7 @@
     }
   }
   function closeSidebar() {
+    PVScrollLock.unlock("filter-drawer");
     if (isMobile()) {
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");

@@ -510,12 +510,23 @@
       return function () { window.removeEventListener('pv:session', onSession); };
     }, []);
 
-    // Close drawer with ESC
+    // Close drawer with ESC, and lock the page behind it while it's open
+    // (PVScrollLock, js/pv-session.js). Widening past the mobile layout
+    // (portal.css, 900px) hides the drawer and its hamburger, so that closes
+    // it too rather than leave the page locked.
     useEffect(function () {
       if (!drawerOpen) return;
       function onKey(e) { if (e.key === 'Escape') setDrawerOpen(false); }
       document.addEventListener('keydown', onKey);
-      return function () { document.removeEventListener('keydown', onKey); };
+      var mobile = window.matchMedia('(max-width: 900px)');
+      function onLayout() { if (!mobile.matches) setDrawerOpen(false); }
+      mobile.addEventListener('change', onLayout);
+      var unlock = PVScrollLock.lock();
+      return function () {
+        document.removeEventListener('keydown', onKey);
+        mobile.removeEventListener('change', onLayout);
+        unlock();
+      };
     }, [drawerOpen]);
 
     // Keep the URL in step with the active section so a refresh (or a copied

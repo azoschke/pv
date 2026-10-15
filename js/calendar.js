@@ -285,6 +285,7 @@
   // ── Sidebar (campaign pattern) ─────────────────────────────────────────────
   function openSidebar() {
     if (isMobile()) {
+      PVScrollLock.lock("filter-drawer");
       sidebarEl.classList.add("sidebar-open");
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
@@ -294,6 +295,7 @@
     }
   }
   function closeSidebar() {
+    PVScrollLock.unlock("filter-drawer");
     if (isMobile()) {
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
@@ -697,6 +699,7 @@
       // Into inline mode: clear any drawer state and keep it collapsed unless it
       // was open, so it doesn't spring into view.
       var wasOpen = sidebarEl.classList.contains("sidebar-open");
+      PVScrollLock.unlock("filter-drawer");
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
       overlay.setAttribute("aria-hidden", "true");
