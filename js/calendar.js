@@ -629,6 +629,7 @@
       modalBody.innerHTML = bodyHtml;              // image is warm → paints at once
       modalOverlay.classList.add("is-open");        // styles.css reveals via .is-open
       modalOverlay.setAttribute("aria-hidden", "false");
+      PVScrollLock.lock("calendar-modal");
     }
 
     // Preload the hero image so it opens WITH the modal. A slight delay is
@@ -649,6 +650,7 @@
   function closeModal() {
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
+    PVScrollLock.unlock("calendar-modal");
   }
 
   // ── Data ───────────────────────────────────────────────────────────────────

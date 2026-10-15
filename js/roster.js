@@ -457,7 +457,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    PVScrollLock.lock("roster-modal");
   }
 
   function closeModal() {
@@ -468,7 +468,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    PVScrollLock.unlock("roster-modal");
     modalBody.innerHTML = "";
   }
 

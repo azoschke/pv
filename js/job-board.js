@@ -467,7 +467,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    PVScrollLock.lock("job-modal");
   }
 
   // ── Apply / withdraw ─────────────────────────────────────────────────────
@@ -588,7 +588,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    PVScrollLock.unlock("job-modal");
     modalBody.innerHTML = "";
   }
 

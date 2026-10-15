@@ -3053,10 +3053,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   opacity: 1;
 }
 
-body.nav-sidebar-open {
-  overflow: hidden;
-}
-
 .nav-sidebar-header {
   display: flex;
   align-items: center;

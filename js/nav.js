@@ -195,7 +195,7 @@
     sidebar.setAttribute('aria-hidden', 'false');
     if (overlay) overlay.classList.add('visible');
     if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('nav-sidebar-open');
+    PVScrollLock.lock('nav-sidebar');
   }
 
   function closeSidebar() {
@@ -207,7 +207,7 @@
     sidebar.setAttribute('aria-hidden', 'true');
     if (overlay) overlay.classList.remove('visible');
     if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
-    document.body.classList.remove('nav-sidebar-open');
+    PVScrollLock.unlock('nav-sidebar');
   }
 
   function wireSidebar() {

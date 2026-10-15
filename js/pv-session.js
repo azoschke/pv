@@ -5,10 +5,11 @@
 //  localStorage under "pv.admin.session" ({ token, username, display_name,
 //  avatar_url, roles, permissions, is_root, expires_at }). This file reads
 //  and writes it, answers permission checks, signs out, and sends requests to
-//  the workers.
+//  the workers. It also holds the page scroll lock (PVScrollLock) that every
+//  popup and drawer shares.
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
-//  that uses the sign-in:
+//  that uses the sign-in or opens a popup:
 //    <script src="js/pv-session.js"></script>
 //
 //  On the live site the edge renderer (pv-site-renderer) keeps its own copy
@@ -226,6 +227,50 @@
     }
     return data;
   }
+
+  // ── Page scroll lock ─────────────────────────────────────────────────────
+  // Popups and drawers stop the page scrolling behind them. Hiding the page's
+  // overflow takes its scrollbar away, which widens the page and shifts it
+  // sideways, so the scrollbar's width goes back on as body padding while
+  // locked: the page stays put, and a tall popup's own scrollbar lands where
+  // the page's was. Each popup locks under its own owner (a name, or a fresh
+  // one when none is given) and the page unlocks once every owner has let go.
+  // Locking or unlocking the same owner twice is harmless. lock() returns a
+  // function that releases that owner, to hand straight back from a React
+  // effect.
+  var scrollOwners = [];
+  var scrollSaved = null;
+
+  function lockScroll(owner) {
+    if (owner == null) owner = {};
+    if (scrollOwners.indexOf(owner) === -1) {
+      if (!scrollOwners.length) {
+        var body = document.body;
+        var gap = global.innerWidth - document.documentElement.clientWidth;
+        scrollSaved = { overflow: body.style.overflow, paddingRight: body.style.paddingRight };
+        if (gap > 0) {
+          var pad = parseFloat(global.getComputedStyle(body).paddingRight) || 0;
+          body.style.paddingRight = (pad + gap) + 'px';
+        }
+        body.style.overflow = 'hidden';
+      }
+      scrollOwners.push(owner);
+    }
+    return function () { unlockScroll(owner); };
+  }
+
+  function unlockScroll(owner) {
+    var i = scrollOwners.indexOf(owner);
+    if (i === -1) return;
+    scrollOwners.splice(i, 1);
+    if (!scrollOwners.length && scrollSaved) {
+      document.body.style.overflow = scrollSaved.overflow;
+      document.body.style.paddingRight = scrollSaved.paddingRight;
+      scrollSaved = null;
+    }
+  }
+
+  global.PVScrollLock = { lock: lockScroll, unlock: unlockScroll };
 
   global.PVSession = {
     get: get,

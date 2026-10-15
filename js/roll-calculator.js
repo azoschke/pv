@@ -607,9 +607,10 @@
     useEffect(function () {
       function onKey(e) { if (e.key === 'Escape') { if (det) setDet(null); else if (props.onClose) props.onClose(); } }
       document.addEventListener('keydown', onKey);
-      var prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-      return function () { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+      return function () { document.removeEventListener('keydown', onKey); };
     }, [det]);
+    // Lock the page for as long as the modal is mounted (pv-session.js).
+    useEffect(function () { return PVScrollLock.lock(); }, []);
     function effectGroup(e) { if (e.type === 'skill_roll') return 'skills'; if (e.type === 'none') return 'narrative'; return 'battle'; }
     // Group a list by holder/boss name, preserving first-seen order.
     function byName(list, nameOf) {

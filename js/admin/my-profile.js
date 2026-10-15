@@ -242,13 +242,13 @@
     useEffect(function () {
       function onKey(e) { if (e.key === 'Escape' && onClose) onClose(); }
       document.addEventListener('keydown', onKey);
-      var prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
       return function () {
         document.removeEventListener('keydown', onKey);
-        document.body.style.overflow = prev;
       };
     }, [onClose]);
+
+    // Lock the page for as long as the modal is mounted (pv-session.js).
+    useEffect(function () { return PVScrollLock.lock(); }, []);
 
     var media = it.image_url
       ? h('img', { className: 'venue-modal-img tear', src: it.image_url, alt: '' })

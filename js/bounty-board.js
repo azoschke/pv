@@ -655,7 +655,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    PVScrollLock.lock("bounty-modal");
   }
 
   function closeModal() {
@@ -667,7 +667,7 @@
     openQuestId = null;
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    PVScrollLock.unlock("bounty-modal");
     modalBody.innerHTML = "";
   }
 
