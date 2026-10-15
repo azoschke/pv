@@ -39,7 +39,7 @@
           h('h3', { className: 'portal-modal-title' }, title || ''),
           h('button', {
             type: 'button',
-            className: 'portal-modal-close',
+            className: 'btn is-quiet is-small is-icon',
             'aria-label': 'Close',
             onClick: function () { if (onClose) onClose(); }
           }, '✕')

@@ -271,12 +271,12 @@
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
-          className: 'portal-btn',
+          className: 'btn',
           disabled: saving
         }, saving ? 'Saving…' : submitLabel),
         onCancel ? h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost',
+          className: 'btn is-quiet',
           onClick: onCancel,
           disabled: saving
         }, 'Cancel') : null
@@ -317,7 +317,7 @@
           }),
           allowEdit ? h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: onNew
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'person_add'),
@@ -353,19 +353,19 @@
                     h('td', { className: 'portal-col-actions' },
                       allowEdit ? h('button', {
                         type: 'button',
-                        className: 'portal-btn is-small is-ghost',
+                        className: 'btn is-small is-quiet',
                         onClick: function () { onEditPatient(p.patient_id); }
                       }, 'Edit patient') : null,
                       allowEdit ? ' ' : null,
                       h('button', {
                         type: 'button',
-                        className: 'portal-btn is-small',
+                        className: 'btn is-small',
                         onClick: function () { onVisits(p.patient_id); }
                       }, 'Add or edit visits'),
                       allowDelete ? h('span', null, ' ',
                         h('button', {
                           type: 'button',
-                          className: 'portal-btn is-small is-danger',
+                          className: 'btn is-small is-danger',
                           onClick: function () {
                             if (confirm('Delete patient “' + (p.patient_name || 'this patient') +
                                 '” and all of their visits? This cannot be undone.')) {
@@ -422,7 +422,7 @@
     if (loading) return h('div', { className: 'portal-card' }, 'Loading patient…');
     if (err || !data || !data.patient) return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-flash error' }, err || 'Patient not found.'),
-      h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onBack }, 'Back')
+      h('button', { type: 'button', className: 'btn is-quiet', onClick: onBack }, 'Back')
     );
 
     var p = data.patient;
@@ -431,7 +431,7 @@
       h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost is-small',
+          className: 'btn is-quiet is-small',
           onClick: onBack
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
@@ -493,7 +493,7 @@
       h('td', { className: 'portal-col-actions' },
         showEdit ? h('button', {
           type: 'button',
-          className: 'portal-btn is-small is-ghost',
+          className: 'btn is-small is-quiet',
           disabled: !allowEdit,
           title: editTooltip || undefined,
           'aria-disabled': allowEdit ? undefined : 'true',
@@ -502,7 +502,7 @@
         allowDelete ? h('span', null, ' ',
           h('button', {
             type: 'button',
-            className: 'portal-btn is-small is-danger',
+            className: 'btn is-small is-danger',
             onClick: function () {
               if (confirm('Delete visit from ' + (v.visit_date || 'unknown date') + '? This cannot be undone.')) {
                 onDelete(v);
@@ -577,7 +577,7 @@
     if (loading) return h('div', { className: 'portal-card' }, 'Loading visits…');
     if (err || !data || !data.patient) return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-flash error' }, err || 'Patient not found.'),
-      h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onBack }, 'Back')
+      h('button', { type: 'button', className: 'btn is-quiet', onClick: onBack }, 'Back')
     );
 
     var p = data.patient;
@@ -596,7 +596,7 @@
       h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost is-small',
+          className: 'btn is-quiet is-small',
           onClick: onBack
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
@@ -607,7 +607,7 @@
         PVAdminAPI.can('medical.edit') ? h('div', { className: 'portal-card-actions' },
           h('button', {
             type: 'button',
-            className: 'portal-btn is-small',
+            className: 'btn is-small',
             onClick: function () {
               setModalVisit({ sort_date: new Date().toISOString().slice(0, 10) });
             }
@@ -686,7 +686,7 @@
       h('div', { className: 'portal-card-header' },
         h('button', {
           type: 'button',
-          className: 'portal-btn is-ghost is-small',
+          className: 'btn is-quiet is-small',
           onClick: onCancel
         },
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
@@ -764,7 +764,7 @@
     if (err && view === 'list') {
       return h('div', { className: 'portal-card' },
         h('div', { className: 'portal-flash error' }, err),
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: reload }, 'Retry')
+        h('button', { type: 'button', className: 'btn is-quiet', onClick: reload }, 'Retry')
       );
     }
     if (loading && view === 'list') return h('div', { className: 'portal-card' }, 'Loading patients…');

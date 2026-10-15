@@ -166,10 +166,10 @@
       ),
 
       h('div', { className: 'portal-form-actions' },
-        h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
+        h('button', { type: 'submit', className: 'btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save category' : 'Add category')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: props.onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -293,7 +293,7 @@
           h(PVAdminImageUpload.UploadButton, { busy: uploading, disabled: saving, title: null, onFile: up.upload }),
           draft.image_url ? h('button', {
             type: 'button',
-            className: 'portal-btn is-ghost is-small',
+            className: 'btn is-quiet is-small',
             onClick: function () { setField('image_url', ''); },
             disabled: uploading || saving
           }, 'Remove') : null
@@ -304,10 +304,10 @@
       ),
 
       h('div', { className: 'portal-form-actions' },
-        h('button', { type: 'submit', className: 'portal-btn', disabled: saving || uploading },
+        h('button', { type: 'submit', className: 'btn', disabled: saving || uploading },
           saving ? 'Saving…' : (isEdit ? 'Save item' : 'Add item')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: props.onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -481,7 +481,7 @@
     function arrowBtn(label, onClick, disabled) {
       return h('button', {
         type: 'button',
-        className: 'portal-btn is-small is-ghost',
+        className: 'btn is-small is-quiet',
         onClick: onClick,
         disabled: disabled,
         'aria-label': label === '▲' ? 'Move up' : 'Move down',
@@ -531,11 +531,11 @@
           arrowBtn('▲', function () { moveItem(cat, index, -1); }, index === 0),
           arrowBtn('▼', function () { moveItem(cat, index, 1); }, index === total - 1),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             onClick: function () { setItemForm({ category: cat, item: item }); }
           }, 'Edit'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger',
+            type: 'button', className: 'btn is-small is-danger',
             onClick: function () { deleteItem(item); }
           }, 'Delete')
         )
@@ -559,15 +559,15 @@
           arrowBtn('▲', function () { moveCategory(index, -1); }, index === 0),
           arrowBtn('▼', function () { moveCategory(index, 1); }, index === cats.length - 1),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             onClick: function () { setCatForm({ category: cat }); }
           }, 'Edit'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger',
+            type: 'button', className: 'btn is-small is-danger',
             onClick: function () { deleteCategory(cat); }
           }, 'Delete'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small',
+            type: 'button', className: 'btn is-small',
             onClick: function () { setItemForm({ category: cat, item: null }); }
           }, 'Add item')
         ),
@@ -602,7 +602,7 @@
           ),
           venueId ? h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setCatForm({ category: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),

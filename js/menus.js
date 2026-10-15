@@ -22,13 +22,14 @@
     empyreum: "Empyreum", shirogane: "Shirogane"
   };
 
-  var SIZE_PALETTE = {
-    room:      { from: "#3a2a3d", to: "#1f1424" },
-    apartment: { from: "#3b3727", to: "#211e15" },
-    cottage:   { from: "#3a2a25", to: "#1f1612" },
-    house:     { from: "#1f3340", to: "#101c25" },
-    mansion:   { from: "#3a2c1e", to: "#1f1810" }
-  };
+  // Placeholder tone (styles.css .media-ph, 1–5) per size, matching the
+  // venue directory.
+  var SIZE_TONE = { room: 1, apartment: 3, cottage: 2, house: 5, mansion: 4 };
+
+  function mediaClass(v) {
+    var tone = SIZE_TONE[v.size] || 5;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── Category icons ───────────────────────────────────────────────────────
   //  Keyed glyphs, not markup: the worker stores only the key, and anything
@@ -119,25 +120,20 @@
 
   // ── Venue chooser ────────────────────────────────────────────────────────
   function venueCardHtml(v) {
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
     var media = v.image_url
       ? '<img class="menu-venue-card-img" src="' + escapeHTML(v.image_url) +
         '" alt="" loading="lazy" decoding="async" />'
-      : '<span class="menu-venue-card-sig">' +
-        escapeHTML((v.name || "").toLowerCase()) + '</span>';
+      : '';
 
     return '' +
       '<button type="button" class="menu-venue-card" data-venue-id="' + escapeHTML(v.id) + '">' +
-        '<span class="menu-venue-card-media"' +
-          (v.image_url ? '' : ' style="background:linear-gradient(135deg,' +
-            palette.from + ' 0%,' + palette.to + ' 100%)"') + '>' +
+        // Placeholder field and torn edge, same as the venue directory cards.
+        '<span class="menu-venue-card-media tear-half ' + mediaClass(v) + '">' +
           media +
-          // Torn-edge overlay, same as the venue directory cards.
-          '<span class="contrast-border-half" aria-hidden="true"></span>' +
         '</span>' +
         '<span class="menu-venue-card-body">' +
           '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
-          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</span>' +
+          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v)) + '</span>' +
         '</span>' +
       '</button>';
   }
@@ -168,7 +164,7 @@
           '<img src="' + escapeHTML(item.image_url) + '" alt="" ' +
           'loading="lazy" decoding="async" />' +
         '</span>'
-      : '<span class="menu-thumb is-placeholder">' +
+      : '<span class="menu-thumb">' +
           iconSvg(icon, "menu-thumb-icon") +
         '</span>';
 
@@ -226,12 +222,14 @@
     });
 
     // A category index is only worth the space once a menu has enough
-    // sections to be worth jumping around.
+    // sections to be worth jumping around. Each link carries its section's
+    // icon.
     var indexHtml = cats.length > 2
       ? '<nav class="menu-index" aria-label="Menu sections">' +
           cats.map(function (c) {
             return '<a class="menu-index-link" href="#' +
               escapeHTML(slugForAnchor(c.name, c.id)) + '">' +
+              iconSvg(c.icon || DEFAULT_ICON, "menu-index-icon") +
               escapeHTML(c.name || "Menu") + '</a>';
           }).join("") +
         '</nav>'
@@ -241,13 +239,14 @@
       ? cats.map(categoryHtml).join("")
       : '<p class="menu-empty">This menu has not been filled in yet.</p>';
 
-    // The venue's own photograph doubles as the masthead backdrop. The chooser
-    // payload always carries image_url; the menu payload's venue object may
-    // not, so fall back to the card data already in hand.
+    // The venue's own photograph doubles as the masthead backdrop, over the
+    // placeholder field when there is none. The chooser payload always
+    // carries image_url; the menu payload's venue object may not, so fall back
+    // to the card data already in hand.
     var heroUrl = v.image_url || venueImage(v.id != null ? v.id : currentVenueId);
 
     sheetEl.innerHTML = '' +
-      '<header class="menu-sheet-header' + (heroUrl ? ' has-hero' : '') + '">' +
+      '<header class="menu-sheet-header media-ph tear' + (heroUrl ? ' has-hero' : '') + '">' +
         '<h1 class="menu-sheet-title">' + escapeHTML(v.name || "Menu") + '</h1>' +
         '<p class="menu-sheet-location">' + escapeHTML(locationLine(v)) + '</p>' +
       '</header>' +

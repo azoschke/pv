@@ -60,12 +60,12 @@
   var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
 
   function stageBadgeClass(stage) {
-    if (stage === 'new')               return 'portal-pill is-red-fill';
-    if (stage === 'scheduled')         return 'portal-pill is-gold';
-    if (stage === 'requires_training') return 'portal-pill is-gold';
-    if (stage === 'accepted')          return 'portal-pill is-green';
-    if (stage === 'declined')          return 'portal-pill is-red';
-    return 'portal-pill is-muted';
+    // A pill only where someone has to act; a brown dot while in progress;
+    // muted text once settled.
+    if (stage === 'new')               return 'pill';
+    if (stage === 'scheduled')         return 'status-dot is-brown';
+    if (stage === 'requires_training') return 'status-dot is-brown';
+    return 'status-dot is-quiet';
   }
 
   function formatDate(iso) {
@@ -163,9 +163,9 @@
               position: 'absolute', zIndex: 30, left: 0, right: 0, top: '100%',
               margin: '0.2rem 0 0', padding: '0.25rem', listStyle: 'none',
               maxHeight: '12rem', overflowY: 'auto',
-              background: 'var(--bg-darker)',
-              border: '1px solid var(--border-color)', borderRadius: '0.3rem',
-              boxShadow: '0 6px 18px rgba(0,0,0,0.25)'
+              background: 'var(--bg-card)',
+              border: 0, borderRadius: '4px',
+              boxShadow: 'var(--shadow-float)'
             }
           },
             matches.map(function (m) {
@@ -318,10 +318,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Add application')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -346,7 +346,7 @@
       h('td', null,
         h('span', { className: 'portal-strong' }, a.member_name),
         archived ? h('span', {
-          className: 'portal-pill is-muted',
+          className: 'status-dot is-quiet',
           style: { marginLeft: '0.5rem' }
         }, 'Archived') : null
       ),
@@ -365,17 +365,17 @@
       ),
       canEdit ? h('td', { className: 'portal-col-actions' },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'btn is-small is-quiet',
           onClick: function () { onEdit(a); }
         }, 'Edit'),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'btn is-small is-quiet',
           onClick: function () { onArchive(a, !archived); }
         }, archived ? 'Unarchive' : 'Archive'),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger',
+          type: 'button', className: 'btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete the application for "' + a.member_name + '"?')) onDelete(a);
           }
@@ -548,7 +548,7 @@
           }),
           canEdit ? h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             onClick: function () { setFormOpen({ app: null }); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
@@ -587,7 +587,7 @@
           ),
           anyFilterActive ? h('button', {
             type: 'button',
-            className: 'portal-btn is-ghost is-small',
+            className: 'btn is-quiet is-small',
             onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
@@ -715,7 +715,7 @@
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, 'Job Applications'),
         newCount
-          ? h('span', { className: 'portal-pill is-red-fill' }, newCount + ' NEW')
+          ? h('span', { className: 'pill' }, newCount + ' New')
           : null
       ),
       h('p', { className: 'portal-card-subtitle' },

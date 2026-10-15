@@ -275,7 +275,7 @@
       '<div class="cal-panel">' +
         '<h2>Couldn’t load the calendar</h2>' +
         '<p>' + escapeHTML(message || "Please try again in a moment.") + '</p>' +
-        '<button type="button" class="cal-panel-btn" id="cal-retry">Try again</button>' +
+        '<button type="button" class="btn" id="cal-retry">Try again</button>' +
       '</div>'
     );
     var retry = document.getElementById("cal-retry");
@@ -395,7 +395,7 @@
     var startMs = parseUtc(e.starts_at);
     var endMs = parseUtc(e.ends_at);
     var cat = e.category || "uncategorized";
-    var badge = '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">'
+    var badge = '<span class="tag" data-cat="' + escapeHTML(cat) + '">'
       + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>';
 
     var timeHTML =
@@ -619,7 +619,7 @@
     var bodyHtml =
       (hiUrl ? '<img class="cal-modal-media" src="' + escapeHTML(hiUrl) + '" alt="" />' : "") +
       '<div class="cal-modal-content">' +
-        '<span class="cal-badge" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
+        '<span class="tag" data-cat="' + escapeHTML(cat) + '">' + escapeHTML(CATEGORY_LABEL[cat] || cat) + '</span>' +
         '<h2 class="cal-modal-title" id="calendar-modal-title">' + escapeHTML(e.title) + '</h2>' +
         '<div class="cal-modal-meta">' + rows + '</div>' +
         (e.description ? '<div class="cal-modal-desc">' + renderMarkdown(e.description) + '</div>' : "") +

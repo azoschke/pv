@@ -27,9 +27,9 @@
   var U = window.PVAdminQuestUtils;
 
   var STATUS_PILL = {
-    pending: { label: 'Pending', cls: 'portal-pill is-gold' },
-    listed:  { label: 'Listed',  cls: 'portal-pill is-green' },
-    hidden:  { label: 'Hidden',  cls: 'portal-pill is-muted' }
+    pending: { label: 'Pending', cls: 'pill' },
+    listed:  { label: 'Listed',  cls: 'status-dot is-quiet' },
+    hidden:  { label: 'Hidden',  cls: 'status-dot is-quiet' }
   };
 
   // Human labels for the fields a proposed edit may touch, in display order.
@@ -261,19 +261,19 @@
           key: 'q' + q.id,
           style: { display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.35rem 0', flexWrap: 'wrap' }
         },
-          h('span', { className: 'portal-pill is-gold' }, 'New submission'),
+          h('span', { className: 'pill' }, 'New submission'),
           h('span', { style: { flex: 1, fontWeight: 600 } },
             q.title + (q.submitted_by_name ? ' — ' + q.submitted_by_name : '')),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             onClick: function () { setModal({ kind: 'review', quest: q }); }
           }, 'Review'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small',
+            type: 'button', className: 'btn is-small',
             onClick: function () { patchQuest(q.id, { status: 'listed' }, 'Quest approved and listed.'); }
           }, 'Approve'),
           canDelete ? h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger',
+            type: 'button', className: 'btn is-small is-danger',
             onClick: function () { handleDelete(q); }
           }, 'Reject') : null
         );
@@ -284,19 +284,19 @@
           key: 'e' + item.edit.id,
           style: { display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.35rem 0', flexWrap: 'wrap' }
         },
-          h('span', { className: 'portal-pill is-gold' }, 'Edit'),
+          h('span', { className: 'pill' }, 'Edit'),
           h('span', { style: { flex: 1, fontWeight: 600 } },
             item.quest.title + (item.edit.submitted_by_name ? ' — ' + item.edit.submitted_by_name : '')),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             onClick: function () { setModal({ kind: 'diff', quest: item.quest, edit: item.edit }); }
           }, 'Review'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small',
+            type: 'button', className: 'btn is-small',
             onClick: function () { approveEdit(item); }
           }, 'Approve'),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger',
+            type: 'button', className: 'btn is-small is-danger',
             onClick: function () { rejectEdit(item); }
           }, 'Reject')
         );
@@ -313,7 +313,7 @@
         h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
             h('span', { className: 'portal-row-title' }, q.title),
-            past ? h('span', { className: 'portal-pill is-red' }, 'Past date') : null
+            past ? h('span', { className: 'pill' }, 'Past date') : null
           ),
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
             'by ' + q.submitted_by_name) : null
@@ -324,11 +324,11 @@
         h('td', { className: 'portal-col-center' }, signupCount),
         h('td', { className: 'portal-col-actions' },
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             onClick: function () { setModal({ kind: 'form', quest: q }); }
           }, 'Edit'),
           canDelete ? h('button', {
-            type: 'button', className: 'portal-btn is-small is-danger is-spaced',
+            type: 'button', className: 'btn is-small is-danger is-spaced',
             onClick: function () { handleDelete(q); }
           }, 'Delete') : null
         )
@@ -347,11 +347,11 @@
           h('label', null, 'Signed up (' + signups.length + ')'),
           h('div', { className: 'portal-faction-tags' },
             signups.map(function (s) {
-              return h('span', { key: s.member_id, className: 'portal-faction-tag' }, s.member_name);
+              return h('span', { key: s.member_id, className: 'tag' }, s.member_name);
             })
           ),
           h('button', {
-            type: 'button', className: 'portal-btn is-small is-ghost',
+            type: 'button', className: 'btn is-small is-quiet',
             style: { marginTop: '0.5rem' },
             onClick: function () { clearSignups(modal.quest); }
           }, 'Clear signups'),
@@ -376,15 +376,15 @@
         h(QuestPreview, { quest: modal.quest }),
         h('div', { className: 'portal-form-actions' },
           h('button', {
-            type: 'button', className: 'portal-btn',
+            type: 'button', className: 'btn',
             onClick: function () { patchQuest(modal.quest.id, { status: 'listed' }, 'Quest approved and listed.'); }
           }, 'Approve & list'),
           h('button', {
-            type: 'button', className: 'portal-btn is-ghost',
+            type: 'button', className: 'btn is-quiet',
             onClick: function () { setModal({ kind: 'form', quest: modal.quest }); }
           }, 'Edit first'),
           canDelete ? h('button', {
-            type: 'button', className: 'portal-btn is-danger is-end',
+            type: 'button', className: 'btn is-danger is-end',
             onClick: function () { handleDelete(modal.quest); }
           }, 'Reject & delete') : null
         )
@@ -398,11 +398,11 @@
         h(EditDiff, { quest: modal.quest, edit: modal.edit }),
         h('div', { className: 'portal-form-actions' },
           h('button', {
-            type: 'button', className: 'portal-btn',
+            type: 'button', className: 'btn',
             onClick: function () { approveEdit({ quest: modal.quest, edit: modal.edit }); }
           }, 'Approve & apply'),
           h('button', {
-            type: 'button', className: 'portal-btn is-danger is-end',
+            type: 'button', className: 'btn is-danger is-end',
             onClick: function () { rejectEdit({ quest: modal.quest, edit: modal.edit }); }
           }, 'Reject')
         )
@@ -421,7 +421,7 @@
             placeholder: 'Search title, reward, member…'
           }),
           h('button', {
-            type: 'button', className: 'portal-btn is-small',
+            type: 'button', className: 'btn is-small',
             onClick: function () { setModal({ kind: 'form', quest: null }); }
           }, 'New quest')
         ),

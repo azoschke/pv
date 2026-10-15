@@ -245,8 +245,8 @@
           : null,
 
         h('div', { className: 'portal-btn-row' },
-          h('button', { type: 'submit', className: 'portal-btn' }, isNew ? 'Add' : 'Done'),
-          h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onClose }, 'Cancel'))
+          h('button', { type: 'submit', className: 'btn' }, isNew ? 'Add' : 'Done'),
+          h('button', { type: 'button', className: 'btn is-quiet', onClick: props.onClose }, 'Cancel'))
       )
     );
   }
@@ -263,8 +263,8 @@
           groups.map(function (g) { return h('option', { key: g.key, value: g.key }, 'End of ' + g.label); }),
           h('option', { value: 'top' }, 'End of the top level'))),
       h('div', { className: 'portal-btn-row' },
-        h('button', { type: 'button', className: 'portal-btn', onClick: function () { props.onPlace(place); } }, 'Add'),
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: props.onClose }, 'Cancel'))
+        h('button', { type: 'button', className: 'btn', onClick: function () { props.onPlace(place); } }, 'Add'),
+        h('button', { type: 'button', className: 'btn is-quiet', onClick: props.onClose }, 'Cancel'))
     );
   }
 
@@ -354,7 +354,7 @@
 
     // ── Rows ──
     function iconBtn(icon, label, onClick, disabled) {
-      return h('button', { type: 'button', className: 'portal-btn is-ghost is-icon is-small', title: label,
+      return h('button', { type: 'button', className: 'btn is-quiet is-icon is-small', title: label,
         'aria-label': label, disabled: !!disabled || saving, onClick: onClick },
         h('span', { className: 'material-icons', 'aria-hidden': 'true' }, icon));
     }
@@ -372,17 +372,17 @@
         return [h('span', { key: 'l' }, n.label || p.title),
           h('span', { key: 's', className: 'nav-ed-sub' }, PVAdminSiteShared.fileOf(p.path)),
           h('span', { key: 'a' }, PVAdminSiteShared.accessBadge(p)),
-          p.needs_review ? h('span', { key: 'r', className: 'portal-badge is-warn' }, 'Needs review') : null];
+          p.needs_review ? h('span', { key: 'r', className: 'pill' }, 'Needs review') : null];
       }
       return [h('span', { key: 'l' }, n.label), h('span', { key: 's', className: 'nav-ed-sub' }, n.url)];
     }
     function badges(n) {
       var out = [];
       if ((n.type === 'campaigns' || (n.type === 'link' && !n.page_id)) && n.visibility !== 'everyone') {
-        out.push(h('span', { key: 'v', className: 'portal-badge' },
+        out.push(h('span', { key: 'v', className: 'tag' },
           n.visibility === 'permission' ? 'By permission' : visibilityLabel(n.visibility)));
       }
-      if (n.new_tab) out.push(h('span', { key: 't', className: 'portal-badge' }, 'New tab'));
+      if (n.new_tab) out.push(h('span', { key: 't', className: 'tag' }, 'New tab'));
       return out;
     }
     function row(n, listId, index, length) {
@@ -426,7 +426,7 @@
         h('span', { className: 'nav-ed-hint' }, 'Drop here to add to the end of ' + label));
     }
     function addButton(listId, label, types) {
-      return h('button', { type: 'button', className: 'portal-btn is-ghost is-small', disabled: saving,
+      return h('button', { type: 'button', className: 'btn is-quiet is-small', disabled: saving,
         onClick: function () { setEditing({ list: listId, index: getList(tree, listId).length, node: null, types: types, label: label }); } },
         h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'), 'Add to ' + label);
     }
@@ -454,8 +454,8 @@
         dirty
           ? h('div', { className: 'perm-savebar' },
               h('span', { className: 'perm-savebar-count' }, 'Unsaved changes'),
-              h('button', { type: 'button', className: 'portal-btn is-ghost', disabled: saving, onClick: discard }, 'Discard'),
-              h('button', { type: 'button', className: 'portal-btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
+              h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: discard }, 'Discard'),
+              h('button', { type: 'button', className: 'btn', disabled: saving, onClick: save }, saving ? 'Saving…' : 'Save'))
           : null),
 
       h('div', { className: 'portal-card' },
@@ -492,7 +492,7 @@
                     h('span', null, p.title),
                     h('span', { className: 'nav-ed-sub' }, PVAdminSiteShared.fileOf(p.path)),
                     PVAdminSiteShared.accessBadge(p),
-                    p.needs_review ? h('span', { className: 'portal-badge is-warn' }, 'Needs review') : null),
+                    p.needs_review ? h('span', { className: 'pill' }, 'Needs review') : null),
                   h('span', { className: 'nav-ed-actions' }, iconBtn('add', 'Add to the nav', function () { setPlacing(p); })));
               })
             : h('span', { className: 'portal-muted' }, 'Every page is in the nav.'))),

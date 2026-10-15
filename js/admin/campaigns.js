@@ -160,9 +160,9 @@
         : null,
 
       h('div', { className: 'portal-btn-row' },
-        h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
+        h('button', { type: 'submit', className: 'btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create campaign')),
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
+        h('button', { type: 'button', className: 'btn is-quiet', onClick: onCancel, disabled: saving }, 'Cancel')
       )
     );
   }
@@ -278,9 +278,9 @@
       ),
 
       h('div', { className: 'portal-btn-row' },
-        h('button', { type: 'submit', className: 'portal-btn', disabled: saving || loadingBody },
+        h('button', { type: 'submit', className: 'btn', disabled: saving || loadingBody },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create chapter')),
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
+        h('button', { type: 'button', className: 'btn is-quiet', onClick: onCancel, disabled: saving }, 'Cancel')
       )
     );
   }
@@ -289,13 +289,13 @@
   // Delete shows only with the delete permission (props.canDelete).
   function RowControls(props) {
     return h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
-      h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+      h('button', { type: 'button', className: 'btn is-small is-quiet',
         title: 'Move up', disabled: props.isFirst, onClick: props.onUp }, '↑'),
-      h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+      h('button', { type: 'button', className: 'btn is-small is-quiet',
         title: 'Move down', disabled: props.isLast, onClick: props.onDown }, '↓'),
-      h('button', { type: 'button', className: 'portal-btn is-small is-ghost', onClick: props.onEdit }, 'Edit'),
+      h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onEdit }, 'Edit'),
       props.canDelete
-        ? h('button', { type: 'button', className: 'portal-btn is-small is-danger', onClick: props.onDelete }, 'Delete')
+        ? h('button', { type: 'button', className: 'btn is-small is-danger', onClick: props.onDelete }, 'Delete')
         : null
     );
   }
@@ -422,9 +422,9 @@
           ),
 
       h('div', { className: 'portal-btn-row' },
-        h('button', { type: 'submit', className: 'portal-btn', disabled: saving },
+        h('button', { type: 'submit', className: 'btn', disabled: saving },
           saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create entry')),
-        h('button', { type: 'button', className: 'portal-btn is-ghost', onClick: onCancel, disabled: saving }, 'Cancel')
+        h('button', { type: 'button', className: 'btn is-quiet', onClick: onCancel, disabled: saving }, 'Cancel')
       )
     );
   }
@@ -521,7 +521,7 @@
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
         h('p', { className: 'portal-note' },
           entries.length + (entries.length === 1 ? ' entry' : ' entries')),
-        h('button', { type: 'button', className: 'portal-btn',
+        h('button', { type: 'button', className: 'btn',
           onClick: function () { setForm({ entry: null }); } }, '+ New entry')
       ),
 
@@ -545,9 +545,9 @@
                       (e.description_md ? String(e.description_md).replace(/[#>*_`~\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '—'))
                   ),
                   h('div', { style: { display: 'flex', gap: '0.35rem', whiteSpace: 'nowrap' } },
-                    h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+                    h('button', { type: 'button', className: 'btn is-small is-quiet',
                       onClick: function () { setForm({ entry: e }); } }, 'Edit'),
-                    canDelete ? h('button', { type: 'button', className: 'portal-btn is-small is-danger',
+                    canDelete ? h('button', { type: 'button', className: 'btn is-small is-danger',
                       onClick: function () { deleteEntry(e); } }, 'Delete') : null
                   )
                 );
@@ -772,7 +772,7 @@
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
         h('p', { className: 'portal-note' },
           campaigns.length + (campaigns.length === 1 ? ' campaign' : ' campaigns')),
-        h('button', { type: 'button', className: 'portal-btn',
+        h('button', { type: 'button', className: 'btn',
           onClick: function () { setCampaignForm({ campaign: null }); } }, '+ New campaign')
       ),
 
@@ -802,7 +802,7 @@
                 })
               ),
               h('div', { style: { marginTop: '0.6rem' } },
-                h('button', { type: 'button', className: 'portal-btn is-small is-ghost',
+                h('button', { type: 'button', className: 'btn is-small is-quiet',
                   onClick: function () { selectCampaign(c.slug); } },
                   isSelected ? '▾ Hide chapters' : '▸ Manage chapters')
               ),
@@ -810,7 +810,7 @@
               isSelected ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' } },
                   h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, 'Chapters'),
-                  h('button', { type: 'button', className: 'portal-btn is-small',
+                  h('button', { type: 'button', className: 'btn is-small',
                     onClick: function () { setFullChapter(null); setChapterForm({ campaign: c, chapter: null }); } }, '+ New chapter')
                 ),
                 chaptersLoading

@@ -89,7 +89,11 @@ p {
   margin: 0;
 }
 a {
-   color: var(--accent-brown);
+  color: var(--accent-brown);
+}
+/* Zero specificity, so any link styled by class keeps its own hover colour. */
+:where(a:hover) {
+  color: var(--accent-brown-hover);
 }
 
 
@@ -97,41 +101,86 @@ a {
    2. CSS VARIABLES
    ============================================================================= */
 
+/* Torchlight palette. Within each theme every neutral sits at one hue at low
+   chroma (light about 88° in OKLCH; dark warmer, toward red-brown), so layers
+   never drift. Use these tokens rather than new colour values.
+
+   Three surface tones, each with one job:
+     --bg-primary  page: the grained ground, and recessed trays inside cards
+     --bg-card     raised: cards, tiles, sidebars, menus (no border, no shadow)
+     --bg-darker   well: controls only (inputs, bars, hover/active, quiet
+                   buttons), never a container
+   Brown leads; red is kept for alerts, danger, HP, attention pills and the
+   drop cap. There is no green: completion is brown or muted text. */
+
 :root {
-  /* Backgrounds */
-  --bg-primary:    #e3ded3;
-  --bg-card:       #f5f3ef;
-  --bg-card-light: #f9f7f4;
-  --bg-darker:     #d3ccbf;
+  /* Surfaces */
+  --bg-primary:    #eee9dd;
+  --bg-card:       #faf7f0;
+  --bg-darker:     #dfdace;
+  /* = well. Every use is a control, hover or selected state. */
+  --bg-card-light: #dfdace;
 
   /* Text */
-  --text-primary:   #3E3832;
-  --text-secondary: #6B6560;
+  --text-primary:   #2b251e;  /* ink: headings, labels, control text */
+  --text-body:      #574e44;  /* running text */
+  --text-secondary: #5f574c;  /* muted: meta, captions, settled statuses */
+  --label:          #fbf8f2;  /* text on brown and red fills */
 
-  /* Borders & accents */
-  --border-color:  #C5B89A;
-  --accent-brown:  #8B6F47;
+  /* Lines & accents */
+  --border-color:  rgba(60, 52, 38, 0.13);  /* faint rules only: row dividers, header underlines */
+  --accent-brown:  #6a573e;
+  --accent-brown-hover: #7c684f;
   --accent-red:    #a54d44;
+  --gold:          #806836;   /* UI gold on raised surfaces (stars, highlights) */
 
   /* Progress */
-  --progress-bg:   #C5B89A;
-  --progress-fill: #8B6F47;
+  --progress-bg:   #dfdace;
+  --progress-fill: #6a573e;
 
-  /* Checkboxes */
-  --check-color:   #5a8a3c;
+  /* Completion */
+  --check-color:   #6a573e;
 
   /* Stars (Crafting DB) */
-  --star-filled: #D4A574;
-  --star-empty:  #C5B89A;
+  --star-filled: #806836;
+  --star-empty:  #cbc4b5;
 
   /* Form inputs */
-  --form-input-bg:          #e3ded3;
-  --form-input-placeholder: #9B8F84;
+  --form-input-bg:          #dfdace;
+  --form-input-placeholder: #5f574c;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #ede9e2;
+  --bg-staff-panel: #faf7f0;
 
-  /* Phoenix Vanguard — parchment world */
+  /* Table rows: the hover tint, and group rows a step past it */
+  --bg-row-hover: #efebe2;
+  --bg-group-row: #eae6dc;
+
+  /* Focus and selection ring, scrim behind modals and drawers, and the one
+     shadow (things that float over content: dropdown menus) */
+  --ring:         color-mix(in srgb, var(--accent-brown) 40%, transparent);
+  --scrim:        rgba(25, 23, 18, 0.6);
+  --shadow-float: 0 2px 4px rgba(60, 52, 38, 0.10), 0 14px 30px rgba(60, 52, 38, 0.12);
+
+  /* Image placeholders: dark fields under grain-dark.svg, the same in both
+     themes except tone 3, which dark sets deeper. Media ink is for type and
+     controls laid over them. */
+  --media-1: #3b3128;
+  --media-2: #4a2b26;
+  --media-3: #33302a;
+  --media-4: #3d3427;
+  --media-5: #2f2a24;
+  --media-ink:     #ece7dc;
+  --media-ink-dim: #c1b5a6;
+
+  /* Sketch wash: the colour blended into illustrations (.sketch-wash) */
+  --sketch-wash-color: #636158;
+
+  /* Paper grain and the torn edge */
+  --grain:  url("../assets/grain-light.svg");
+  --tear-h: 26px;
+
+  /* Phoenix Vanguard — parchment world (PDF / parchment forms) */
   --parchment-bg:    #e3ded3;
   --parchment-dark:  #d6d0c4;
   --ink-color:       #2c1810;
@@ -140,38 +189,57 @@ a {
 }
 
 [data-theme="dark"] {
-  /* Backgrounds */
+  /* Surfaces */
   --bg-primary:    #1a1614;
-  --bg-card:       #2a2521;
-  --bg-card-light: #35302b;
-  --bg-darker:     #3a342f;
+  --bg-card:       #231f1d;
+  --bg-darker:     #2b2724;
+  --bg-card-light: #2b2724;
 
   /* Text */
-  --text-primary:   #ebe3d0;
-  --text-secondary: #c5b89a;
+  --text-primary:   #ece7dc;
+  --text-body:      #cdc2b2;
+  --text-secondary: #c1b5a6;
+  --label:          #1a1614;
 
-  /* Borders & accents */
-  --border-color: #4a4239;
-  --accent-brown: #a88959;
-  --accent-red:   #c9655b;
+  /* Lines & accents */
+  --border-color:  rgba(236, 231, 220, 0.10);
+  --accent-brown:  #b8a082;
+  --accent-brown-hover: #c8b091;
+  --accent-red:    #c9655b;
+  --gold:          #d6b676;
 
   /* Progress */
-  --progress-bg:   #4a4239;
-  --progress-fill: #a88959;
+  --progress-bg:   #2b2724;
+  --progress-fill: #b8a082;
 
-  /* Checkboxes */
-  --check-color: #7ab85e;
+  /* Completion */
+  --check-color: #b8a082;
 
   /* Stars */
-  --star-filled: #d4a574;
-  --star-empty:  #6b6560;
+  --star-filled: #d6b676;
+  --star-empty:  #4b4541;
 
   /* Form inputs */
-  --form-input-bg:          #3a342f;
-  --form-input-placeholder: #6b6560;
+  --form-input-bg:          #2b2724;
+  --form-input-placeholder: #c1b5a6;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #231e1a;
+  --bg-staff-panel: #231f1d;
+
+  /* Table rows */
+  --bg-row-hover: #272320;
+  --bg-group-row: #2e2925;
+
+  /* Ring, scrim, float shadow */
+  --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
+  --shadow-float: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.40);
+
+  /* Image placeholder tone 3, and the sketch wash colour */
+  --media-3: #2a2823;
+  --sketch-wash-color: #4b4945;
+
+  /* Paper grain */
+  --grain: url("../assets/grain-dark.svg");
 
   /* Phoenix Vanguard dark — parchment world stays light-ish by design
      (background image handles darkness); only tweak ink/shadow */
@@ -187,24 +255,33 @@ a {
    3. BASE / BODY
    ============================================================================= */
 
+/* Running text is 18px Crimson Pro in the warm body colour; headings carry the
+   ink. The page ground is grained paper, which scrolls with the content (never
+   background-attachment: fixed). overflow-x: clip keeps the full-bleed header
+   band (section 5) from adding a sideways scroll where scrollbars take width. */
 body {
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 18px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
+  overflow-x: clip;
   background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-image: var(--grain);
+  color: var(--text-body);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1, h2, h3 {
-   font-family: 'Stoke', serif;
-   font-weight: normal;
+h1, h2, h3, h4 {
+  font-family: 'Stoke', Georgia, serif;
+  font-weight: 400;
+  color: var(--text-primary);
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 3rem;
 }
@@ -219,7 +296,7 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 button {
@@ -251,21 +328,41 @@ pre {
    5. SHARED NAV
    ============================================================================= */
 
-/* Wrapper nav.js injects the nav into. It holds the nav's height before the
-   nav arrives (the 70px logo plus the nav's 0.75rem top and bottom padding)
-   so the page doesn't jump down when it loads, and carries the space below
-   the nav that .site-nav used to. */
+/* The header band. nav.js (or the edge renderer) puts the nav into
+   #nav-placeholder, which sits inside .container, so the band is drawn by a
+   ::before that runs the full width of the window behind it: card tone, with
+   the torn edge cut out of its bottom (the same mask as .tear in section 6).
+   The tear is on the background layer only, so the dropdowns can hang below
+   the band unclipped. The ::before sits at z-index -1 without the placeholder
+   making a stacking context, so the dropdowns still stack against the page.
+   The negative top margin cancels .container's top padding so the band meets
+   the top of the window; min-height holds the nav's space before it arrives
+   (the 70px logo, the nav's padding and the tear). */
 #nav-placeholder {
-  min-height: calc(70px + 1.5rem);
-  margin-bottom: 1.5rem;
+  position: relative;
+  min-height: calc(70px + 0.9rem + var(--tear-h));
+  margin: -1.5rem 0 1.5rem;
+  padding-bottom: var(--tear-h);
+}
+
+#nav-placeholder::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  background-color: var(--bg-card);
 }
 
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.5rem 1.25rem;
   margin: 0;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0 0.15rem;
 }
 
 .site-brand {
@@ -298,7 +395,7 @@ pre {
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 0.25rem;
+  gap: 2px;
   flex: 1;
 }
 
@@ -306,30 +403,36 @@ pre {
   position: relative;
 }
 
+/* Links sit flat in the band: ink text, well behind them on hover, and well
+   with brown text for the current page. */
 .nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.6rem;
+  gap: 0.35rem;
+  min-height: 38px;
+  padding: 0 0.75rem;
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .nav-link:hover {
   color: var(--text-primary);
+  background-color: var(--bg-darker);
 }
 
-.nav-link.active {
-  color: var(--accent-red);
+.nav-link.active,
+.nav-link.active:hover {
+  color: var(--accent-brown);
+  background-color: var(--bg-darker);
 }
 
 /* --- Dropdowns --- */
@@ -338,6 +441,7 @@ pre {
 .nav-caret {
   font-size: 0.7em;
   line-height: 1;
+  color: var(--text-secondary);
   transition: transform 0.2s ease;
 }
 
@@ -347,23 +451,35 @@ pre {
   transform: rotate(180deg);
 }
 
+/* The menus float over the page, so they are the one raised surface with a
+   shadow. They open a little below the link; the ::before bridges that gap so
+   the menu stays open while the pointer crosses it. */
 .nav-submenu {
   list-style: none;
   margin: 0;
-  padding: 0.35rem 0;
+  padding: 8px;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   left: 0;
-  min-width: 12rem;
+  min-width: 15rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  box-shadow: 0 6px 18px rgba(62, 56, 50, 0.18);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--shadow-float);
   opacity: 0;
   transform: translateY(-4px);
   pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 50;
+}
+
+.nav-submenu::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 6px;
 }
 
 .nav-dropdown:hover > .nav-submenu,
@@ -375,15 +491,15 @@ pre {
 }
 
 .nav-sublink {
-  display: block;
-  padding: 0.45rem 1rem;
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
   font-family: 'Stoke', serif;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
+  font-size: .85rem;
+  color: var(--text-body);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .nav-sublink:hover {
@@ -391,82 +507,68 @@ pre {
   color: var(--text-primary);
 }
 
-.nav-sublink.active {
-  color: var(--text-primary);
-  border-left-color: var(--accent-brown);
+.nav-sublink.active,
+.nav-sublink.active:hover {
+  color: var(--accent-brown);
   background-color: var(--bg-darker);
 }
 
+/* Group labels: ink small caps, set apart by space and one faint rule. */
 .nav-submenu-label {
-  padding: 0.45rem 1rem 0.2rem;
+  padding: 10px 10px 6px;
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.75;
+  color: var(--text-primary);
   pointer-events: none;
   user-select: none;
   list-style: none;
 }
 
 .nav-submenu-label--divider {
-  margin-top: 0.2rem;
-  padding-top: 0.55rem;
+  margin-top: 8px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-color);
 }
 
 /* Empty separator <li> injected between the campaign list and the Codex link. */
 .nav-submenu-divider {
   height: 0;
-  margin: 0.35rem 0;
+  margin: 8px 0;
   border-top: 1px solid var(--border-color);
   list-style: none;
   pointer-events: none;
 }
 
-/* --- Sign-in pill (user icon + "Sign In") --- */
-.nav-login-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  height: 2.1rem;
-  padding: 0 0.85rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  font-family: 'Stoke', serif;
-  font-size: 0.95rem;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-.nav-login-btn:hover  { background-color: var(--bg-darker); }
-.nav-login-btn:active { transform: scale(0.97); }
+/* --- Sign-in button (user icon + "Sign In") ---
+   A quiet button (section 6); here only its place in the bar. */
+.nav-login-btn { flex-shrink: 0; }
 
 /* --- Account (signed in): picture and name, opening Dashboard / Sign Out --- */
 .nav-account { flex-shrink: 0; }
-/* Plain, like the nav links beside it: no box, brightening on hover. (The
-   sidebar copy is styled as a .nav-sidebar-toggle.) */
+/* Plain, like the nav links beside it. (The sidebar copy is styled as a
+   .nav-sidebar-toggle.) */
 .nav-account > .nav-account-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.4rem 0.6rem;
+  min-height: 38px;
+  padding: 0 0.75rem;
   background: transparent;
-  border: none;
-  color: var(--text-secondary);
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-primary);
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 .nav-account > .nav-account-btn:hover,
 .nav-account.open > .nav-account-btn {
-  color: var(--text-primary);
+  background-color: var(--bg-darker);
 }
 /* Keep a long character name from stretching the top nav; the full-width
    sidebar copy has room, so it shows the name in full. */
@@ -480,14 +582,13 @@ pre {
 .nav-account .nav-submenu {
   left: auto;
   right: 0;
-  min-width: 10rem;
+  min-width: 11rem;
 }
 /* Sign Out is a button that looks like the menu's links. */
 button.nav-sublink {
   width: 100%;
   background: none;
   border: 0;
-  border-left: 3px solid transparent;
   text-align: left;
   cursor: pointer;
 }
@@ -499,8 +600,9 @@ button.nav-sublink {
   min-width: 0;
 }
 
-/* The account's picture in a circle; the initial beneath shows when there is
-   no picture or it can't be loaded (as on the Roll Calculator). */
+/* The account's picture in a circle (avatars are the one round shape); the
+   initial beneath shows when there is no picture or it can't be loaded (as on
+   the Roll Calculator). */
 .nav-avatar {
   position: relative;
   display: inline-flex;
@@ -512,12 +614,11 @@ button.nav-sublink {
   overflow: hidden;
   border-radius: 50%;
   background: var(--accent-brown);
-  color: #ffffff;
+  color: var(--label);
   font-family: 'Stoke', serif;
   font-size: 0.8rem;
   line-height: 1;
 }
-[data-theme="dark"] .nav-avatar { color: #241d17; }
 .nav-avatar-img {
   position: absolute;
   inset: 0;
@@ -526,115 +627,429 @@ button.nav-sublink {
   object-fit: cover;
 }
 .nav-login-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
 }
 .nav-login-btn-sidebar {
   margin: 0.5rem 1rem;
-  justify-content: center;
   width: calc(100% - 2rem);
 }
 
-/* --- Theme toggle (icon only: the dashboard's sun and moon) --- */
+/* --- Theme toggle (icon only: the dashboard's sun and moon) ---
+   A quiet icon button (section 6), pushed to the end of the bar. */
 .theme-toggle {
-  font-size: 1rem;
-  line-height: 1;
-  width: 2.1rem;
-  height: 2.1rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   margin-left: auto;
   flex-shrink: 0;
 }
 
 .theme-toggle .material-icons { font-size: 1.15rem; }
 
-.theme-toggle:hover   { background-color: var(--bg-darker); }
-.theme-toggle:active  { transform: scale(0.97); }
-
 
 /* =============================================================================
    6. SHARED UTILITIES
    ============================================================================= */
 
-/* --- App header (Zodiac pages) --- */
+/* --- Page header: script subtitle, title, lead --- */
 .app-header {
   text-align: center;
+  padding: 1.75rem 0 0.5rem;
   margin-bottom: 1.5rem;
 }
+.app-header:has(+ .landing-intro:not([hidden])) { margin-bottom: 0; }
 
 .app-title {
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 2rem;
+  font-size: 2.5rem;
+  line-height: 1.1;
   letter-spacing: 0.02em;
   color: var(--text-primary);
-  margin: 0 0 0.25rem;
+  margin: 0.2rem 0 0.5rem;
 }
 
 .app-subtitle {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 1.25rem;
-  color: var(--text-secondary);
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--accent-brown);
   margin: 0;
+}
+
+/* --- Torn edge ---
+   The textured rip along the bottom of large raised boxes (the header band,
+   page cards, sidebars, image tiles), cut out of the element itself so the
+   tear is the element's own colour and texture with no seam: whatever sits
+   behind shows through. .tear-half uses the narrower vector, so the rip
+   doesn't stretch flat across cards and tiles. Give a torn box enough
+   padding-bottom to clear var(--tear-h); its bottom corners are squared off.
+   The mask clips the box's children too, so anything that must hang below
+   the edge needs the tear on a background layer instead (as the header band
+   in section 5 does). The SVGs carry preserveAspectRatio="none", so the mask
+   stretches flush to both sides. */
+.tear,
+.tear-half,
+#nav-placeholder::before {
+  --tear-img: url("../assets/border-contrast-vector.svg");
+  -webkit-mask: linear-gradient(#000 0 0), var(--tear-img) bottom / 100% var(--tear-h) no-repeat;
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0), var(--tear-img) bottom / 100% var(--tear-h) no-repeat;
+          mask-composite: exclude;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.tear-half {
+  --tear-img: url("../assets/half-border-contrast-vector.svg");
+}
+
+/* --- Recessed tray ---
+   A container nested inside a raised card drops back to the page tone, with
+   the grain. Anything raised inside a tray is card tone again, so no two
+   card-tone surfaces ever touch. */
+.tray {
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border: 0;
+  border-radius: 4px;
+}
+
+/* --- Image placeholder ---
+   A dark field under the dark grain, with no text. The tone classes give a
+   grid some variety; each page keys them to something stable (faction, venue
+   size, job category). Real images cover the field. */
+.media-ph {
+  background-color: var(--media-1);
+  background-image: url("../assets/grain-dark.svg");
+}
+.media-ph.is-tone-2 { background-color: var(--media-2); }
+.media-ph.is-tone-3 { background-color: var(--media-3); }
+.media-ph.is-tone-4 { background-color: var(--media-4); }
+.media-ph.is-tone-5 { background-color: var(--media-5); }
+
+/* Theme-specific images: put both versions in the same box; .light-only
+   shows in light (the default), .dark-only in dark. */
+[data-theme="dark"] .light-only,
+:root:not([data-theme="dark"]) .dark-only { display: none; }
+
+/* --- Buttons ---
+   One button, a few looks:
+     .btn                brown fill: the primary action
+     .btn.is-quiet       well fill, ink text: secondary actions, toolbars
+     .btn.is-danger      well fill, red text: remove, clear, leave
+     .btn.is-destructive red fill: only to confirm something destructive
+     .btn.is-plain       text only, brown: low-key actions like "Reset filters"
+   and two modifiers: .is-small (30px, for dense cards and tables) and
+   .is-icon (square, for an icon on its own). A quiet button that toggles shows
+   brown when it is on (.is-active or aria-pressed="true").
+   The nav's buttons come from the edge renderer, so they keep their own
+   classes and share the quiet rules here. */
+.btn,
+.nav-login-btn,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--accent-brown);
+  color: var(--label);
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: var(--accent-brown-hover);
+  color: var(--label);
+}
+
+.btn.is-quiet,
+.nav-login-btn,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+}
+
+.btn.is-quiet:hover:not(:disabled),
+.nav-login-btn:hover,
+.theme-toggle:hover,
+.hamburger:hover,
+.nav-sidebar-close:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
+}
+
+.btn.is-quiet.is-active,
+.btn.is-quiet[aria-pressed="true"],
+.btn.is-quiet.is-active:hover:not(:disabled),
+.btn.is-quiet[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: var(--accent-brown);
+  color: var(--label);
+}
+
+.btn.is-danger {
+  background-color: var(--bg-darker);
+  color: var(--accent-red);
+}
+
+.btn.is-danger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--bg-darker) 85%, var(--accent-red));
+  color: var(--accent-red);
+}
+
+.btn.is-destructive {
+  background-color: var(--accent-red);
+  color: var(--label);
+}
+
+.btn.is-destructive:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent-red) 88%, var(--text-primary));
+  color: var(--label);
+}
+
+.btn.is-plain {
+  min-height: 0;
+  padding: 0.35rem 0;
+  background: none;
+  color: var(--accent-brown);
+}
+
+.btn.is-plain:hover:not(:disabled) {
+  background: none;
+  color: var(--accent-brown-hover);
+  text-decoration: underline;
+}
+
+.btn.is-small {
+  min-height: 30px;
+  padding: 0 0.7rem;
+  font-size: 0.82rem;
+}
+
+.btn.is-icon,
+.theme-toggle,
+.hamburger,
+.nav-sidebar-close {
+  width: 38px;
+  padding: 0;
+}
+
+.btn.is-small.is-icon { width: 30px; }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn .material-icons,
+.btn .material-symbols-outlined { font-size: 1.15em; }
+
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+/* --- Segmented control ---
+   A choice of views or filters: a well track with the current segment raised
+   in card tone (.is-active, or aria-pressed="true"). */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+}
+
+.seg-btn {
+  min-height: 34px;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.seg-btn:hover { color: var(--text-primary); }
+
+.seg-btn.is-active,
+.seg-btn[aria-pressed="true"] {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- Pills, status, tags ---
+   Pills are only for states that need someone to act (Needs role, Pending,
+   New, Pinned...). Work in progress gets a brown dot and plain text
+   (.status-dot.is-brown), a neutral state a muted dot (.status-dot), and
+   settled states (Done, Active) plain muted text (.status-dot.is-quiet).
+   In grids, a state that needs action is a red dot (.status-dot.is-red) and
+   a lapsed or unknown one (Inactive, No Data) a gold dot (.status-dot.is-gold).
+   Category labels are italic text or a small square tag in the well. */
+.pill {
+  display: inline-block;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 0;
+  white-space: nowrap;
+  background-color: var(--accent-red);
+  color: var(--label);
+}
+.pill.is-brown { background-color: var(--accent-brown); }
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.status-dot::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+}
+.status-dot.is-brown::before { background-color: var(--accent-brown); }
+.status-dot.is-red::before { background-color: var(--accent-red); }
+.status-dot.is-gold::before { background-color: var(--gold); }
+.status-dot.is-quiet { color: var(--text-secondary); }
+.status-dot.is-quiet::before { display: none; }
+
+.tag {
+  display: inline-block;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--text-primary);
+  background-color: var(--bg-darker);
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* --- Avatar ---
+   Initials in a brown circle. js/officer-avatars.js swaps in the member's
+   profile picture when the public roster has one. */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--accent-brown);
+  color: var(--label);
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.avatar.is-small {
+  width: 30px;
+  height: 30px;
+  font-size: 0.62rem;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Drop cap ---
+   Stoke, floated, exactly two lines deep. (Not initial-letter: Stoke's tall
+   capitals overrun the line above.) */
+.drop::first-letter {
+  float: left;
+  font-family: 'Stoke', Georgia, serif;
+  font-weight: 400;
+  font-size: 3.05em;
+  line-height: 1;
+  margin: 0.04em 0.22em 0 0;
+  color: var(--accent-red);
 }
 
 /* --- Progress bars --- */
 .overall-progress {
   margin-bottom: 1.25rem;
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
 }
 
 .overall-progress-label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-  font-size: 1rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+  color: var(--text-primary);
 }
 
 .overall-progress-sub {
-  margin-top: 0.4rem;
-  font-size: 0.78rem;
+  margin-top: 0.6rem;
+  font-size: 0.98rem;
   color: var(--text-secondary);
 }
 
 .progress-bar {
   width: 100%;
-  height: 10px;
+  height: 12px;
   background-color: var(--progress-bg);
-  border-radius: 5px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
   background-color: var(--progress-fill);
-  border-radius: 5px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
-/* --- Info card --- */
+/* --- Info card ---
+   A raised card of guidance above a tool. The big ones tear (add .tear). */
 .info-card {
   margin-bottom: 1.25rem;
-  padding: 0.9rem 1.1rem;
+  padding: 1.25rem 1.6rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--accent-brown);
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  border: 0;
+  border-radius: 4px;
 }
+
+.info-card.tear,
+.info-card.tear-half { padding-bottom: calc(1.1rem + var(--tear-h)); }
 
 .info-card p { margin: 0 0 0.6rem; }
 .info-card p:last-child { margin-bottom: 0; }
@@ -652,19 +1067,17 @@ button.nav-sublink {
 .top-controls-right { justify-content: flex-end; }
 
 /* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
-   Outside .container, so the top border runs the full width of the window;
-   the text keeps to the same 1100px column as the page. */
+   Outside .container; the text keeps to the same 1300px column as the page. */
 .site-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--border-color);
+  padding: 2.5rem 1.25rem 3rem;
   text-align: center;
-  font-size: 0.72rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
 .site-footer-text {
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
@@ -722,23 +1135,23 @@ button.nav-sublink {
 
 .job-selector select {
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
+  font-size: 1rem;
+  min-height: 38px;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 4px;
   background-color: var(--form-input-bg);
   color: var(--text-primary);
   cursor: pointer;
 }
 
-/* Book sections */
+/* Book sections: raised cards, 8px apart. */
 .book {
-  margin-bottom: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  margin-bottom: 8px;
+  border: 0;
+  border-radius: 4px;
   overflow: hidden;
   background-color: var(--bg-card);
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
 .book-header {
@@ -796,14 +1209,14 @@ button.nav-sublink {
   width: 80px;
   height: 6px;
   background-color: var(--progress-bg);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .book-progress-bar-fill {
   height: 100%;
   background-color: var(--progress-fill);
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
@@ -862,9 +1275,9 @@ button.nav-sublink {
 
 .task-table tr:last-child td { border-bottom: none; }
 
+/* A finished task reads muted. */
 .task-table tr.checked td {
-  opacity: 0.5;
-  text-decoration: line-through;
+  color: var(--text-secondary);
 }
 
 .task-table input[type="checkbox"] {
@@ -885,21 +1298,51 @@ button.nav-sublink {
   margin-top: 0.15rem;
 }
 
-/* Atma table */
-.atma-table {
+/* Atma table: a torn card (#atma-container) whose header band drops back to
+   the grained page tone. It scrolls sideways on narrow screens, inside the
+   card so the scrollbar stays clear of the tear. */
+.atma-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border-radius: 4px 4px 0 0;
+  padding-bottom: var(--tear-h);
   overflow: hidden;
 }
 
-.atma-table th,
-.atma-table td { padding: 0.55rem 0.75rem; }
+.atma-scroll { overflow-x: auto; }
 
-.atma-table tr.checked td {
-  opacity: 0.6;
-  background-color: rgba(90, 138, 60, 0.08);
+.atma-table { min-width: 560px; }
+
+.atma-table th {
+  padding: 0.75rem 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-bottom: 0;
 }
+
+.atma-table td {
+  padding: 0.5rem 1rem;
+  vertical-align: middle;
+}
+
+.atma-table th:first-child,
+.atma-table td:first-child { padding-left: 26px; width: 60px; }
+
+.atma-table th:last-child,
+.atma-table td:last-child { padding-right: 26px; }
+
+.atma-table .td-num { font-variant-numeric: tabular-nums; }
+
+/* A finished row: muted text, "Complete" in italic before a faded counter. */
+.atma-table tr.checked td {
+  color: var(--text-secondary);
+}
+
+.atma-table tr:last-child td { border-bottom: 1px solid var(--border-color); }
 
 .td-count-header { text-align: right; }
 
@@ -909,38 +1352,62 @@ button.nav-sublink {
   white-space: nowrap;
 }
 
+.atma-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.atma-complete {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* The counter: one well-toned −/value/+ group. */
 .count-control {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
 }
+
+.atma-table tr.checked .count-control { opacity: 0.55; }
 
 .count-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  width: 1.9rem;
-  height: 1.9rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  background-color: var(--bg-card);
+  font-size: 1.15rem;
+  line-height: 1;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  line-height: 1;
 }
 
-.count-btn:hover  { background-color: var(--bg-darker); }
-.count-btn:active { transform: scale(0.95); }
+.count-btn:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+}
+
+.count-btn:disabled {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: default;
+}
 
 .count-input {
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
-  width: 3rem;
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
   text-align: center;
-  padding: 0.3rem 0.35rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  background-color: var(--form-input-bg);
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text-primary);
   -moz-appearance: textfield;
 }
@@ -1396,15 +1863,14 @@ button.nav-sublink {
    (React-rendered; most layout is handled in JS — only shared overrides here)
    ============================================================================= */
 
+/* Database cards are denser than regular cards: tighter padding, a smaller
+   title, 8px between them in the list. */
 .craft-card {
-  background-color: var(--bg-card);
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.2);
-  transition: all 0.2s ease-in-out;
   position: relative;
-  border-radius: 6px;
+  padding: 10px 16px 12px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
 }
-
-.craft-card:hover { box-shadow: 0 2px 8px rgba(62, 56, 50, 0.2); }
 
 .craft-name {
   font-family: 'Stoke', serif;
@@ -1415,17 +1881,15 @@ button.nav-sublink {
   margin-bottom: .5rem;
 }
 
-.search-section {
-  background-color: var(--bg-darker);
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: inset 0 2px 4px rgba(62, 56, 50, 0.15);
+.craft-card .craft-name {
+  font-size: 1.05rem;
+  margin: 0;
 }
 
 /* Form inputs (shared with Crafting DB) */
 .form-input {
   background-color: var(--form-input-bg);
-  border: 1px solid var(--border-color);
+  border: 0;
   color: var(--text-primary);
 }
 
@@ -1437,65 +1901,13 @@ button.nav-sublink {
    11. LANDING PAGE
    ============================================================================= */
 
+/* The lead paragraph under a page's title: body size and colour. */
 .landing-intro {
   text-align: center;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  max-width: 560px;
+  font-size: 1em;
+  color: var(--text-body);
+  max-width: 58ch;
   margin: 0 auto 2.5rem;
-  line-height: 1.65;
-}
-
-.landing-section {
-  margin-bottom: 3rem;
-}
-
-.landing-section-header {
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.landing-section-title {
-  font-family: 'Stoke', serif;
-  font-weight: 400;
-  font-size: 1.5rem;
-  letter-spacing: 0.03em;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem;
-}
-
-.landing-section-desc {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
-.landing-subsection-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin: 0 0 0.75rem;
-}
-
-/* ── Medical Division staff band ─────────────────────────────────────────── */
-
-.medical-staff-band {
-  margin-top: 1.25rem;
-}
-
-.medical-staff-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-
-.medical-staff-band .landing-card {
-  background-color: var(--bg-staff-panel);
-  box-shadow: none;
 }
 
 .landing-grid {
@@ -1509,21 +1921,20 @@ button.nav-sublink {
   margin-bottom: 0;
 }
 
+/* Campaign cards (campaigns.html): raised, no border or shadow. */
 .landing-card {
   display: block;
   text-decoration: none;
   color: var(--text-primary);
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  border: 0;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
 }
 
 .landing-card:hover {
-  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
+  color: var(--text-primary);
   transform: translateY(-2px);
-  border-color: var(--accent-brown);
 }
 
 .landing-card-inner {
@@ -1553,9 +1964,9 @@ button.nav-sublink {
 }
 
 .landing-card-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
+  font-size: 0.98rem;
+  color: var(--text-body);
+  line-height: 1.5;
   flex: 1;
    margin: unset;
    margin-bottom:1rem;
@@ -1575,123 +1986,286 @@ button.nav-sublink {
 }
 
 .landing-card:hover .landing-card-cta {
-  color: var(--accent-red);
+  color: var(--accent-brown-hover);
 }
 
-/* Non-link card grid variants */
-.half-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-}
-
-.full-card-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-}
-
-.card {
-  display: block;
-  color: var(--text-primary);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 16px rgba(62, 56, 50, 0.18);
-  transform: translateY(-2px);
-  border-color: var(--accent-brown);
-}
-
-
-/* ── Landing rows (alternating image / content) ─────────────────────────────── */
-
+/* The lead under a page's title on the 404 page. */
 .landing-tagline {
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  color: var(--text-secondary);
+  font-size: 1em;
+  color: var(--text-body);
   text-align: center;
-  max-width: 36rem;
-  margin: 0.25rem auto 0;
-  line-height: 1.6;
+  max-width: 58ch;
+  margin: 0 auto;
 }
 
-.app-header + .landing-row {
-  margin-top: 3.5rem;
+/* ── Home page (index.html) ──────────────────────────────────────────────────
+   One page, two states. Blocks only for visitors carry .home-for-visitors and
+   hide once signed in (the pre-paint script marks <html> with .pv-signed-in);
+   the member blocks are built by js/home.js after the session check, so a
+   visitor never receives them. Short text that differs between the two
+   states sits in .home-for-visitors / .home-for-members spans. */
+.pv-signed-in .home-for-visitors,
+html:not(.pv-signed-in) .home-for-members { display: none; }
+
+/* Small-caps label over a title or a block. */
+.eyebrow {
+  font-family: 'Stoke', serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
 }
 
-.landing-row {
-  display: grid;
-  grid-template-columns: 5fr 6fr;
-  gap: 3rem;
-  align-items: stretch;
-  margin-bottom: 4rem;
+/* A group's name over its list: ink small caps on a hairline rule. */
+.group-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.landing-row-image {
+/* Loading, empty and failed lines inside the member blocks. */
+.home-muted {
+  margin: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* Brown icons: the quick cards' solid glyphs from the icon font (Calendar,
+   and the portal's Campaigns and Combat Toolkit icons), and the line-drawn
+   done check. */
+.home-icon.material-icons { font-size: 24px; }
+
+.home-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--accent-brown);
+}
+
+/* ── Hero ── The photo band under the nav runs the full width of the window.
+   It sits behind the nav band (z-index -2, the band's ::before is -1), pulled
+   up under the band's torn edge so the photo shows through the tear, and it
+   tears into the page at the bottom. The negative top margin cancels the nav
+   placeholder's bottom margin and its tear. */
+.home-band {
+  position: relative;
+  z-index: -2;
+  left: 50%;
+  width: 100vw;
+  margin: calc(-1.5rem - var(--tear-h)) 0 0 -50vw;
+}
+
+.home-band-photo {
+  --tear-h: 30px;
+  position: relative;
+  height: 560px;
+  overflow: hidden;
+}
+
+.home-band-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-band.is-short .home-band-photo { height: 360px; }
+.home-band.is-short .home-band-photo img { object-position: 50% 30%; }
+
+/* The raised card that overlaps the bottom of the band: the visitor's
+   welcome, or the member's welcome back with the quick-access cards. */
+.home-hero-card,
+.home-welcome {
+  position: relative;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-hero-card {
+  max-width: 800px;
+  margin-top: -200px;
+  padding: 2rem 2.25rem calc(1.75rem + var(--tear-h));
   display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.landing-row:nth-of-type(even) {
-  grid-template-columns: 6fr 5fr;
+.home-hero-card .app-title { font-size: 3.1rem; margin: 0; }
+.home-hero-card .eyebrow { margin: 0; }
+.home-hero-lead { font-size: 1.12rem; margin: 0; }
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  margin-top: 0.4rem;
 }
 
-.landing-row:nth-of-type(even) .landing-row-image {
+/* The "opens elsewhere" arrow on the recruitment link. */
+.home-ext-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Buttons js/home.js shows once it has somewhere for them to go. */
+.home-hero-actions .btn[hidden],
+.home-actions .btn[hidden] { display: none; }
+
+.home-welcome {
+  margin-top: -150px;
+  padding: 1.75rem 1.75rem calc(1.5rem + var(--tear-h));
+}
+
+.home-welcome-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem 2rem;
+  margin-bottom: 1.4rem;
+}
+
+.home-welcome-head .app-title { font-size: 2.3rem; margin: 0.15rem 0 0; }
+
+/* Quick access: Calendar, Campaigns, Roll Calculator. */
+.home-quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 1rem;
+}
+
+.home-quick-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.2rem 1.3rem;
+}
+
+.home-quick-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.home-quick-head h2 { font-size: 1.35rem; margin: 0; }
+.home-quick-body { flex: 1; }
+.home-quick-body .eyebrow { margin: 0 0 2px; }
+
+.home-quick-value {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.home-quick-card > .btn { width: 100%; }
+
+/* A tag followed by an italic muted note, e.g. "RP Campaign  Fri · 8:00 PM". */
+.home-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+}
+
+.home-meta-note {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* ── Backstory ── Full width, text only. */
+.home-backstory {
+  margin: 0;
+  padding: 4.5rem 0 3rem;
+  max-width: 64rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.home-backstory .eyebrow { margin: 0; }
+
+.home-backstory blockquote {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.home-backstory figcaption { max-width: 52rem; }
+
+/* ── Image rows ── Photo and text, half and half. The photo comes first in
+   the markup; .is-flipped puts it on the right. Signed in, Tools follows
+   Medical with its photo on the right, so the rows still alternate. The
+   text column carries
+   bottom padding equal to the photo's torn edge, so it centres on the photo
+   above the tear. */
+.landing-row {
+  --tear-h: 30px;
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: 3rem;
+  align-items: center;
+  padding: 2.5rem 0;
+}
+
+.landing-row.is-flipped .landing-row-image,
+.pv-signed-in .landing-row--tools .landing-row-image {
   order: 2;
 }
 
 .landing-row-content {
   min-width: 0;
-}
-
-.landing-row-eyebrow {
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 1.1rem;
-  color: var(--accent-red);
-  margin: 0 0 0.4rem;
-  letter-spacing: 0.01em;
+  padding-bottom: var(--tear-h);
 }
 
 .landing-row-title {
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 2rem;
+  font-size: 1.7rem;
   letter-spacing: 0.01em;
   color: var(--text-primary);
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.6rem;
 }
 
 .landing-row-desc {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
+  font-size: 1em;
+  color: var(--text-body);
   margin: 0;
-  max-width: 38rem;
 }
 
-/* "Sign In" under the landing tagline: the nav's Sign In button
-   (.nav-login-btn) with room above it. It and the tagline's sign-in note are
-   hidden once signed in (the page marks <html> with .pv-signed-in before it
-   paints). */
-.landing-signin { margin-top: 1.25rem; }
-.pv-signed-in .landing-signin,
-.pv-signed-in .landing-signin-note { display: none; }
+.landing-row-content > .home-meta { margin: 0 0 0.75rem; }
 
-/* A landing row's photo: fills the image box (as tall as the text beside it,
-   280px at least), cropped to fit. */
+/* A row's photo: as tall as the text beside it (380px at least), cropped to
+   fit, with the placeholder field behind it (.media-ph) and a torn bottom
+   edge (.tear-half). */
 .landing-row-image--photo {
   position: relative;
-  min-height: 280px;
+  align-self: stretch;
+  min-height: 380px;
   overflow: hidden;
-  border-radius: 4px;
-  background-color: var(--bg-darker);
+  border-radius: 4px 4px 0 0;
 }
+
 .landing-row-image--photo img {
   position: absolute;
   inset: 0;
@@ -1699,198 +2273,711 @@ button.nav-sublink {
   height: 100%;
   object-fit: cover;
 }
-/* The campaign photo's subject sits right of centre: keep it in frame as the
-   column narrows (desktop 85%, tablet 75%); stacked on phones it is centred. */
-.landing-row--campaigns .landing-row-image--photo img { object-position: 85%; }
-@media (max-width: 900px) {
-  .landing-row--campaigns .landing-row-image--photo img { object-position: 75%; }
-}
-@media (max-width: 720px) {
-  .landing-row--campaigns .landing-row-image--photo img { object-position: 50%; }
+
+.landing-row--campaign .landing-row-image--photo img { object-position: 72% center; }
+.landing-row--venues   .landing-row-image--photo img { object-position: 35% center; }
+.landing-row--tools    .landing-row-image--photo img { object-position: 58% center; }
+.landing-row--medical  .landing-row-image--photo img { object-position: 25% center; }
+
+/* Button rows and the campaign's plain links. */
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.25rem;
 }
 
-/* ── About page sections (about.html) ──────────────────────────────────── */
-.about-section {
-  max-width: 46rem;
-  margin: 0 auto 2.5rem;
+.home-actions.is-tight { gap: 0.5rem; }
+
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 1rem 0 0;
 }
-.about-section + .about-section {
-  padding-top: 2.5rem;
-  border-top: 1px solid var(--border-color);
+
+/* Grouped link lists (Tools: Crafting / Zodiac Weapon; Medical). */
+.home-tool-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 1.25rem 1.5rem;
+  margin-top: 1.25rem;
 }
-.about-section .landing-row-desc + .landing-row-desc { margin-top: 1rem; }
-/* Officer Core's groups (Leaders, Phoenix Council...) and the people in them. */
-.about-subtitle {
+
+.home-tool-groups .tool-list { margin-top: 0.75rem; }
+
+/* Venues & Menus: the photo with a small raised note pinned over its lower
+   right, tilted, with a red pin. */
+.home-pinned {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+  min-height: 400px;
+}
+
+.home-pinned .landing-row-image--photo { flex: 1; }
+
+.home-pin-note {
+  position: absolute;
+  right: 22px;
+  bottom: 54px;
+  width: 250px;
+  padding: 1.5rem 1.25rem calc(1rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  transform: rotate(-1.5deg);
+}
+
+.home-pin-note::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background-color: var(--accent-red);
+}
+
+.home-pin-note h3 { font-size: 1.25rem; margin: 0; }
+
+.home-pin-note-addr {
+  margin: 0.3rem 0 0;
   font-family: 'Stoke', serif;
-  font-weight: 400;
-  font-size: 1.35rem;
-  letter-spacing: 0.01em;
+  line-height: 1.35;
   color: var(--text-primary);
-  margin: 2rem 0 1rem;
 }
-.about-person { margin-bottom: 1.25rem; }
-.about-person-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.3rem;
+
+.home-pin-note-hours {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
-/* Bulleted lists (Phoenix Guard, Hooks), in the paragraphs' type. */
-.about-list {
-  max-width: 38rem;
+
+/* ── Officer Core ── A raised, torn card: two leaders as trays, the council
+   as a list, the guard as a line. */
+.home-officers {
+  margin: 2.5rem 0;
+  padding: 2rem 2rem calc(1.5rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-officers-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-officers-head .landing-row-title { margin: 0; }
+.home-officers-head > p { max-width: 34rem; margin: 0; }
+
+.home-leaders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+
+.home-leader {
+  display: flex;
+  gap: 1.1rem;
+  padding: 1.25rem 1.4rem;
+}
+
+.home-leader h3 { font-size: 1.3rem; margin: 0; }
+
+.home-leader-role {
   margin: 0;
-  padding-left: 1.25rem;
-  font-size: 1rem;
-  line-height: 1.65;
+  font-style: italic;
   color: var(--text-secondary);
 }
-.about-list li + li { margin-top: 0.4rem; }
 
-/* ── Image slot ──────────────────────────────────────────────────────────── */
-
-.img-slot {
-  position: relative;
-  flex: 1;
-  width: 100%;
-  min-height: 280px;
-  border-radius: 4px;
-  overflow: hidden;
-  background-color: var(--bg-darker);
-  background-image: url('../assets/pdf-texture-web.jpg');
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: rgba(245, 240, 230, 0.92);
+.home-leader-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
 }
 
-.img-slot::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
+.home-council-label { margin-top: 2rem; }
 
-.img-slot.tone-camp::before { background: linear-gradient(140deg, rgba(44,24,16,.55),  rgba(165,77,68,.35)); }   /* ink → red */
-.img-slot.tone-ven::before  { background: linear-gradient(140deg, rgba(107,68,35,.45), rgba(139,111,71,.45)); }  /* gold-brown */
-.img-slot.tone-med::before  { background: linear-gradient(140deg, rgba(90,138,60,.30), rgba(107,68,35,.55)); }   /* check-green → brown */
-.img-slot.tone-tool::before { background: linear-gradient(140deg, rgba(62,56,50,.55), rgba(139,111,71,.40)); }   /* ink → tan */
-.img-slot.tone-job::before  { background: linear-gradient(140deg, rgba(44,24,16,.55),  rgba(139,111,71,.45)); }  /* ink → gold */
-
-.img-slot-icon {
-  position: relative;
-  z-index: 1;
-  width: 56px;
-  height: 56px;
-  opacity: 0.85;
-}
-
-.img-slot-label {
-  position: absolute;
-  left: 1.25rem;
-  bottom: 1rem;
-  z-index: 1;
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(245, 240, 230, 0.78);
-}
-
-/* ── Tool list ───────────────────────────────────────────────────────────── */
-
-.tool-list {
+.home-council {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 0 2rem;
   list-style: none;
-  margin: 1.75rem 0 0;
+  margin: 0;
   padding: 0;
 }
 
-.tool-list li {
+.home-council li {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.9rem 0;
   border-bottom: 1px solid var(--border-color);
 }
 
-.tool-list li:first-child {
+.home-council-name {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  color: var(--text-primary);
+}
+
+.home-council-note {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.home-officers-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin-top: 1.25rem;
+}
+
+.home-officers-foot p { margin: 0; }
+.home-officers-foot .eyebrow { margin: 0 0.75rem 0 0; }
+
+.home-officers-recruit {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+  font-size: 0.98rem;
+}
+
+/* ── Visitor sign-in strip ── A raised strip in the card tone. */
+.home-signin-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin: 0 0 1rem;
+  padding: 1.2rem 1.5rem;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-signin-strip p { margin: 0; }
+
+.home-signin-strip strong {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+/* ── New Aboard (onboarding) ── A raised, torn card: the photo inset on the
+   left, the open steps beside it; a finished step collapses to one row. */
+.home-onboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem 2rem;
+  margin-top: 2.5rem;
+  padding: 1.75rem 1.75rem calc(1.5rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-onboard-photo {
+  position: relative;
+  flex: 1 1 280px;
+  min-height: 320px;
+  align-self: stretch;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+}
+
+.home-onboard-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 40% center;
+}
+
+.home-onboard-body {
+  flex: 999 1 560px;
+  min-width: 0;
+}
+
+.home-onboard-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem 2rem;
+}
+
+.home-onboard-head .landing-row-title { margin: 0; }
+
+.home-onboard-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0 1.4rem;
+}
+
+.home-onboard-progress .progress-bar {
+  flex: 1;
+  max-width: 360px;
+}
+
+.home-onboard-progress span {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.home-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 0.9rem;
+}
+
+.home-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.2rem 1.3rem;
+}
+
+.home-step.is-wide,
+.home-step-done { grid-column: 1 / -1; }
+
+.home-step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-step-top .status-dot { font-size: 0.95rem; }
+
+.home-step-num {
+  font-family: 'Stoke', serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--accent-brown);
+}
+
+.home-step h3 { font-size: 1.2rem; margin: 0; }
+
+.home-step-text {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.home-step-text.is-grow { flex: 1; }
+.home-step > .btn { align-self: flex-start; }
+
+/* Tag and rule side by side on hairline rows; the rules line up after the
+   widest tag. */
+.home-step-rules {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-content: start;
+  flex: 1;
+  margin: 0.2rem 0 0.35rem;
+}
+
+.home-step-rules dt,
+.home-step-rules dd {
+  margin: 0;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.home-step-rules dt { padding-right: 0.85rem; }
+
+.home-step-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 1.1rem;
+}
+
+.home-step-done .home-icon { width: 22px; height: 22px; }
+
+.home-step-done strong {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.home-step-done span {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.home-onboard-foot {
+  margin: 1.2rem 0 0;
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+}
+
+/* ── Boards ── Job Board and Bounty Board side by side: the three newest or
+   soonest postings, each with a thumbnail. */
+.home-boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 1.5rem;
+  padding: 2.5rem 0;
+}
+
+.home-board {
+  display: flex;
+  flex-direction: column;
+  padding: 1.6rem 1.6rem calc(1.4rem + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.home-board-intro { margin: 0 0 1rem; }
+
+.home-board-list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-board-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.home-thumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.home-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-board-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-board-row-title {
+  margin: 0;
+  font-family: 'Stoke', serif;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.home-board-row .home-meta { margin: 0; }
+
+.home-board-side {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.home-board-side.status-dot { color: var(--text-primary); }
+.home-board .home-actions { margin-top: 1.1rem; }
+
+/* ── About page (about.html) ─────────────────────────────────────────────────
+   An "on this page" column of button-style links beside the article: sticky
+   on desktop, wrapping above the article on phones. */
+.about-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 4rem;
+  align-items: flex-start;
+  padding: 1rem 0 1.5rem;
+}
+
+.about-toc {
+  flex: 1 1 170px;
+  max-width: 200px;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.about-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-toc a {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-family: 'Stoke', serif;
+  font-size: 0.98rem;
+}
+
+.about-toc a:hover {
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+}
+
+.about-article {
+  flex: 999 1 560px;
+  min-width: 0;
+}
+
+.about-section + .about-section { margin-top: 96px; }
+.about-section .landing-row-title {
+  font-size: 1.75rem;
+  margin: 0 0 20px;
+}
+.about-section .landing-row-desc {
+  max-width: 68ch;
+  margin: 0 0 16px;
+}
+
+/* Officer Core's groups (Leaders, Phoenix Council...) and the people in them:
+   card-tone bios two to a row. */
+.about-subtitle {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 60px 0 20px;
+}
+
+.about-people {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.about-person {
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  padding: 22px 24px 24px;
+}
+
+.about-person-name {
+  font-size: 1.2rem;
+  margin: 0 0 10px;
+}
+
+/* Avatar beside the name. */
+.about-person-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.about-person-head .about-person-name { margin: 0; }
+
+.about-section .about-person .landing-row-desc {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* The Phoenix Guard: a plain row of names. */
+.about-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 40px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.about-names li {
+  font-family: 'Stoke', serif;
+  font-size: 1.15rem;
+}
+
+/* Hooks: a torn card, one hook per rule-separated row with a short brown dash. */
+.about-hooks {
+  background-color: var(--bg-card);
+  border-radius: 4px 4px 0 0;
+  padding: 26px 30px calc(26px + var(--tear-h));
+}
+
+.about-hooks ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-hooks li {
+  position: relative;
+  max-width: 70ch;
+  padding: 12px 0 12px 26px;
+}
+
+.about-hooks li + li { border-top: 1px solid var(--border-color); }
+
+.about-hooks li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1.3em;
+  width: 10px;
+  height: 2px;
+  background-color: var(--accent-brown);
+}
+
+.about-hooks-addr {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 820px) {
+  .about-section + .about-section { margin-top: 72px; }
+  .about-people { grid-template-columns: minmax(0, 1fr); }
+  .about-toc {
+    max-width: none;
+    position: static;
+  }
+  .about-toc ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Tool list ───────────────────────────────────────────────────────────────
+   Links as full-width buttons in the well, a brown arrow at the end. A note
+   such as "staff only" rides in the button as a muted italic suffix, wrapping
+   under the name when there isn't room. */
+
+.tool-list {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .tool-list a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 0.85rem 0;
-  padding-left: 0;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0.4rem 14px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
   text-decoration: none;
   color: var(--text-primary);
   font-family: 'Stoke', serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.01em;
-  transition: padding-left 0.25s ease, color 0.25s ease;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s ease;
+}
+
+.tool-list a:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
 }
 
 .tool-list-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
 }
 
 .tool-list-arrow {
   color: var(--accent-brown);
-  font-size: 1.05rem;
-  transition: color 0.25s ease;
 }
 
-.tool-list a:hover {
-  padding-left: 0.4rem;
-  color: var(--accent-red);
-}
-
-.tool-list a:hover .tool-list-arrow {
-  color: var(--accent-red);
-}
-
-.tool-list a:focus-visible {
-  outline-offset: 4px;
-}
-
-/* ── Staff pill ──────────────────────────────────────────────────────────── */
-
-.tool-pill {
-  display: inline-block;
-  padding: 0.05rem 0.55rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.tool-list-note {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  letter-spacing: 0;
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  vertical-align: middle;
-  white-space: nowrap;
 }
 
 /* ── Responsive: stack rows on narrow viewports ──────────────────────────── */
 
-@media (max-width: 720px) {
-  .landing-row,
-  .landing-row:nth-of-type(even) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-    margin-bottom: 3rem;
+@media (max-width: 820px) {
+  .landing-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
   }
-  .landing-row:nth-of-type(even) .landing-row-image {
+  .landing-row.is-flipped .landing-row-image,
+  .pv-signed-in .landing-row--tools .landing-row-image {
     order: 0;
   }
-  .img-slot,
   .landing-row-image--photo {
-    min-height: 200px;
+    min-height: 240px;
   }
-  .landing-row-title {
-    font-size: 1.6rem;
+  .landing-row-content {
+    padding-bottom: 0;
   }
+  /* The pinned note moves up over the photo's top right, smaller, so it
+     doesn't push the text down; phones leave it out. */
+  .home-pinned { min-height: 0; }
+  .landing-row--venues .landing-row-image--photo { min-height: 300px; }
+  .home-pin-note {
+    top: 16px;
+    right: 14px;
+    bottom: auto;
+    width: 220px;
+    padding: 1.2rem 1rem calc(0.8rem + var(--tear-h));
+  }
+}
+
+@media (max-width: 560px) {
+  .home-pin-note { display: none; }
+}
+
+@media (max-width: 720px) {
+  .home-band-photo { height: 380px; }
+  .home-band.is-short .home-band-photo { height: 260px; }
+  .home-hero-card {
+    margin-top: -140px;
+    padding: 1.5rem 1.25rem calc(1.25rem + var(--tear-h));
+  }
+  .home-hero-card .app-title { font-size: 2.3rem; }
+  .home-welcome {
+    margin-top: -110px;
+    padding: 1.4rem 1.25rem calc(1.25rem + var(--tear-h));
+  }
+  .home-welcome-head .app-title { font-size: 2rem; }
+  .home-officers,
+  .home-onboard,
+  .home-board {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .home-backstory { padding-top: 3rem; }
+  .home-backstory blockquote { font-size: 1.3rem; }
 }
 
 
@@ -1898,20 +2985,12 @@ button.nav-sublink {
    12. RESPONSIVE
    ============================================================================= */
 
-/* --- Hamburger button (hidden on desktop) --- */
+/* --- Hamburger button (hidden on desktop) ---
+   A quiet icon button (section 6) holding three bars. */
 .hamburger {
   display: none;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   gap: 5px;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-card);
-  cursor: pointer;
   flex-shrink: 0;
 }
 
@@ -1919,12 +2998,13 @@ button.nav-sublink {
   display: block;
   width: 18px;
   height: 2px;
-  background-color: var(--text-primary);
+  background-color: currentColor;
   border-radius: 2px;
-  transition: background-color 0.2s ease;
 }
 
-/* --- Mobile sidebar drawer --- */
+/* --- Mobile sidebar drawer ---
+   Card tone, sliding over a scrim; like the dropdowns it floats, so it carries
+   the float shadow while open. */
 .nav-sidebar {
   position: fixed;
   top: 0;
@@ -1932,7 +3012,7 @@ button.nav-sublink {
   width: 280px;
   height: 100%;
   background-color: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  border: 0;
   z-index: 200;
   transform: translateX(-100%);
   transition: transform 0.28s ease;
@@ -1943,14 +3023,14 @@ button.nav-sublink {
 
 .nav-sidebar.open {
   transform: translateX(0);
-  box-shadow: 4px 0 20px rgba(62, 56, 50, 0.2);
+  box-shadow: var(--shadow-float);
 }
 
 .nav-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(44, 24, 16, 0.45);
+  background: var(--scrim);
   z-index: 199;
   opacity: 0;
   transition: opacity 0.28s ease;
@@ -1974,76 +3054,52 @@ body.nav-sidebar-open {
   flex-shrink: 0;
 }
 
+/* The close button is a quiet icon button (section 6). */
 .nav-sidebar-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-darker);
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
   flex-shrink: 0;
-}
-
-.nav-sidebar-close:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-card);
+  font-size: 0.9rem;
 }
 
 .nav-sidebar-links {
   list-style: none;
   margin: 0;
-  padding: 0.5rem 0;
+  padding: 0.5rem;
   flex: 1;
 }
-
-.nav-sidebar-section {}
 
 .nav-sidebar-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  min-height: 42px;
+  padding: 0 0.75rem;
   font-family: 'Stoke', serif;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   background: transparent;
-  border: none;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
   text-align: left;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .nav-sidebar-toggle:hover {
-  color: var(--text-primary);
   background-color: var(--bg-darker);
 }
 
 /* Non-dropdown sidebar items inherit the desktop .nav-link box; override so
-   they match the spacing of the dropdown toggles above. */
+   they match the dropdown toggles above. */
 .nav-sidebar-link {
   display: flex;
-  align-items: center;
   width: 100%;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  border-bottom: none;
-}
-
-.nav-sidebar-link:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-darker);
+  min-height: 42px;
 }
 
 .nav-sidebar-section.active > .nav-sidebar-toggle {
-  color: var(--accent-red);
+  color: var(--accent-brown);
 }
 
 .nav-sidebar-section .nav-caret {
@@ -2067,44 +3123,19 @@ body.nav-sidebar-open {
   max-height: 500px;
 }
 
-.nav-sidebar-submenu li {}
-
 .nav-sidebar-submenu .nav-submenu-label {
-  padding: 0.5rem 1.25rem 0.2rem 1.5rem;
-}
-
-.nav-sidebar-submenu .nav-submenu-label--divider {
-  margin-top: 0.2rem;
-  padding-top: 0.55rem;
+  padding: 0.6rem 0.75rem 0.3rem 1.25rem;
 }
 
 .nav-sidebar-submenu .nav-sublink {
-  display: block;
-  padding: 0.55rem 1.25rem 0.55rem 2rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.nav-sidebar-submenu .nav-sublink:hover {
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-}
-
-.nav-sidebar-submenu .nav-sublink.active {
-  color: var(--text-primary);
-  border-left-color: var(--accent-brown);
-  background-color: var(--bg-darker);
+  padding-left: 1.5rem;
 }
 
 
 /* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
 @media (max-width: 900px) {
   .hamburger {
-    display: flex;
+    display: inline-flex;
     margin-left: auto;
     order: 2;
   }
@@ -2130,10 +3161,13 @@ body.nav-sidebar-open {
   }
 }
 
+/* --- Page title --- */
+@media (max-width: 820px) {
+  .app-title { font-size: 2rem; }
+}
+
 /* --- Zodiac pages --- */
 @media (max-width: 640px) {
-  .app-title { font-size: 1.5rem; }
-
   .top-controls { flex-direction: column; align-items: stretch; }
 
   .job-selector { justify-content: space-between; }
@@ -2143,33 +3177,16 @@ body.nav-sidebar-open {
 
   .book-progress-bar { width: 50px; }
 
-  .task-table { font-size: 0.8rem; }
-  .task-table th,
-  .task-table td { padding: 0.3rem 0.35rem; }
-
-  .atma-table th,
-  .atma-table td { padding: 0.4rem 0.45rem; }
-
-  .count-input { width: 2.4rem; }
+  /* Book task tables tighten up; the Atma table scrolls sideways instead. */
+  .task-table:not(.atma-table) { font-size: 0.8rem; }
+  .task-table:not(.atma-table) th,
+  .task-table:not(.atma-table) td { padding: 0.3rem 0.35rem; }
 }
 
 
 /* =============================================================================
    12. CAMPAIGNS — Selection page + Chapter viewer
    ============================================================================= */
-
-/* ── Disabled campaign card (campaigns.html) ────────────────────────────────── */
-
-.landing-card--disabled {
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: default;
-  color: var(--text-secondary);
-}
-
-.landing-card-cta--muted {
-  color: var(--text-secondary) !important;
-}
 
 /* Breadcrumb under the campaign title: Campaigns / <current> (current disabled) */
 .campaign-breadcrumb {
@@ -2180,11 +3197,11 @@ body.nav-sidebar-open {
   gap: 0.4rem;
   margin: 0.6rem 0 0;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.92rem;
+  font-size: 1em;
 }
 
 .campaign-breadcrumb-link {
-  color: var(--accent-red);
+  color: var(--accent-brown);
   text-decoration: none;
 }
 
@@ -2209,14 +3226,17 @@ body.nav-sidebar-open {
   align-items: flex-start;
 }
 
-/* ── Chapter sidebar ────────────────────────────────────────────────────────── */
+/* ── Sidebar (filters, patient list) ───────────────────────────────────────────
+   A raised card with a torn bottom edge (.tear-half in the markup), sticky
+   beside the content on desktop and a drawer on phones. */
 
 .campaign-sidebar {
   width: 250px;
   flex-shrink: 0;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  padding-bottom: var(--tear-h);
   overflow-y: auto;
   position: sticky;
   top: 1rem;
@@ -2230,49 +3250,30 @@ body.nav-sidebar-open {
   }
 }
 
+/* Title ("Filters") and the close button, a small quiet icon button. */
 .campaign-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1rem 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 0.25rem;
 }
 
 .campaign-sidebar-title {
   font-family: 'Stoke', serif;
-  font-size: 0.78rem;
+  font-size: 1.15rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.campaign-sidebar-close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  padding: 0;
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.campaign-sidebar-close-btn:hover {
   color: var(--text-primary);
-  background-color: var(--bg-darker);
 }
 
 /* ── Chapter list ────────────────────────────────────────────────────────────── */
 
+/* A list of links in a sidebar (Patient Records): well behind the hovered and
+   current rows, brown text for the current one. */
 .chapter-list {
   list-style: none;
   margin: 0;
-  padding: 0.4rem 0;
+  padding: 0.4rem 0.75rem;
 }
 
 .chapter-list-item {
@@ -2280,46 +3281,35 @@ body.nav-sidebar-open {
 }
 
 .chapter-list-btn {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
+  min-height: 40px;
   text-align: left;
-  padding: 0.55rem 1rem;
+  padding: 0 0.6rem;
   background: none;
-  border: none;
-  border-left: 2px solid transparent;
+  border: 0;
+  border-radius: 4px;
   cursor: pointer;
   color: var(--text-primary);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
-.chapter-list-btn:hover {
-  background-color: var(--bg-darker);
-}
-
+.chapter-list-btn:hover,
 .chapter-list-item.active .chapter-list-btn {
-  border-left-color: var(--accent-red);
   background-color: var(--bg-darker);
 }
 
 .chapter-list-btn-title {
   display: block;
   font-family: 'Stoke', serif;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 400;
-  color: var(--text-primary);
-  transition: color 0.15s ease;
+  color: inherit;
 }
 
-.chapter-list-item.active .chapter-list-btn-title {
-  color: var(--accent-red);
-}
-
-.chapter-list-btn-date {
-  display: block;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-top: 0.15rem;
+.chapter-list-item.active .chapter-list-btn {
+  color: var(--accent-brown);
 }
 
 /* ── Main content area ───────────────────────────────────────────────────────── */
@@ -2333,40 +3323,60 @@ body.nav-sidebar-open {
   margin-bottom: 1rem;
 }
 
-/* Single-chapter campaigns hide the Chapters toolbar; add back roughly its
-   vertical footprint (toggle button height + 1rem margin) so the content sits
-   as comfortably below the title as it does on multi-chapter pages. */
-.campaign-main.is-single-chapter {
-  margin-top: 2.85rem;
+/* ── Chapter viewer (view.html) ──────────────────────────────────────────────
+   A reading column about 860px wide: the chapter bar, then the chapter sheet,
+   a torn card. */
+
+.chapter-reader {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-top: 0.5rem;
 }
 
-.campaign-sidebar-toggle-btn {
-  display: inline-flex;
+/* Previous / "Chapter N of M" with a select of every chapter / Next. */
+.chapter-bar {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.chapter-bar[hidden] { display: none; }
+
+.chapter-bar-pick {
+  flex: 1 1 300px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chapter-bar-count {
   font-family: 'Stoke', serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.03em;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  padding: 0.4rem 0.85rem;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
 }
 
-.campaign-sidebar-toggle-btn:hover {
+.chapter-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 0.7rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
   color: var(--text-primary);
-  border-color: var(--accent-brown);
+  background-color: var(--bg-darker);
+  border: 0;
+  border-radius: 4px;
 }
-
-/* ── Chapter content card ────────────────────────────────────────────────────── */
 
 .chapter-view {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  padding: 2rem 2.5rem;
+  border: 0;
+  border-radius: 4px 4px 0 0;
+  padding: 34px 48px calc(36px + var(--tear-h));
 }
 
 .chapter-view-header {
@@ -2374,8 +3384,8 @@ body.nav-sidebar-open {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.25rem;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--border-color);
   flex-wrap: wrap;
 }
@@ -2386,110 +3396,126 @@ body.nav-sidebar-open {
 
 .chapter-view-label {
   font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin: 0 0 0.3rem;
-}
-
-.chapter-view-title {
-  font-family: 'Stoke', serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--text-primary);
-  margin: 0 0 0.3rem;
-}
-
-.chapter-view-date {
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 1.1rem;
+  font-size: 0.92rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
-/* ── TL;DR toggle button ─────────────────────────────────────────────────────── */
-
-.tldr-toggle-btn {
+.chapter-view-title {
   font-family: 'Stoke', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.4rem 1rem;
-  background: transparent;
-  border: 1.5px solid var(--border-color);
-  border-radius: 2rem;
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin: 2px 0 4px;
+}
+
+.chapter-view-date {
+  font-style: italic;
   color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
+  margin: 0;
 }
 
-.tldr-toggle-btn:hover {
-  border-color: var(--accent-brown);
+/* At the end of the sheet: "Next chapter: Title · date →", in the well. */
+.chapter-next-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 34px;
+  padding: 14px 18px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background-color 0.15s ease;
+}
+
+.chapter-next-link:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
+}
+
+.chapter-next-link small {
+  display: block;
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.chapter-next-link strong {
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+.chapter-next-link em {
+  margin-left: 8px;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+}
+
+.chapter-next-arrow {
+  font-family: 'Stoke', serif;
+  font-size: 1.2rem;
   color: var(--accent-brown);
-}
-
-.tldr-toggle-btn.active {
-  background-color: var(--accent-red);
-  border-color: var(--accent-red);
-  color: #fff;
 }
 
 /* ── Rendered chapter markdown ───────────────────────────────────────────────── */
 
 .chapter-body, .record-field-value {
   font-family: 'Crimson Pro', serif;
-  font-size: 1.15rem;
-  line-height: 1.75;
-  color: var(--text-primary);
+  font-size: 1em;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+.chapter-body {
+  font-size: 1.25rem;
+  line-height: 1.6;
 }
 
 /*
  * H1 in chapter content is narrative body text (the author uses # for paragraphs).
- * Style it to read as prominent prose, not a page-level heading.
+ * Style it to read as prose, not a page-level heading.
  */
-.chapter-body h1 {
+.chapter-body h1,
+.chapter-body p {
   font-family: 'Crimson Pro', serif;
-  font-size: 1.2rem;
+  font-size: 1em;
   font-weight: 400;
-  line-height: 1.75;
-  color: var(--text-primary);
-  margin: 0 0 1rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  max-width: 68ch;
+  margin: 0 0 16px;
+}
+
+.chapter-body p:last-child {
+  margin-bottom: 0;
 }
 
 /* H2 is used for named section headers within the chapter */
 .chapter-body h2 {
   font-family: 'Stoke', serif;
-  font-size: 0.85rem;
+  font-size: 1.25rem;
   font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent-brown);
+  color: var(--text-primary);
   margin: 2rem 0 0.75rem;
 }
 
 .chapter-body h3 {
   font-family: 'Stoke', serif;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 400;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 1.5rem 0 0.5rem;
 }
 
-.chapter-body p {
-    margin: 0 0 1rem;
-    font-size: 1.3rem;
-    line-height: 1.7rem;
-}
-.chapter-body p:last-child {
-  margin-bottom: 0;
-}
-
+/* A plain full-width rule, matching the one under the chapter header. */
 .chapter-body hr {
-  border: none;
-  border-top: 1px solid var(--border-color);
-  margin: 2rem 0;
+  border: 0;
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 30px 0;
 }
 
 .chapter-body strong { font-weight: 700; }
@@ -2521,7 +3547,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(44, 24, 16, 0.5);
+  background: var(--scrim);
   z-index: 100;
   cursor: pointer;
 }
@@ -2537,6 +3563,7 @@ body.nav-sidebar-open {
     gap: 0;
   }
 
+  /* A drawer over the scrim, so no torn edge; it floats while open. */
   .campaign-sidebar {
     position: fixed;
     top: 0;
@@ -2545,22 +3572,23 @@ body.nav-sidebar-open {
     z-index: 110;
     width: 280px;
     max-height: 100vh;
+    padding-bottom: 0;
     border-radius: 0;
-    border-top: none;
-    border-bottom: none;
-    border-left: none;
-    border-right: 1px solid var(--border-color);
+    -webkit-mask: none;
+            mask: none;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
 
   .campaign-sidebar.sidebar-open {
     transform: translateX(0);
+    box-shadow: var(--shadow-float);
   }
+}
 
-  .chapter-view {
-    padding: 1.25rem 1rem;
-  }
+@media (max-width: 820px) {
+  .chapter-view { padding: 26px 22px calc(32px + var(--tear-h)); }
+  .chapter-bar-pick { order: -1; flex-basis: 100%; }
 }
 
 /* --- Phoenix Vanguard --- */
@@ -2598,95 +3626,58 @@ body.nav-sidebar-open {
   align-items: center;
 }
 
-/* Buttons */
-.cdb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  border: none;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cdb-btn-primary {
-  background-color: var(--accent-brown);
-  color: #fff;
-}
-
-.cdb-btn-primary:hover { filter: brightness(1.1); }
-
-.cdb-btn-secondary {
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.cdb-btn-secondary:hover { background-color: var(--border-color); }
-
-/* Secondary buttons with a fixed colour: Cancel, Save, Delete (no hover
-   change), and red-outlined remove buttons. */
-.cdb-btn-secondary.is-cancel  { background-color: var(--bg-darker); color: var(--text-primary); }
-.cdb-btn-secondary.is-primary { background-color: var(--accent-brown); color: white; }
-.cdb-btn-secondary.is-delete  { background-color: var(--accent-red); color: white; }
-.cdb-btn-secondary.is-danger  { color: var(--accent-red); border-color: var(--accent-red); }
-/* Edit button sitting on the card's right edge. */
-.cdb-btn.cdb-card-edit {
-  padding: 8px;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(50%);
-  z-index: 10;
-}
 .cdb-file-input { display: none; }
 
 /* Search section */
+/* Search panel: a raised card. */
 .cdb-search-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 14px;
+  padding: 20px 22px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
 }
 
 .cdb-search-bar { width: 100%; }
 
-.cdb-input {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
+/* Inputs and selects sit in the well, with no outline of their own. */
+.cdb-input,
+.cdb-select {
+  min-height: 40px;
+  padding: 0 0.8rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--bg-darker);
   color: var(--text-primary);
   font-family: 'Crimson Pro', serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
-.cdb-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25); }
+.cdb-input { width: 100%; }
+.cdb-select { cursor: pointer; }
+.cdb-input::placeholder { color: var(--text-secondary); }
+textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-input-mono { font-family: monospace; font-size: 0.85rem; }
-.cdb-input-sm   { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+.cdb-input-sm   { min-height: 30px; padding: 0 0.5rem; font-size: 0.85rem; }
 
-.cdb-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
+/* A checkbox with its label (filters, Food Required). */
+.cdb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-left: 4px;
+  font-size: 1rem;
   color: var(--text-primary);
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.875rem;
   cursor: pointer;
 }
-
-.cdb-select:focus { outline: none; box-shadow: 0 0 0 2px rgba(139, 111, 71, 0.25); }
 
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 10px;
   align-items: center;
 }
 
@@ -2704,25 +3695,23 @@ body.nav-sidebar-open {
 .cdb-craft-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
   padding-bottom: 2rem;
 }
 
-/* Craft card header */
+/* Card header: title, then the meta and the expand button, wrapping on
+   narrow screens. */
 .craft-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 1rem;
-  padding-right: 80px;
+  gap: 6px 16px;
   cursor: pointer;
-  position: relative;
-  transition: opacity 0.15s ease;
 }
 
-.craft-card-header:hover { opacity: 0.95; }
-.craft-card-header.expanded { border-bottom: 1px solid var(--border-color); }
-
 .craft-title-section {
+  flex: 1 1 280px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2731,7 +3720,7 @@ body.nav-sidebar-open {
 .craft-meta-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 6px 16px;
   margin-left: auto;
 }
 
@@ -2755,47 +3744,30 @@ body.nav-sidebar-open {
 .cdb-icon-md { font-size: 20px !important; }
 
 /* Icon colors */
-.cdb-icon-btn    { color: var(--accent-brown); font-size: 24px; cursor: pointer; transition: opacity 0.2s; }
-.cdb-icon-btn:hover { opacity: 0.7; }
 .cdb-icon-food   { color: var(--star-filled); }
 .cdb-icon-potion { color: var(--accent-brown); }
 
 /* Star display */
 .cdb-stars { display: inline-flex; align-items: center; gap: 0.25rem; }
 
-/* Delete button */
-.cdb-delete-btn {
-  background-color: var(--accent-red);
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 8px;
-  cursor: pointer;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(50%);
-  z-index: 10;
-  transition: filter 0.2s;
-}
-
-.cdb-delete-btn:hover { filter: brightness(1.15); }
-
-/* Stats bar (darker inset row below header) */
+/* Stats bar under the header: a recessed tray inside the card. */
 .cdb-stats-row {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  background-color: var(--bg-darker);
+  margin-top: 10px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 
 .cdb-stats-values {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
@@ -2803,21 +3775,24 @@ body.nav-sidebar-open {
 .cdb-stat-value  { font-weight: 600; color: var(--text-primary); }
 .cdb-hint        { font-size: 0.75rem; margin-left: 0.5rem; color: var(--text-secondary); }
 
-/* Editable stats row */
+/* Editable stats row (a tray, like the stats bar) */
 .cdb-stats-edit-row {
-  padding: 0.75rem 1rem;
+  margin-top: 10px;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background-color: var(--bg-darker);
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 
-/* Card body */
+/* Card body (expanded) */
 .cdb-card-body {
-  padding: 1rem;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 14px;
 }
 
 .cdb-craft-stats {
@@ -2839,9 +3814,10 @@ body.nav-sidebar-open {
 }
 
 .cdb-subheading {
-  font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  font-family: 'Stoke', serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  margin: 0 0 8px;
   color: var(--text-primary);
 }
 
@@ -2861,52 +3837,35 @@ body.nav-sidebar-open {
   margin-bottom: 0.25rem;
 }
 
-.cdb-macro-label { font-size: 0.75rem; color: var(--text-secondary); }
-
-.cdb-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: inherit;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  border: none;
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.cdb-copy-btn:hover { background-color: var(--border-color); }
+.cdb-macro-label { font-size: 0.85rem; color: var(--text-secondary); }
 
 .cdb-macro-pre {
+  margin: 0;
   padding: 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-family: monospace;
   overflow-x: auto;
   white-space: pre-wrap;
-  background-color: var(--bg-card);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
 }
 
 .cdb-notes-text { font-size: 0.875rem; color: var(--text-primary); }
 
 /* Add/Edit form panel */
 .cdb-form-panel {
-  border-radius: 0.5rem;
+  border-radius: 4px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 0;
 }
 
 .cdb-form-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-family: 'Stoke', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
 }
 
 .cdb-form-fields {
@@ -2929,23 +3888,27 @@ body.nav-sidebar-open {
   color: var(--text-primary);
 }
 .cdb-label.is-flush { margin-bottom: 0; }
-/* Boxed group of fields inside a form (Cosmic Exploration). */
+/* Boxed group of fields inside a form (Cosmic Exploration): a recessed tray. */
 .cdb-form-fields.is-boxed {
   margin-bottom: 0.75rem;
   padding: 0.75rem;
-  background-color: var(--bg-darker);
-  border-radius: 0.375rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 .cdb-align-end { align-self: end; }
 
 /* Card details: stat labels, tags row, item macros, results count. */
 .cdb-stat-label { color: var(--text-secondary); }
 .cdb-stat-text { color: var(--text-primary); }
-.cdb-inline-row.cdb-card-tags { padding: 0 1rem 0.75rem; flex-wrap: wrap; gap: 0.4rem; }
-.cdb-meta { color: var(--text-secondary); font-size: 0.85rem; }
+/* Collapsed card: "Crafts:" and a small quiet button per item. */
+.cdb-inline-row.cdb-card-tags { margin-top: 6px; flex-wrap: wrap; gap: 6px; }
+.cdb-card-tags-label { margin-right: 2px; font-size: 0.9rem; color: var(--text-secondary); }
+.cdb-card-tags .btn .material-icons { color: var(--accent-brown); }
+.cdb-meta { color: var(--text-secondary); font-size: 0.9rem; }
 .cdb-item-block { margin-bottom: 0.75rem; }
 .cdb-item-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
-.cdb-results-count { margin: 0.5rem 0 1rem; color: var(--text-secondary); font-size: 0.9rem; }
+.cdb-results-count { margin: 20px 2px 12px; color: var(--text-secondary); font-style: italic; }
 .cdb-filter-note { margin-right: 0.75rem; }
 
 .cdb-label-xs {
@@ -2961,7 +3924,7 @@ body.nav-sidebar-open {
   gap: 0.5rem;
 }
 
-.cdb-checkbox { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--check-color); }
+.cdb-checkbox { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--accent-brown); }
 
 .cdb-form-actions {
   display: flex;
@@ -2974,9 +3937,32 @@ body.nav-sidebar-open {
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
 }
+
+/* "No macros saved" and the Add macros button, in a recessed tray. */
+.cdb-empty-macros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* A note above the list (import result, catalog errors): a small raised card. */
+.cdb-notice {
+  margin: 0.5rem 0;
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.cdb-notice.is-error { color: var(--accent-red); }
 
 /* Class stats modal */
 .cdb-modal-overlay {
@@ -2987,18 +3973,18 @@ body.nav-sidebar-open {
   justify-content: center;
   padding: 1rem;
   z-index: 50;
-  background-color: rgba(62, 56, 50, 0.75);
+  background-color: var(--scrim);
 }
 
 .cdb-modal {
-  border-radius: 0.5rem;
+  border-radius: 4px;
   padding: 1.5rem;
   max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 0;
 }
 
 .cdb-modal-desc {
@@ -3009,11 +3995,9 @@ body.nav-sidebar-open {
 
 .cdb-modal-body { margin-bottom: 1.5rem; }
 
+/* One class's stats inside the modal: a recessed tray (.tray). */
 .cdb-class-row {
   padding: 1rem;
-  border-radius: 0.375rem;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
 }
 
 .cdb-class-row-title {
@@ -3066,110 +4050,85 @@ body.nav-sidebar-open {
   align-items: center;
 }
 
+/* A reward: the level's numeral in brown and the count, in the well. */
 .cdb-data-chip {
   display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 0.35rem;
-  border: 1px solid var(--border-color);
+  align-items: baseline;
+  gap: 6px;
+  padding: 0.22rem 0.65rem;
+  border-radius: 3px;
   background-color: var(--bg-darker);
   font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
 }
 
-.cdb-data-chip-label { font-weight: 700; }
-.cdb-data-chip-count { color: var(--text-secondary); font-size: 0.8rem; }
+.cdb-data-chip-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  color: var(--accent-brown);
+}
 
-.cdb-data-chip--gray  { background: rgba(163, 155, 142, 0.18); border-color: rgba(163, 155, 142, 0.5); }
-.cdb-data-chip--tan   { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
-.cdb-data-chip--olive { background: rgba(142, 139,  92, 0.18); border-color: rgba(142, 139,  92, 0.5); }
-.cdb-data-chip--plum  { background: rgba(140,  94, 120, 0.18); border-color: rgba(140,  94, 120, 0.5); }
-.cdb-data-chip--rust  { background: rgba(158,  92,  58, 0.18); border-color: rgba(158,  92,  58, 0.5); }
-.cdb-data-chip--wine  { background: rgba(122,  46,  46, 0.18); border-color: rgba(122,  46,  46, 0.5); }
-.cdb-data-chip--indigo{ background: rgba( 74,  78, 122, 0.18); border-color: rgba( 74,  78, 122, 0.5); }
-.cdb-data-chip--brown { background: rgba(139, 111,  71, 0.20); border-color: rgba(139, 111,  71, 0.55); }
+.cdb-data-chip-count { color: var(--text-primary); }
 
-/* Badge row in the card header (location / job / food) */
+/* Card meta: location, job and food as muted text with icons (.cdb-badge),
+   the class as a square .tag. */
 .cdb-badge-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 4px 14px;
   align-items: center;
-  margin-right: 0.5rem;
 }
 
 .cdb-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.75rem;
-  font-family: 'Stoke', serif;
-  line-height: 1;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-}
-
-.cdb-badge--location { background: rgba(197, 184, 154, 0.18); border-color: rgba(197, 184, 154, 0.5); }
-.cdb-badge--job      { background: rgba(139, 111,  71, 0.15); border-color: rgba(139, 111,  71, 0.5); }
-.cdb-badge--food     { background: rgba(120, 130,  80, 0.18); border-color: rgba(120, 130,  80, 0.5); }
-
-/* Category badge with per-category accent colors */
-.cdb-cat-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.75rem;
-  font-family: 'Stoke', serif;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  line-height: 1;
-}
-
-.cdb-cat-badge--class-a-expert  { background: rgba(122,  46,  46, 0.20); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.5); }
-.cdb-cat-badge--class-a         { background: rgba(140,  94, 120, 0.20); color: #8c5e78; border-color: rgba(140,  94, 120, 0.5); }
-.cdb-cat-badge--class-b         { background: rgba( 94, 110, 140, 0.20); color: #5e6e8c; border-color: rgba( 94, 110, 140, 0.5); }
-.cdb-cat-badge--class-c         { background: rgba(120, 130,  80, 0.20); color: #788250; border-color: rgba(120, 130,  80, 0.5); }
-.cdb-cat-badge--class-d         { background: rgba(163, 155, 142, 0.20); color: #6c655a; border-color: rgba(163, 155, 142, 0.5); }
-.cdb-cat-badge--sequential      { background: rgba(158,  92,  58, 0.20); color: #9e5c3a; border-color: rgba(158,  92,  58, 0.5); }
-.cdb-cat-badge--time-restricted { background: rgba(180, 145,  60, 0.20); color: #b4913c; border-color: rgba(180, 145,  60, 0.5); }
-.cdb-cat-badge--critical        { background: rgba(122,  46,  46, 0.25); color: #7a2e2e; border-color: rgba(122,  46,  46, 0.55); }
-
-/* Items grid (3-up in expanded body) */
-.cdb-cosmic-item-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-.cdb-cosmic-item-card {
-  background-color: var(--bg-darker);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-}
-
-.cdb-cosmic-item-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.4rem;
-}
-
-.cdb-cosmic-item-stat {
-  font-size: 0.85rem;
+  gap: 6px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
-.cdb-cosmic-item-stat .cdb-stat-value { color: var(--text-primary); }
+.cdb-badge .material-icons { font-size: 15px; }
 
+/* Items in an expanded card, each a recessed tray (.tray). */
+.cdb-cosmic-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.cdb-cosmic-item-card {
+  padding: 10px 14px;
+}
+
+.cdb-cosmic-item-name {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.cdb-cosmic-item-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.cdb-cosmic-item-stat .cdb-stat-value {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* The stat a numeric search matched. */
 .cdb-cosmic-item-stat--match {
-  background: rgba(139, 111, 71, 0.18);
+  margin: 0 -0.25rem;
   padding: 0 0.25rem;
-  border-radius: 0.2rem;
-  font-weight: 600;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--accent-brown) 18%, transparent);
 }
 
 @media (max-width: 768px) {
@@ -3188,7 +4147,7 @@ body.nav-sidebar-open {
 }
 
 .venues-filter-body {
-  padding: 0.85rem 1rem 1.25rem;
+  padding: 0.85rem 1.25rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -3202,34 +4161,26 @@ body.nav-sidebar-open {
 
 .venues-filter-label {
   font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
 }
 
+/* Inputs sit in the well, with no outline of their own. */
 .venues-filter-input,
 .venues-filter-select {
   width: 100%;
-  padding: 0.45rem 0.6rem;
+  min-height: 40px;
+  padding: 0 0.75rem;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   background-color: var(--bg-darker);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  outline: none;
-  transition: border-color 0.15s ease;
+  border: 0;
+  border-radius: 4px;
 }
 
 .venues-filter-input::placeholder {
-  font-style: italic;
   color: var(--text-secondary);
-}
-
-.venues-filter-input:focus,
-.venues-filter-select:focus {
-  border-color: var(--accent-brown);
 }
 
 .venues-filter-list {
@@ -3238,7 +4189,6 @@ body.nav-sidebar-open {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .venues-filter-item { padding: 0; }
@@ -3246,8 +4196,8 @@ body.nav-sidebar-open {
 .venues-filter-check {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
+  gap: 10px;
+  min-height: 38px;
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   color: var(--text-primary);
@@ -3256,36 +4206,22 @@ body.nav-sidebar-open {
 
 .venues-filter-check input[type="checkbox"] {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   margin: 0;
+  accent-color: var(--accent-brown);
 }
 
 .venues-filter-check-text { flex: 1; }
 
 .venues-filter-count {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.venues-filter-reset {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-brown);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 0.3rem;
-  padding: 0.55rem 0.75rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.venues-filter-reset:hover {
-  border-color: var(--accent-brown);
-  color: var(--accent-red);
-}
+/* "Reset filters" is a plain button (.btn.is-plain) at the foot of the list. */
+.venues-filter-body > .btn.is-plain { align-self: flex-start; }
 
 /* ── Toolbar (count + sort) ──────────────────────────────────────────────── */
 .venues-toolbar {
@@ -3293,13 +4229,12 @@ body.nav-sidebar-open {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .venues-result-count {
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
+  font-style: italic;
   color: var(--text-secondary);
   flex: 1;
 }
@@ -3312,10 +4247,8 @@ body.nav-sidebar-open {
 
 .venues-sort-label {
   font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
 }
 
 .venues-sort .venues-filter-select {
@@ -3326,9 +4259,9 @@ body.nav-sidebar-open {
 /* ── Card grid ───────────────────────────────────────────────────────────── */
 .venues-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 14px;
 }
 
 .venues-empty {
@@ -3337,8 +4270,8 @@ body.nav-sidebar-open {
   font-size: 1.1rem;
   color: var(--text-primary);
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 0;
+  border-radius: 4px;
   padding: 2rem 1.5rem;
   text-align: center;
 }
@@ -3356,7 +4289,7 @@ body.nav-sidebar-open {
   flex-direction: column;
   background: var(--bg-card);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
   text-align: left;
   padding: 0;
@@ -3370,15 +4303,13 @@ body.nav-sidebar-open {
   transform: translateY(-2px);
 }
 
-.venue-card.is-featured {
-  box-shadow: 0 6px 18px rgba(62, 56, 50, 0.28);
-}
-
+/* The media box carries .media-ph (the placeholder field under any image)
+   and .tear-half (its torn bottom edge into the card body). */
 .venue-card-media {
+  --tear-h: 22px;
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -3389,50 +4320,37 @@ body.nav-sidebar-open {
   display: block;
 }
 
-.venue-card-sig {
+/* Labels over a card's image (size, featured, position, category, status):
+   small square tags in the media inks, the same on every card, with no
+   per-category colours. In a popup's text the same labels are plain .tag. */
+.venue-badge,
+.job-badge {
   position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
-}
-
-.venue-badge {
-  position: absolute;
+  top: 0.6rem;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 0.25rem;
-  line-height: 1;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--media-5) 85%, transparent);
+  color: var(--media-ink);
 }
 
-.venue-badge-featured {
-  top: 0.6rem;
-  left: 0.6rem;
-  background: var(--accent-red);
-  color: #fff;
-}
+.venue-badge-featured,
+.job-badge-category { left: 0.6rem; }
 
-.venue-badge-size {
-  top: 0.6rem;
-  right: 0.6rem;
-  background: rgba(0, 0, 0, 0.55);
-  color: #f3e9d2;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
+.venue-badge-size,
+.job-badge-status { right: 0.6rem; }
 
 .venue-card-body {
-  padding: 1rem 1.1rem 1.1rem;
+  padding: 12px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
   flex: 1;
 }
 
@@ -3445,26 +4363,27 @@ body.nav-sidebar-open {
 
 .venue-card-title {
   font-family: 'Stoke', serif;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 400;
   margin: 0;
   color: var(--text-primary);
 }
 
+/* The line under the name (IC rank, location, position): muted italic. */
 .venue-card-location {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .venue-card-desc {
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  line-height: 1.45;
-  color: var(--text-primary);
-  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  margin: 4px 0 0;
   flex: 1;
 }
 
@@ -3476,9 +4395,10 @@ body.nav-sidebar-open {
 }
 
 .venue-card-tag {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: 'Crimson Pro', serif;
   font-size: 0.95rem;
-  color: var(--accent-brown);
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* ── Venue modal ─────────────────────────────────────────────────────────── */
@@ -3486,7 +4406,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 12, 8, 0.7);
+  background: var(--scrim);
   z-index: 200;
   align-items: flex-start;
   justify-content: center;
@@ -3501,30 +4421,18 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.venue-modal-close {
+/* Close button for the detail popups (venue, job, roster, codex...): a small
+   quiet icon button (.btn.is-quiet.is-small.is-icon) pinned top right. */
+.modal-close {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
   z-index: 2;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
 }
-
-.venue-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
 /* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
    work from the moment they appear. That is a focus move, not a focus stop —
@@ -3543,50 +4451,10 @@ body.nav-sidebar-open {
   position: relative;
 }
 
-/* Contrast-vector border overlay. An SVG is used as a mask (same technique as
-   the site logo) and filled with --bg-card so its torn edge reads as a seamless
-   extension of the card body below the media. Full height sits on detail-modal
-   images (.contrast-border); half height sits on unopened grid-card images
-   (.contrast-border-half). Wrap a lone <img> in .contrast-media so the overlay
-   has a positioned box to anchor to; containers that are already positioned
-   (galleries, card media) can hold the overlay directly. */
-.contrast-media {
-  position: relative;
-  display: block;
-  line-height: 0;
-}
-
-.contrast-border,
-.contrast-border-half {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  width: 100%;
-  background-color: var(--bg-card);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.contrast-border {
-  aspect-ratio: 591.84 / 42.48;
-  -webkit-mask: url("../assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-          mask: url("../assets/border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-}
-
-/* The half vector is a narrower (not shorter) torn edge, so its taller aspect
-   ratio keeps the band from stretching thin on the smaller grid-card widths.
-   (The SVGs carry preserveAspectRatio="none" so the 100% mask stretches flush
-   to every edge instead of letterboxing a sliver at the corners.) */
-.contrast-border-half {
-  aspect-ratio: 319.4136 / 42.48;
-  -webkit-mask: url("../assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-          mask: url("../assets/half-border-contrast-vector.svg") no-repeat bottom center / 100% 100%;
-}
-
 /* Sketch wash — the shared tint for the site's illustrations. Put it on the
    box that holds the artwork (a card's media tile, a thumb, a modal image
-   wrapper) and it lends that box's contents the parchment hue of the theme.
+   wrapper) and it lends that box's contents the theme's wash colour
+   (--sketch-wash-color).
    Blended on colour, not laid over as a veil: the illustration keeps its own
    luminance, so linework stays exactly as dark as it was drawn.
 
@@ -3594,17 +4462,13 @@ body.nav-sidebar-open {
    gradient fallback can carry the class unconditionally and only be washed
    when there is something to wash.
 
-   Stays below any torn edge in the same box: .contrast-border/-half carry
-   z-index 1 and this is z-index auto, so they paint after the wash and are
-   not part of the backdrop it blends with. Keep it that way — a z-index here
-   would tint the border along with the art.
+   A torn edge (.tear / .tear-half) on the same box cuts the wash along with
+   the art, so the two can share a box.
 
-   --sketch-wash-alpha tunes the strength per surface; the default is the
-   subtle end, and the menu thumbs run stronger (see .menu-thumb below). */
+   --sketch-wash-alpha sets the strength (0.5 in both themes); a surface can
+   override it. */
 .sketch-wash {
-  --sketch-wash-tint-from: 107, 68, 35;
-  --sketch-wash-tint-to:   139, 111, 71;
-  --sketch-wash-alpha: 0.1;
+  --sketch-wash-alpha: 0.5;
   position: relative;
   /* Own stacking context, so the blend composites against the artwork inside
      the box and not whatever sits behind it. */
@@ -3615,25 +4479,16 @@ body.nav-sidebar-open {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(140deg,
-    rgba(var(--sketch-wash-tint-from), var(--sketch-wash-alpha)),
-    rgba(var(--sketch-wash-tint-to), var(--sketch-wash-alpha)));
+  background: color-mix(in srgb, var(--sketch-wash-color) calc(var(--sketch-wash-alpha) * 100%), transparent);
   mix-blend-mode: color;
   pointer-events: none;
-}
-
-/* The blend carries hue and saturation, so each theme keeps its own pair —
-   dark's is the more muted of the two. */
-[data-theme="dark"] .sketch-wash {
-  --sketch-wash-tint-from: 38, 22, 14;
-  --sketch-wash-tint-to:   74, 66, 57;
 }
 
 .venue-gallery {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000;
+  background-color: var(--media-5);
   overflow: hidden;
 }
 
@@ -3654,35 +4509,24 @@ body.nav-sidebar-open {
 
 .venue-gallery-slide.is-active { opacity: 1; }
 
+/* Previous / next: quiet icon buttons (.btn.is-quiet.is-icon) over the photo. */
 .venue-gallery-nav {
   position: absolute;
   /* Nudged below center so the arrows sit lower in the frame. */
   top: 58%;
   transform: translateY(-50%);
-  width: 2.25rem;
-  height: 2.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.95rem;
-  cursor: pointer;
   z-index: 2;
 }
 
-.venue-gallery-nav:hover { background: rgba(0, 0, 0, 0.75); }
+.venue-gallery-nav:active { transform: translateY(-50%) scale(0.98); }
 
 .venue-gallery-prev { left: 0.6rem; }
 .venue-gallery-next { right: 0.6rem; }
 
 .venue-gallery-dots {
   position: absolute;
-  /* Lifted clear of the contrast-border torn edge that overlays the gallery
-     bottom (full border is ~46px tall at the 640px modal width). */
-  bottom: 3rem;
+  /* Lifted clear of the gallery's torn bottom edge. */
+  bottom: calc(var(--tear-h) + 0.75rem);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -3695,14 +4539,13 @@ body.nav-sidebar-open {
   height: 0.55rem;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--media-ink);
+  background: transparent;
   cursor: pointer;
 }
 
 .venue-gallery-dot.is-active {
-  background: #f3e9d2;
-  border-color: #f3e9d2;
+  background: var(--media-ink);
 }
 
 .venue-modal-content {
@@ -3724,15 +4567,26 @@ body.nav-sidebar-open {
   color: var(--text-primary);
 }
 
+/* The line under a popup's title (location): muted italic. */
 .venue-modal-location {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  font-style: italic;
   color: var(--text-secondary);
   margin: 0 0 1rem;
 }
-/* A labelled section further down the popup (roster SKILLS / RP HOOKS). */
-.venue-modal-location.is-section { margin-top: 1rem; }
+/* A labelled section further down the popup (roster SKILLS / RP HOOKS): a
+   group header in ink small caps. */
+.venue-modal-location.is-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Stoke', serif;
+  font-size: 0.84rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
 
 .venue-modal-desc {
   font-family: 'Crimson Pro', serif;
@@ -3745,26 +4599,6 @@ body.nav-sidebar-open {
 .venue-modal-desc p:last-child { margin-bottom: 0; }
 /* "No description provided." in a venue / job / roster popup. */
 .modal-empty-note { color: var(--text-secondary); }
-
-/* Button-style link in the roster modal (Character page) */
-.venue-modal-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.95rem;
-  border-radius: 6px;
-  background: var(--ink-color);
-  color: var(--parchment-bg);
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px var(--shadow-color);
-}
-.venue-modal-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
-.venue-modal-btn:active { transform: translateY(0); }
 
 .venue-modal-tags { margin-top: 1.1rem; }
 
@@ -3782,23 +4616,23 @@ body.nav-sidebar-open {
    ========================================================================== */
 .codex-list { display: flex; flex-direction: column; }
 
+/* Group header: ink small caps. */
 .codex-type-heading {
   font-family: 'Stoke', serif;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 400;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  opacity: 0.85;
-  margin: 2rem 0 0.5rem;
+  color: var(--text-primary);
+  margin: 2rem 0 0.6rem;
 }
 .codex-type-heading:first-child { margin-top: 0.25rem; }
 
-/* Each type group is one rounded card; rows fill it edge-to-edge so the
+/* Each type group is one raised card; rows fill it edge-to-edge so the
    hover/focus highlight spans the full width with no inset box. */
 .codex-group {
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--bg-card);
 }
@@ -3838,12 +4672,11 @@ body.nav-sidebar-open {
 }
 .codex-row-sub {
   display: block;
-  margin-top: 0.15rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.02em;
-  color: var(--accent-brown);
-  opacity: 0.85;
+  margin-top: 0.1rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--text-secondary);
 }
 .codex-row-preview {
   display: block;
@@ -3851,7 +4684,7 @@ body.nav-sidebar-open {
   font-family: 'Crimson Pro', serif;
   font-size: 1rem;
   line-height: 1.4;
-  color: var(--text-secondary);
+  color: var(--text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3874,18 +4707,6 @@ body.nav-sidebar-open {
   margin-top: 1.35rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
-}
-.codex-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -3920,7 +4741,7 @@ body.nav-sidebar-open {
   flex-direction: column;
   background: var(--bg-card);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
   text-align: left;
   padding: 0;
@@ -3942,11 +4763,12 @@ body.nav-sidebar-open {
   opacity: 0.85;
 }
 
+/* Placeholder field and torn edge as on .venue-card-media. */
 .job-card-media {
+  --tear-h: 22px;
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -3957,90 +4779,36 @@ body.nav-sidebar-open {
   display: block;
 }
 
-.job-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
-}
-
-.job-badge {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 0.25rem;
-  line-height: 1;
-}
-
-/* Category badge (top-left), tinted per division. */
-.job-badge-category {
-  top: 0.6rem;
-  left: 0.6rem;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.job-badge-category.job-cat-medical     { background: #2f6b4f; }
-.job-badge-category.job-cat-pirate      { background: #2c5a73; }
-.job-badge-category.job-cat-mercenary   { background: #8b3a3f; }
-.job-badge-category.job-cat-house_staff { background: #6b4f8b; }
-.job-badge-category.job-cat-contractor  { background: #8b6f47; }
-
-/* Status badge (top-right). */
-.job-badge-status {
-  top: 0.6rem;
-  right: 0.6rem;
-  color: #f3e9d2;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.job-badge-status.job-status-open   { background: var(--accent-red); color: #fff; }
-.job-badge-status.job-status-closed { background: rgba(0, 0, 0, 0.62); }
-.job-badge-status.job-status-filled { background: rgba(0, 0, 0, 0.62); }
-
-/* Badges inside a popup sit in the text flow instead of over a card image. */
-.venue-badge.is-static,
-.job-badge.is-static { position: static; }
-
 .job-card-body {
-  padding: 1rem 1.1rem 1.1rem;
+  padding: 12px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
   flex: 1;
 }
 
 .job-card-title {
   font-family: 'Stoke', serif;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 400;
   margin: 0;
   color: var(--text-primary);
 }
 
 .job-card-meta {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .job-card-desc {
   font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  line-height: 1.45;
-  color: var(--text-primary);
-  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  margin: 4px 0 0;
   flex: 1;
 }
 
@@ -4049,7 +4817,7 @@ body.nav-sidebar-open {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 12, 8, 0.7);
+  background: var(--scrim);
   z-index: 200;
   align-items: flex-start;
   justify-content: center;
@@ -4064,30 +4832,9 @@ body.nav-sidebar-open {
   width: 100%;
   max-width: 640px;
   background: var(--bg-card);
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
-
-.job-modal-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  z-index: 2;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.3rem;
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.job-modal-close:hover { background: rgba(0, 0, 0, 0.75); }
 
 .job-modal-img {
   width: 100%;
@@ -4128,10 +4875,8 @@ body.nav-sidebar-open {
 
 .job-modal-contact-label {
   font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  color: var(--text-primary);
   margin-right: 0.5rem;
 }
 
@@ -4155,22 +4900,9 @@ body.nav-sidebar-open {
 /* =============================================================================
    16. BOUNTY BOARD + FACTION ROSTERS — public pages
    Reuses the job-card / job-modal and venue-card / venue-modal patterns; the
-   classes below cover the quest schedule badges and the member action row
-   (sign up / apply) shown inside detail modals.
+   classes below cover the member action row (sign up / apply, shared
+   buttons) shown inside detail modals.
    ========================================================================== */
-
-/* Schedule badge variants (layered on .job-badge.job-badge-status) */
-.job-badge-status.quest-sched-scheduled  { background: var(--accent-red); color: #fff; }
-.job-badge-status.quest-sched-tbd        { background: #8a6d2f; color: #fff; }
-.job-badge-status.quest-sched-repeatable { background: #2f6d62; color: #fff; }
-.job-badge-status.quest-sched-past       { background: rgba(0, 0, 0, 0.62); color: #f3e9d2; }
-
-/* Mission type badge variants (layered on .job-badge.job-badge-category) */
-.job-badge-category.quest-type-training      { background: #2f5d42; color: #f3e9d2; }
-.job-badge-category.quest-type-investigation { background: #4a3566; color: #f3e9d2; }
-.job-badge-category.quest-type-bounty        { background: #6e3a35; color: #f3e9d2; }
-.job-badge-category.quest-type-escort        { background: #2f4d62; color: #f3e9d2; }
-.job-badge-category.quest-type-gathering     { background: #6e5a2f; color: #f3e9d2; }
 
 .quest-card-stats { letter-spacing: 0.05em; }
 
@@ -4190,42 +4922,6 @@ body.nav-sidebar-open {
   flex-wrap: wrap;
 }
 
-.quest-action-btn {
-  font-family: 'Stoke', serif;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #fff;
-  background: var(--accent-red);
-  border: 1px solid var(--accent-red);
-  border-radius: 0.3rem;
-  padding: 0.55rem 1.3rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition: filter 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.quest-action-btn:hover { filter: brightness(1.08); }
-
-.quest-action-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.quest-action-btn.is-ghost {
-  background: transparent;
-  color: var(--accent-brown);
-  border-color: var(--border-color);
-}
-
-.quest-action-btn.is-ghost:hover {
-  border-color: var(--accent-brown);
-  color: var(--accent-red);
-  filter: none;
-}
-
 .quest-action-note {
   font-family: 'Crimson Pro', serif;
   color: var(--text-secondary);
@@ -4238,12 +4934,9 @@ body.nav-sidebar-open {
   margin-top: 0.5rem;
 }
 
-/* "Submit a quest" sits at the right edge of the bounty board toolbar */
+/* "Submit a quest" (a .btn) sits at the right edge of the bounty board toolbar */
 .quest-submit-btn {
   margin-left: auto;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -4253,13 +4946,12 @@ body.nav-sidebar-open {
 
 /* =============================================================================
    17. VENUE MENUS — public menus page
-   A narrow, centered "menu sheet" rather than the wide card grid used by the
-   venues directory: the constrained reading column is what makes this read as
-   a printed menu instead of a database table. Items flow into two columns on
-   desktop beneath a full-width category heading, and collapse to one on
-   mobile. Placeholder thumbnails reuse the .img-slot recipe from the landing
-   page (parchment texture + centered line icon) so a menu that is only
-   partly photographed still looks deliberate.
+   A "menu sheet" rather than the wide card grid used by the venues directory:
+   a torn card holding the venue's banner, an index of its sections and the
+   items. Items flow into two columns on desktop beneath each section heading,
+   and collapse to one on mobile. Items without a photo keep a placeholder
+   tile in the well with the section's icon, so a menu that is only partly
+   photographed still looks deliberate.
    ============================================================================= */
 
 /* ── Venue chooser ───────────────────────────────────────────────────────── */
@@ -4267,40 +4959,36 @@ body.nav-sidebar-open {
 
 .menu-venue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
 }
 
-/* Lighter than .venue-card: no badges, shorter media, and it navigates
-   rather than opening a modal. */
+/* Lighter than .venue-card: no badges, and it navigates rather than opening a
+   modal. */
 .menu-venue-card {
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   overflow: hidden;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
   font-family: inherit;
   color: inherit;
 }
 
 .menu-venue-card:hover { transform: translateY(-2px); }
 
-.menu-venue-card:focus-visible {
-  outline: 2px solid var(--accent-brown);
-  outline-offset: 2px;
-}
-
+/* Placeholder field and torn edge as on .venue-card-media. */
 .menu-venue-card-media {
+  --tear-h: 22px;
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
   width: 100%;
-  background: linear-gradient(135deg, #2a1f1c 0%, #14100e 100%);
   overflow: hidden;
 }
 
@@ -4311,104 +4999,72 @@ body.nav-sidebar-open {
   display: block;
 }
 
-.menu-venue-card-sig {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.75rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
-}
-
 .menu-venue-card-body {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.85rem 1rem 1rem;
+  gap: 4px;
+  padding: 12px 18px 20px;
 }
 
 .menu-venue-card-title {
   font-family: 'Stoke', serif;
-  font-size: 1.1rem;
+  font-size: 1.18rem;
   color: var(--text-primary);
 }
 
 .menu-venue-card-location {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-size: 0.95rem;
+  font-style: italic;
   color: var(--text-secondary);
 }
 
 /* ── Menu view ───────────────────────────────────────────────────────────── */
 .menus-view { margin-top: 1.25rem; }
 
-.menu-back-btn {
-  display: inline-block;
-  font-family: 'Stoke', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  padding: 0.35rem 0;
-  margin-bottom: 0.9rem;
-  cursor: pointer;
-}
+/* "← All Menus": a plain button above the sheet. */
+.menu-back { margin-bottom: 10px; }
 
-.menu-back-btn:hover { color: var(--accent-red); }
-
-/* The sheet itself — the menu card. Runs the full content width like any
-   other page; the two-column item flow inside is what keeps line lengths
-   readable, so an outer clamp isn't needed. */
+/* The sheet itself: a torn card. */
 .menu-sheet {
-  /* Inline padding is a variable so the full-bleed bands (the category index
-     and each category heading) can cancel it with a negative margin and stay
-     in step at every breakpoint. */
-  --menu-sheet-pad: 2.5rem;
-  /* The top padding is a variable too, so the hero header can cancel it and
-     sit flush against the sheet's top edge at every breakpoint. */
-  --menu-sheet-pad-top: 2.25rem;
+  /* Inline padding is a variable so the full-bleed banner can cancel it with
+     a negative margin and stay in step at every breakpoint. */
+  --menu-sheet-pad: 2.75rem;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2.75rem;
+  border-radius: 4px 4px 0 0;
+  padding: 0 var(--menu-sheet-pad) calc(2.25rem + var(--tear-h));
   overflow: hidden;
 }
 
+/* The banner: a dark field (.media-ph) that tears into the sheet (.tear),
+   with the venue's own photograph over it when there is one. The type uses
+   the media inks, which read the same on both themes. */
 .menu-sheet-header {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-/* Masthead over the venue's own photograph. The image is texture here, not
-   subject: lightly blurred, overscanned, and sunk under a dark veil.
-   Deliberately theme-independent — the band reads as a dusk-lit signboard in
-   light mode as much as in dark, and one treatment means one set of contrast
-   figures to stand behind instead of two. Its type therefore carries the
-   parchment inks rather than the page's, which invert underneath it. */
-.menu-sheet-header.has-hero {
-  /* The dark-theme ink pair, pinned so light mode gets it too. */
-  --menu-hero-ink:     #ebe3d0;
-  --menu-hero-ink-dim: #c5b89a;
+  --tear-h: 30px;
   position: relative;
   /* Own stacking context, so the negative-z layers below stay above the
-     sheet's background instead of falling behind it. */
+     field instead of falling behind it. */
   isolation: isolate;
   overflow: hidden;
-  margin: calc(var(--menu-sheet-pad-top) * -1) calc(var(--menu-sheet-pad) * -1) 0;
-  padding: 3rem var(--menu-sheet-pad) 2.5rem;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--menu-hero-ink);
-  /* Inherited by the title and location — enough to hold the type together
-     where the veil thins over a bright patch of the photo. */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 230px;
+  margin: 0 calc(var(--menu-sheet-pad) * -1);
+  padding: 2.5rem var(--menu-sheet-pad) calc(2.25rem + var(--tear-h));
+  text-align: center;
+  color: var(--media-ink);
 }
 
-/* Overscanned just past the band so the blur's feathered edge never shows —
-   in pixels, not a percentage, to keep the extra crop off the photo minimal. */
+/* The photograph is texture here, not subject: lightly blurred, overscanned
+   just past the band so the blur's feathered edge never shows (in pixels, to
+   keep the extra crop off the photo minimal), and sunk under a veil. */
+.menu-sheet-header.has-hero {
+  /* Enough to hold the type together where the veil thins over a bright
+     patch of the photo. */
+  text-shadow: 0 1px 3px var(--scrim);
+}
+
 .menu-sheet-header.has-hero::before {
   content: '';
   position: absolute;
@@ -4417,78 +5073,76 @@ body.nav-sidebar-open {
   background-image: var(--menu-hero-img);
   background-size: cover;
   background-position: center;
-  /* Light blur only — enough to soften detail under the type without losing
-     the venue. Brightness comes down a touch first: a photo already sitting
-     near the band's own range needs less covering up, so more of it survives
-     at the same legibility. Saturation is left alone. */
   filter: blur(3px) brightness(0.85);
 }
 
+/* Thinnest at the top edge, where nothing sits over it, and steady from the
+   title down. */
 .menu-sheet-header.has-hero::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* Light-handed: venue photographs are moderately dark to begin with, so the
-     veil only has to settle them. Thinnest at the top edge, where nothing
-     sits over it, and steady from the title down. */
   background: linear-gradient(180deg,
-    rgba(26, 22, 20, 0.3) 0%,
-    rgba(26, 22, 20, 0.5) 42%,
-    rgba(26, 22, 20, 0.5) 100%);
-}
-
-.menu-sheet-header.has-hero .menu-sheet-title { color: var(--menu-hero-ink); }
-.menu-sheet-header.has-hero .menu-sheet-location { color: var(--menu-hero-ink-dim); }
-
-/* The hero already closes with a rule, so the index band below it drops its
-   own top border and butts straight up against it. */
-.menu-sheet-header.has-hero + .menu-index {
-  margin-top: 0;
-  border-top: 0;
+    color-mix(in srgb, var(--scrim) 50%, transparent) 0%,
+    color-mix(in srgb, var(--scrim) 83%, transparent) 42%,
+    color-mix(in srgb, var(--scrim) 83%, transparent) 100%);
 }
 
 .menu-sheet-title {
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   letter-spacing: 0.02em;
-  color: var(--text-primary);
-  margin: 0 0 0.2rem;
+  line-height: 1.15;
+  color: var(--media-ink);
+  margin: 0;
 }
 
 .menu-sheet-location {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 1.15rem;
-  color: var(--text-secondary);
-  margin: 0;
+  font-size: 1.3rem;
+  color: var(--media-ink-dim);
+  margin: 8px 0 0;
 }
 
-/* A full-bleed band across the sheet: the negative inline margin cancels the
-   sheet padding, and the padding is put back inside so the links stay aligned
-   with the content above and below. */
+/* Section index: button-style links in the well, each with its section's
+   icon in brown. */
 .menu-index {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.4rem 1.2rem;
-  margin: 1.4rem calc(var(--menu-sheet-pad) * -1) 0;
-  padding: 1rem var(--menu-sheet-pad);
-  background: var(--bg-staff-panel);
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  padding: 1.4rem 0 0.4rem;
 }
 
 .menu-index-link {
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+  color: var(--text-primary);
   text-decoration: none;
+  font-family: 'Stoke', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s ease;
 }
 
-.menu-index-link:hover { color: var(--accent-red); }
+.menu-index-link:hover {
+  background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown));
+  color: var(--text-primary);
+}
+
+.menu-index-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--accent-brown);
+}
 
 .menu-empty {
   font-family: 'Crimson Pro', serif;
@@ -4499,43 +5153,29 @@ body.nav-sidebar-open {
   margin: 0;
 }
 
-/* ── Category heading ────────────────────────────────────────────────────── */
-/* Centered label flanked by hairline rules — the strongest "menu" signal on
-   the page, and the reason the heading spans the full sheet rather than
-   sitting inside a column. */
+/* ── Section heading ─────────────────────────────────────────────────────── */
+/* Brown icon, Stoke heading, one faint rule underneath. */
 .menu-cat-heading {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  /* Bleeds to the sheet edges so the flanking rules run the full width. */
-  margin: 2.4rem calc(var(--menu-sheet-pad) * -1) 1.2rem;
+  margin: 2.75rem 0 1.6rem;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1.4rem;
   color: var(--text-primary);
-}
-
-.menu-category:first-of-type .menu-cat-heading { margin-top: 1.8rem; }
-
-.menu-cat-heading::before,
-.menu-cat-heading::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
 }
 
 .menu-cat-heading-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
 .menu-cat-icon {
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
   color: var(--accent-brown);
   flex: 0 0 auto;
 }
@@ -4554,9 +5194,9 @@ body.nav-sidebar-open {
 
 .menu-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0 0.75rem;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 0 1.75rem;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
 }
@@ -4565,10 +5205,10 @@ body.nav-sidebar-open {
    half-photographed menu from looking ragged. */
 .menu-thumb {
   position: relative;
-  flex: 0 0 120px;
-  width: 120px;
-  height: 120px;
-  border-radius: 0.3rem;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 104px;
+  border-radius: 4px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -4583,44 +5223,11 @@ body.nav-sidebar-open {
   display: block;
 }
 
-/* Placeholder: parchment texture under a gold-brown wash, matching the
-   .img-slot treatment on the landing page. */
-.menu-thumb.is-placeholder {
-  background-image: url('../assets/pdf-texture-web.jpg');
-  background-size: cover;
-  background-position: center;
-}
-
-.menu-thumb.is-placeholder::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(140deg, rgba(107, 68, 35, .55), rgba(139, 111, 71, .55));
-  pointer-events: none;
-}
-
-/* The light-mode wash reads as a bright block against the dark sheet, where
-   placeholders would out-shout the real photographs beside them. Sink it. */
-[data-theme="dark"] .menu-thumb.is-placeholder::before {
-  background: linear-gradient(140deg, rgba(38, 22, 14, .82), rgba(74, 66, 57, .8));
-}
-
-[data-theme="dark"] .menu-thumb-icon {
-  color: rgba(235, 227, 208, 0.78);
-  opacity: 0.7;
-}
-
-/* Menu artwork sits on a light sheet at small size and carries the tint
-   better than the darker card media does, so it runs above the default. */
-.menu-thumb.sketch-wash { --sketch-wash-alpha: 0.25; }
-
+/* No photo: the section's icon, muted, in the well. */
 .menu-thumb-icon {
-  position: relative;
-  z-index: 1;
-  width: 44px;
-  height: 44px;
-  color: rgba(245, 240, 230, 0.92);
-  opacity: 0.85;
+  width: 38px;
+  height: 38px;
+  color: var(--text-secondary);
 }
 
 .menu-item-body {
@@ -4633,6 +5240,7 @@ body.nav-sidebar-open {
   flex-wrap: nowrap;
   align-items: baseline;
   gap: 0.4rem;
+  margin: 2px 0 4px;
 }
 
 /* Leader and price hold the first line, taking whatever the capped name
@@ -4649,7 +5257,7 @@ body.nav-sidebar-open {
   flex: 0 1 auto;
   font-family: 'Stoke', serif;
   font-weight: 400;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1.3;
   color: var(--text-primary);
 }
@@ -4678,47 +5286,22 @@ body.nav-sidebar-open {
 .menu-item-desc {
   font-family: 'Crimson Pro', serif;
   font-style: italic;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 1.5;
   color: var(--text-secondary);
-  margin: 0.2rem 0 0;
+  margin: 0;
 }
 
-/* ── Venue modal "View Menu" link ────────────────────────────────────────── */
-/* A chip, not a button: it sits between the location line and the description
-   in a modal that is mostly reading matter, so it is padded to about half a
-   button's height and kept in the secondary ink until hovered. The pill
-   radius follows the action chips elsewhere in the app. */
+/* ── Venue modal "View Menu" link ──────────────────────────────────────────
+   A small quiet button between the location line and the description; its
+   arrow nudges forward on hover. */
 .venue-modal-menu-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
   /* The location already carries 1rem beneath it, so only a gap below. */
   margin: 0 0 1.1rem;
-  padding: 0.32rem 0.7rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: var(--text-secondary);
-  text-decoration: none;
-  background: var(--bg-darker);
-  border: 1px solid var(--border-color);
-  border-radius: 2rem;
-  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-/* Nudges forward on hover — the one bit of movement the chip makes. */
 .venue-modal-menu-arrow {
   transition: transform 0.18s ease;
-}
-
-.venue-modal-menu-link:hover,
-.venue-modal-menu-link:focus-visible {
-  color: var(--accent-red);
-  border-color: var(--accent-red);
-  background: var(--bg-card-light);
 }
 
 .venue-modal-menu-link:hover .venue-modal-menu-arrow,
@@ -4727,30 +5310,26 @@ body.nav-sidebar-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .venue-modal-menu-link,
   .venue-modal-menu-arrow { transition: none; }
   .venue-modal-menu-link:hover .venue-modal-menu-arrow,
   .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }
 }
 
 @media (max-width: 1024px) {
-  .menu-sheet  { --menu-sheet-pad: 1.5rem; --menu-sheet-pad-top: 1.75rem;
-                 padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 2rem; }
+  .menu-sheet  { --menu-sheet-pad: 1.5rem; }
   .menu-items  { columns: 1; }
-  .menu-sheet-header.has-hero { padding: 2.5rem var(--menu-sheet-pad) 2rem; }
 }
 
-@media (max-width: 600px) {
-  .menu-sheet       { --menu-sheet-pad: 1.1rem; --menu-sheet-pad-top: 1.4rem;
-                      padding: var(--menu-sheet-pad-top) var(--menu-sheet-pad) 1.75rem; }
-  .menu-sheet-title { font-size: 1.5rem; }
-  .menu-thumb       { flex-basis: 96px; width: 96px; height: 96px; }
-  .menu-thumb-icon  { width: 36px; height: 36px; }
-  .menu-cat-heading { gap: 0.6rem; font-size: 0.85rem; }
-  .menu-sheet-header.has-hero { padding: 1.9rem var(--menu-sheet-pad) 1.6rem; }
+@media (max-width: 820px) {
+  .menu-sheet       { --menu-sheet-pad: 1.25rem; }
+  .menu-sheet-header { min-height: 190px; }
+  .menu-sheet-title { font-size: 2rem; }
+  .menu-thumb       { flex-basis: 84px; width: 84px; height: 84px; }
+  .menu-thumb-icon  { width: 32px; height: 32px; }
+  .menu-cat-heading { margin-top: 2rem; }
 }
 
-/* Extra small: a 96px square beside the text leaves the description wrapping
+/* Extra small: an 84px square beside the text leaves the description wrapping
    every three or four words, so the thumb takes a row of its own above the
    name and the item reads straight down. */
 @media (max-width: 480px) {
@@ -4762,15 +5341,17 @@ body.nav-sidebar-open {
   .menu-item-body { width: 100%; }
 }
 
-/* ── FC Members: shared character block (Discord / Joined / linked alts) ──── */
+/* ── FC Members: shared character block (Discord / Joined / linked alts) ────
+   Both the shared block (in the notes popup) and each linked-alt row (in the
+   member form) sit inside a card, so they are recessed trays. */
 .member-shared-block {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.6rem 0.75rem;
-  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-color);
-  border-radius: 0.4rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
 }
 .member-shared-row {
   display: flex;
@@ -4802,8 +5383,8 @@ body.nav-sidebar-open {
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  background: var(--bg-card-light, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-color);
-  border-radius: 0.35rem;
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border-radius: 4px;
   font-size: 0.92rem;
 }

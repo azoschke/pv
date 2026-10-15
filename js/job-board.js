@@ -41,15 +41,16 @@
     return (JOB_TYPE_LABEL[jobTypeOf(j)] + " · " + (CATEGORY_LABEL[j.category] || "")).trim();
   }
 
-  // Per-category palette for the colored card backdrop (used when no image_url).
-  var CATEGORY_PALETTE = {
-    medical:     { from: "#1f3a2e", to: "#10201a" },
-    pirate:      { from: "#1f3340", to: "#101c25" },
-    mercenary:   { from: "#3a2225", to: "#1f1214" },
-    house_staff: { from: "#2e1f3a", to: "#170f20" },
-    recon:       { from: "#2c3327", to: "#161c12" },
-    contractor:  { from: "#3a2c1e", to: "#1f1810" }
+  // Placeholder tone (styles.css .media-ph, 1–5) per category, for a card
+  // without an image.
+  var CATEGORY_TONE = {
+    medical: 3, pirate: 5, mercenary: 2, house_staff: 1, recon: 3, contractor: 4
   };
+
+  function mediaClass(j) {
+    var tone = CATEGORY_TONE[j.category] || 4;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl    = document.getElementById("jobs-sidebar");
@@ -328,6 +329,14 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no listed job has (closed jobs count only while Show
+      // closed is on), unless it is ticked, so it can still be cleared.
+      var anyone = allJobs.some(function (j) {
+        if (!filters.showClosed && j.status !== "open") return false;
+        return kind === "categories" ? j.category === value : jobTypeOf(j) === value;
+      });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 
@@ -345,9 +354,9 @@
     card.className = "job-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
     card.setAttribute("aria-label", j.title);
 
-    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
+    // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media";
+    media.className = "job-card-media tear-half " + mediaClass(j);
 
     if (j.image_url) {
       var img = document.createElement("img");
@@ -355,34 +364,18 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "job-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "job-card-sig";
-      sig.textContent = (j.title || "").toLowerCase();
-      media.appendChild(sig);
     }
 
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
-
     var catBadge = document.createElement("span");
-    catBadge.className = "job-badge job-badge-category job-cat-" + j.category;
-    catBadge.textContent = jobBadgeLabel(j).toUpperCase();
+    catBadge.className = "job-badge job-badge-category";
+    catBadge.textContent = jobBadgeLabel(j);
     media.appendChild(catBadge);
 
     var statusBadge = document.createElement("span");
-    statusBadge.className = "job-badge job-badge-status job-status-" + j.status;
-    statusBadge.textContent = (STATUS_LABEL[j.status] || "").toUpperCase();
+    statusBadge.className = "job-badge job-badge-status";
+    statusBadge.textContent = STATUS_LABEL[j.status] || "";
     media.appendChild(statusBadge);
 
     card.appendChild(media);
@@ -437,18 +430,10 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(j) {
-    var palette = CATEGORY_PALETTE[j.category] || CATEGORY_PALETTE.contractor;
     if (j.image_url) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img tear">';
     }
-    return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-      '<span class="job-card-sig">' + escapeHTML((j.title || "").toLowerCase()) + '</span>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
-      '</div>';
+    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
   }
 
   function openModal(j) {
@@ -459,10 +444,8 @@
       : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges =
-      '<span class="job-badge job-badge-category job-cat-' + j.category + ' is-static">' +
-        escapeHTML(jobBadgeLabel(j).toUpperCase()) + '</span>' +
-      '<span class="job-badge job-badge-status job-status-' + j.status + ' is-static">' +
-        escapeHTML((STATUS_LABEL[j.status] || "").toUpperCase()) + '</span>';
+      '<span class="tag">' + escapeHTML(jobBadgeLabel(j)) + '</span>' +
+      '<span class="tag">' + escapeHTML(STATUS_LABEL[j.status] || "") + '</span>';
 
     var contactHtml = j.contact
       ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
@@ -524,7 +507,7 @@
     if (!getSession()) {
       // Round-trip through login and come back to the board to finish applying.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="login.html?redirect=' +
+        '<a class="btn" href="login.html?redirect=' +
         encodeURIComponent(window.location.pathname) + '">Sign in to apply</a>' +
         '</div>';
     }
@@ -535,7 +518,7 @@
         var conflict = activePrimaryElsewhere(j);
         if (conflict) {
           return '<div class="quest-modal-actions">' +
-            '<button type="button" class="quest-action-btn" id="job-apply-btn" disabled>Apply</button>' +
+            '<button type="button" class="btn" id="job-apply-btn" disabled>Apply</button>' +
             '<span class="quest-action-note">You already have an active application for a primary position (' +
             escapeHTML(conflict.title) + '). Withdraw it before applying to another primary position. ' +
             'Secondary positions have no limit.</span>' +
@@ -543,12 +526,12 @@
         }
       }
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn" id="job-apply-btn">Apply</button>' +
+        '<button type="button" class="btn" id="job-apply-btn">Apply</button>' +
         '</div>';
     }
     if (app.stage === "new") {
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn is-ghost" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
+        '<button type="button" class="btn is-danger" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
         '<span class="quest-action-note">Application submitted.</span>' +
         '</div>';
     }

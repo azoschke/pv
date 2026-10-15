@@ -54,7 +54,7 @@ function renderAtma() {
   let totalHave = 0;
   let typesComplete = 0;
 
-  let html = '<table class="task-table atma-table"><thead><tr>' +
+  let html = '<div class="atma-scroll"><table class="task-table atma-table"><thead><tr>' +
     '<th>#</th><th>Atma</th><th>FATE Zone</th><th class="td-count-header">Count (0&ndash;' + ATMA_MAX + ')</th>' +
     '</tr></thead><tbody>';
 
@@ -64,22 +64,26 @@ function renderAtma() {
     totalHave += count;
     if (count >= ATMA_MAX) typesComplete++;
 
-    const rowCls = count >= ATMA_MAX ? 'checked' : '';
-    html += '<tr class="' + rowCls + '">' +
+    // A finished row reads muted, with "Complete" before its counter.
+    const done = count >= ATMA_MAX;
+    html += '<tr class="' + (done ? 'checked' : '') + '">' +
       '<td class="td-num">' + (i + 1) + '</td>' +
       '<td>' + escapeHtml(a.name) + '</td>' +
       '<td>' + escapeHtml(a.zone) + '</td>' +
       '<td class="td-count">' +
-        '<div class="count-control">' +
-          '<button type="button" class="count-btn" data-action="dec" data-id="' + a.id + '" aria-label="Decrement">&minus;</button>' +
-          '<input type="number" min="0" max="' + ATMA_MAX + '" step="1" value="' + count + '" data-id="' + a.id + '" class="count-input">' +
-          '<button type="button" class="count-btn" data-action="inc" data-id="' + a.id + '" aria-label="Increment">+</button>' +
-        '</div>' +
+        '<span class="atma-count">' +
+          (done ? '<span class="atma-complete">Complete</span>' : '') +
+          '<span class="count-control">' +
+            '<button type="button" class="count-btn" data-action="dec" data-id="' + a.id + '" aria-label="Decrement"' + (count <= 0 ? ' disabled' : '') + '>&minus;</button>' +
+            '<input type="number" min="0" max="' + ATMA_MAX + '" step="1" value="' + count + '" data-id="' + a.id + '" class="count-input" aria-label="' + escapeHtml(a.name) + ' count">' +
+            '<button type="button" class="count-btn" data-action="inc" data-id="' + a.id + '" aria-label="Increment"' + (done ? ' disabled' : '') + '>+</button>' +
+          '</span>' +
+        '</span>' +
       '</td>' +
       '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   container.innerHTML = html;
 
   // Overall progress (capped per-atma to ATMA_MAX).

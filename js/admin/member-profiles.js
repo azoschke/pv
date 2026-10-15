@@ -183,7 +183,7 @@
                           factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },
                                 factionTags.map(function (f) {
-                                  return h('span', { key: f, className: 'portal-faction-tag' }, f);
+                                  return h('span', { key: f, className: 'tag' }, f);
                                 })
                               )
                             : h('span', { className: 'portal-muted' }, '—')
@@ -194,20 +194,20 @@
                             : h('span', { className: 'portal-muted' }, '—')
                         ),
                         h('td', null,
-                          h('span', { className: p.published ? 'portal-pill is-green' : 'portal-pill is-muted' },
+                          h('span', { className: 'status-dot is-quiet' },
                             p.published ? 'Published' : 'Draft')
                         ),
                         h('td', { className: 'portal-col-actions' },
                           h('button', {
-                            type: 'button', className: 'portal-btn is-small is-ghost',
+                            type: 'button', className: 'btn is-small is-quiet',
                             onClick: function () { setModalProfile(p); }
                           }, 'View'),
                           h('button', {
-                            type: 'button', className: 'portal-btn is-small is-ghost is-spaced',
+                            type: 'button', className: 'btn is-small is-quiet is-spaced',
                             onClick: function () { togglePublished(p); }
                           }, p.published ? 'Unpublish' : 'Publish'),
                           allowDelete ? h('button', {
-                            type: 'button', className: 'portal-btn is-small is-danger is-spaced',
+                            type: 'button', className: 'btn is-small is-danger is-spaced',
                             onClick: function () { handleDelete(p); }
                           }, 'Delete') : null
                         )

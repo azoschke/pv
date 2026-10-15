@@ -291,10 +291,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (props.saveLabel || 'Save')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: props.onCancel, disabled: saving
         }, 'Cancel')
       )

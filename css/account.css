@@ -2,7 +2,20 @@
    account.css — sign-in pages: login.html, register.html, reset.html
    ========================================================================== */
 .admin-login-wrap { max-width: 420px; margin: 3rem auto; }
-.admin-login-wrap .parchment { padding: 32px; }
+/* The sign-in pages borrow the parchment panel and form fields; here they
+   follow the site's surfaces (no shadow, inputs in the well), leaving the
+   parchment forms' own rules alone. */
+.admin-login-wrap .parchment { padding: 32px; border-radius: 4px; box-shadow: none; }
+.admin-login-wrap .form-group label { font-family: 'Stoke', serif; font-size: 0.92rem; color: var(--text-primary); }
+.admin-login-wrap .form-group input {
+  border: 0;
+  background: var(--form-input-bg);
+  color: var(--text-primary);
+}
+.admin-login-wrap .form-group input:focus {
+  background: var(--form-input-bg);
+  box-shadow: 0 0 0 2px var(--ring);
+}
 .portal-brand {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -19,29 +32,41 @@
 .login-home-link:hover .login-home-logo { transform: scale(1.06); }
 .portal-brand-title {
   font-family: 'Stoke', serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
   color: var(--text-primary);
   margin: 0 0 0.25rem;
 }
 .portal-brand-subtitle {
   font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+  font-size: 1rem;
+  color: var(--accent-brown);
   margin: 0;
 }
+/* A message under the form: a line of text led by a dot (red for an error,
+   brown once something has gone through). */
 .flash {
-  padding: 0.6rem 0.8rem;
-  border-radius: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
   margin-top: 0.75rem;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
 }
-.flash.error   { background: rgba(165, 77, 68, 0.12); color: var(--accent-red); border: 1px solid rgba(165, 77, 68, 0.35); }
-.flash.success { background: rgba(90, 138, 60, 0.12); color: var(--check-color); border: 1px solid rgba(90, 138, 60, 0.35); }
+.flash::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-brown);
+  transform: translateY(-1px);
+}
+.flash.error { color: var(--accent-red); }
+.flash.error::before { background-color: var(--accent-red); }
 .admin-login-wrap .section-heading { text-align: center; }
-.admin-login-wrap .submit-btn { width: 100%; }
+.admin-login-wrap .btn[type="submit"] { width: 100%; margin-top: 1.5rem; }
 /* "Create one →" / "Sign in →" links under the form. */
 .login-link {
   display: block;
@@ -49,7 +74,6 @@
   margin-top: 1rem;
   font-family: 'Crimson Pro', serif;
   font-size: 0.95rem;
-  color: var(--accent-red);
 }
 
 /* ── Create Account (register.html) ─────────────────────────────────────── */
@@ -59,9 +83,11 @@
   color: var(--text-secondary);
   margin-top: 0.25rem;
 }
+/* The username rules: a recessed tray inside the panel. */
 .rules-card {
-  background: var(--bg-card-light);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  background-image: var(--grain);
+  border: 0;
   border-radius: 4px;
   padding: 0.75rem 0.9rem;
   font-family: 'Crimson Pro', serif;

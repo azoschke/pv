@@ -45,20 +45,18 @@
     "Stock Management"
   ];
 
-  // Backdrop palette for the colored card header (cards have no images).
-  // Picked per primary position so the grid reads at a glance.
-  var POSITION_PALETTE = {
-    "Medical Lead":           { from: "#3a2225", to: "#1f1214" },
-    "Assistant Medical Lead": { from: "#3a2c1e", to: "#1f1810" },
-    "Secretary":              { from: "#2e1f3a", to: "#170f20" },
-    "Staff Medic":            { from: "#1f3a2e", to: "#10201a" },
-    "Therapist":              { from: "#1f3340", to: "#101c25" },
-    "Physical Therapist":     { from: "#1f2f3a", to: "#101820" },
-    "Nutritionist":           { from: "#3a3522", to: "#1f1c12" },
-    "Supply Coordinator":     { from: "#2a2f3a", to: "#141820" },
-    "Student Medic":          { from: "#33363f", to: "#1a1c22" }
+  // Placeholder tone (styles.css .media-ph, 1–5) for a card without a photo,
+  // picked per primary position so the grid reads with variety.
+  var POSITION_TONE = {
+    "Medical Lead": 2, "Assistant Medical Lead": 4, "Secretary": 1,
+    "Staff Medic": 3, "Therapist": 5, "Physical Therapist": 5,
+    "Nutritionist": 4, "Supply Coordinator": 3, "Student Medic": 1
   };
-  var FALLBACK_PALETTE = { from: "#33363f", to: "#1a1c22" };
+
+  function mediaClass(position) {
+    var tone = POSITION_TONE[position] || 1;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl     = document.getElementById("staff-sidebar");
@@ -319,6 +317,12 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no one on the roster has (unless it is ticked, so it
+      // can still be cleared).
+      var field = kind === "positions" ? "_positions" : "_tags";
+      var anyone = allStaff.some(function (s) { return s[field].indexOf(value) !== -1; });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 
@@ -332,15 +336,15 @@
 
   function buildCardEl(s) {
     var primary = primaryPosition(s._positions);
-    var palette = POSITION_PALETTE[primary] || FALLBACK_PALETTE;
 
     var card = document.createElement("button");
     card.type = "button";
     card.className = "venue-card";
     card.setAttribute("aria-label", s.name);
 
+    // The placeholder field shows wherever the photo is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media";
+    media.className = "venue-card-media tear-half " + mediaClass(primary);
 
     if (s.image_url) {
       var img = document.createElement("img");
@@ -348,35 +352,8 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "venue-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-        var sig2 = document.createElement("span");
-        sig2.className = "venue-card-sig";
-        sig2.textContent = (s.name || "").toLowerCase();
-        media.appendChild(sig2);
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "venue-card-sig";
-      sig.textContent = (s.name || "").toLowerCase();
-      media.appendChild(sig);
-    }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
-
-    if (primary) {
-      var posBadge = document.createElement("span");
-      posBadge.className = "venue-badge venue-badge-size";
-      posBadge.textContent = primary.toUpperCase();
-      media.appendChild(posBadge);
     }
 
     card.appendChild(media);
@@ -395,7 +372,7 @@
     if (s._positions.length) {
       var loc = document.createElement("p");
       loc.className = "venue-card-location";
-      loc.textContent = s._positions.join(" · ").toUpperCase();
+      loc.textContent = s._positions.join(" · ");
       body.appendChild(loc);
     }
 
@@ -448,26 +425,17 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function openModal(s) {
     var primary = primaryPosition(s._positions);
-    var palette = POSITION_PALETTE[primary] || FALLBACK_PALETTE;
 
     var imgHtml = s.image_url
-      ? '<div class="contrast-media">' +
-          '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img">' +
-          '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>'
-      : '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-        palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-        '<span class="venue-card-sig">' + escapeHTML((s.name || "").toLowerCase()) + '</span>' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img tear">'
+      : '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(primary) + '"></div>';
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
       : '<p class="modal-empty-note"><em>No description provided.</em></p>';
 
     var badges = s._positions.map(function (p) {
-      return '<span class="venue-badge venue-badge-size is-static">' +
-        escapeHTML(p.toUpperCase()) + '</span>';
+      return '<span class="tag">' + escapeHTML(p) + '</span>';
     }).join("");
 
     var tagsHtml = s._tags.length

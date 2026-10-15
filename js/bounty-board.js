@@ -36,17 +36,15 @@
   var MISSION_TYPES = ["Training", "Investigation", "Bounty", "Escort", "Gathering"];
   function typeSlug(t) { return String(t || "").toLowerCase(); }
 
-  // Card backdrop when a quest has no image, keyed by mission type.
-  var QUEST_PALETTE = { from: "#3a2c1e", to: "#1f1810" };
-  var TYPE_PALETTE = {
-    training:      { from: "#1f3a2e", to: "#10201a" },
-    investigation: { from: "#2e1f3a", to: "#170f20" },
-    bounty:        { from: "#3a2225", to: "#1f1214" },
-    escort:        { from: "#1f3340", to: "#101c25" },
-    gathering:     { from: "#3a2c1e", to: "#1f1810" }
+  // Placeholder tone (styles.css .media-ph, 1–5) per mission type, for a
+  // card without an image.
+  var TYPE_TONE = {
+    training: 3, investigation: 1, bounty: 2, escort: 5, gathering: 4
   };
-  function paletteFor(q) {
-    return TYPE_PALETTE[typeSlug(q.mission_type)] || QUEST_PALETTE;
+
+  function mediaClass(q) {
+    var tone = TYPE_TONE[typeSlug(q.mission_type)] || 4;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
   }
 
   // 0-5 difficulty -> star string; null -> '' (unrated).
@@ -148,7 +146,7 @@
     var d = new Date(ms);
     return d.toLocaleString(undefined, {
       month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
-    }).toUpperCase();
+    });
   }
 
   function createdTime(q) {
@@ -410,9 +408,9 @@
     card.className = "job-card quest-card" + (isPast(q) ? " is-inactive" : "");
     card.setAttribute("aria-label", q.title);
 
+    // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media";
-    var palette = paletteFor(q);
+    media.className = "job-card-media tear-half " + mediaClass(q);
 
     if (q.image_url) {
       var img = document.createElement("img");
@@ -420,36 +418,19 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "job-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "job-card-sig";
-      sig.textContent = (q.title || "").toLowerCase();
-      media.appendChild(sig);
     }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
 
     if (q.mission_type) {
       var typeBadge = document.createElement("span");
-      typeBadge.className = "job-badge job-badge-category quest-type-" + typeSlug(q.mission_type);
-      typeBadge.textContent = q.mission_type.toUpperCase();
+      typeBadge.className = "job-badge job-badge-category";
+      typeBadge.textContent = q.mission_type;
       media.appendChild(typeBadge);
     }
 
     var schedBadge = document.createElement("span");
-    schedBadge.className = "job-badge job-badge-status quest-sched-" + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "");
+    schedBadge.className = "job-badge job-badge-status";
     schedBadge.textContent = scheduleBadgeText(q);
     media.appendChild(schedBadge);
 
@@ -524,18 +505,10 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(q) {
-    var palette = paletteFor(q);
     if (q.image_url) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img tear">';
     }
-    return '<div class="job-modal-img job-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-      palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-      '<span class="job-card-sig">' + escapeHTML((q.title || "").toLowerCase()) + '</span>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
-      '</div>';
+    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
   }
 
   function scheduleDetailHtml(q) {
@@ -598,7 +571,7 @@
     if (!session) {
       // Round-trip through login and come back to the board to finish the signup.
       return '<div class="quest-modal-actions">' +
-        '<a class="quest-action-btn" href="' + LOGIN_URL +
+        '<a class="btn" href="' + LOGIN_URL +
         encodeURIComponent(window.location.pathname) + '">Sign in to register</a>' +
         '</div>';
     }
@@ -606,12 +579,12 @@
     var mine = mySignup(q);
     if (mine) {
       return '<div class="quest-modal-actions">' +
-        '<button type="button" class="quest-action-btn is-ghost" id="quest-withdraw-btn">Withdraw signup</button>' +
+        '<button type="button" class="btn is-danger" id="quest-withdraw-btn">Withdraw signup</button>' +
         '<span class="quest-action-note">You are signed up for this quest.</span>' +
         '</div>';
     }
     return '<div class="quest-modal-actions">' +
-      '<button type="button" class="quest-action-btn" id="quest-signup-btn">Sign up</button>' +
+      '<button type="button" class="btn" id="quest-signup-btn">Sign up</button>' +
       '</div>';
   }
 
@@ -657,13 +630,9 @@
 
     var badges = "";
     if (q.mission_type) {
-      badges += '<span class="job-badge job-badge-category quest-type-' + typeSlug(q.mission_type) +
-        ' is-static">' + escapeHTML(q.mission_type.toUpperCase()) + '</span>';
+      badges += '<span class="tag">' + escapeHTML(q.mission_type) + '</span>';
     }
-    badges +=
-      '<span class="job-badge job-badge-status quest-sched-' + q.schedule_mode +
-      (isPast(q) ? " quest-sched-past" : "") + ' is-static">' +
-      escapeHTML(scheduleBadgeText(q)) + '</span>';
+    badges += '<span class="tag">' + escapeHTML(scheduleBadgeText(q)) + '</span>';
 
     modalBody.innerHTML =
       imgHtml +

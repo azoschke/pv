@@ -271,7 +271,7 @@
           h('label', { style: { margin: 0 } }, 'Items *'),
           h('button', {
             type: 'button',
-            className: 'portal-btn is-small is-ghost',
+            className: 'btn is-small is-quiet',
             onClick: addItem
           }, '+ Add item')
         ),
@@ -322,7 +322,7 @@
             draft.items.length > 1 ? h('div', { style: { textAlign: 'right', marginTop: '0.35rem' } },
               h('button', {
                 type: 'button',
-                className: 'portal-btn is-small is-danger',
+                className: 'btn is-small is-danger',
                 onClick: function () { removeItem(idx); }
               }, 'Remove item')
             ) : null
@@ -358,10 +358,10 @@
 
       h('div', { className: 'portal-form-actions' },
         h('button', {
-          type: 'submit', className: 'portal-btn', disabled: saving
+          type: 'submit', className: 'btn', disabled: saving
         }, saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create quest')),
         h('button', {
-          type: 'button', className: 'portal-btn is-ghost',
+          type: 'button', className: 'btn is-quiet',
           onClick: onCancel, disabled: saving
         }, 'Cancel')
       )
@@ -397,12 +397,12 @@
       ),
       h('td', { className: 'portal-nowrap' },
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-ghost',
+          type: 'button', className: 'btn is-small is-quiet',
           onClick: function () { onEdit(q); }
         }, 'Edit'),
         ' ',
         h('button', {
-          type: 'button', className: 'portal-btn is-small is-danger',
+          type: 'button', className: 'btn is-small is-danger',
           onClick: function () {
             if (confirm('Delete quest "' + (q.questName || q.id) + '"? Saved macros on user devices will keep pointing at this ID but the quest will disappear from the catalog.')) {
               onDelete(q);
@@ -546,7 +546,7 @@
           ),
           h('button', {
             type: 'button',
-            className: 'portal-btn',
+            className: 'btn',
             disabled: !meta,
             onClick: function () { setFormOpen({ quest: null }); }
           },

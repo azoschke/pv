@@ -82,7 +82,7 @@
   function UploadButton(props) {
     var off = !!(props.busy || props.disabled);
     return h('label', {
-      className: 'portal-btn is-ghost is-small portal-upload-btn',
+      className: 'btn is-quiet is-small portal-upload-btn',
       title: props.title !== undefined ? props.title : (props.busy ? 'Uploading…' : 'Upload an image.'),
       style: { opacity: off ? 0.55 : 1, cursor: off ? 'not-allowed' : 'pointer' }
     },

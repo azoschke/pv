@@ -27,20 +27,20 @@
 }
 .cal-day-weekday { font-family: 'Stoke', serif; font-size: 1.15rem; letter-spacing: 0.03em; }
 .cal-day-date { font-size: 0.9rem; color: var(--text-secondary); }
-.cal-day-header.is-today { border-bottom-color: var(--accent-red); }
+.cal-day-header.is-today { border-bottom-color: var(--accent-brown); }
 .cal-day-header.is-today .cal-day-weekday,
-.cal-day-header.is-today .cal-day-date { color: var(--accent-red); }
+.cal-day-header.is-today .cal-day-date { color: var(--accent-brown); }
 
-/* Event row — cover image leads, flush to the card edges, then details.
-   Click opens the detail modal. */
+/* Event row — a raised card: cover image leads, flush to the card edges,
+   then details. Click opens the detail modal. */
 .cal-event {
   display: flex; align-items: center; gap: 0; width: 100%; padding: 0;
   text-align: left; font: inherit; color: inherit; cursor: pointer; overflow: hidden;
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: 0.55rem; margin-bottom: 0.65rem;
-  transition: border-color 0.15s ease, transform 0.05s ease;
+  background: var(--bg-card); border: 0;
+  border-radius: 4px; margin-bottom: 8px;
+  transition: background-color 0.15s ease, transform 0.05s ease;
 }
-.cal-event:hover { border-color: var(--accent-brown); }
+.cal-event:hover { background: color-mix(in srgb, var(--bg-darker) 40%, var(--bg-card)); }
 .cal-event:active { transform: translateY(1px); }
 
 /* Natural aspect ratio kept (fixed height, auto width), flush to the card
@@ -59,9 +59,8 @@
 
 .cal-event-time {
   flex: 0 0 5rem; display: flex; flex-direction: column; gap: 0.1rem;
-  font-variant-numeric: tabular-nums; padding-right: 0.9rem;
-  border-right: 1px solid var(--border-color); align-self: stretch;
-  justify-content: center;
+  font-variant-numeric: tabular-nums; padding-right: 0.4rem;
+  align-self: stretch; justify-content: center;
 }
 .cal-event-start { font-size: 1.02rem; }
 .cal-event-end { font-size: 0.78rem; color: var(--text-secondary); }
@@ -91,34 +90,7 @@
   }
 }
 
-/* Category badge — matches the Job / Bounty Board badge system
-   (.job-badge in styles.css): a solid dark-tinted chip with light text,
-   so it reads on any background in both themes. Colours reuse the board's
-   established category palette, grouped per the agreed list:
-     purple  #6b4f8b  (house_staff)  → RP, RP Campaign, Community Event
-     green   #2f6b4f  (medical)       → Seasonal
-     gold    #8b6f47  (contractor)    → Collab, Event
-     red     #8b3a3f  (mercenary)     → PVE
-     brand   --accent-red (open)      → FC (the flagship)
-     blue    #2c5a73  (pirate)        → Update */
-.cal-badge {
-  display: inline-flex; align-items: center; gap: 0.25rem;
-  font-family: 'Stoke', serif; font-size: 0.6rem; line-height: 1;
-  text-transform: uppercase; letter-spacing: 0.12em;
-  border-radius: 0.25rem; padding: 0.2rem 0.5rem;
-  color: #f3e9d2; background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12); white-space: nowrap;
-}
-.cal-badge[data-cat="rp"],
-.cal-badge[data-cat="rp-campaign"],
-.cal-badge[data-cat="community-event"] { background: #6b4f8b; color: #fff; }
-.cal-badge[data-cat="seasonal"]        { background: #2f6b4f; color: #fff; }
-.cal-badge[data-cat="collab"],
-.cal-badge[data-cat="event"]           { background: #8b6f47; color: #fff; }
-.cal-badge[data-cat="pve"]             { background: #8b3a3f; color: #fff; }
-.cal-badge[data-cat="fc"]              { background: var(--accent-red); color: #fff; }
-.cal-badge[data-cat="update"]          { background: #2c5a73; color: #fff; }
-
+/* The category is a square .tag (styles.css), the same for every category. */
 .cal-recurring {
   display: inline-flex; align-items: center; gap: 0.25rem;
   font-size: 0.72rem; color: var(--text-secondary);
@@ -141,27 +113,12 @@
   #calendar-main .venues-toolbar { display: flex; }
 }
 
-/* View toggle (Agenda / Month) */
-.cal-viewtoggle { display: inline-flex; border: 1px solid var(--border-color); border-radius: 0.4rem; overflow: hidden; }
-.cal-view-btn {
-  border: 0; background: var(--bg-card-light); color: var(--text-secondary);
-  font: inherit; font-size: 0.9rem; padding: 0.32rem 0.9rem; cursor: pointer;
-}
-.cal-view-btn + .cal-view-btn { border-left: 1px solid var(--border-color); }
-.cal-view-btn[aria-pressed="true"] { background: var(--accent-brown); color: #fff; }
-
+/* The view toggle is the shared segmented control (.seg in styles.css); the
+   period nav uses small quiet buttons. */
 /* Month navigation */
 .cal-monthnav { display: inline-flex; align-items: center; gap: 0.4rem; }
 .cal-monthnav[hidden] { display: none !important; }
 .cal-month-label { font-family: 'Stoke', serif; font-size: 1.05rem; min-width: 9.5rem; text-align: center; }
-.cal-nav-btn {
-  border: 1px solid var(--border-color); background: var(--bg-card-light); color: var(--text-primary);
-  font: inherit; border-radius: 0.35rem; padding: 0.2rem 0.6rem; cursor: pointer; line-height: 1.4;
-}
-.cal-nav-btn:hover { border-color: var(--accent-brown); }
-.cal-nav-btn:disabled { opacity: 0.35; cursor: default; }
-.cal-nav-btn:disabled:hover { border-color: var(--border-color); }
-.cal-nav-today { font-size: 0.85rem; }
 
 /* Month grid */
 .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
@@ -171,11 +128,15 @@
 }
 .cal-cell {
   position: relative; aspect-ratio: 1 / 1; overflow: hidden;
-  border: 1px solid var(--border-color); border-radius: 0.4rem;
+  border: 0; border-radius: 4px;
   background: var(--bg-card); display: flex; flex-direction: column;
 }
 .cal-cell.is-out { opacity: 0.4; }
-.cal-cell.is-today { border-color: var(--accent-red); }
+/* Today: a brown ring drawn over the cell's art. */
+.cal-cell.is-today::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  border-radius: inherit; box-shadow: inset 0 0 0 2px var(--accent-brown);
+}
 
 /* Banner art lives in the right ~20-25% of the cover; zoom the height so a
    right-anchored slice of roughly that width fills the square. */
@@ -183,17 +144,21 @@
   position: absolute; inset: 0;
   background-repeat: no-repeat; background-position: right center; background-size: auto 175%;
 }
+/* Darkens the art toward the bottom so the event labels read. */
 .cal-cell-scrim {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.10) 100%);
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--media-5) 88%, transparent) 0%,
+    color-mix(in srgb, var(--media-5) 35%, transparent) 55%,
+    color-mix(in srgb, var(--media-5) 10%, transparent) 100%);
 }
 .cal-cell-num {
   position: relative; z-index: 1; padding: 0.25rem 0.4rem;
   font-size: 0.85rem; font-variant-numeric: tabular-nums;
 }
-.cal-cell.has-events .cal-cell-num { color: #fff; }
-.cal-cell.is-today .cal-cell-num { color: var(--accent-red); font-weight: 700; }
-.cal-cell.has-events.is-today .cal-cell-num { color: #fff; text-shadow: 0 0 5px var(--accent-red); }
+.cal-cell.has-events .cal-cell-num { color: var(--media-ink); }
+.cal-cell.is-today .cal-cell-num { color: var(--accent-brown); font-weight: 700; }
+.cal-cell.has-events.is-today .cal-cell-num { color: var(--media-ink); }
 
 .cal-cell-events {
   position: relative; z-index: 1; margin-top: auto;
@@ -201,20 +166,12 @@
 }
 .cal-cell-event {
   display: flex; align-items: center; gap: 0.3rem; width: 100%; text-align: left;
-  border: 0; background: rgba(0,0,0,0.4); color: #fff; font: inherit; font-size: 0.72rem;
-  line-height: 1.25; padding: 0.15rem 0.35rem; border-radius: 0.3rem; cursor: pointer;
+  border: 0; background: color-mix(in srgb, var(--media-5) 55%, transparent); color: var(--media-ink);
+  font: inherit; font-size: 0.72rem;
+  line-height: 1.25; padding: 0.15rem 0.35rem; border-radius: 3px; cursor: pointer;
 }
-.cal-cell-event:hover { background: rgba(0,0,0,0.68); }
-.cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--border-color); }
-.cal-cell-dot[data-cat="rp"],
-.cal-cell-dot[data-cat="rp-campaign"],
-.cal-cell-dot[data-cat="community-event"] { background: #6b4f8b; }
-.cal-cell-dot[data-cat="seasonal"]        { background: #2f6b4f; }
-.cal-cell-dot[data-cat="collab"],
-.cal-cell-dot[data-cat="event"]           { background: #8b6f47; }
-.cal-cell-dot[data-cat="pve"]             { background: #8b3a3f; }
-.cal-cell-dot[data-cat="fc"]              { background: var(--accent-red); }
-.cal-cell-dot[data-cat="update"]          { background: #2c5a73; }
+.cal-cell-event:hover { background: color-mix(in srgb, var(--media-5) 85%, transparent); }
+.cal-cell-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--media-ink-dim); }
 .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-cell[data-single-id] { cursor: pointer; }
 
@@ -229,16 +186,11 @@
 /* Status region: loading / gate / error / empty. */
 .cal-panel {
   max-width: 520px; margin: 3rem auto; text-align: center;
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: 0.75rem; padding: 2.25rem 1.75rem;
+  background: var(--bg-card); border: 0;
+  border-radius: 4px; padding: 2.25rem 1.75rem;
 }
 .cal-panel h2 { font-family: 'Stoke', serif; margin: 0 0 0.5rem; }
 .cal-panel p { color: var(--text-secondary); margin: 0 0 1.25rem; }
-.cal-panel-btn {
-  display: inline-block; border: 1px solid var(--accent-brown); background: var(--accent-brown);
-  color: #fff; padding: 0.5rem 1.1rem; border-radius: 0.4rem; cursor: pointer;
-  text-decoration: none; font: inherit;
-}
 .cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
 
 /* Detail modal reuses .job-modal-* from styles.css. The hero image bleeds
@@ -258,13 +210,14 @@
    separation without the full blank line that back-to-back <br> produced. */
 .cal-modal-desc p { margin: 0 0 0.6rem; }
 .cal-modal-desc p:last-child { margin-bottom: 0; }
-.cal-modal-desc a { color: var(--accent-red); }
 .cal-modal-desc code {
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em;
-  background: var(--bg-darker); border-radius: 0.25rem; padding: 0.05rem 0.3rem;
+  background: var(--bg-darker); border-radius: 3px; padding: 0.05rem 0.3rem;
 }
+/* A code block in the modal: a recessed tray. */
 .cal-modal-desc pre {
-  background: var(--bg-darker); border-radius: 0.4rem; padding: 0.6rem 0.75rem;
+  background-color: var(--bg-primary); background-image: var(--grain);
+  border-radius: 4px; padding: 0.6rem 0.75rem;
   overflow-x: auto; margin: 0.5rem 0;
 }
 .cal-modal-desc pre code { background: none; padding: 0; }

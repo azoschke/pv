@@ -34,14 +34,14 @@
     restaurant: "Restaurant", fight_club: "Fight Club", shop: "Shop", other: "Other"
   };
 
-  // Per-size palette for the colored card backdrop (used when no image_url).
-  var SIZE_PALETTE = {
-    room:      { from: "#3a2a3d", to: "#1f1424" },
-    apartment: { from: "#3b3727", to: "#211e15" },
-    cottage:   { from: "#3a2a25", to: "#1f1612" },
-    house:     { from: "#1f3340", to: "#101c25" },
-    mansion:   { from: "#3a2c1e", to: "#1f1810" }
-  };
+  // Placeholder tone (styles.css .media-ph, 1–5) per size, for a venue
+  // without an image.
+  var SIZE_TONE = { room: 1, apartment: 3, cottage: 2, house: 5, mansion: 4 };
+
+  function mediaClass(v) {
+    var tone = SIZE_TONE[v.size] || 5;
+    return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
+  }
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   var sidebarEl    = document.getElementById("venues-sidebar");
@@ -337,6 +337,14 @@
       var value = el.dataset.value;
       if (!kind || !value) return;
       el.textContent = String(countForFacet(kind, value));
+      // Hide an option no venue has (unless it is ticked, so it can still be
+      // cleared).
+      var anyone = allVenues.some(function (v) {
+        if (kind === "sizes") return v.size === value;
+        return (Array.isArray(v.tags) ? v.tags : []).indexOf(value) !== -1;
+      });
+      var item = el.closest(".venues-filter-item");
+      if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
 
@@ -378,9 +386,9 @@
     card.className = "venue-card" + (v.featured ? " is-featured" : "");
     card.setAttribute("aria-label", v.name);
 
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
+    // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media";
+    media.className = "venue-card-media tear-half " + mediaClass(v);
 
     if (v.image_url) {
       var img = document.createElement("img");
@@ -388,35 +396,19 @@
       img.alt = "";
       img.loading = "lazy";
       img.className = "venue-card-img";
-      img.addEventListener("error", function () {
-        img.remove();
-        media.style.background =
-          "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      });
+      img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
-    } else {
-      media.style.background =
-        "linear-gradient(135deg, " + palette.from + " 0%, " + palette.to + " 100%)";
-      var sig = document.createElement("span");
-      sig.className = "venue-card-sig";
-      sig.textContent = (v.name || "").toLowerCase();
-      media.appendChild(sig);
     }
-
-    var cardBorder = document.createElement("span");
-    cardBorder.className = "contrast-border-half";
-    cardBorder.setAttribute("aria-hidden", "true");
-    media.appendChild(cardBorder);
 
     if (v.featured) {
       var fb = document.createElement("span");
       fb.className = "venue-badge venue-badge-featured";
-      fb.innerHTML = '<span aria-hidden="true">&#9733;</span> FEATURED';
+      fb.innerHTML = '<span aria-hidden="true">&#9733;</span> Featured';
       media.appendChild(fb);
     }
     var sb = document.createElement("span");
     sb.className = "venue-badge venue-badge-size";
-    sb.textContent = (SIZE_LABEL[v.size] || "").toUpperCase();
+    sb.textContent = SIZE_LABEL[v.size] || "";
     media.appendChild(sb);
 
     card.appendChild(media);
@@ -434,7 +426,7 @@
 
     var loc = document.createElement("p");
     loc.className = "venue-card-location";
-    loc.textContent = locationLine(v).toUpperCase();
+    loc.textContent = locationLine(v);
     body.appendChild(loc);
 
     var desc = document.createElement("p");
@@ -487,22 +479,14 @@
 
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildGalleryHtml(v) {
-    var palette = SIZE_PALETTE[v.size] || SIZE_PALETTE.house;
     var imgs = venueImages(v);
 
     if (!imgs.length) {
-      return '<div class="venue-modal-img venue-modal-img-fallback" style="background:linear-gradient(135deg, ' +
-        palette.from + ' 0%, ' + palette.to + ' 100%);">' +
-        '<span class="venue-card-sig">' + escapeHTML((v.name || "").toLowerCase()) + '</span>' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
     }
 
     if (imgs.length === 1) {
-      return '<div class="contrast-media">' +
-        '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img">' +
-        '<span class="contrast-border" aria-hidden="true"></span>' +
-        '</div>';
+      return '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img tear">';
     }
 
     var slides = imgs.map(function (src, i) {
@@ -516,12 +500,11 @@
         '" data-index="' + i + '" aria-label="Image ' + (i + 1) + '"></button>';
     }).join("");
 
-    return '<div class="venue-gallery" data-count="' + imgs.length + '">' +
+    return '<div class="venue-gallery tear" data-count="' + imgs.length + '">' +
       '<div class="venue-gallery-track">' + slides + '</div>' +
-      '<button type="button" class="venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
-      '<button type="button" class="venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
+      '<button type="button" class="btn is-quiet is-icon venue-gallery-nav venue-gallery-prev" aria-label="Previous image">&#10094;</button>' +
+      '<button type="button" class="btn is-quiet is-icon venue-gallery-nav venue-gallery-next" aria-label="Next image">&#10095;</button>' +
       '<div class="venue-gallery-dots">' + dots + '</div>' +
-      '<span class="contrast-border" aria-hidden="true"></span>' +
       '</div>';
   }
 
@@ -567,13 +550,13 @@
       : "";
 
     var badges =
-      (v.featured ? '<span class="venue-badge venue-badge-featured is-static"><span aria-hidden="true">&#9733;</span> FEATURED</span>' : "") +
-      '<span class="venue-badge venue-badge-size is-static">' + escapeHTML((SIZE_LABEL[v.size] || "").toUpperCase()) + '</span>';
+      (v.featured ? '<span class="tag"><span aria-hidden="true">&#9733;</span> Featured</span>' : "") +
+      '<span class="tag">' + escapeHTML(SIZE_LABEL[v.size] || "") + '</span>';
 
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="venue-modal-menu-link" href="menus.html?venue=' +
+      ? '<a class="btn is-quiet is-small venue-modal-menu-link" href="menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
           'View Menu' +
           '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +
@@ -585,7 +568,7 @@
       '<div class="venue-modal-content">' +
         '<div class="venue-modal-badges">' + badges + '</div>' +
         '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
-        '<p class="venue-modal-location">' + escapeHTML(locationLine(v).toUpperCase()) + '</p>' +
+        '<p class="venue-modal-location">' + escapeHTML(locationLine(v)) + '</p>' +
         menuLinkHtml +
         '<div class="venue-modal-desc">' + descHtml + '</div>' +
         tagsHtml +

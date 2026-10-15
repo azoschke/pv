@@ -23,17 +23,17 @@
   var useEffect = React.useEffect;
 
   var QUEST_STATUS_PILL = {
-    pending: { label: 'Pending approval', cls: 'portal-pill is-gold' },
-    listed:  { label: 'Listed',           cls: 'portal-pill is-green' },
-    hidden:  { label: 'Hidden',           cls: 'portal-pill is-muted' }
+    pending: { label: 'Pending approval', cls: 'status-dot is-brown' },
+    listed:  { label: 'Listed',           cls: 'status-dot is-quiet' },
+    hidden:  { label: 'Hidden',           cls: 'status-dot is-quiet' }
   };
 
   var APP_STAGE_PILL = {
-    new:               { label: 'Submitted',           cls: 'portal-pill is-gold' },
-    scheduled:         { label: 'Interview scheduled', cls: 'portal-pill is-green' },
-    requires_training: { label: 'Requires training',   cls: 'portal-pill is-gold' },
-    accepted:          { label: 'Accepted',            cls: 'portal-pill is-green' },
-    declined:          { label: 'Declined',            cls: 'portal-pill is-muted' }
+    new:               { label: 'Submitted',           cls: 'status-dot is-brown' },
+    scheduled:         { label: 'Interview scheduled', cls: 'status-dot is-brown' },
+    requires_training: { label: 'Requires training',   cls: 'status-dot is-brown' },
+    accepted:          { label: 'Accepted',            cls: 'status-dot is-quiet' },
+    declined:          { label: 'Declined',            cls: 'status-dot is-quiet' }
   };
 
   // Division slugs are stored on the application; map to display labels.
@@ -114,7 +114,7 @@
       h('div', { className: 'portal-head-row' },
         h('h2', { className: 'portal-card-title portal-head-title' }, 'My Quest Submissions'),
         h('button', {
-          type: 'button', className: 'portal-btn is-small',
+          type: 'button', className: 'btn is-small',
           onClick: function () { setModal({ quest: null }); }
         }, 'New submission')
       ),
@@ -146,11 +146,11 @@
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
                 h('td', { className: 'portal-col-actions' },
                   h('button', {
-                    type: 'button', className: 'portal-btn is-small is-ghost',
+                    type: 'button', className: 'btn is-small is-quiet',
                     onClick: function () { setModal({ quest: q }); }
                   }, 'Edit'),
                   q.status === 'pending' ? h('button', {
-                    type: 'button', className: 'portal-btn is-small is-danger is-spaced',
+                    type: 'button', className: 'btn is-small is-danger is-spaced',
                     onClick: function () { handleWithdraw(q); }
                   }, 'Withdraw') : null
                 )
@@ -169,10 +169,10 @@
             key: e.id,
             style: { display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.3rem 0' }
           },
-            h('span', { className: 'portal-pill is-gold' }, 'Edit pending'),
+            h('span', { className: 'status-dot is-brown' }, 'Edit pending'),
             h('span', { style: { flex: 1 } }, e.quest_title),
             h('button', {
-              type: 'button', className: 'portal-btn is-small is-ghost',
+              type: 'button', className: 'btn is-small is-quiet',
               onClick: function () { handleCancelEdit(e); }
             }, 'Cancel')
           );
@@ -236,7 +236,7 @@
                 h('td', null, PVAdminQuestUtils.scheduleSummary(s)),
                 h('td', { className: 'portal-col-actions' },
                   h('button', {
-                    type: 'button', className: 'portal-btn is-small is-ghost',
+                    type: 'button', className: 'btn is-small is-quiet',
                     onClick: function () { handleWithdraw(s); }
                   }, 'Withdraw')
                 )
@@ -299,7 +299,7 @@
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
                 h('td', { className: 'portal-col-actions' },
                   a.stage === 'new' ? h('button', {
-                    type: 'button', className: 'portal-btn is-small is-ghost',
+                    type: 'button', className: 'btn is-small is-quiet',
                     onClick: function () { handleWithdraw(a); }
                   }, 'Withdraw') : null
                 )
