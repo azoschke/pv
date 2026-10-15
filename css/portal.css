@@ -787,7 +787,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    body is the only thing that scrolls and its foot is always in reach, and
    on a large screen it stops at 94dvh. dvh follows mobile browsers' toolbar,
    where vh is measured as if the toolbar were hidden; browsers without dvh
-   keep the vh lines. */
+   keep the vh lines. The scrim also runs well past the overlay's edges (the
+   shadow), so if Safari moves the view before the overlay catches up, the
+   page around it is still dimmed. */
 .portal-modal-overlay {
   position: fixed;
   top: var(--vv-top, 0px);
@@ -796,6 +798,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   height: var(--vv-height, 100%);
   z-index: 60;
   background: var(--scrim);
+  box-shadow: 0 0 0 100vmax var(--scrim);
   display: flex;
   align-items: flex-start;
   justify-content: center;

@@ -243,7 +243,7 @@
   // also on the locked element as --scroll-lock-gap, so the full-bleed bands
   // (styles.css) can still reach the window's edge where the scrollbar was.
   //
-  // Two more things hold while locked, both for mobile Safari:
+  // Three more things hold while locked, all for mobile Safari:
   //  - A locked main area is held where it was. Safari scrolls it to bring a
   //    field in a popup into view (the popup sits inside it in the page),
   //    overflow hidden or not. The body is left alone: snapping the window
@@ -252,9 +252,15 @@
   //    root as --vv-top and --vv-height, so a popup's overlay can fit it
   //    (portal.css). Otherwise the overlay stays the full window height
   //    behind the keyboard and Safari lets the view slide over it.
+  //  - A finger drag only goes through when it's over something (in a popup
+  //    or drawer) that can scroll further that way; any other drag is
+  //    cancelled, so Safari can't slide or bounce the view, which it
+  //    otherwise does with the keyboard up. Two-finger gestures (pinch zoom)
+  //    are left alone.
   var scrollOwners = [];
   var scrollSaved = null;
   var viewport = global.visualViewport || null;
+  var touchLast = null;
 
   function pageScroller() {
     return document.querySelector('[data-scroll-main]') || document.body;
@@ -272,6 +278,39 @@
     var root = document.documentElement.style;
     root.setProperty('--vv-top', viewport.offsetTop + 'px');
     root.setProperty('--vv-height', viewport.height + 'px');
+  }
+
+  // Whether el scrolls, along the drag's main axis, in the direction a
+  // finger moving by delta would take it (a finger moving down or right
+  // scrolls towards the top or left).
+  function scrollsFurther(el, vertical, delta) {
+    var style = global.getComputedStyle(el);
+    var overflow = vertical ? style.overflowY : style.overflowX;
+    if (overflow !== 'auto' && overflow !== 'scroll') return false;
+    if (vertical) {
+      if (el.scrollHeight - el.clientHeight < 1) return false;
+      return delta > 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+    }
+    if (el.scrollWidth - el.clientWidth < 1) return false;
+    return delta > 0 ? el.scrollLeft > 0 : el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+  }
+
+  function onTouchStart(e) {
+    touchLast = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }
+
+  function onTouchMove(e) {
+    if (!touchLast || e.touches.length !== 1) return;
+    var t = e.touches[0];
+    var dx = t.clientX - touchLast.x;
+    var dy = t.clientY - touchLast.y;
+    touchLast = { x: t.clientX, y: t.clientY };
+    if (!dx && !dy) return;
+    var vertical = Math.abs(dy) >= Math.abs(dx);
+    for (var n = e.target; n && n.nodeType === 1 && n !== document.body; n = n.parentElement) {
+      if (scrollsFurther(n, vertical, vertical ? dy : dx)) return;
+    }
+    if (e.cancelable) e.preventDefault();
   }
 
   // The width the element's vertical scrollbar takes (0 for overlay
@@ -305,6 +344,9 @@
           viewport.addEventListener('resize', trackViewport);
           viewport.addEventListener('scroll', trackViewport);
         }
+        touchLast = null;
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
       }
       scrollOwners.push(owner);
     }
@@ -327,6 +369,9 @@
         document.documentElement.style.removeProperty('--vv-top');
         document.documentElement.style.removeProperty('--vv-height');
       }
+      document.removeEventListener('touchstart', onTouchStart, { passive: true });
+      document.removeEventListener('touchmove', onTouchMove, { passive: false });
+      touchLast = null;
       scrollSaved = null;
     }
   }
