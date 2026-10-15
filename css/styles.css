@@ -2088,7 +2088,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 /* The same band and card heading another page (staff-roster.html): the
    member band's height, overlapped as far as the member welcome. */
 .home-band.is-page .home-band-photo { height: 360px; }
-.home-band.is-page .home-band-photo img { object-position: 50% 0%; }
+.home-band.is-page .home-band-photo img { object-position: 50% 35%; }
 
 /* The raised card that overlaps the bottom of the band: the visitor's
    welcome, or the member's welcome back with the quick-access cards. */
