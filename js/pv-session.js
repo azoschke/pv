@@ -6,7 +6,7 @@
 //  avatar_url, roles, permissions, is_root, expires_at }). This file reads
 //  and writes it, answers permission checks, signs out, and sends requests to
 //  the workers. It also holds the page scroll lock (PVScrollLock) that every
-//  popup and drawer shares.
+//  popup and drawer shares, and lets the mouse drag scrolling tables.
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in or opens a popup:
@@ -290,6 +290,89 @@
   }
 
   global.PVScrollLock = { lock: lockScroll, unlock: unlockScroll };
+
+  // ── Drag to scroll ───────────────────────────────────────────────────────
+  // On desktop, a table wider (or taller) than its box can be dragged with
+  // the mouse, as a touch screen swipes it. The box shows a hand cursor only
+  // while it can actually scroll; links, buttons, fields and labels in it
+  // work as usual, and so does a popup drawn inside it. Dragging takes over
+  // from selecting text by dragging (a double-click still selects a word),
+  // and the click that ends a drag is swallowed so it doesn't also act on
+  // the row under the mouse. Touch and pen keep their native scrolling.
+  var DRAG_SCROLL = '.portal-table-wrap, .perm-grid-wrap, .site-table-scroll, .atma-scroll';
+  var DRAG_SKIP = 'a, button, input, select, textarea, label, summary, [contenteditable], [role="dialog"], .portal-modal-overlay';
+  var DRAG_THRESHOLD = 5;
+  var drag = null;
+
+  function scrollAxes(box) {
+    return { x: box.scrollWidth - box.clientWidth > 1, y: box.scrollHeight - box.clientHeight > 1 };
+  }
+
+  function dragBox(target) {
+    var box = target && target.closest ? target.closest(DRAG_SCROLL) : null;
+    if (!box) return null;
+    // A control or popup inside the box keeps the mouse; one the box itself
+    // sits inside (a table in a popup) doesn't count.
+    var skip = target.closest(DRAG_SKIP);
+    return skip && box.contains(skip) ? null : box;
+  }
+
+  function swallowClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function endDrag() {
+    if (!drag) return;
+    if (drag.moved) {
+      drag.box.classList.remove('is-dragging');
+      // The click that follows this mouseup is part of the drag.
+      document.addEventListener('click', swallowClick, true);
+      setTimeout(function () { document.removeEventListener('click', swallowClick, true); }, 0);
+    }
+    drag = null;
+  }
+
+  document.addEventListener('mouseover', function (e) {
+    var box = e.target && e.target.closest ? e.target.closest(DRAG_SCROLL) : null;
+    if (!box) return;
+    var axes = scrollAxes(box);
+    box.classList.toggle('is-drag-scroll', axes.x || axes.y);
+  });
+
+  document.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    var box = dragBox(e.target);
+    if (!box) return;
+    var axes = scrollAxes(box);
+    if (!axes.x && !axes.y) return;
+    drag = { box: box, axes: axes, x: e.clientX, y: e.clientY,
+             left: box.scrollLeft, top: box.scrollTop, moved: false };
+  });
+
+  document.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    if (!e.buttons) { endDrag(); return; } // released outside the window
+    var dx = drag.axes.x ? e.clientX - drag.x : 0;
+    var dy = drag.axes.y ? e.clientY - drag.y : 0;
+    if (!drag.moved) {
+      if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+      drag.moved = true;
+      drag.box.classList.add('is-dragging');
+      var sel = global.getSelection ? global.getSelection() : null;
+      if (sel) sel.removeAllRanges();
+    }
+    drag.box.scrollLeft = drag.left - dx;
+    drag.box.scrollTop = drag.top - dy;
+  });
+
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+
+  // Images in a table would otherwise start the browser's own drag.
+  document.addEventListener('dragstart', function (e) {
+    if (drag) e.preventDefault();
+  });
 
   global.PVSession = {
     get: get,

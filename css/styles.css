@@ -323,6 +323,18 @@ pre {
 ::-webkit-scrollbar-thumb  { background: var(--accent-brown); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
+/* A table box the mouse can drag to scroll (js/pv-session.js marks it while
+   it can scroll). Fields and labels keep their own cursor; while dragging the
+   whole box grabs and nothing in it selects. */
+.is-drag-scroll { cursor: grab; }
+.is-drag-scroll :is(input, select, textarea, label) { cursor: auto; }
+.is-drag-scroll.is-dragging,
+.is-drag-scroll.is-dragging * {
+  cursor: grabbing;
+  -webkit-user-select: none;
+          user-select: none;
+}
+
 
 /* =============================================================================
    5. SHARED NAV
