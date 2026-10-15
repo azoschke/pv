@@ -237,7 +237,9 @@
   // one when none is given) and the page unlocks once every owner has let go.
   // Locking or unlocking the same owner twice is harmless. lock() returns a
   // function that releases that owner, to hand straight back from a React
-  // effect.
+  // effect. While locked, the scrollbar's width is also on the body as
+  // --scroll-lock-gap, so the full-bleed bands (styles.css) can still reach
+  // the window's edge where the scrollbar was.
   var scrollOwners = [];
   var scrollSaved = null;
 
@@ -251,6 +253,7 @@
         if (gap > 0) {
           var pad = parseFloat(global.getComputedStyle(body).paddingRight) || 0;
           body.style.paddingRight = (pad + gap) + 'px';
+          body.style.setProperty('--scroll-lock-gap', gap + 'px');
         }
         body.style.overflow = 'hidden';
       }
@@ -266,6 +269,7 @@
     if (!scrollOwners.length && scrollSaved) {
       document.body.style.overflow = scrollSaved.overflow;
       document.body.style.paddingRight = scrollSaved.paddingRight;
+      document.body.style.removeProperty('--scroll-lock-gap');
       scrollSaved = null;
     }
   }

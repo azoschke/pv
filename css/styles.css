@@ -337,7 +337,9 @@ pre {
    making a stacking context, so the dropdowns still stack against the page.
    The negative top margin cancels .container's top padding so the band meets
    the top of the window; min-height holds the nav's space before it arrives
-   (the 70px logo, the nav's padding and the tear). */
+   (the 70px logo, the nav's padding and the tear). While a popup locks the
+   page (PVScrollLock, js/pv-session.js) the scrollbar is gone, so the band
+   grows by half its width (--scroll-lock-gap) to still reach the edge. */
 #nav-placeholder {
   position: relative;
   min-height: calc(70px + 0.9rem + var(--tear-h));
@@ -352,7 +354,7 @@ pre {
   top: 0;
   bottom: 0;
   left: 50%;
-  width: 100vw;
+  width: calc(100vw + var(--scroll-lock-gap, 0px) / 2);
   margin-left: -50vw;
   background-color: var(--bg-card);
 }
@@ -2058,12 +2060,13 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
    It sits behind the nav band (z-index -2, the band's ::before is -1), pulled
    up under the band's torn edge so the photo shows through the tear, and it
    tears into the page at the bottom. The negative top margin cancels the nav
-   placeholder's bottom margin and its tear. */
+   placeholder's bottom margin and its tear. Like the nav band, it grows by
+   half of --scroll-lock-gap while a popup locks the page. */
 .home-band {
   position: relative;
   z-index: -2;
   left: 50%;
-  width: 100vw;
+  width: calc(100vw + var(--scroll-lock-gap, 0px) / 2);
   margin: calc(-1.5rem - var(--tear-h)) 0 0 -50vw;
 }
 
