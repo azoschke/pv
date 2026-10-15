@@ -218,15 +218,20 @@
   }
 
   // --------- Top bar (mobile/tablet only) ----------
-  // The logo and "Management Portal" centred, the hamburger on the right. The
-  // section's own header names the page, so the bar doesn't repeat it.
+  // The drawer's brand (logo, then Phoenix Vanguard over Management Portal)
+  // centred, the hamburger on the right, and the site's torn edge along the
+  // bottom. The section's own header names the page, so the bar doesn't
+  // repeat it.
   function PortalTopBar(props) {
     var onOpenDrawer = props.onOpenDrawer;
 
-    return h('header', { className: 'portal-topbar' },
+    return h('header', { className: 'portal-topbar tear' },
       h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
-        h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' }),
-        h('span', { className: 'portal-topbar-subtitle' }, 'Management Portal')
+        h('span', { className: 'site-logo sidebar-logo', role: 'img', 'aria-label': '' }),
+        h('span', { className: 'sidebar-brand-text' },
+          h('span', { className: 'sidebar-brand-title' }, 'Phoenix Vanguard'),
+          h('span', { className: 'sidebar-brand-subtitle' }, 'Management Portal')
+        )
       ),
       h('button', {
         type: 'button',
