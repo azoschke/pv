@@ -254,10 +254,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
 }
 
-/* --------------- Top bar (mobile/tablet) --------------- */
+/* --------------- Top bar (mobile/tablet) ---------------
+   Three columns: an empty one, the brand centred, the hamburger at the right.
+   The outer two share the spare width equally, so the brand sits at the
+   bar's centre. */
 .portal-topbar {
   display: none;
   grid-area: topbar;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 1rem;
@@ -267,6 +271,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 /* A quiet icon button (.btn.is-quiet.is-icon) holding three bars. */
 .portal-topbar-hamburger {
+  grid-column: 3;
+  justify-self: end;
   flex-direction: column;
   gap: 4px;
 }
@@ -278,20 +284,23 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 2px;
 }
 .portal-topbar-brand {
+  grid-column: 2;
   display: inline-flex;
   align-items: center;
+  gap: 0.6rem;
   text-decoration: none;
 }
 .portal-topbar-logo {
   height: 32px;
   width: 32px;
 }
-.portal-topbar-title {
-  font-family: 'Stoke', serif;
-  letter-spacing: 0.02em;
+/* The desktop sidebar's "Management Portal" subtitle, in the same hand. */
+.portal-topbar-subtitle {
+  font-family: 'La Belle Aurore', cursive;
   font-size: 1rem;
-  color: var(--text-primary);
-  margin-left: auto;
+  color: var(--accent-brown);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* --------------- Mobile drawer --------------- */
@@ -1419,7 +1428,7 @@ textarea.cmp-code,
   }
   .portal-sidebar-rail { display: none; }
   .portal-topbar {
-    display: flex;
+    display: grid;
     /* Keep the top bar pinned so it stays visible after modal saves / form
        rerenders on mobile — without this, some viewport changes (virtual
        keyboard, momentum scroll) could leave the shell scrolled with the

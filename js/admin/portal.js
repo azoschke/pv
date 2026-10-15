@@ -218,11 +218,16 @@
   }
 
   // --------- Top bar (mobile/tablet only) ----------
+  // The logo and "Management Portal" centred, the hamburger on the right. The
+  // section's own header names the page, so the bar doesn't repeat it.
   function PortalTopBar(props) {
     var onOpenDrawer = props.onOpenDrawer;
-    var activeMeta = props.activeMeta;
 
     return h('header', { className: 'portal-topbar' },
+      h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
+        h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' }),
+        h('span', { className: 'portal-topbar-subtitle' }, 'Management Portal')
+      ),
       h('button', {
         type: 'button',
         className: 'btn is-quiet is-icon portal-topbar-hamburger',
@@ -230,12 +235,6 @@
         onClick: onOpenDrawer
       },
         h('span', null), h('span', null), h('span', null)
-      ),
-      h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
-        h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' })
-      ),
-      h('span', { className: 'portal-topbar-title' },
-        activeMeta ? activeMeta.label : ''
       )
     );
   }
@@ -578,8 +577,7 @@
 
       // Mobile top bar
       h(PortalTopBar, {
-        onOpenDrawer: function () { setDrawerOpen(true); },
-        activeMeta: activeMeta
+        onOpenDrawer: function () { setDrawerOpen(true); }
       }),
 
       // Mobile drawer (always rendered; positioned offscreen when closed)
