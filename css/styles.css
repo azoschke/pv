@@ -3143,12 +3143,23 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 
-/* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
+/* --- Nav breakpoint: show hamburger, hide desktop nav-links ---
+   The bar becomes three columns: an empty one, the logo centred, the
+   hamburger at the right. The outer two share the spare width equally, so
+   the logo sits at the bar's centre. Everything else in the bar is hidden
+   or (the theme toggle) fixed, so it takes no column. */
 @media (max-width: 900px) {
+  .site-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .site-nav > .site-brand { grid-column: 2; }
+
   .hamburger {
     display: inline-flex;
-    margin-left: auto;
-    order: 2;
+    grid-column: 3;
+    justify-self: end;
   }
 
   .nav-links {
