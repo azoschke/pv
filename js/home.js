@@ -238,7 +238,8 @@
   function medicalHtml() {
     return '<section class="landing-row landing-row--medical" aria-label="Medical">' +
         '<div class="landing-row-image landing-row-image--photo media-ph is-tone-4 tear-half">' +
-          '<img src="' + IMAGES + 'infirmary-1779211929695.webp" alt="The infirmary: a lamplit room with a bed, hanging plants and red drapes" loading="lazy">' +
+          '<img class="light-only" src="' + IMAGES + 'medical-light.jpg" alt="Medics in the lamplit infirmary, one reading from a book and one holding a glowing vial, beside a patient on a bed" loading="lazy">' +
+          '<img class="dark-only" src="' + IMAGES + 'medical-dark.jpg" alt="Medics in the lamplit infirmary, one reading from a book and one holding a glowing vial, beside a patient on a bed" loading="lazy">' +
         "</div>" +
         '<div class="landing-row-content">' +
           '<p class="eyebrow">Patient &amp; staff resources</p>' +
