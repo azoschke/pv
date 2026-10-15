@@ -189,6 +189,10 @@ a {
 }
 
 [data-theme="dark"] {
+  /* The browser draws its own controls (date pickers and their icon, a
+     dropdown's open list) in its dark version too. */
+  color-scheme: dark;
+
   /* Surfaces */
   --bg-primary:    #1a1614;
   --bg-card:       #231f1d;

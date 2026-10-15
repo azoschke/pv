@@ -498,6 +498,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    }
 .portal-field input[type="text"],
 .portal-field input[type="date"],
+.portal-field input[type="datetime-local"],
 .portal-field input[type="number"],
 .portal-field textarea,
 .portal-field select, .portal-select {
@@ -513,6 +514,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    heights. (The select chevron is drawn with .portal-filter-select above.) */
 .portal-field input[type="text"],
 .portal-field input[type="date"],
+.portal-field input[type="datetime-local"],
 .portal-field input[type="number"],
 .portal-field select, .portal-select {
   line-height: 1.25;
