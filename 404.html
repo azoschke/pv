@@ -6,13 +6,6 @@
   <title>Page Not Found</title>
   <style>.pv-forwarding body { visibility: hidden; }</style>
   <script>
-    // GitHub Pages serves this page for any address it can't find, at that
-    // address — so links here are built from the site's base path, which is
-    // /pv on GitHub Pages and empty on the live domain.
-    //
-    // Pages used to live in folders (/pv/job-board/job-board.html); they all
-    // sit at the top level now, so an old address is forwarded to
-    // <base>/<page>.html, keeping its ?query and #hash.
     (function () {
       var path = window.location.pathname;
       var base = path.indexOf('/pv/') === 0 ? '/pv' : '';
