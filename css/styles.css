@@ -2287,7 +2287,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .landing-row--campaign .landing-row-image--photo img { object-position: 72% center; }
 .landing-row--venues   .landing-row-image--photo img { object-position: 35% center; }
 .landing-row--tools    .landing-row-image--photo img { object-position: 58% center; }
-.landing-row--medical  .landing-row-image--photo img { object-position: 25% center; }
+.landing-row--medical  .landing-row-image--photo img { object-position: 50% 50%; }
 
 /* Button rows and the campaign's plain links. */
 .home-actions {
