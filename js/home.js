@@ -1,30 +1,5 @@
-// ============================================================================
-//  home.js — the home page's live parts (index.html)
-// ----------------------------------------------------------------------------
-//  Visitors get the page as written. This fills in:
-//   - the recruitment line and links, from Admin Settings → Pages → Site
-//     Defaults → Recruitment listing URL (GET /site/public). No URL, or no
-//     answer, reads as "not recruiting right now";
-//   - the main campaign's name and landing blurb (the campaigns worker).
-//
-//  Signed in (PVSession), it builds the member blocks after the session
-//  check, so a visitor never receives them or anything they fetch:
-//   - Welcome back, with Calendar, Campaigns and Roll Calculator;
-//   - New Aboard (onboarding), for members not marked "NA - No RP";
-//   - the Job Board and Bounty Board;
-//   - the campaign row with Continue Reading and TL;DR;
-//   - Medical.
-//  Each block shows a quiet loading line, an empty line, or a short line
-//  when its request fails; its buttons stay either way.
-//
-//  Workers:
-//   pv-med-database-worker    GET /site/public, /calendar*, /my-profile*,
-//                             /jobs, /quests
-//   pv-campaigns-worker       GET /campaigns, /campaigns/:slug
-//   pv-campaign-rolls-worker  GET /rp/me/status* (falls back to /rp/me/active
-//                             until the worker has it)
-//   * signed in
-// ============================================================================
+// home.js — the home page: the recruiting line and campaign copy, and the
+// signed-in blocks.
 (function () {
   "use strict";
 
@@ -38,14 +13,12 @@
   // "Hide for now" on New Aboard lasts for this browser session.
   var HIDE_ONBOARDING_KEY = "pv-home-onboarding-hidden";
 
-  // Mirrors js/calendar.js CATEGORIES.
+  // Shared with the calendar and the boards.
   var EVENT_CATEGORY = {
     "rp": "RP", "rp-campaign": "RP Campaign", "community-event": "Community Event",
     "seasonal": "Seasonal", "pve": "PVE", "collab": "Collab", "event": "Event",
     "fc": "FC", "update": "Update", "uncategorized": "Uncategorized"
   };
-  // Mirror js/job-board.js and js/bounty-board.js: division names, and the
-  // placeholder tone (.media-ph) for a posting without an image.
   var DIVISION_LABEL = {
     mercenary: "Mercenary", medical: "Medical", pirate: "Pirate",
     house_staff: "House Staff", recon: "Recon", contractor: "Contractor"
@@ -54,8 +27,7 @@
   var MISSION_TONE  = { training: 3, investigation: 1, bounty: 2, escort: 5, gathering: 4 };
 
   var session = window.PVSession ? window.PVSession.get() : null;
-  // The pre-paint script and PVSession read the same sign-in; keep the page
-  // in step with PVSession if they ever disagree.
+  // Keep the page in step with the sign-in.
   document.documentElement.classList.toggle("pv-signed-in", !!session);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -86,8 +58,7 @@
     return "media-ph" + (tone > 1 ? " is-tone-" + tone : "");
   }
 
-  // A 56px thumbnail: the image, or the placeholder field when there is none
-  // or it fails.
+  // A thumbnail, or the placeholder when there's no image.
   function thumb(url, tone) {
     return '<span class="home-thumb ' + mediaClass(tone) + '" aria-hidden="true">' +
       (url ? '<img src="' + esc(url) + '" alt="" loading="lazy">' : "") + "</span>";
@@ -114,8 +85,7 @@
     });
   }
 
-  // A signed-in read. When the med worker (which issues sign-ins) no longer
-  // accepts this one, it is cleared and the page reloads as a visitor's.
+  // A signed-in read. A sign-in the med worker rejects is cleared.
   var reloading = false;
   function memberGet(base, path) {
     return window.PVSession.request(base, "GET", path, undefined, { auth: "optional" })
@@ -149,7 +119,6 @@
       (chapterSlug ? "&ch=" + encodeURIComponent(chapterSlug) : "");
   }
 
-  // The name and landing blurb replace the page's copy wherever it appears.
   mainCampaign.then(function (c) {
     if (!c) return;
     if (c.name) {
@@ -234,8 +203,7 @@
       "</div>";
   }
 
-  // The visitor row's copy (in the page, hidden once signed in) is the
-  // starting text here too, until the worker's arrives.
+  // Starts with the visitor row's copy.
   function campaignRowHtml() {
     var nameEl = document.querySelector("[data-home-campaign-name]");
     var blurbEl = document.querySelector("[data-home-campaign-blurb]");
@@ -349,9 +317,7 @@
   }
 
   // ── Members: Roll Calculator ─────────────────────────────────────────────
-  // Active or Paused name the campaign the calculator will open; anything
-  // else (no session, or an account not linked to a roster character) is
-  // Not Active.
+  // Active or Paused with the campaign's name; anything else is Not Active.
   function statusFromActive(d) {
     if (d && d.active) return { status: "active", campaign_name: d.campaign && d.campaign.name };
     if (d && d.reason === "paused") return { status: "paused", campaign_name: d.campaign_name };
@@ -380,9 +346,8 @@
   }
 
   // ── Members: New Aboard ──────────────────────────────────────────────────
-  // Two steps: a published profile, and an IC rank. Gone once both are done,
-  // for members marked "NA - No RP", and when /my-profile has no linked
-  // roster member or can't be read.
+  // Two steps: a published profile and an IC rank. Hidden once both are
+  // done, and for "NA - No RP" members.
   function loadOnboarding() {
     if (storageGet(HIDE_ONBOARDING_KEY)) return;
     memberGet(MED_API, "/my-profile").then(function (data) {
@@ -498,8 +463,7 @@
     });
   }
 
-  // The three soonest quests: upcoming dated ones by date, then undated ones
-  // (repeatable or date to be decided) newest first. Past ones are left out.
+  // The three soonest quests: dated ones first, then undated, newest first.
   function questSchedule(q, t) {
     if (q.schedule_mode === "tbd") return "Date TBD";
     if (q.schedule_mode === "repeatable") return t != null ? "Repeatable \u00b7 " + fmtWhen(t) : "Repeatable";

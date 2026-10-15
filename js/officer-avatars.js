@@ -1,11 +1,5 @@
-// ============================================================================
-//  officer-avatars.js — profile pictures in the officers' initials circles
-//  (The Officers on index.html and about.html)
-// ----------------------------------------------------------------------------
-//  Each .avatar with data-avatar-name shows that member's My Profile picture
-//  from the public roster (GET /roster, published profiles only), matched on
-//  the name. Without one, or if it fails to load, it keeps its initials.
-// ============================================================================
+// officer-avatars.js — officers' profile pictures in their initials circles,
+// from the public roster; the initials stay when there's no picture.
 (function () {
   "use strict";
 
@@ -28,7 +22,6 @@
       circles.forEach(function (circle) {
         var url = pictures[key(circle.getAttribute("data-avatar-name"))];
         if (!url) return;
-        // Swapped in once loaded, so a broken picture never replaces the initials.
         var img = new Image();
         img.alt = "";
         img.addEventListener("load", function () {
