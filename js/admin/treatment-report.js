@@ -62,7 +62,7 @@
       props.onChange(out.text);
     }
 
-    return h(React.Fragment, null,
+    return h('div', { className: 'markup-field' },
       props.markup === false ? null : h('div', { className: 'markup-toolbar' },
         MARKUP_BUTTONS.map(function (b) {
           return h('button', {
@@ -274,7 +274,7 @@
             value: draft.attending_medic || '',
             onChange: function (e) { setField('attending_medic', e.target.value); }
           },
-            h('option', { value: '' }, '— Choose a medic —'),
+            h('option', { value: '' }, 'Select a medic…'),
             medics.map(function (n) { return h('option', { key: n, value: n }, n); })
           )),
           requests !== null && (requestOptions.length || draft.appointment_id) ? field('Appointment request', h('select', {

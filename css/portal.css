@@ -559,6 +559,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* The formatting toolbar (styles.css) over a portal textarea: the field's own
    well tone, no border, sitting flush on the box. Quick picks are a wrapping
    row of small quiet buttons above their box. */
+/* The toolbar and its box as one block, the full width of the field. */
+.markup-field { display: flex; flex-direction: column; }
 .portal-field .markup-toolbar {
   border: 0;
   background-color: var(--form-input-bg);
@@ -611,10 +613,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-form-section {
   margin-bottom: 1.25rem;
 }
-.portal-form-section + .portal-form-section {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
+.portal-form-section + .portal-form-section { padding-top: 0.5rem; }
 /* Group header: ink small caps with a rule underneath. */
 .portal-form-section-title {
   margin: 0 0 0.75rem;

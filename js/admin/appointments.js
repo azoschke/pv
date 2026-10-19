@@ -8,13 +8,14 @@
 //    - View patient request: its intake (Out of Character included)
 //    - scheduling: the assigned medic (the requested one to start with) and
 //      when, free text
-//    - its treatment reports, Mark seen (once it has one) and Cancel request
-//      (a medic's cancellation posts nothing to Discord)
+//    - its treatment reports, and Deny request (a medic's cancellation;
+//      it posts nothing to Discord)
 //    - delete (medical.delete): a request with a linked visit is archived
 //      instead, so the visit keeps its intake
 //  A scheduled request's row has "Write treatment report": the treatment
-//  report form, filled from the intake and linked to the request. A patient
-//  record is created from the intake first if the character has none.
+//  report form, filled from the intake and linked to the request; saving it
+//  marks the request seen. A patient record is created from the intake
+//  first if the character has none.
 //
 //  Buttons follow the permission grid: medical.view sees the queue,
 //  medical.edit schedules, cancels, creates the record and writes the report,
@@ -94,10 +95,10 @@
   }
 
   // One request: the request and its scheduling, with the patient's intake
-  // a button away (View patient request), and the actions along the bottom:
-  // Mark seen (once it has a treatment report) and Cancel request, then
-  // Delete. The treatment report is written from the list once the request
-  // is scheduled, which opens this with props.mode 'report'.
+  // a button away (View patient request), and Deny request and Delete along
+  // the bottom. The treatment report is written from the list once the
+  // request is scheduled, which opens this with props.mode 'report'; saving
+  // it marks the request seen.
   function RequestDetail(props) {
     var id = props.id;
     var canEdit = PVAdminAPI.can('medical.edit');
@@ -197,7 +198,7 @@
     }
 
     function schedule() {
-      if (!sched.assigned) { setErr('Choose a medic.'); return; }
+      if (!sched.assigned) { setErr('Select a medic.'); return; }
       patch({ status: 'scheduled', assigned_medic_id: Number(sched.assigned), scheduled_when: sched.when });
     }
 
@@ -255,16 +256,12 @@
     }
 
     var actions = [
-      canEdit && isOpen && hasReport ? h('button', {
-        key: 'seen', type: 'button', className: 'btn', disabled: busy,
-        onClick: function () { patch({ status: 'seen' }); }
-      }, 'Mark seen') : null,
       canEdit && isOpen ? h('button', {
-        key: 'cancel', type: 'button', className: 'btn is-danger', disabled: busy,
-        onClick: function () { if (confirm('Cancel this request?')) patch({ status: 'cancelled' }); }
-      }, 'Cancel request') : null,
+        key: 'deny', type: 'button', className: 'btn is-danger', disabled: busy,
+        onClick: function () { if (confirm('Deny this request?')) patch({ status: 'cancelled' }); }
+      }, 'Deny request') : null,
       canDelete && r.status !== 'archived' ? h('button', {
-        key: 'delete', type: 'button', className: 'btn is-danger is-end', disabled: busy, onClick: remove
+        key: 'delete', type: 'button', className: 'btn is-danger', disabled: busy, onClick: remove
       }, hasReport ? 'Archive request' : 'Delete request') : null
     ].filter(Boolean);
 
@@ -273,7 +270,6 @@
 
       h('div', { className: 'appt-detail-head' },
         h(StatusTag, { status: r.status }),
-        h('span', { className: 'portal-muted' }, 'Requested ' + fmtDate(r.created_at)),
         h('button', {
           type: 'button', className: 'btn is-quiet is-small is-end',
           onClick: function () { setMode('intake'); }
