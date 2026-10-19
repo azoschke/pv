@@ -320,15 +320,17 @@
         '</div></div>';
     }
 
-    // A visit's Patient Intake: the presenting complaint and current symptoms
-    // (the visit's own, as its treatment report saved them, else its
-    // request's), then a request's Out of Character answers folded away. The
-    // rest of the intake is in the patient's own details above.
+    // A visit's Patient Intake: the presenting complaint, current symptoms and
+    // recent exposures (the visit's own, as its treatment report saved them,
+    // else its request's), then a request's Out of Character answers folded
+    // away. The rest of the intake is in the patient's own details above.
     function visitIntakeFields(v) {
       var intake = v.intake || {};
+      function pick(key) { return hasValue(v[key]) ? v[key] : intake[key]; }
       return [
-        { l: "Presenting Complaint/Injury", v: hasValue(v.presenting_complaint) ? v.presenting_complaint : intake.presenting_complaint },
-        { l: "Current Symptoms", v: hasValue(v.current_symptoms) ? v.current_symptoms : intake.current_symptoms }
+        { l: "Presenting Complaint/Injury", v: pick("presenting_complaint") },
+        { l: "Current Symptoms", v: pick("current_symptoms") },
+        { l: "Recent Exposures", v: pick("recent_exposures") }
       ].filter(function (f) { return hasValue(f.v); });
     }
     function oocHtml(intake) {
