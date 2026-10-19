@@ -7,8 +7,10 @@
 //  request shows the request and:
 //    - View patient request: its intake (Out of Character included)
 //    - scheduling: the assigned medic (the requested one to start with) and
-//      when, free text and required; scheduling, and then any new time or
-//      medic, posts to Discord (the med worker)
+//      when, a date and time in the medic's own time zone (required), saved
+//      as an exact moment and shown to everyone in theirs; scheduling, and
+//      then any new time or medic, posts to Discord as a Discord timestamp
+//      (the med worker)
 //    - its treatment reports, and Cancel request (a medic's cancellation
 //      posts nothing to Discord)
 //    - delete (medical.delete), whatever its status: a linked treatment
@@ -65,6 +67,14 @@
 
   function hasValue(v) { return v != null && String(v).trim() !== ''; }
 
+  // Appointment times work as quest times do (quest-form.js): saved as UTC
+  // "YYYY-MM-DD HH:MM:SS" (scheduled_at), picked and shown in the viewer's
+  // own time zone. Requests scheduled before have the time as typed.
+  function Q() { return window.PVAdminQuestUtils; }
+  function whenLabel(r) {
+    return (r && r.scheduled_at ? Q().formatLocal(r.scheduled_at) : '') || (r && r.scheduled_when) || '';
+  }
+
   function Field(props) {
     if (!hasValue(props.value)) return null;
     return h('div', { className: 'appt-field' },
@@ -114,7 +124,7 @@
     var busy = busyState[0], setBusy = busyState[1];
     var medicsState = useState([]);
     var medics = medicsState[0], setMedics = medicsState[1];
-    var schedState = useState({ assigned: '', when: '' });
+    var schedState = useState({ assigned: '', at: '' });
     var sched = schedState[0], setSched = schedState[1];
     var modeState = useState('detail'); // 'detail' | 'intake' | 'report'
     var mode = modeState[0], setMode = modeState[1];
@@ -123,7 +133,7 @@
       setData(resp);
       var r = resp && resp.request;
       // The assigned medic, else the requested one (none for Any Available Medic).
-      if (r) setSched({ assigned: String(r.assigned_medic_id || r.requested_medic_id || ''), when: r.scheduled_when || '' });
+      if (r) setSched({ assigned: String(r.assigned_medic_id || r.requested_medic_id || ''), at: Q().utcToLocalInput(r.scheduled_at) });
     }
 
     async function load() {
@@ -201,8 +211,10 @@
 
     function schedule() {
       if (!sched.assigned) { setErr('Select a medic.'); return; }
-      if (!sched.when.trim()) { setErr('Enter when the appointment is.'); return; }
-      patch({ status: 'scheduled', assigned_medic_id: Number(sched.assigned), scheduled_when: sched.when });
+      var at = Q().localInputToUtc(sched.at);
+      if (!at) { setErr('Enter when the appointment is.'); return; }
+      // The picker's time replaces any typed one from before.
+      patch({ status: 'scheduled', assigned_medic_id: Number(sched.assigned), scheduled_at: at, scheduled_when: null });
     }
 
     async function remove() {
@@ -302,8 +314,8 @@
           h('div', { className: 'portal-field' },
             h('label', null, 'When'),
             h('input', {
-              type: 'text', value: sched.when,
-              onChange: function (e) { setSched(Object.assign({}, sched, { when: e.target.value })); }
+              type: 'datetime-local', value: sched.at,
+              onChange: function (e) { setSched(Object.assign({}, sched, { at: e.target.value })); }
             })
           )
         ),
@@ -387,7 +399,7 @@
                             r.on_behalf ? h('span', { className: 'portal-muted' }, ' · via ' + r.submitted_by_name) : null),
                           h('td', null, r.assigned_medic_name || r.requested_medic_name),
                           h('td', null, h(StatusTag, { status: r.status })),
-                          h('td', null, r.status === 'scheduled' ? (r.scheduled_when || '—') : h('span', { className: 'portal-muted' }, '—')),
+                          h('td', null, r.status === 'scheduled' ? (whenLabel(r) || '—') : h('span', { className: 'portal-muted' }, '—')),
                           h('td', { className: 'portal-col-actions' },
                             canEdit && r.status === 'scheduled' ? h('button', {
                               type: 'button', className: 'btn is-small',
@@ -421,4 +433,5 @@
   }
 
   window.PVAdminAppointments = Appointments;
+  window.PVAdminAppointmentUtils = { whenLabel: whenLabel };
 })();

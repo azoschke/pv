@@ -207,10 +207,11 @@
       });
     });
     apptScheduled.forEach(function (r) {
+      var when = PVAdminAppointmentUtils.whenLabel(r);
       attention.push({
         key: 'apptsched-' + r.id, tag: 'Appointment', statusCls: 'status-dot is-brown',
         name: r.character_name,
-        desc: 'appointment scheduled' + (r.scheduled_when ? ' — ' + r.scheduled_when : ''),
+        desc: 'appointment scheduled' + (when ? ' — ' + when : ''),
         source: 'Medical Records', target: 'medical',
         params: { tab: 'appointments' }
       });

@@ -301,7 +301,8 @@
                 h('td', null, fmtDate(r.created_at)),
                 h('td', null,
                   h('span', { className: 'status-dot is-brown' }, scheduled ? 'Scheduled' : 'Requested'),
-                  scheduled && r.scheduled_when ? h('span', { className: 'portal-muted' }, ' · ' + r.scheduled_when) : null
+                  scheduled && PVAdminAppointmentUtils.whenLabel(r)
+                    ? h('span', { className: 'portal-muted' }, ' · ' + PVAdminAppointmentUtils.whenLabel(r)) : null
                 ),
                 h('td', { className: 'portal-col-actions' },
                   scheduled ? null : h('button', {
