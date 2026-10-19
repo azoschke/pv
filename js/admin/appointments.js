@@ -7,9 +7,10 @@
 //  request shows the request and:
 //    - View patient request: its intake (Out of Character included)
 //    - scheduling: the assigned medic (the requested one to start with) and
-//      when, free text
-//    - its treatment reports, and Deny request (a medic's cancellation;
-//      it posts nothing to Discord)
+//      when, free text and required; scheduling, and then any new time or
+//      medic, posts to Discord (the med worker)
+//    - its treatment reports, and Cancel request (a medic's cancellation
+//      posts nothing to Discord)
 //    - delete (medical.delete): a request with a linked visit is archived
 //      instead, so the visit keeps its intake
 //  A scheduled request's row has "Write treatment report": the treatment
@@ -95,7 +96,7 @@
   }
 
   // One request: the request and its scheduling, with the patient's intake
-  // a button away (View patient request), and Deny request and Delete along
+  // a button away (View patient request), and Cancel request and Delete along
   // the bottom. The treatment report is written from the list once the
   // request is scheduled, which opens this with props.mode 'report'; saving
   // it marks the request seen.
@@ -199,6 +200,7 @@
 
     function schedule() {
       if (!sched.assigned) { setErr('Select a medic.'); return; }
+      if (!sched.when.trim()) { setErr('Enter when the appointment is.'); return; }
       patch({ status: 'scheduled', assigned_medic_id: Number(sched.assigned), scheduled_when: sched.when });
     }
 
@@ -257,12 +259,13 @@
 
     var actions = [
       canEdit && isOpen ? h('button', {
-        key: 'deny', type: 'button', className: 'btn is-danger', disabled: busy,
-        onClick: function () { if (confirm('Deny this request?')) patch({ status: 'cancelled' }); }
-      }, 'Deny request') : null,
+        key: 'cancel', type: 'button', className: 'btn is-danger', disabled: busy,
+        onClick: function () { if (confirm('Cancel this request?')) patch({ status: 'cancelled' }); }
+      }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'free_cancellation'), 'Cancel request') : null,
       canDelete && r.status !== 'archived' ? h('button', {
         key: 'delete', type: 'button', className: 'btn is-danger', disabled: busy, onClick: remove
-      }, hasReport ? 'Archive request' : 'Delete request') : null
+      }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'delete'),
+        hasReport ? 'Archive request' : 'Delete request') : null
     ].filter(Boolean);
 
     return h('div', { className: 'appt-detail' },
@@ -270,6 +273,7 @@
 
       h('div', { className: 'appt-detail-head' },
         h(StatusTag, { status: r.status }),
+        h('span', { className: 'portal-muted' }, fmtDate(r.created_at)),
         h('button', {
           type: 'button', className: 'btn is-quiet is-small is-end',
           onClick: function () { setMode('intake'); }
