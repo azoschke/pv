@@ -84,6 +84,13 @@
   //   - props.sections : grouped [{ id, title, fields: [...] }]
   // When `sections` is provided, fields render grouped under subsection
   // headings (mirrors the layout of the patient intake form).
+  // Admins (an admin role, or the root admin): the only ones who can change an
+  // existing record's FC member link.
+  function isAdmin() {
+    var s = PVAdminAPI.getSession();
+    return !!s && (!!s.is_root || (s.roles || []).indexOf('admin') !== -1);
+  }
+
   function RecordForm(props) {
     var sections = props.sections || null;
     var fields = props.fields || (sections
@@ -142,9 +149,7 @@
         },
           h('label', null, f.label),
           h('input', { type: 'text', value: linkedName, readOnly: true, disabled: true }),
-          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null,
-          h('span', { className: 'portal-field-help' },
-            'Name comes from the linked FC member. Edit the member to change it.')
+          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null
         );
       }
 
@@ -158,23 +163,25 @@
           style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
         },
           h('label', null, f.label),
-          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true }),
-          h('span', { className: 'portal-field-help' }, 'From the linked FC member’s IC Rank.')
+          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true })
         );
       }
 
       // Hybrid FC-member link. Choosing a member fills the patient name from
       // that member (nickname first); "Manual entry" leaves the name free-text.
       // A member has one patient record, so members linked to another record
-      // aren't offered (this record's own member stays).
+      // aren't offered (this record's own member stays). On an existing
+      // record only admins see it, in an inset.
       if (f.type === 'member-link') {
+        if (!isNew && !isAdmin()) return null;
         var members = props.members || [];
         var taken = props.takenMemberIds || {};
         var linkable = members.filter(function (mm) {
           return !taken[mm.id] || String(mm.id) === String(initial.member_id || '');
         });
-        return h('div', {
-          className: 'portal-field is-full', key: f.key
+        var linkField = h('div', {
+          className: 'portal-field is-full', key: f.key,
+          style: isNew ? undefined : { marginBottom: 0 }
         },
           h('label', null, f.label),
           h('select', {
@@ -196,11 +203,12 @@
               return h('option', { key: mm.id, value: String(mm.id) }, memberPickerLabel(mm));
             })
           ),
-          h('span', { className: 'portal-field-help' },
-            draft.member_id
-              ? 'Linked to an FC member. Removing that member from FC Members also removes this patient record.'
-              : 'Link this patient to an FC member, or leave as “Manual entry” and type a name below.')
+          draft.member_id ? null : h('span', { className: 'portal-field-help' },
+            'Link this patient to an FC member, or leave as “Manual entry” and type a name below.')
         );
+        return isNew ? linkField : h('div', {
+          className: 'portal-card is-inset', key: f.key, style: { gridColumn: '1 / -1' }
+        }, linkField);
       }
 
       var input;
@@ -417,8 +425,7 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title' },
-          'Edit Patient — ' + p.patient_name)
+        h('h2', { className: 'portal-card-title' }, 'Edit Patient')
       ),
       saved ? h('div', { className: 'portal-flash success' }, 'Saved.') : null,
       h(RecordForm, {
@@ -579,8 +586,7 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title' },
-          'Visits — ' + p.patient_name),
+        h('h2', { className: 'portal-card-title' }, 'Visits'),
         PVAdminAPI.can('medical.edit') ? h('div', { className: 'portal-card-actions' },
           h('button', {
             type: 'button',
