@@ -9,10 +9,16 @@
 //  Worker routes (all need "Manage the medical staff roster"):
 //    GET    /members/faction?division=medical   the Medical faction's members
 //    GET    /medical-staff/admin
-//        -> [{ member_id, positions:[], tags:[], description, updated_at }]
+//        -> [{ member_id, positions:[], tags:[], description, discord_id, updated_at }]
 //    PUT    /medical-staff/:member_id
-//        body { positions:[], tags:[], description }
+//        body { positions:[], tags:[], description, image_url, discord_id }
 //    DELETE /medical-staff/:member_id
+//    GET/PUT /medical-settings
+//        { medical_role_id, medical_thread_id } — the Medical role the
+//        appointment pings mention, and the thread they post in
+//
+//  A medic's Discord ID is who an appointment request for them pings; it is
+//  never shown on the public roster.
 //
 //  Public route (used by the staff-roster.html page, not this module):
 //    GET    /medical-staff
@@ -90,6 +96,8 @@
     return (a.member.name || '').localeCompare(b.member.name || '', undefined, { sensitivity: 'base' });
   }
 
+  var DISCORD_ID = /^\d{17,20}$/;
+
   // --------- Edit modal body ----------
   function StaffForm(props) {
     var row = props.row;
@@ -105,7 +113,8 @@
       positions: (profile.positions || []).slice(),
       tags: (profile.tags || []).slice(),
       description: profile.description || '',
-      image_url: profile.image_url || ''
+      image_url: profile.image_url || '',
+      discord_id: profile.discord_id || ''
     });
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
@@ -143,13 +152,19 @@
         setErr('Pick at least one position.');
         return;
       }
+      var discordId = draft.discord_id.trim();
+      if (discordId && !DISCORD_ID.test(discordId)) {
+        setErr('The Discord ID should be the 17 to 20 digit number from Copy User ID in Discord.');
+        return;
+      }
       setSaving(true); setErr('');
       try {
         await onSave({
           positions: draft.positions.slice(),
           tags: draft.tags.slice(),
           description: draft.description.trim(),
-          image_url: draft.image_url.trim() || null
+          image_url: draft.image_url.trim() || null,
+          discord_id: discordId
         });
       } catch (e2) {
         setErr(e2.message || 'Save failed.');
@@ -209,6 +224,22 @@
         name: row.member.name,
         help: 'Paste a URL or upload a portrait. Shown on the public staff roster card.'
       }),
+
+      h('div', { className: 'portal-field' },
+        h('label', { htmlFor: 'medic-discord-id' }, 'Discord ID'),
+        h('input', {
+          id: 'medic-discord-id',
+          type: 'text',
+          inputMode: 'numeric',
+          autoComplete: 'off',
+          value: draft.discord_id,
+          onChange: function (e) { setField('discord_id', e.target.value); },
+          disabled: saving,
+          placeholder: 'e.g. 123456789012345678'
+        }),
+        h('p', { className: 'portal-field-help' },
+          'Pinged when an appointment request names this medic. In Discord, turn on Developer Mode, then right-click them → Copy User ID. Not shown publicly.')
+      ),
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Description'),
@@ -289,6 +320,87 @@
     );
   }
 
+  // --------- Discord settings ----------
+  // The Medical role the appointment pings mention (Any Available Medic,
+  // cancellations, treatment reports) and the thread they post in. Blank
+  // falls back to the ones the Discord worker has built in.
+  function DiscordSettings() {
+    var formState = useState({ medical_role_id: '', medical_thread_id: '' });
+    var form = formState[0], setForm = formState[1];
+    var loadedState = useState(false);
+    var loaded = loadedState[0], setLoaded = loadedState[1];
+    var savingState = useState(false);
+    var saving = savingState[0], setSaving = savingState[1];
+    var msgState = useState(null); // null | { ok, text }
+    var msg = msgState[0], setMsg = msgState[1];
+
+    useEffect(function () {
+      PVAdminAPI.request('GET', '/medical-settings', undefined, true).then(function (s) {
+        setForm({ medical_role_id: (s && s.medical_role_id) || '', medical_thread_id: (s && s.medical_thread_id) || '' });
+        setLoaded(true);
+      }, function (e) {
+        setMsg({ ok: false, text: e.message || 'Could not load the Discord settings.' });
+      });
+    }, []);
+
+    function setField(k, v) {
+      setForm(function (f) { var n = Object.assign({}, f); n[k] = v; return n; });
+    }
+
+    async function save(e) {
+      e.preventDefault();
+      var body = { medical_role_id: form.medical_role_id.trim(), medical_thread_id: form.medical_thread_id.trim() };
+      if ((body.medical_role_id && !DISCORD_ID.test(body.medical_role_id)) ||
+          (body.medical_thread_id && !DISCORD_ID.test(body.medical_thread_id))) {
+        setMsg({ ok: false, text: 'Each ID should be the 17 to 20 digit number from Copy ID in Discord.' });
+        return;
+      }
+      setSaving(true); setMsg(null);
+      try {
+        var saved = await PVAdminAPI.request('PUT', '/medical-settings', body, true);
+        setForm({ medical_role_id: saved.medical_role_id || '', medical_thread_id: saved.medical_thread_id || '' });
+        setMsg({ ok: true, text: 'Discord settings saved.' });
+      } catch (e2) {
+        setMsg({ ok: false, text: e2.message || 'Save failed.' });
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    function idField(key, id, label) {
+      return h('div', { className: 'portal-field' },
+        h('label', { htmlFor: id }, label),
+        h('input', {
+          id: id,
+          type: 'text',
+          inputMode: 'numeric',
+          autoComplete: 'off',
+          value: form[key],
+          onChange: function (e) { setField(key, e.target.value); },
+          disabled: !loaded || saving
+        })
+      );
+    }
+
+    return h('div', { className: 'portal-card' },
+      h('div', { className: 'portal-card-header' },
+        h('h2', { className: 'portal-card-title' }, 'Appointment Pings')
+      ),
+      h('p', { className: 'portal-field-help' },
+        'Appointment requests, cancellations and new treatment reports post here. The Medical role is pinged for Any Available Medic, cancellations and treatment reports; a request for a named medic pings that medic instead (by the Discord ID on their profile; no ping without one). Blank uses the IDs built into the Discord worker.'),
+      msg ? h('div', { className: 'portal-flash ' + (msg.ok ? 'success' : 'error') }, msg.text) : null,
+      h('form', { onSubmit: save },
+        h('div', { className: 'portal-field-row' },
+          idField('medical_role_id', 'medical-role-id', 'Medical role ID'),
+          idField('medical_thread_id', 'medical-thread-id', 'Thread ID')
+        ),
+        h('div', { className: 'portal-form-actions' },
+          h('button', { type: 'submit', className: 'btn', disabled: !loaded || saving }, saving ? 'Saving…' : 'Save')
+        )
+      )
+    );
+  }
+
   // --------- Main component ----------
   function MedicalStaff() {
     var allowDelete = PVAdminAPI.can('factions.medical.manage');
@@ -341,7 +453,8 @@
             positions: parseList(p.positions),
             tags: parseList(p.tags),
             description: p.description || '',
-            image_url: p.image_url || ''
+            image_url: p.image_url || '',
+            discord_id: p.discord_id || ''
           };
         }
       });
@@ -451,6 +564,8 @@
                 )
               )
             ),
+
+      allowDelete ? h(DiscordSettings) : null,
 
       modalRow ? h(window.PVAdminModal, {
         title: (modalRow.profile ? 'Edit profile — ' : 'Add profile — ') + (modalRow.member.name || ''),

@@ -74,6 +74,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/pv-session.js"></script>
+  <script src="js/medical-shared.js"></script>
 
   <script>
   (function () {
@@ -93,6 +94,8 @@
     var activePatientId = null;
     var allPatients = [];   // full list, sorted by display name
     var patientQuery = "";  // current search text
+    // The patient on screen, for the export buttons.
+    var currentRecord = { visits: [], name: "", position: "" };
 
     var AZ_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").concat(["#"]);
     // Group key = first letter of the display name (A–Z), else "#".
@@ -211,6 +214,133 @@
         return escapeHTML(err.message && err.message !== "Forbidden" ? err.message : "Your account doesn't have access to patient records.");
       }
       return null;
+    }
+
+    // ── Exports ────────────────────────────────────────────────────────
+    // Each visit's Patient Intake (when it came from an appointment request)
+    // and Treatment Report download as the PDF / JPG the medical forms have
+    // always made; medics can also copy them for Discord. The builders
+    // (js/med-forms.js) and the PDF libraries load the first time they're
+    // needed.
+    var JSPDF_SRC = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    var PDFJS_SRC = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    var loadedScripts = {};
+    function loadScript(src) {
+      if (!loadedScripts[src]) {
+        loadedScripts[src] = new Promise(function (resolve, reject) {
+          var el = document.createElement("script");
+          el.src = src;
+          el.onload = resolve;
+          el.onerror = function () {
+            delete loadedScripts[src];
+            el.remove();
+            reject(new Error("Could not load " + src));
+          };
+          document.head.appendChild(el);
+        });
+      }
+      return loadedScripts[src];
+    }
+    function loadFormsScript() { return loadScript("js/med-forms.js"); }
+    function loadPdfTools() {
+      return Promise.all([loadScript(JSPDF_SRC), loadScript(PDFJS_SRC), loadFormsScript()])
+        .then(function () { return window.PVMedForms.ready(); });
+    }
+
+    function canCopyForDiscord() { return PVSession.canAny(["medical.view"]); }
+
+    function exportData(kind, v) {
+      var F = window.PVMedForms;
+      if (kind === "intake") {
+        var d = F.intakeFromRecord(v.intake);
+        d.patientName = currentRecord.name || d.patientName;
+        return d;
+      }
+      return F.treatmentFromRecord(v, currentRecord.name, currentRecord.position);
+    }
+
+    // "treatment-report-aria-silversong-2026-10-19"
+    function exportName(kind, v) {
+      var slug = String(currentRecord.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "patient";
+      var date = String(v.sort_date || (v.intake && v.intake.signed_date) || "").replace(/[^0-9-]/g, "").slice(0, 10);
+      return (kind === "intake" ? "patient-intake-" : "treatment-report-") + slug + (date ? "-" + date : "");
+    }
+
+    async function runExport(btn) {
+      var kind = btn.getAttribute("data-export");
+      var format = btn.getAttribute("data-format");
+      var v = currentRecord.visits[Number(btn.getAttribute("data-visit-idx"))];
+      if (!v || (kind === "intake" && !v.intake)) return;
+      var icon = btn.querySelector(".material-icons");
+      var original = icon.textContent;
+      btn.disabled = true;
+      icon.textContent = "hourglass_empty";
+      try {
+        if (format === "discord") {
+          // Copied straight from the click once the builders are loaded, as
+          // Safari only lets a click write to the clipboard.
+          if (!window.PVMedForms) await loadFormsScript();
+          var F = window.PVMedForms;
+          var data = exportData(kind, v);
+          await F.copyText(kind === "intake" ? F.buildIntakeDiscordText(data) : F.buildTreatmentDiscordText(data));
+        } else {
+          await loadPdfTools();
+          var P = window.PVMedForms;
+          var doc = kind === "intake" ? P.buildIntakePDF(exportData(kind, v)) : P.buildTreatmentPDF(exportData(kind, v));
+          var name = exportName(kind, v);
+          if (format === "pdf") P.savePDF(doc, name + ".pdf");
+          else await P.saveJPG(doc, name + ".jpg");
+        }
+        icon.textContent = "check";
+      } catch (err) {
+        console.error("Export failed:", err);
+        icon.textContent = "error";
+      }
+      setTimeout(function () { icon.textContent = original; btn.disabled = false; }, 1800);
+    }
+
+    patientContent.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-export]");
+      if (btn && !btn.disabled) runExport(btn);
+    });
+
+    // A visit subsection's heading with its export buttons.
+    function subsectionHead(label, kind, idx) {
+      var what = kind === "intake" ? "patient intake" : "treatment report";
+      function button(format, icon, title) {
+        return '<button type="button" class="btn is-quiet is-small is-icon" data-export="' + kind + '" data-format="' + format +
+          '" data-visit-idx="' + idx + '" title="' + title + '" aria-label="' + title + ' (' + what + ')">' +
+          '<span class="material-icons" aria-hidden="true">' + icon + '</span></button>';
+      }
+      return '<div class="visit-subsection-head"><div class="visit-subsection-label">' + escapeHTML(label) + '</div>' +
+        '<div class="visit-export" role="group" aria-label="Export ' + what + '">' +
+          button("pdf", "picture_as_pdf", "Download PDF") +
+          button("jpg", "image", "Download JPG") +
+          (canCopyForDiscord() ? button("discord", "content_copy", "Copy for Discord") : "") +
+        '</div></div>';
+    }
+
+    // A visit's intake from its appointment request: the In Character
+    // sections, then Out of Character folded away.
+    var INLINE_SECTIONS = { "Patient Information": true, "Emergency Contact": true, "Authorization for Treatment": true };
+    function intakeHtml(intake) {
+      var M = window.PVMedical;
+      var html = field("Reason for Appointment", intake.reason);
+      M.INTAKE_SECTIONS.forEach(function (section) {
+        var rows = section.fields.filter(function (f) { return hasValue(intake[f[0]]); });
+        if (!rows.length) return;
+        var inner = rows.map(function (f) { return field(f[1], intake[f[0]]); }).join("");
+        html += '<div class="visit-intake-section"><div class="visit-intake-title">' + escapeHTML(section.title) + '</div>' +
+          (INLINE_SECTIONS[section.title] ? '<div class="record-fields-inline">' + inner + '</div>' : inner) +
+          '</div>';
+      });
+      var ooc = M.OOC_FIELDS.filter(function (f) { return hasValue(intake[f[0]]); });
+      if (ooc.length) {
+        html += '<details class="visit-ooc"><summary>Out of Character</summary>' +
+          ooc.map(function (f) { return field(f[1], M.oocDisplay(f[0], intake[f[0]])); }).join("") +
+          '</details>';
+      }
+      return html;
     }
 
     // ── Patient list ───────────────────────────────────────────────────
@@ -395,6 +525,12 @@
         return db.sun - da.sun;
       });
 
+      currentRecord = {
+        visits: visits,
+        name: displayName,
+        position: (member && member.ic_rank) ? member.ic_rank : (patient.vanguard_position || "")
+      };
+
       // --- Build HTML ---
       var html = "";
 
@@ -455,8 +591,11 @@
         html += '<div class="record-card-header"><div><p class="record-card-label">Medical</p><h2 class="record-card-title">Visit History</h2></div></div>';
 
         visits.forEach(function(v, idx) {
-          // Split into intake fields (from patient) and report fields (from medic)
-          var intakeFields = [
+          // Split into intake fields (from patient) and report fields (from medic).
+          // A visit from an appointment request carries that request's intake;
+          // older visits keep the few intake fields saved on the visit itself.
+          var intake = v.intake || null;
+          var intakeFields = intake ? [] : [
             { l: "Presenting Complaint", v: v.presenting_complaint },
             { l: "Current Symptoms", v: v.current_symptoms },
             { l: "Recent Exposures", v: v.recent_exposures }
@@ -472,7 +611,8 @@
             { l: "Additional Notes", v: v.additional_notes }
           ].filter(function(f) { return hasValue(f.v); });
 
-          var hasContent = intakeFields.length || reportFields.length;
+          var hasIntake = !!intake || intakeFields.length > 0;
+          var hasContent = hasIntake || reportFields.length;
 
           html += '<div class="visit-card" data-visit-idx="' + idx + '">';
           html += '<div class="visit-card-header">';
@@ -489,15 +629,18 @@
           if (!hasContent) {
             html += '<em class="visit-card-empty">No details available for this visit.</em>';
           } else {
-            if (intakeFields.length) {
+            if (intake) {
+              html += subsectionHead("Patient Intake", "intake", idx);
+              html += intakeHtml(intake);
+            } else if (intakeFields.length) {
               html += '<div class="visit-subsection-label">Patient Intake</div>';
               intakeFields.forEach(function(f) { html += field(f.l, f.v); });
             }
             if (reportFields.length) {
-              if (intakeFields.length) {
+              if (hasIntake) {
                 html += '<div class="visit-subsection-divider"></div>';
               }
-              html += '<div class="visit-subsection-label">Treatment Report</div>';
+              html += subsectionHead("Treatment Report", "treatment", idx);
               reportFields.forEach(function(f) { html += field(f.l, f.v); });
             }
           }
@@ -510,10 +653,11 @@
 
       patientContent.innerHTML = html;
 
-      // Wire up visit card toggles
+      // Wire up visit card toggles. Opening one readies Copy for Discord.
       patientContent.querySelectorAll(".visit-card-header").forEach(function(header) {
         header.addEventListener("click", function() {
-          header.parentElement.classList.toggle("open");
+          var open = header.parentElement.classList.toggle("open");
+          if (open && canCopyForDiscord()) loadFormsScript().catch(function () {});
         });
       });
     }
