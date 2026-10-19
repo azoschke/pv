@@ -1,7 +1,7 @@
 // ============================================================================
 //  PVAdminMyApplications — member self-service activity section
 //
-//  Three cards, each shown only with its permission:
+//  Four cards, each shown only with its permission:
 //    1. My Quest Submissions (quests.submit) — submit new quests (live after
 //       officer approval), edit them (edits to listed quests queue for
 //       approval), withdraw pending ones.
@@ -9,12 +9,16 @@
 //       for on the public Bounty Board; withdrawable anytime.
 //    3. My Job Applications (jobs.apply) — status of public job board
 //       applications; withdrawable while still unreviewed.
+//    4. My Appointment Requests (the Appointment Request page's key) — your
+//       characters' open requests: Requested ones can be cancelled; Scheduled
+//       ones show the assigned medic and when, and stay as they are.
 //
 //  Worker routes (all authed):
 //    GET  /my/quests        POST /quests      PATCH/DELETE /my/quests/:id
 //    DELETE /quest-edits/:id                  (cancel own proposed edit)
 //    GET  /my/signups       DELETE /quests/:id/signups
 //    GET  /my/applications  DELETE /my/applications/:id
+//    GET  /my/appointments  POST /my/appointments/:id/cancel
 // ============================================================================
 
 (function () {
@@ -250,6 +254,69 @@
     );
   }
 
+  // --------- My appointment requests card ----------
+  // The Appointment Request page's key (Permissions → Site Pages) opens the
+  // page, the request and this card alike.
+  var APPOINTMENT_KEY = 'site.appointment-request.view';
+
+  function MyAppointmentsCard(props) {
+    var requests = props.requests || [];
+    var onChanged = props.onChanged;
+    var onError = props.onError;
+
+    async function handleCancel(r) {
+      if (!confirm('Cancel the appointment request for ' + r.character_name + '?')) return;
+      try {
+        await PVAdminAPI.request('POST', '/my/appointments/' + r.id + '/cancel', {}, true);
+        onChanged();
+      } catch (e) {
+        onError(e.message || 'Failed to cancel.');
+      }
+    }
+
+    return h('div', { className: 'portal-card' },
+      h('h2', { className: 'portal-card-title' }, 'My Appointment Requests'),
+      h('p', { className: 'portal-head-desc' },
+        'Request one from the ',
+        h('a', { href: 'appointment-request.html' }, 'Appointment Request'),
+        ' page. A request can be cancelled until a medic schedules it.'
+      ),
+      requests.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
+        h('table', { className: 'portal-table' },
+          h('thead', null,
+            h('tr', null,
+              h('th', null, 'Character'),
+              h('th', null, 'Medic'),
+              h('th', null, 'Requested'),
+              h('th', null, 'Status'),
+              h('th', { className: 'portal-col-actions' }, '')
+            )
+          ),
+          h('tbody', null,
+            requests.map(function (r) {
+              var scheduled = r.status === 'scheduled';
+              return h('tr', { key: r.id },
+                h('td', { className: 'portal-strong' }, r.character_name),
+                h('td', null, (scheduled && r.assigned_medic_name) || r.requested_medic_name),
+                h('td', null, fmtDate(r.created_at)),
+                h('td', null,
+                  h('span', { className: 'status-dot is-brown' }, scheduled ? 'Scheduled' : 'Requested'),
+                  scheduled && r.scheduled_when ? h('span', { className: 'portal-muted' }, ' · ' + r.scheduled_when) : null
+                ),
+                h('td', { className: 'portal-col-actions' },
+                  scheduled ? null : h('button', {
+                    type: 'button', className: 'btn is-small is-quiet',
+                    onClick: function () { handleCancel(r); }
+                  }, 'Cancel')
+                )
+              );
+            })
+          )
+        )
+      ) : h('p', { className: 'portal-muted portal-gap-top' }, 'No open appointment requests.')
+    );
+  }
+
   // --------- My job applications card ----------
   function MyJobApplicationsCard(props) {
     var apps = props.apps || [];
@@ -323,6 +390,8 @@
     var myApps = appsState[0], setMyApps = appsState[1];
     var jobsState = useState({});
     var jobsById = jobsState[0], setJobsById = jobsState[1];
+    var apptState = useState([]);
+    var myAppointments = apptState[0], setMyAppointments = apptState[1];
 
     var loadingState = useState(true);
     var loading = loadingState[0], setLoading = loadingState[1];
@@ -332,6 +401,7 @@
     var canSubmit = PVAdminAPI.can('quests.submit');
     var canSignup = PVAdminAPI.can('quests.signup');
     var canApply = PVAdminAPI.can('jobs.apply');
+    var canRequest = PVAdminAPI.can(APPOINTMENT_KEY);
 
     // Only load what this account may see.
     function load(allowed, path, empty) {
@@ -347,7 +417,8 @@
           load(canApply, '/my/applications', []),
           // Postings carry job_type / category; index by id so My Job
           // Applications can show the division label and Primary/Secondary type.
-          load(canApply, '/jobs', []).catch(function () { return []; })
+          load(canApply, '/jobs', []).catch(function () { return []; }),
+          load(canRequest, '/my/appointments', [])
         ]);
         setMyQuests(results[0] && results[0].quests ? results[0] : { quests: [], edits: [] });
         setMySignups(Array.isArray(results[1]) ? results[1] : []);
@@ -355,6 +426,7 @@
         var byId = {};
         (Array.isArray(results[3]) ? results[3] : []).forEach(function (j) { byId[j.id] = j; });
         setJobsById(byId);
+        setMyAppointments(Array.isArray(results[4]) ? results[4] : []);
       } catch (e) {
         setErr(e.message || 'Failed to load your activity.');
       } finally {
@@ -375,7 +447,8 @@
 
       canSubmit ? h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }) : null,
       canSignup ? h(MySignupsCard, { signups: mySignups, onChanged: reload, onError: setErr }) : null,
-      canApply ? h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr }) : null
+      canApply ? h(MyJobApplicationsCard, { apps: myApps, jobsById: jobsById, onChanged: reload, onError: setErr }) : null,
+      canRequest ? h(MyAppointmentsCard, { requests: myAppointments, onChanged: reload, onError: setErr }) : null
     );
   }
 

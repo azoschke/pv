@@ -63,7 +63,7 @@
   // "awaiting approval" notice instead.
   var PROFILE_TABS = {
     'profile-profile':      ['profile.own'],
-    'profile-applications': ['jobs.apply', 'quests.submit', 'quests.signup'],
+    'profile-applications': ['jobs.apply', 'quests.submit', 'quests.signup', 'site.appointment-request.view'],
     'profile-items':        ['items.own']
   };
   var FACTION_TABS = {

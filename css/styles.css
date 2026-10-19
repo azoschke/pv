@@ -1872,9 +1872,146 @@ button.nav-sublink {
   font-style: italic;
   color: var(--text-secondary);
 }
-#appt-name[readonly] {
-  opacity: 0.85;
-  cursor: not-allowed;
+
+/* ── Appointment Request: the stepped form ────────────────────────────────── */
+.appt-draft-note {
+  margin: 0 0 12px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* A button that reads as a link: Start over, Edit, Rebuild. */
+.appt-link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-style: normal;
+  color: var(--accent-red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.appt-link-btn:hover { color: var(--text-primary); }
+
+/* Progress bar: a numbered tab per step; done steps gold, the current one red. */
+.form-progress {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.form-progress[hidden] { display: none; }
+.form-progress li { flex: 1 1 0; min-width: 0; }
+
+.form-progress-step {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px 6px;
+  border: none;
+  border-top: 3px solid var(--bg-darker);
+  background: none;
+  font-family: 'Crimson Pro', serif;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.form-progress-step:hover { color: var(--text-primary); }
+.form-progress-step:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+
+.form-progress-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-darker);
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.form-progress-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.form-progress-step.is-done { border-top-color: var(--accent-gold); }
+.form-progress-step.is-done .form-progress-num { background: var(--accent-gold); color: #f5f3ef; }
+.form-progress-step.is-current { border-top-color: var(--accent-red); color: var(--text-primary); }
+.form-progress-step.is-current .form-progress-num { background: var(--accent-red); color: #f5f3ef; }
+
+/* "Patient: Name" at the top of step 2. */
+.appt-patient-line {
+  margin: 0 0 15px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.05rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.appt-patient-line strong { color: var(--text-primary); }
+
+/* Review: each group's heading with its Edit link, then label / answer rows. */
+.appt-review-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 25px 0 10px;
+  border-bottom: 2px dashed var(--bg-darker);
+}
+.appt-review-head:first-child { margin-top: 0; }
+.appt-review-head .subsection-heading { margin: 0; padding-bottom: 4px; border-bottom: none; }
+.appt-review-head .appt-link-btn { font-family: 'Crimson Pro', serif; font-size: 0.95rem; }
+
+.appt-review-list {
+  display: grid;
+  grid-template-columns: minmax(140px, 35%) 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.appt-review-list dt { font-weight: 600; color: var(--text-secondary); }
+.appt-review-list dd { margin: 0; color: var(--text-primary); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Back: an outline next to the solid Next / Submit. */
+.submit-btn.is-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-secondary);
+  box-shadow: none;
+}
+.submit-btn.is-secondary:hover { background: var(--bg-darker); box-shadow: none; }
+.submit-btn[hidden] { display: none; }
+
+@media (max-width: 600px) {
+  /* Numbers only; each step's own heading names it. */
+  .form-progress { gap: 4px; }
+  .form-progress-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .appt-review-list { grid-template-columns: 1fr; gap: 2px; }
+  .appt-review-list dd { margin-bottom: 8px; }
+
+  /* Back and Next stay side by side. */
+  #appointmentForm .button-group { flex-direction: row; }
 }
 
 

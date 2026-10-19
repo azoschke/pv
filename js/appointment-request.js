@@ -1,86 +1,481 @@
-// The proxy worker builds the Discord message (embed + medic/role ping) from
-// the form fields, so the page only sends { name, medic, reason }. When the
-// medic list changes, update the <select> options and the worker's MEDIC_IDS.
-const DISCORD_WEBHOOK_URL = 'https://pv-discord-proxy-secure.chlorinatorgreen.workers.dev/';
+// ============================================================================
+//  Appointment Request — a request and its patient intake, in six steps
+//
+//    1 Request                 character, medic, reason (required)
+//    2 About the Patient       race, gender, age, emergency contact
+//    3 Reason for Visit        complaint, symptoms, exposures
+//    4 Pre-Existing Conditions
+//    5 Out of Character        as on the Patient Intake Form
+//    6 Review & Sign           a summary, the symptoms and exposures combined
+//                              into editable boxes, the signature and date
+//
+//  The page needs a sign-in (Admin Settings → Pages); without one the visitor
+//  is sent to sign in and brought back. GET /appointments/form gives the
+//  characters (your own and your linked alts; everyone for medics, who can
+//  request on someone's behalf) and, for the chosen character, the patient
+//  record to pre-fill steps 2 and 4 from. The medic list is the published
+//  Medical staff roster (GET /medical-staff). Progress is kept in this
+//  browser as you go, per account, until the request is sent.
+//
+//  POST /appointments saves the request and its intake; the med worker posts
+//  the Discord message (and the "submitted by" note when it is on someone
+//  else's behalf). Requests are followed and cancelled in My Profile →
+//  Applications.
+// ============================================================================
 
-// ── Signed-in form ──────────────────────────────────────────────────────────
-// Requests are tied to the signed-in account, and the page needs a sign-in
-// (Admin Settings → Pages). Without one the visitor is sent to the sign-in
-// page and brought back here; the form stays hidden meanwhile. Signed in, the
-// Name field is filled from the account's display name and locked so the
-// request always matches the signed-in account.
-function initAppointmentForm() {
-    const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
-    const formWrapper = document.getElementById('form-wrapper');
+(function () {
+  var M = window.PVMedical;
+  var STEPS = 6;
+  var DRAFT_PREFIX = 'pv.appointment-draft.';
+  var ANY = 'any';
 
-    if (!session) {
-        PVAdminAPI.redirectToLogin();
-        return;
+  // The patient record fields steps 2 and 4 start from (field id → key).
+  var PREFILL_FIELDS = [
+    ['intake-race', 'race'],
+    ['intake-gender', 'gender'],
+    ['intake-age', 'age'],
+    ['intake-emergency-name', 'emergency_contact_name'],
+    ['intake-emergency-relationship', 'emergency_contact_relationship'],
+    ['intake-emergency-contact', 'emergency_contact_method'],
+    ['intake-chronic', 'chronic_illness'],
+    ['intake-injuries', 'previous_injuries'],
+    ['intake-allergies', 'known_allergies'],
+    ['intake-medications', 'current_medications'],
+    ['intake-aetheric', 'aetheric_abnormalities']
+  ];
+
+  var form = null;
+  var step = 1;
+  var draftKey = '';
+  var saveTimer = null;
+  // Once the combined symptoms / exposures are edited on the review step,
+  // going back and forth keeps the edit.
+  var combinedEdited = { symptoms: false, exposures: false };
+
+  function $(id) { return document.getElementById(id); }
+
+  // The formatting toolbar's buttons (onclick="insertMarkup(this, 'bold')").
+  window.insertMarkup = function (btn, type) {
+    var group = btn.closest('.form-group');
+    var textarea = group && group.querySelector('textarea');
+    if (!textarea) return;
+    var out = M.applyMarkup(textarea.value, textarea.selectionStart, textarea.selectionEnd, type);
+    textarea.value = out.text;
+    textarea.setSelectionRange(out.start, out.end);
+    textarea.focus();
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  // ── Reading the form ──────────────────────────────────────────────────────
+  function checked(name) {
+    return Array.prototype.map.call(form.querySelectorAll('input[name="' + name + '"]:checked'), function (cb) {
+      return cb.value;
+    });
+  }
+  function radio(name) {
+    var el = form.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '';
+  }
+  function val(id) {
+    var el = $(id);
+    return el ? String(el.value || '').trim() : '';
+  }
+  function characterTarget() {
+    var v = $('appt-character').value;
+    if (!v) return null;
+    return v.charAt(0) === 'm' ? { member_id: Number(v.slice(2)) } : { patient_id: Number(v.slice(2)) };
+  }
+  function selectedText(id) {
+    var el = $(id);
+    var opt = el && el.options[el.selectedIndex];
+    return opt && el.value ? opt.getAttribute('data-name') || opt.textContent : '';
+  }
+
+  // ── Draft ─────────────────────────────────────────────────────────────────
+  function snapshot() {
+    var fields = {};
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name) return;
+      if (el.type === 'checkbox') {
+        fields[el.name] = fields[el.name] || [];
+        if (el.checked) fields[el.name].push(el.value);
+      } else if (el.type === 'radio') {
+        if (el.checked) fields[el.name] = el.value;
+      } else {
+        fields[el.name] = el.value;
+      }
+    });
+    return { step: step, fields: fields, combinedEdited: combinedEdited };
+  }
+  function saveDraftSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(draftKey, JSON.stringify(snapshot())); } catch (_) {}
+    }, 300);
+  }
+  function clearDraft() {
+    clearTimeout(saveTimer);
+    try { localStorage.removeItem(draftKey); } catch (_) {}
+  }
+  function ensureOption(select, value) {
+    if (!value || Array.prototype.some.call(select.options, function (o) { return o.value === value; })) return;
+    var opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = value;
+    select.appendChild(opt);
+  }
+  // Restores a saved draft; returns its step, or 0 when there is none.
+  function restoreDraft() {
+    var draft = null;
+    try { draft = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch (_) {}
+    if (!draft || !draft.fields) return 0;
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name || !(el.name in draft.fields)) return;
+      var v = draft.fields[el.name];
+      if (el.type === 'checkbox') el.checked = Array.isArray(v) && v.indexOf(el.value) !== -1;
+      else if (el.type === 'radio') el.checked = v === el.value;
+      else {
+        if (el.tagName === 'SELECT' && el.id !== 'appt-character' && el.id !== 'appt-medic') ensureOption(el, v);
+        el.value = v;
+      }
+    });
+    combinedEdited = draft.combinedEdited || combinedEdited;
+    $('appt-draft-note').hidden = false;
+    return Math.min(Math.max(Number(draft.step) || 1, 1), STEPS);
+  }
+
+  // ── Characters, medics, pre-fill ──────────────────────────────────────────
+  function fillCharacters(data) {
+    var select = $('appt-character');
+    select.innerHTML = '';
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select a character...';
+    select.appendChild(placeholder);
+
+    function option(c) {
+      var opt = document.createElement('option');
+      opt.value = c.member_id ? 'm:' + c.member_id : 'p:' + c.patient_id;
+      opt.setAttribute('data-name', c.name);
+      opt.textContent = c.name + (c.open ? ' — has an open request' : '');
+      opt.disabled = !!c.open;
+      return opt;
     }
-
-    if (formWrapper) formWrapper.style.display = 'block';
-
-    const accountName = (session.display_name || session.username || '').trim();
-    const nameInput = document.getElementById('appt-name');
-    if (nameInput && accountName) {
-        nameInput.value = accountName;
-        nameInput.readOnly = true;
+    var own = data.characters.filter(function (c) { return c.own; });
+    var others = data.characters.filter(function (c) { return !c.own; });
+    if (data.can_submit_for_others && own.length && others.length) {
+      [['Your characters', own], ['Everyone else', others]].forEach(function (g) {
+        var group = document.createElement('optgroup');
+        group.label = g[0];
+        g[1].forEach(function (c) { group.appendChild(option(c)); });
+        select.appendChild(group);
+      });
+    } else {
+      data.characters.forEach(function (c) { select.appendChild(option(c)); });
     }
-    const note = document.getElementById('appt-name-note');
-    if (note && accountName) {
-        note.textContent = 'Requesting as ' + accountName + '.';
+    // A single available character of your own is chosen for you.
+    var available = own.filter(function (c) { return !c.open; });
+    if (available.length === 1 && !data.can_submit_for_others) select.value = option(available[0]).value;
+
+    $('appt-character-note').textContent = data.can_submit_for_others
+      ? 'Medics can request for anyone. A request for someone else notes that you submitted it.'
+      : 'Requesting for one of your characters.';
+  }
+
+  function fillMedics(staff, fallback) {
+    var select = $('appt-medic');
+    select.innerHTML = '';
+    function add(value, label, name) {
+      var opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      if (name) opt.setAttribute('data-name', name);
+      select.appendChild(opt);
     }
-}
+    add('', 'Select a medic...');
+    add(ANY, 'Any Available Medic', 'Any Available Medic');
+    var list = staff && staff.length ? staff : (fallback || []);
+    list.forEach(function (m) {
+      var positions = Array.isArray(m.positions) && m.positions.length ? ' — ' + m.positions.join(', ') : '';
+      add(String(m.member_id), m.name + positions, m.name);
+    });
+  }
 
-document.addEventListener('DOMContentLoaded', initAppointmentForm);
+  function showPatientName() {
+    $('appt-patient-name').textContent = selectedText('appt-character') || '—';
+  }
 
-async function submitAppointmentRequest(event) {
+  async function prefillFromRecord() {
+    var target = characterTarget();
+    if (!target) return;
+    var q = target.member_id ? 'member_id=' + target.member_id : 'patient_id=' + target.patient_id;
+    var res;
+    try { res = await PVAdminAPI.request('GET', '/appointments/form?' + q, undefined, true); }
+    catch (_) { return; }
+    var p = (res && res.prefill) || {};
+    var any = false;
+    PREFILL_FIELDS.forEach(function (f) {
+      var el = $(f[0]);
+      var v = p[f[1]] || '';
+      if (el.tagName === 'SELECT') ensureOption(el, v);
+      el.value = v;
+      if (v) any = true;
+    });
+    $('appt-prefill-note').hidden = !any;
+    saveDraftSoon();
+  }
+
+  // ── Steps ─────────────────────────────────────────────────────────────────
+  function showError(text) {
+    $('error-text').textContent = text;
+    $('error-message').style.display = 'block';
+  }
+  function hideError() { $('error-message').style.display = 'none'; }
+
+  function stepOneComplete(report) {
+    var missing = !$('appt-character').value ? 'Choose who the appointment is for.'
+      : !$('appt-medic').value ? 'Choose a medic, or Any Available Medic.'
+      : !val('appt-reason') ? 'Give a reason for the appointment.'
+      : '';
+    if (missing && report) showError(missing);
+    return !missing;
+  }
+
+  function showStep(n) {
+    step = n;
+    hideError();
+    Array.prototype.forEach.call(form.querySelectorAll('.form-step'), function (s) {
+      s.hidden = Number(s.getAttribute('data-step')) !== n;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.form-progress-step'), function (b) {
+      var k = Number(b.getAttribute('data-step'));
+      b.classList.toggle('is-current', k === n);
+      b.classList.toggle('is-done', k < n);
+      if (k === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+    $('appt-back').hidden = n === 1;
+    $('appt-next').hidden = n === STEPS;
+    $('submit-btn').hidden = n !== STEPS;
+    if (n === 2) showPatientName();
+    if (n === STEPS) buildReview();
+    var top = $('appt-progress');
+    if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    saveDraftSoon();
+  }
+
+  function goTo(n) {
+    if (n === step) return;
+    if (n > 1 && !stepOneComplete(true)) { if (step !== 1) showStep(1); return; }
+    showStep(n);
+  }
+
+  // ── Review ────────────────────────────────────────────────────────────────
+  function recombine(which) {
+    if (which !== 'exposures') {
+      $('review-symptoms').value = M.combineChecked(checked('symptoms'), val('intake-symptoms-detail'));
+      combinedEdited.symptoms = false;
+    }
+    if (which !== 'symptoms') {
+      $('review-exposures').value = M.combineChecked(checked('exposures'), val('intake-exposures-detail'));
+      combinedEdited.exposures = false;
+    }
+  }
+
+  function buildReview() {
+    if (!combinedEdited.symptoms) recombine('symptoms');
+    if (!combinedEdited.exposures) recombine('exposures');
+
+    var groups = [
+      ['Request', [
+        ['Character', selectedText('appt-character')],
+        ['Medic', selectedText('appt-medic')],
+        ['Reason for Appointment', val('appt-reason')]
+      ]],
+      ['Patient Information', [
+        ['Race', val('intake-race')], ['Gender', val('intake-gender')], ['Age', val('intake-age')]
+      ]],
+      ['Emergency Contact', [
+        ['Name', val('intake-emergency-name')],
+        ['Relationship', val('intake-emergency-relationship')],
+        ['Contact Method', val('intake-emergency-contact')]
+      ]],
+      ['Reason for Visit', [['Presenting Complaint/Injury', val('intake-complaint')]]],
+      ['Pre-Existing Conditions', [
+        ['Chronic Illness', val('intake-chronic')],
+        ['Previous Injuries', val('intake-injuries')],
+        ['Known Allergies', val('intake-allergies')],
+        ['Current Medications', val('intake-medications')],
+        ['Aetheric Abnormalities', val('intake-aetheric')]
+      ]],
+      ['Out of Character', [
+        ['Severity Assessment', M.oocLabel('severity', radio('severity'))],
+        ['RP Goals and Timeline', M.oocLabel('rp_timeline', radio('rpTimeline'))],
+        ['Conceptual Development', M.oocLabel('concept_dev', radio('conceptDev'))],
+        ['Desired Outcomes', val('intake-desired-outcomes')],
+        ['Specific Plot Hooks/Story Elements', val('intake-plot-hooks')],
+        ['Triggers to Avoid', val('intake-triggers')]
+      ]]
+    ];
+    var box = $('appt-review');
+    box.innerHTML = '';
+    groups.forEach(function (g, i) {
+      var rows = g[1].filter(function (r) { return r[1]; });
+      if (!rows.length) return;
+      var head = document.createElement('div');
+      head.className = 'appt-review-head';
+      var title = document.createElement('h4');
+      title.className = 'subsection-heading';
+      title.textContent = g[0];
+      head.appendChild(title);
+      // Each group's step: Request 1, patient info and contact 2, reason 3,
+      // conditions 4, out of character 5.
+      var target = [1, 2, 2, 3, 4, 5][i];
+      var edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'appt-link-btn';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () { goTo(target); });
+      head.appendChild(edit);
+      box.appendChild(head);
+      var list = document.createElement('dl');
+      list.className = 'appt-review-list';
+      rows.forEach(function (r) {
+        var dt = document.createElement('dt');
+        dt.textContent = r[0];
+        var dd = document.createElement('dd');
+        dd.textContent = r[1];
+        list.appendChild(dt);
+        list.appendChild(dd);
+      });
+      box.appendChild(list);
+    });
+  }
+
+  function showEorzeanDate() {
+    var display = $('intake-eorzean-date');
+    var text = M.eorzeanDate($('intake-patient-date').value);
+    display.textContent = text;
+    display.style.display = text ? 'block' : 'none';
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+  async function submit(event) {
     event.preventDefault();
+    if (step !== STEPS) return;
+    if (!stepOneComplete(true)) return;
+    var session = PVAdminAPI.getSession();
+    if (!session) { PVAdminAPI.redirectToLogin(); return; }
 
-    // Reassert the session at submit time — a token can expire while the form
-    // sits open. If it has, sign in again (and come back) rather than sending.
-    const session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
-    if (!session) {
-        PVAdminAPI.redirectToLogin();
-        return;
-    }
+    var medic = $('appt-medic').value;
+    var signedDate = $('intake-patient-date').value;
+    var payload = Object.assign({}, characterTarget(), {
+      medic_id: medic === ANY ? null : Number(medic),
+      reason: val('appt-reason'),
+      race: val('intake-race'),
+      gender: val('intake-gender'),
+      age: val('intake-age'),
+      emergency_contact_name: val('intake-emergency-name'),
+      emergency_contact_relationship: val('intake-emergency-relationship'),
+      emergency_contact_method: val('intake-emergency-contact'),
+      presenting_complaint: val('intake-complaint'),
+      current_symptoms: val('review-symptoms'),
+      recent_exposures: val('review-exposures'),
+      chronic_illness: val('intake-chronic'),
+      previous_injuries: val('intake-injuries'),
+      known_allergies: val('intake-allergies'),
+      current_medications: val('intake-medications'),
+      aetheric_abnormalities: val('intake-aetheric'),
+      patient_signature: val('intake-patient-signature'),
+      signed_date: signedDate,
+      signed_ic_date: M.eorzeanDate(signedDate),
+      severity: radio('severity'),
+      rp_timeline: radio('rpTimeline'),
+      concept_dev: radio('conceptDev'),
+      desired_outcomes: val('intake-desired-outcomes'),
+      plot_hooks: val('intake-plot-hooks'),
+      triggers: val('intake-triggers')
+    });
 
-    const name = document.getElementById('appt-name').value.trim();
-    // Discord caps an embed field value at 1024 chars; clamp so a long reason
-    // can't make the webhook 400 (which would surface as "Discord Error").
-    const reason = document.getElementById('appt-reason').value.trim().slice(0, 1024);
-    const medic = document.getElementById('appt-medic').value;
-
-    const submitBtn = document.getElementById('submit-btn');
-    const errorDiv = document.getElementById('error-message');
-    const errorText = document.getElementById('error-text');
-
-    errorDiv.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
-
-    const payload = { name: name, medic: medic, reason: reason };
-
+    var btn = $('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
+    hideError();
     try {
-        const response = await fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            document.getElementById('form-wrapper').style.display = 'none';
-            document.getElementById('confirmation-wrapper').style.display = 'block';
-        } else {
-            errorText.textContent = 'Something went wrong. Please try again.';
-            errorDiv.style.display = 'block';
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';
-        }
-    } catch (err) {
-        errorText.textContent = 'Could not connect. Please check your connection and try again.';
-        errorDiv.style.display = 'block';
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span class="material-icons">send</span> Submit Request';
+      await PVAdminAPI.request('POST', '/appointments', payload, true);
+      clearDraft();
+      $('form-wrapper').style.display = 'none';
+      $('confirmation-wrapper').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      showError(e && e.message ? e.message : 'Could not send the request. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-icons">send</span> Submit Request';
     }
-}
+  }
+
+  // ── Start ─────────────────────────────────────────────────────────────────
+  async function init() {
+    var session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
+    if (!session) { PVAdminAPI.redirectToLogin(); return; }
+    form = $('appointmentForm');
+    draftKey = DRAFT_PREFIX + String(session.username || '').toLowerCase();
+
+    var data, staff;
+    try {
+      var results = await Promise.all([
+        PVAdminAPI.request('GET', '/appointments/form', undefined, true),
+        PVAdminAPI.request('GET', '/medical-staff', undefined, false).catch(function () { return []; })
+      ]);
+      data = results[0];
+      staff = results[1];
+    } catch (e) {
+      $('form-wrapper').style.display = 'block';
+      $('appointmentForm').hidden = true;
+      $('appt-progress').hidden = true;
+      showError(e && e.message ? e.message : 'Could not load the form. Please try again.');
+      return;
+    }
+    if (!data.characters || !data.characters.length) {
+      $('no-character-wrapper').style.display = 'block';
+      return;
+    }
+
+    fillCharacters(data);
+    fillMedics(staff, data.medics);
+
+    var restoredStep = restoreDraft();
+    // A drafted character that has since been given an open request can't be
+    // chosen again.
+    var chosen = $('appt-character').selectedOptions[0];
+    if (chosen && chosen.disabled) $('appt-character').value = '';
+    if (restoredStep > 1 && !stepOneComplete(false)) restoredStep = 1;
+    if (!$('intake-patient-date').value) $('intake-patient-date').value = M.todayISO();
+    showEorzeanDate();
+
+    form.addEventListener('input', saveDraftSoon);
+    form.addEventListener('change', saveDraftSoon);
+    form.addEventListener('submit', submit);
+    $('appt-character').addEventListener('change', function () { showPatientName(); prefillFromRecord(); });
+    $('intake-patient-date').addEventListener('change', showEorzeanDate);
+    $('review-symptoms').addEventListener('input', function () { combinedEdited.symptoms = true; });
+    $('review-exposures').addEventListener('input', function () { combinedEdited.exposures = true; });
+    $('appt-recombine').addEventListener('click', function () { recombine(); saveDraftSoon(); });
+    $('appt-next').addEventListener('click', function () { goTo(step + 1); });
+    $('appt-back').addEventListener('click', function () { showStep(Math.max(1, step - 1)); });
+    Array.prototype.forEach.call(document.querySelectorAll('.form-progress-step'), function (b) {
+      b.addEventListener('click', function () { goTo(Number(b.getAttribute('data-step'))); });
+    });
+    $('appt-start-over').addEventListener('click', function () {
+      if (!confirm('Clear this draft and start over?')) return;
+      clearDraft();
+      window.location.reload();
+    });
+
+    $('form-wrapper').style.display = 'block';
+    // A fresh form (or one chosen for you) starts from the patient record.
+    if (!restoredStep && $('appt-character').value) prefillFromRecord();
+    showStep(restoredStep || 1);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();

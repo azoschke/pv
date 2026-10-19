@@ -32,42 +32,6 @@
   var useRef = React.useRef;
   var M = window.PVMedical;
 
-  // Bold / italic wrap the selection; heading / list prefix its lines (the
-  // same edits as the toolbar on the medical form pages).
-  function applyMarkup(text, start, end, type) {
-    var selected = text.substring(start, end);
-    if (type === 'bold' || type === 'italic') {
-      var wrapper = type === 'bold' ? '**' : '*';
-      var insert = selected || (type === 'bold' ? 'bold text' : 'italic text');
-      return {
-        text: text.substring(0, start) + wrapper + insert + wrapper + text.substring(end),
-        start: start + wrapper.length,
-        end: start + wrapper.length + insert.length
-      };
-    }
-    var prefix = type === 'heading' ? '## ' : '- ';
-    if (selected) {
-      var prefixed = selected.split('\n').map(function (line) {
-        return line.indexOf(prefix) === 0 ? line : prefix + line;
-      }).join('\n');
-      return { text: text.substring(0, start) + prefixed + text.substring(end), start: start, end: start + prefixed.length };
-    }
-    var placeholder = type === 'heading' ? 'Heading' : 'List item';
-    var lineStart = text.lastIndexOf('\n', start - 1) + 1;
-    if (text.substring(lineStart, start).trim() === '') {
-      return {
-        text: text.substring(0, lineStart) + prefix + placeholder + text.substring(start),
-        start: lineStart + prefix.length,
-        end: lineStart + prefix.length + placeholder.length
-      };
-    }
-    return {
-      text: text.substring(0, start) + '\n' + prefix + placeholder + text.substring(end),
-      start: start + 1 + prefix.length,
-      end: start + 1 + prefix.length + placeholder.length
-    };
-  }
-
   var MARKUP_BUTTONS = [
     ['bold', 'format_bold', 'Bold'],
     ['italic', 'format_italic', 'Italic'],
@@ -92,7 +56,7 @@
     function markup(type) {
       var el = ref.current;
       if (!el) return;
-      var out = applyMarkup(props.value || '', el.selectionStart, el.selectionEnd, type);
+      var out = M.applyMarkup(props.value || '', el.selectionStart, el.selectionEnd, type);
       pendingSelection.current = { start: out.start, end: out.end };
       props.onChange(out.text);
     }

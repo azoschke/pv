@@ -22,64 +22,468 @@
         </header>
 
         <p class="landing-intro">
-            Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a> <br><em>All fields are required</em>.
+            Request a medical appointment with a Phoenix Vanguard medic, along with a short patient intake so your medic can prepare. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a>.<br><em>Your progress is saved as you go.</em>
         </p>
 
-        <!-- Request form (shown once the sign-in is confirmed) -->
+        <!-- Shown once the sign-in and the form's options have loaded -->
         <div id="form-wrapper" style="display: none;">
-            <div class="form-container active" id="form-appointment">
-                <form id="appointmentForm" onsubmit="submitAppointmentRequest(event)">
-                    <div class="parchment">
-                        <h3 class="section-heading">APPOINTMENT REQUEST</h3>
+            <p class="appt-draft-note" id="appt-draft-note" hidden>
+                Draft restored. <button type="button" class="appt-link-btn" id="appt-start-over">Start over</button>
+            </p>
 
-                        <div class="form-group">
-                            <label for="appt-name">
-                                <span class="material-icons">person</span>
-                                Name
-                            </label>
-                            <input type="text" id="appt-name" name="name" required readonly placeholder="Your character's name">
-                            <p class="appt-name-note" id="appt-name-note">Requesting as your signed-in account.</p>
-                        </div>
+            <ol class="form-progress" id="appt-progress" aria-label="Form steps">
+                <li><button type="button" class="form-progress-step" data-step="1"><span class="form-progress-num">1</span><span class="form-progress-label">Request</span></button></li>
+                <li><button type="button" class="form-progress-step" data-step="2"><span class="form-progress-num">2</span><span class="form-progress-label">About the Patient</span></button></li>
+                <li><button type="button" class="form-progress-step" data-step="3"><span class="form-progress-num">3</span><span class="form-progress-label">Reason for Visit</span></button></li>
+                <li><button type="button" class="form-progress-step" data-step="4"><span class="form-progress-num">4</span><span class="form-progress-label">Pre-Existing Conditions</span></button></li>
+                <li><button type="button" class="form-progress-step" data-step="5"><span class="form-progress-num">5</span><span class="form-progress-label">Out of Character</span></button></li>
+                <li><button type="button" class="form-progress-step" data-step="6"><span class="form-progress-num">6</span><span class="form-progress-label">Review &amp; Sign</span></button></li>
+            </ol>
 
-                        <div class="form-group">
-                            <label for="appt-reason">
-                                <span class="material-icons">medical_services</span>
-                                Reason for Appointment
-                            </label>
-                            <textarea id="appt-reason" name="reason" required placeholder="Briefly describe the reason for your appointment..."></textarea>
-                        </div>
+            <form id="appointmentForm" novalidate>
 
+                <!-- Step 1: the request -->
+                <section class="form-step" data-step="1">
+                <div class="parchment">
+                    <h3 class="section-heading">APPOINTMENT REQUEST</h3>
+
+                    <div class="form-group">
+                        <label for="appt-character">
+                            <span class="material-icons">person</span>
+                            Character
+                        </label>
+                        <select id="appt-character" name="character" required></select>
+                        <p class="appt-name-note" id="appt-character-note">Requesting for one of your characters.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-medic">
+                            <span class="material-icons">badge</span>
+                            I'd like an appointment with
+                        </label>
+                        <select id="appt-medic" name="medic" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-reason">
+                            <span class="material-icons">medical_services</span>
+                            Reason for Appointment
+                        </label>
+                        <textarea id="appt-reason" name="reason" required maxlength="1024" placeholder="Briefly describe the reason for your appointment..."></textarea>
+                    </div>
+                    <p class="appt-name-note">All fields on this step are required. The rest of the form can be filled out as much or as little as you'd like.</p>
+                </div>
+                </section>
+
+                <!-- Step 2: about the patient -->
+                <section class="form-step" data-step="2" hidden>
+                <div class="parchment">
+                    <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
+                    <p class="appt-patient-line">Patient: <strong id="appt-patient-name"></strong></p>
+
+                    <h4 class="subsection-heading">Patient Information</h4>
+                    <div class="form-row form-row-3">
                         <div class="form-group">
-                            <label for="appt-medic">
-                                <span class="material-icons">badge</span>
-                                I'd like an appointment with
+                            <label for="intake-race">
+                                <span class="material-icons">groups</span>
+                                Race
                             </label>
-                            <select id="appt-medic" name="medic" required>
-                                <option value="">Select a medic...</option>
-                                <option value="Any Available Medic">Any Available Medic</option>
-                                <option value="Astares De'Ruahn">Astares De'Ruahn — Assistant Medical Lead</option>
-                                <option value="Addison Tyrrell">Addison Tyrrell — Secretary &amp; Medic</option>
-                                <option value="Camimi Mili">Camimi Mili — Medic</option>
-                                <option value="Fiora Acaeus">Fiora Acaeus — Medic</option>
-                                <option value="Lixiss Valra">Lixiss Valra — Medic</option>
-                                <option value="Nikita Lynkasch">Nikita Lynkasch — Physical Therapist</option>
-                                <option value="Tasha Theja">Tasha Theja — Prosthetics</option>
+                            <select id="intake-race" name="race">
+                                <option value="">Select race...</option>
+                                <option value="Hyur">Hyur</option>
+                                <option value="Miqo'te">Miqo'te</option>
+                                <option value="Elezen">Elezen</option>
+                                <option value="Roegadyn">Roegadyn</option>
+                                <option value="Lalafell">Lalafell</option>
+                                <option value="Au Ra">Au Ra</option>
+                                <option value="Viera">Viera</option>
+                                <option value="Hrothgar">Hrothgar</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
 
-                        <div id="error-message" class="error-message">
-                            <span class="material-icons">error_outline</span>
-                            <span id="error-text">Something went wrong. Please try again.</span>
+                        <div class="form-group">
+                            <label for="intake-gender">
+                                <span class="material-icons">wc</span>
+                                Gender
+                            </label>
+                            <select id="intake-gender" name="gender">
+                                <option value="">Select gender...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Non-binary">Non-binary</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="intake-age">
+                                <span class="material-icons">cake</span>
+                                Age
+                            </label>
+                            <input type="text" id="intake-age" name="age" placeholder="Age">
                         </div>
                     </div>
 
-                    <div class="button-group">
-                        <button type="submit" id="submit-btn" class="submit-btn">
-                            <span class="material-icons">send</span>
-                            Submit Request
-                        </button>
+                    <h4 class="subsection-heading">Emergency Contact</h4>
+                    <div class="form-group">
+                        <label for="intake-emergency-name">
+                            <span class="material-icons">contact_phone</span>
+                            Name
+                        </label>
+                        <input type="text" id="intake-emergency-name" name="emergency_contact_name" placeholder="Emergency contact name">
                     </div>
-                </form>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="intake-emergency-relationship">
+                                <span class="material-icons">people</span>
+                                Relationship
+                            </label>
+                            <input type="text" id="intake-emergency-relationship" name="emergency_contact_relationship" placeholder="Relationship to patient">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="intake-emergency-contact">
+                                <span class="material-icons">mail</span>
+                                Contact Method
+                            </label>
+                            <input type="text" id="intake-emergency-contact" name="emergency_contact_method" placeholder="How to reach them">
+                        </div>
+                    </div>
+                </div>
+                </section>
+
+                <!-- Step 3: reason for visit -->
+                <section class="form-step" data-step="3" hidden>
+                <div class="parchment">
+                    <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
+                    <h4 class="subsection-heading">Reason for Visit</h4>
+
+                    <div class="form-group">
+                        <label for="intake-complaint">
+                            <span class="material-icons">report_problem</span>
+                            Presenting Complaint/Injury
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="intake-complaint" name="presenting_complaint" placeholder="Describe the presenting complaint or injury in detail..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">healing</span>
+                            Current Symptoms
+                        </label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Pain"> Pain
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Fever/Chills"> Fever/Chills
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Nausea/Vomiting"> Nausea/Vomiting
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Dizziness/Disorientation"> Dizziness/Disorientation
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Bleeding"> Bleeding
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Difficulty Breathing"> Difficulty Breathing
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Loss of Consciousness"> Loss of Consciousness
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="symptoms" value="Other"> Other
+                            </label>
+                        </div>
+                        <input type="text" id="intake-symptoms-detail" name="symptoms_detail" placeholder="Additional symptom details (bleeding location, other symptoms, etc.)...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">warning</span>
+                            Recent Exposures
+                        </label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Combat"> Combat
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Voidsent Encounter"> Voidsent Encounter
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Primal Encounter"> Primal Encounter
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Poisonous Substances"> Poisonous Substances
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Extreme Temperatures"> Extreme Temperatures
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Overaspected Crystals"> Overaspected Crystals
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="exposures" value="Other"> Other
+                            </label>
+                        </div>
+                        <input type="text" id="intake-exposures-detail" name="exposures_detail" placeholder="Additional exposure details...">
+                    </div>
+                </div>
+                </section>
+
+                <!-- Step 4: pre-existing conditions -->
+                <section class="form-step" data-step="4" hidden>
+                <div class="parchment">
+                    <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
+                    <h4 class="subsection-heading">Pre-Existing Conditions</h4>
+
+                    <div class="form-group">
+                        <label for="intake-chronic">
+                            <span class="material-icons">favorite</span>
+                            Chronic Illness
+                        </label>
+                        <input type="text" id="intake-chronic" name="chronic_illness" placeholder="List any chronic illnesses...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-injuries">
+                            <span class="material-icons">accessibility</span>
+                            Previous Injuries
+                        </label>
+                        <input type="text" id="intake-injuries" name="previous_injuries" placeholder="List any previous significant injuries...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-allergies">
+                            <span class="material-icons">do_not_disturb</span>
+                            Known Allergies
+                        </label>
+                        <input type="text" id="intake-allergies" name="known_allergies" placeholder="List any known allergies...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-medications">
+                            <span class="material-icons">medication</span>
+                            Current Medications
+                        </label>
+                        <input type="text" id="intake-medications" name="current_medications" placeholder="List any current medications...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-aetheric">
+                            <span class="material-icons">auto_awesome</span>
+                            Aetheric Abnormalities
+                        </label>
+                        <input type="text" id="intake-aetheric" name="aetheric_abnormalities" placeholder="Describe any aetheric abnormalities...">
+                    </div>
+                    <p class="appt-name-note" id="appt-prefill-note" hidden>Filled from your patient record. Change anything that's different now; a medic will update the record.</p>
+                </div>
+                </section>
+
+                <!-- Step 5: out of character (as on the Patient Intake Form) -->
+                <section class="form-step" data-step="5" hidden>
+                <div class="parchment">
+                    <!-- Out of Character Information -->
+                    <h3 class="section-heading">OUT OF CHARACTER INFORMATION</h3>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">assessment</span>
+                            Severity Assessment
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="severity" value="Minor">
+                                Minor (surface wounds, common illness, routine check)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="severity" value="Moderate">
+                                Moderate (significant injury, uncommon illness, requires monitoring)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="severity" value="Severe">
+                                Severe (life-threatening, complex condition, intensive care required)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="severity" value="Critical">
+                                Critical (immediate intervention required, high mortality risk)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="severity" value="Not Sure/Other">
+                                Not Sure/Other
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">schedule</span>
+                            RP Goals and Timeline
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="rpTimeline" value="Short-term">
+                                Short-term: Single session resolution, full recovery expected
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="rpTimeline" value="Medium-term">
+                                Medium-term: 2-4 sessions, recovery with possible complications
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="rpTimeline" value="Long-term">
+                                Long-term: Ongoing condition requiring extended care and follow-up
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="rpTimeline" value="Permanent">
+                                Permanent: Condition will result in lasting effects
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="material-icons">lightbulb</span>
+                            Conceptual Development
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="conceptDev" value="Collaborative">
+                                I need help exploring this RP idea and would like collaborative assistance
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="conceptDev" value="Specific">
+                                I know specifically what the issue is and how I'd like this RP to play out
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-desired-outcomes">
+                            <span class="material-icons">flag</span>
+                            Desired Outcomes (if any)
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="intake-desired-outcomes" name="desiredOutcomes" placeholder="Describe any specific outcomes you're hoping for..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-plot-hooks">
+                            <span class="material-icons">auto_stories</span>
+                            Specific Plot Hooks/Story Elements (if any)
+                        </label>
+                        <div class="markup-toolbar">
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'heading')" title="Heading"><span class="material-icons">title</span></button>
+                            <button type="button" class="markup-btn" onclick="insertMarkup(this, 'list')" title="List"><span class="material-icons">format_list_bulleted</span></button>
+                        </div>
+                        <textarea id="intake-plot-hooks" name="plotHooks" placeholder="Describe any plot hooks or story elements you'd like to incorporate..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="intake-triggers">
+                            <span class="material-icons">warning</span>
+                            Are there specific triggers you'd like to avoid?
+                        </label>
+                        <input type="text" id="intake-triggers" name="triggers" placeholder="List any topics or content you'd prefer to avoid...">
+                    </div>
+                </div>
+                </section>
+
+                <!-- Step 6: review and sign -->
+                <section class="form-step" data-step="6" hidden>
+                <div class="parchment">
+                    <h3 class="section-heading">REVIEW &amp; SIGN</h3>
+                    <div class="appt-review" id="appt-review"></div>
+
+                    <h4 class="subsection-heading">Symptoms and Exposures</h4>
+                    <div class="form-group">
+                        <label for="review-symptoms">
+                            <span class="material-icons">healing</span>
+                            Current Symptoms
+                        </label>
+                        <textarea id="review-symptoms" name="current_symptoms" placeholder="No symptoms given."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="review-exposures">
+                            <span class="material-icons">warning</span>
+                            Recent Exposures
+                        </label>
+                        <textarea id="review-exposures" name="recent_exposures" placeholder="No exposures given."></textarea>
+                        <p class="appt-name-note">Combined from Reason for Visit. Edit them here as you like. <button type="button" class="appt-link-btn" id="appt-recombine">Rebuild from Reason for Visit</button></p>
+                    </div>
+
+                    <h4 class="subsection-heading">Authorization for Treatment</h4>
+                    <div class="authorization-text">
+                        I authorize the Phoenix Vanguard medical staff to provide necessary medical treatment, including but not limited to: examination, diagnostic procedures, medication administration, surgical intervention, and aetheric healing. I understand that I may refuse specific treatments and that I will be informed of procedures when practical.
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="intake-patient-signature">
+                                <span class="material-icons">draw</span>
+                                Patient or Witness Signature
+                            </label>
+                            <input type="text" id="intake-patient-signature" name="patient_signature" class="signature-input" placeholder="Sign here...">
+                        </div>
+                        <div class="form-group">
+                            <label for="intake-patient-date">
+                                <span class="material-icons">event</span>
+                                Date
+                            </label>
+                            <input type="date" id="intake-patient-date" name="signed_date" class="date-input">
+                            <div class="eorzean-date-display" id="intake-eorzean-date"></div>
+                        </div>
+                    </div>
+                </div>
+                </section>
+
+                <div id="error-message" class="error-message">
+                    <span class="material-icons">error_outline</span>
+                    <span id="error-text">Something went wrong. Please try again.</span>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="submit-btn is-secondary" id="appt-back">
+                        <span class="material-icons">arrow_back</span>
+                        Back
+                    </button>
+                    <button type="button" class="submit-btn" id="appt-next">
+                        Next
+                        <span class="material-icons">arrow_forward</span>
+                    </button>
+                    <button type="submit" class="submit-btn" id="submit-btn" hidden>
+                        <span class="material-icons">send</span>
+                        Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- No character to request for -->
+        <div id="no-character-wrapper" style="display: none;">
+            <div class="parchment">
+                <div class="confirmation-panel is-shown">
+                    <span class="material-icons check-icon">person_off</span>
+                    <h2>No Character Linked</h2>
+                    <p>Your account isn't linked to a character on the FC roster yet, so there's nothing to request for. Ask an officer to link it.</p>
+                </div>
             </div>
         </div>
 
@@ -90,14 +494,14 @@
                     <span class="material-icons check-icon">check_circle</span>
                     <h2>Request Sent</h2>
                     <p>
-                        Your appointment request has been submitted to the medical team. A medic will be in touch with you soon.
+                        Your appointment request and intake have been sent to the medical team. A medic will be in touch with you soon.
                     </p>
                     <p>
-                        In the meantime, please fill out a Patient Intake Form and post it to the appointment request channel in Discord so your medic can prepare.
+                        You can follow it in My Profile, and cancel it there until a medic schedules it.
                     </p>
-                    <a href="patient-intake-form.html" class="intake-btn">
+                    <a href="portal.html?section=my-profile&amp;tab=applications" class="intake-btn">
                         <span class="material-icons">assignment</span>
-                        Fill Out Patient Intake Form
+                        View My Requests
                     </a>
                 </div>
             </div>
@@ -111,6 +515,7 @@
 
     <script src="js/pv-session.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/medical-shared.js"></script>
     <script src="js/appointment-request.js"></script>
     <script src="js/nav.js"></script>
 </body>
