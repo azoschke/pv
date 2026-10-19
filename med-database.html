@@ -320,27 +320,24 @@
         '</div></div>';
     }
 
-    // A visit's intake from its appointment request: the In Character
-    // sections, then Out of Character folded away.
-    var INLINE_SECTIONS = { "Patient Information": true, "Emergency Contact": true, "Authorization for Treatment": true };
-    function intakeHtml(intake) {
+    // A visit's Patient Intake: the presenting complaint and current symptoms
+    // (the visit's own, as its treatment report saved them, else its
+    // request's), then a request's Out of Character answers folded away. The
+    // rest of the intake is in the patient's own details above.
+    function visitIntakeFields(v) {
+      var intake = v.intake || {};
+      return [
+        { l: "Presenting Complaint/Injury", v: hasValue(v.presenting_complaint) ? v.presenting_complaint : intake.presenting_complaint },
+        { l: "Current Symptoms", v: hasValue(v.current_symptoms) ? v.current_symptoms : intake.current_symptoms }
+      ].filter(function (f) { return hasValue(f.v); });
+    }
+    function oocHtml(intake) {
       var M = window.PVMedical;
-      var html = field("Reason for Appointment", intake.reason);
-      M.INTAKE_SECTIONS.forEach(function (section) {
-        var rows = section.fields.filter(function (f) { return hasValue(intake[f[0]]); });
-        if (!rows.length) return;
-        var inner = rows.map(function (f) { return field(f[1], intake[f[0]]); }).join("");
-        html += '<div class="visit-intake-section"><div class="visit-intake-title">' + escapeHTML(section.title) + '</div>' +
-          (INLINE_SECTIONS[section.title] ? '<div class="record-fields-inline">' + inner + '</div>' : inner) +
-          '</div>';
-      });
       var ooc = M.OOC_FIELDS.filter(function (f) { return hasValue(intake[f[0]]); });
-      if (ooc.length) {
-        html += '<details class="visit-ooc"><summary>Out of Character</summary>' +
-          ooc.map(function (f) { return field(f[1], M.oocDisplay(f[0], intake[f[0]])); }).join("") +
-          '</details>';
-      }
-      return html;
+      if (!ooc.length) return "";
+      return '<details class="visit-ooc"><summary>Out of Character</summary>' +
+        ooc.map(function (f) { return field(f[1], M.oocDisplay(f[0], intake[f[0]])); }).join("") +
+        '</details>';
     }
 
     // ── Patient list ───────────────────────────────────────────────────
@@ -592,14 +589,10 @@
 
         visits.forEach(function(v, idx) {
           // Split into intake fields (from patient) and report fields (from medic).
-          // A visit from an appointment request carries that request's intake;
-          // older visits keep the few intake fields saved on the visit itself.
+          // A visit from an appointment request also carries that request's
+          // intake, for its Out of Character answers and the intake exports.
           var intake = v.intake || null;
-          var intakeFields = intake ? [] : [
-            { l: "Presenting Complaint", v: v.presenting_complaint },
-            { l: "Current Symptoms", v: v.current_symptoms },
-            { l: "Recent Exposures", v: v.recent_exposures }
-          ].filter(function(f) { return hasValue(f.v); });
+          var intakeFields = visitIntakeFields(v);
 
           var reportFields = [
             { l: "Clinical Summary", v: v.clinical_summary },
@@ -629,12 +622,12 @@
           if (!hasContent) {
             html += '<em class="visit-card-empty">No details available for this visit.</em>';
           } else {
-            if (intake) {
-              html += subsectionHead("Patient Intake", "intake", idx);
-              html += intakeHtml(intake);
-            } else if (intakeFields.length) {
-              html += '<div class="visit-subsection-label">Patient Intake</div>';
+            if (hasIntake) {
+              html += intake
+                ? subsectionHead("Patient Intake", "intake", idx)
+                : '<div class="visit-subsection-label">Patient Intake</div>';
               intakeFields.forEach(function(f) { html += field(f.l, f.v); });
+              if (intake) html += oocHtml(intake);
             }
             if (reportFields.length) {
               if (hasIntake) {

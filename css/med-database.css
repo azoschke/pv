@@ -189,19 +189,6 @@
 .visit-export .btn.is-small.is-icon { width: 26px; min-height: 26px; }
 .visit-export .btn .material-icons { font-size: 16px; }
 
-/* A linked intake's sections (Patient Information, Reason for Visit, ...). */
-.visit-intake-section { margin-bottom: 1.25rem; }
-.visit-intake-section:last-child { margin-bottom: 0; }
-.visit-intake-title {
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--text-secondary);
-  padding-bottom: 0.2rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
 /* Out of Character, folded until opened. */
 .visit-ooc {
   margin-top: 1.25rem;

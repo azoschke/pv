@@ -11,8 +11,9 @@
 //      medic, posts to Discord (the med worker)
 //    - its treatment reports, and Cancel request (a medic's cancellation
 //      posts nothing to Discord)
-//    - delete (medical.delete): a request with a linked visit is archived
-//      instead, so the visit keeps its intake
+//    - delete (medical.delete), whatever its status: a linked treatment
+//      report stays, keeping its own complaint and symptoms, and loses the
+//      request's Out of Character answers
 //  A scheduled request's row has "Write treatment report": the treatment
 //  report form, filled from the intake and linked to the request; saving it
 //  marks the request seen. A patient record is created from the intake
@@ -206,11 +207,7 @@
 
     async function remove() {
       var r = data.request;
-      var hasVisit = data.visits && data.visits.length;
-      var msg = hasVisit
-        ? 'This request will be archived. Continue?'
-        : 'Delete the request for ' + r.character_name + '? This cannot be undone.';
-      if (!confirm(msg)) return;
+      if (!confirm('Delete the request for ' + r.character_name + '? This cannot be undone.')) return;
       setBusy(true); setErr('');
       try {
         await PVAdminAPI.request('DELETE', '/appointments/' + id, undefined, true);
@@ -262,10 +259,9 @@
         key: 'cancel', type: 'button', className: 'btn is-danger', disabled: busy,
         onClick: function () { if (confirm('Cancel this request?')) patch({ status: 'cancelled' }); }
       }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'free_cancellation'), 'Cancel request') : null,
-      canDelete && r.status !== 'archived' ? h('button', {
+      canDelete ? h('button', {
         key: 'delete', type: 'button', className: 'btn is-danger', disabled: busy, onClick: remove
-      }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'delete'),
-        hasReport ? 'Archive request' : 'Delete request') : null
+      }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'delete'), 'Delete request') : null
     ].filter(Boolean);
 
     return h('div', { className: 'appt-detail' },
@@ -283,7 +279,7 @@
         h('h3', { className: 'portal-form-section-title' }, 'Request'),
         h(Field, { label: 'Character', value: r.character_name }),
         h(Field, { label: 'Requested medic', value: r.requested_medic_name }),
-        h(Field, { label: 'Reason for appointment', value: r.reason }),
+        h(Field, { label: 'Message for the secretary', value: r.reason }),
         r.on_behalf ? h(Field, { label: 'Submitted by', value: r.submitted_by_name }) : null,
         r.status === 'cancelled'
           ? h(Field, { label: 'Cancelled', value: r.cancelled_by === 'patient' ? 'By the patient' : 'By a medic' })

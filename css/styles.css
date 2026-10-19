@@ -1875,6 +1875,10 @@ button.nav-sublink {
 }
 #appointmentForm .subsection-heading { border-bottom: 1px solid var(--border-color); }
 #appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
+/* Out of Character choices as a plain list, not a tile per option. */
+#appointmentForm .radio-group { gap: 6px; }
+#appointmentForm .radio-label,
+#appointmentForm .radio-label:hover { padding: 0; background: none; border: 0; }
 
 /* A short note under a step's fields, and the restored-draft line. */
 .appt-note {

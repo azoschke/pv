@@ -1,7 +1,8 @@
 // ============================================================================
 //  Appointment Request — a request and its patient intake, in six steps
 //
-//    1 Request                 character, medic, reason (required)
+//    1 Request                 character, medic, message for the secretary
+//                              (required; the Discord post's reason)
 //    2 About the Patient       race, gender, age, emergency contact
 //    3 Reason for Visit        complaint, symptoms, exposures
 //    4 Pre-Existing Conditions
@@ -230,7 +231,7 @@
   function stepOneComplete(report) {
     var missing = !$('appt-character').value ? 'Choose who the appointment is for.'
       : !$('appt-medic').value ? 'Choose a medic, or Any Available Medic.'
-      : !val('appt-reason') ? 'Give a reason for the appointment.'
+      : !val('appt-reason') ? 'Add a message for the secretary.'
       : '';
     if (missing && report) showError(missing);
     return !missing;
@@ -281,7 +282,7 @@
       ['Request', [
         ['Character', selectedText('appt-character')],
         ['Medic', selectedText('appt-medic')],
-        ['Reason for Appointment', val('appt-reason')]
+        ['Message for the Secretary', val('appt-reason')]
       ]],
       ['Patient Information', [
         ['Race', val('intake-race')], ['Gender', val('intake-gender')], ['Age', val('intake-age')]

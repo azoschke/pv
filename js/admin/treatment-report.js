@@ -146,7 +146,7 @@
         appointment_id: initial.appointment_id || (request ? request.id : null),
         presenting_complaint: initial.presenting_complaint != null
           ? initial.presenting_complaint
-          : (fromIntake.presenting_complaint || fromIntake.reason || ''),
+          : (fromIntake.presenting_complaint || ''),
         current_symptoms: initial.current_symptoms != null ? initial.current_symptoms : (fromIntake.current_symptoms || ''),
         recent_exposures: initial.recent_exposures != null ? initial.recent_exposures : (fromIntake.recent_exposures || ''),
         clinical_summary: initial.clinical_summary || '',
