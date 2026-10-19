@@ -77,10 +77,11 @@
   // ── Intake choices ────────────────────────────────────────────────────────
   var RACES = ['Hyur', "Miqo'te", 'Elezen', 'Roegadyn', 'Lalafell', 'Au Ra', 'Viera', 'Hrothgar', 'Other'];
   var GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say'];
+  // No "Other": each list has its own box for anything else.
   var SYMPTOMS = ['Pain', 'Fever/Chills', 'Nausea/Vomiting', 'Dizziness/Disorientation', 'Bleeding',
-    'Difficulty Breathing', 'Loss of Consciousness', 'Other'];
+    'Difficulty Breathing', 'Loss of Consciousness'];
   var EXPOSURES = ['Combat', 'Voidsent Encounter', 'Primal Encounter', 'Poisonous Substances',
-    'Extreme Temperatures', 'Overaspected Crystals', 'Other'];
+    'Extreme Temperatures', 'Overaspected Crystals'];
 
   // Ticked boxes and their detail as one line, the way the intake has always
   // written them: "Pain, Bleeding - left forearm".

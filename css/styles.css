@@ -1875,10 +1875,23 @@ button.nav-sublink {
 }
 #appointmentForm .subsection-heading { border-bottom: 1px solid var(--border-color); }
 #appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
-/* Out of Character choices as a plain list, not a tile per option. */
-#appointmentForm .radio-group { gap: 6px; }
+/* Checkbox and radio choices as plain, compact lists rather than a tile per
+   option (and without the field label's size and bottom margin). */
+#appointmentForm .checkbox-group {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 4px 16px;
+}
+#appointmentForm .radio-group { gap: 4px; }
+#appointmentForm .checkbox-label,
 #appointmentForm .radio-label,
-#appointmentForm .radio-label:hover { padding: 0; background: none; border: 0; }
+#appointmentForm .checkbox-label:hover,
+#appointmentForm .radio-label:hover {
+  margin: 0;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+  font-size: 1rem;
+}
 
 /* A short note under a step's fields, and the restored-draft line. */
 .appt-note {
