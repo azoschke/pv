@@ -127,7 +127,6 @@
       (r.status && r.status !== 'requested' ? ' (' + r.status + ')' : '');
   }
 
-  var OTHER = '__other__';
 
   function TreatmentReportForm(props) {
     var patient = props.patient || {};
@@ -172,8 +171,6 @@
     var medics = medicsState[0], setMedics = medicsState[1];
     var requestsState = useState(null);
     var requests = requestsState[0], setRequests = requestsState[1];
-    var otherState = useState(false);
-    var medicIsOther = otherState[0], setMedicIsOther = otherState[1];
     var savingState = useState(false);
     var saving = savingState[0], setSaving = savingState[1];
     var errState = useState('');
@@ -183,14 +180,22 @@
     var followUpRef = useRef(null);
     var dischargeRef = useRef(null);
 
-    // The published roster for the medic picker; a name not on it is Other.
+    // The published roster for the medic picker. A saved visit's medic who
+    // is no longer on it stays listed, so editing the visit keeps them; a new
+    // report's default (you, or the request's medic) is kept only if listed.
     useEffect(function () {
       PVAdminAPI.request('GET', '/medical-staff', undefined, false).then(function (list) {
         var names = (Array.isArray(list) ? list : []).map(function (m) { return m.name; });
-        setMedics(names);
         var current = String(draft.attending_medic || '').trim();
-        setMedicIsOther(!!current && names.indexOf(current) === -1);
-      }, function () { setMedics([]); setMedicIsOther(true); });
+        if (current && names.indexOf(current) === -1) {
+          if (isNew) setField('attending_medic', '');
+          else names.push(current);
+        }
+        setMedics(names);
+      }, function () {
+        var current = String(draft.attending_medic || '').trim();
+        setMedics(current ? [current] : []);
+      });
     }, []);
 
     // The patient's requests, for the link (medics who can see the queue).
@@ -253,7 +258,6 @@
     var requestOptions = (requests || []).filter(function (r) {
       return r.status !== 'cancelled' || Number(r.id) === Number(draft.appointment_id);
     });
-    var medicValue = medicIsOther ? OTHER : (draft.attending_medic || '');
 
     return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
@@ -264,31 +268,19 @@
           field('Date', h('input', {
             type: 'date', value: draft.real_date || '',
             onChange: function (e) { onDate(e.target.value); }
-          }), { half: true, help: 'Sets the in-character date and where the visit sorts.' }),
+          }), { half: true }),
           field('In-character date *', h('input', {
             type: 'text', value: draft.visit_date || '',
-            placeholder: 'e.g. Third Sun of the Second Umbral Moon',
             onChange: function (e) { setField('visit_date', e.target.value); }
-          }), { half: true, help: 'Filled from the date; edit it if you need to.' }),
-          field('Attending medic', h('div', null,
-            h('select', {
-              className: 'portal-filter-select',
-              value: medicValue,
-              onChange: function (e) {
-                if (e.target.value === OTHER) { setMedicIsOther(true); setField('attending_medic', ''); }
-                else { setMedicIsOther(false); setField('attending_medic', e.target.value); }
-              }
-            },
-              h('option', { value: '' }, '— Choose a medic —'),
-              medics.map(function (n) { return h('option', { key: n, value: n }, n); }),
-              h('option', { value: OTHER }, 'Other…')
-            ),
-            medicIsOther ? h('input', {
-              type: 'text', value: draft.attending_medic || '', placeholder: 'Medic’s name',
-              style: { marginTop: '0.5rem' },
-              onChange: function (e) { setField('attending_medic', e.target.value); }
-            }) : null
-          ), { help: medicIsOther ? 'A name not on the staff roster can only be edited later by medics who can edit any visit.' : null }),
+          }), { half: true }),
+          field('Attending medic', h('select', {
+            className: 'portal-filter-select',
+            value: draft.attending_medic || '',
+            onChange: function (e) { setField('attending_medic', e.target.value); }
+          },
+            h('option', { value: '' }, '— Choose a medic —'),
+            medics.map(function (n) { return h('option', { key: n, value: n }, n); })
+          )),
           requests !== null && (requestOptions.length || draft.appointment_id) ? field('Appointment request', h('select', {
             className: 'portal-filter-select',
             value: draft.appointment_id ? String(draft.appointment_id) : '',
@@ -303,8 +295,7 @@
       h('div', { className: 'portal-form-section' },
         h('h3', { className: 'portal-form-section-title' }, 'Patient Intake'),
         h('div', { className: 'portal-field-row' },
-          field('Presenting Complaint', text('presenting_complaint'),
-            { help: request ? 'From the request’s intake. Edit as needed.' : null }),
+          field('Presenting Complaint', text('presenting_complaint')),
           field('Current Symptoms', text('current_symptoms', { plain: true })),
           field('Recent Exposures', text('recent_exposures', { plain: true }))
         )

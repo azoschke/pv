@@ -22,13 +22,13 @@
         </header>
 
         <p class="landing-intro">
-            Request a medical appointment with a Phoenix Vanguard medic, along with a short patient intake so your medic can prepare. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a>.<br><em>Your progress is saved as you go.</em>
+            Request a medical appointment with a Phoenix Vanguard medic. Not sure who you should see? Select Any Available Medic or <a href="staff-roster.html">review the Staff Roster</a>.
         </p>
 
         <!-- Shown once the sign-in and the form's options have loaded -->
         <div id="form-wrapper" style="display: none;">
             <p class="appt-draft-note" id="appt-draft-note" hidden>
-                Draft restored. <button type="button" class="appt-link-btn" id="appt-start-over">Start over</button>
+                Draft restored. <button type="button" class="btn is-plain" id="appt-start-over">Start over</button>
             </p>
 
             <ol class="form-progress" id="appt-progress" aria-label="Form steps">
@@ -48,30 +48,20 @@
                     <h3 class="section-heading">APPOINTMENT REQUEST</h3>
 
                     <div class="form-group">
-                        <label for="appt-character">
-                            <span class="material-icons">person</span>
-                            Character
-                        </label>
+                        <label for="appt-character">Character</label>
                         <select id="appt-character" name="character" required></select>
-                        <p class="appt-name-note" id="appt-character-note">Requesting for one of your characters.</p>
                     </div>
 
                     <div class="form-group">
-                        <label for="appt-medic">
-                            <span class="material-icons">badge</span>
-                            I'd like an appointment with
-                        </label>
+                        <label for="appt-medic">I'd like an appointment with</label>
                         <select id="appt-medic" name="medic" required></select>
                     </div>
 
                     <div class="form-group">
-                        <label for="appt-reason">
-                            <span class="material-icons">medical_services</span>
-                            Reason for Appointment
-                        </label>
+                        <label for="appt-reason">Reason for Appointment</label>
                         <textarea id="appt-reason" name="reason" required maxlength="1024" placeholder="Briefly describe the reason for your appointment..."></textarea>
                     </div>
-                    <p class="appt-name-note">All fields on this step are required. The rest of the form can be filled out as much or as little as you'd like.</p>
+                    <p class="appt-note">All fields on this page are required. On the rest of the form, non-applicable fields may be left blank.</p>
                 </div>
                 </section>
 
@@ -79,15 +69,15 @@
                 <section class="form-step" data-step="2" hidden>
                 <div class="parchment">
                     <h3 class="section-heading">IN CHARACTER INFORMATION</h3>
-                    <p class="appt-patient-line">Patient: <strong id="appt-patient-name"></strong></p>
 
                     <h4 class="subsection-heading">Patient Information</h4>
+                    <div class="form-group">
+                        <label for="appt-patient-name">Patient Name</label>
+                        <input type="text" id="appt-patient-name" readonly>
+                    </div>
                     <div class="form-row form-row-3">
                         <div class="form-group">
-                            <label for="intake-race">
-                                <span class="material-icons">groups</span>
-                                Race
-                            </label>
+                            <label for="intake-race">Race</label>
                             <select id="intake-race" name="race">
                                 <option value="">Select race...</option>
                                 <option value="Hyur">Hyur</option>
@@ -103,10 +93,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="intake-gender">
-                                <span class="material-icons">wc</span>
-                                Gender
-                            </label>
+                            <label for="intake-gender">Gender</label>
                             <select id="intake-gender" name="gender">
                                 <option value="">Select gender...</option>
                                 <option value="Male">Male</option>
@@ -118,37 +105,25 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="intake-age">
-                                <span class="material-icons">cake</span>
-                                Age
-                            </label>
+                            <label for="intake-age">Age</label>
                             <input type="text" id="intake-age" name="age" placeholder="Age">
                         </div>
                     </div>
 
                     <h4 class="subsection-heading">Emergency Contact</h4>
                     <div class="form-group">
-                        <label for="intake-emergency-name">
-                            <span class="material-icons">contact_phone</span>
-                            Name
-                        </label>
+                        <label for="intake-emergency-name">Name</label>
                         <input type="text" id="intake-emergency-name" name="emergency_contact_name" placeholder="Emergency contact name">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="intake-emergency-relationship">
-                                <span class="material-icons">people</span>
-                                Relationship
-                            </label>
+                            <label for="intake-emergency-relationship">Relationship</label>
                             <input type="text" id="intake-emergency-relationship" name="emergency_contact_relationship" placeholder="Relationship to patient">
                         </div>
 
                         <div class="form-group">
-                            <label for="intake-emergency-contact">
-                                <span class="material-icons">mail</span>
-                                Contact Method
-                            </label>
+                            <label for="intake-emergency-contact">Contact Method</label>
                             <input type="text" id="intake-emergency-contact" name="emergency_contact_method" placeholder="How to reach them">
                         </div>
                     </div>
@@ -162,10 +137,7 @@
                     <h4 class="subsection-heading">Reason for Visit</h4>
 
                     <div class="form-group">
-                        <label for="intake-complaint">
-                            <span class="material-icons">report_problem</span>
-                            Presenting Complaint/Injury
-                        </label>
+                        <label for="intake-complaint">Presenting Complaint/Injury</label>
                         <div class="markup-toolbar">
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
@@ -176,10 +148,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>
-                            <span class="material-icons">healing</span>
-                            Current Symptoms
-                        </label>
+                        <label>Current Symptoms</label>
                         <div class="checkbox-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" name="symptoms" value="Pain"> Pain
@@ -210,10 +179,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>
-                            <span class="material-icons">warning</span>
-                            Recent Exposures
-                        </label>
+                        <label>Recent Exposures</label>
                         <div class="checkbox-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" name="exposures" value="Combat"> Combat
@@ -249,45 +215,29 @@
                     <h4 class="subsection-heading">Pre-Existing Conditions</h4>
 
                     <div class="form-group">
-                        <label for="intake-chronic">
-                            <span class="material-icons">favorite</span>
-                            Chronic Illness
-                        </label>
+                        <label for="intake-chronic">Chronic Illness</label>
                         <input type="text" id="intake-chronic" name="chronic_illness" placeholder="List any chronic illnesses...">
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-injuries">
-                            <span class="material-icons">accessibility</span>
-                            Previous Injuries
-                        </label>
+                        <label for="intake-injuries">Previous Injuries</label>
                         <input type="text" id="intake-injuries" name="previous_injuries" placeholder="List any previous significant injuries...">
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-allergies">
-                            <span class="material-icons">do_not_disturb</span>
-                            Known Allergies
-                        </label>
+                        <label for="intake-allergies">Known Allergies</label>
                         <input type="text" id="intake-allergies" name="known_allergies" placeholder="List any known allergies...">
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-medications">
-                            <span class="material-icons">medication</span>
-                            Current Medications
-                        </label>
+                        <label for="intake-medications">Current Medications</label>
                         <input type="text" id="intake-medications" name="current_medications" placeholder="List any current medications...">
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-aetheric">
-                            <span class="material-icons">auto_awesome</span>
-                            Aetheric Abnormalities
-                        </label>
+                        <label for="intake-aetheric">Aetheric Abnormalities</label>
                         <input type="text" id="intake-aetheric" name="aetheric_abnormalities" placeholder="Describe any aetheric abnormalities...">
                     </div>
-                    <p class="appt-name-note" id="appt-prefill-note" hidden>Filled from your patient record. Change anything that's different now; a medic will update the record.</p>
                 </div>
                 </section>
 
@@ -298,10 +248,7 @@
                     <h3 class="section-heading">OUT OF CHARACTER INFORMATION</h3>
 
                     <div class="form-group">
-                        <label>
-                            <span class="material-icons">assessment</span>
-                            Severity Assessment
-                        </label>
+                        <label>Severity Assessment</label>
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="severity" value="Minor">
@@ -327,10 +274,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>
-                            <span class="material-icons">schedule</span>
-                            RP Goals and Timeline
-                        </label>
+                        <label>RP Goals and Timeline</label>
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="rpTimeline" value="Short-term">
@@ -352,10 +296,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>
-                            <span class="material-icons">lightbulb</span>
-                            Conceptual Development
-                        </label>
+                        <label>Conceptual Development</label>
                         <div class="radio-group">
                             <label class="radio-label">
                                 <input type="radio" name="conceptDev" value="Collaborative">
@@ -369,10 +310,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-desired-outcomes">
-                            <span class="material-icons">flag</span>
-                            Desired Outcomes (if any)
-                        </label>
+                        <label for="intake-desired-outcomes">Desired Outcomes (if any)</label>
                         <div class="markup-toolbar">
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
@@ -383,10 +321,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-plot-hooks">
-                            <span class="material-icons">auto_stories</span>
-                            Specific Plot Hooks/Story Elements (if any)
-                        </label>
+                        <label for="intake-plot-hooks">Specific Plot Hooks/Story Elements (if any)</label>
                         <div class="markup-toolbar">
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'bold')" title="Bold"><span class="material-icons">format_bold</span></button>
                             <button type="button" class="markup-btn" onclick="insertMarkup(this, 'italic')" title="Italic"><span class="material-icons">format_italic</span></button>
@@ -397,10 +332,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="intake-triggers">
-                            <span class="material-icons">warning</span>
-                            Are there specific triggers you'd like to avoid?
-                        </label>
+                        <label for="intake-triggers">Are there specific triggers you'd like to avoid?</label>
                         <input type="text" id="intake-triggers" name="triggers" placeholder="List any topics or content you'd prefer to avoid...">
                     </div>
                 </div>
@@ -414,19 +346,13 @@
 
                     <h4 class="subsection-heading">Symptoms and Exposures</h4>
                     <div class="form-group">
-                        <label for="review-symptoms">
-                            <span class="material-icons">healing</span>
-                            Current Symptoms
-                        </label>
-                        <textarea id="review-symptoms" name="current_symptoms" placeholder="No symptoms given."></textarea>
+                        <label for="review-symptoms">Current Symptoms</label>
+                        <textarea id="review-symptoms" name="current_symptoms" placeholder="No symptoms provided."></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="review-exposures">
-                            <span class="material-icons">warning</span>
-                            Recent Exposures
-                        </label>
-                        <textarea id="review-exposures" name="recent_exposures" placeholder="No exposures given."></textarea>
-                        <p class="appt-name-note">Combined from Reason for Visit. Edit them here as you like. <button type="button" class="appt-link-btn" id="appt-recombine">Rebuild from Reason for Visit</button></p>
+                        <label for="review-exposures">Recent Exposures</label>
+                        <textarea id="review-exposures" name="recent_exposures" placeholder="No exposures provided."></textarea>
+                        <p class="appt-note">Add more detail as needed or <button type="button" class="btn is-plain" id="appt-edit-reason">Edit from Reason for Visit</button></p>
                     </div>
 
                     <h4 class="subsection-heading">Authorization for Treatment</h4>
@@ -436,17 +362,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="intake-patient-signature">
-                                <span class="material-icons">draw</span>
-                                Patient or Witness Signature
-                            </label>
+                            <label for="intake-patient-signature">Patient or Witness Signature</label>
                             <input type="text" id="intake-patient-signature" name="patient_signature" class="signature-input" placeholder="Sign here...">
                         </div>
                         <div class="form-group">
-                            <label for="intake-patient-date">
-                                <span class="material-icons">event</span>
-                                Date
-                            </label>
+                            <label for="intake-patient-date">Date</label>
                             <input type="date" id="intake-patient-date" name="signed_date" class="date-input">
                             <div class="eorzean-date-display" id="intake-eorzean-date"></div>
                         </div>
@@ -459,19 +379,10 @@
                     <span id="error-text">Something went wrong. Please try again.</span>
                 </div>
 
-                <div class="button-group">
-                    <button type="button" class="submit-btn is-secondary" id="appt-back">
-                        <span class="material-icons">arrow_back</span>
-                        Back
-                    </button>
-                    <button type="button" class="submit-btn" id="appt-next">
-                        Next
-                        <span class="material-icons">arrow_forward</span>
-                    </button>
-                    <button type="submit" class="submit-btn" id="submit-btn" hidden>
-                        <span class="material-icons">send</span>
-                        Submit Request
-                    </button>
+                <div class="appt-actions">
+                    <button type="button" class="btn is-quiet" id="appt-back">Back</button>
+                    <button type="button" class="btn" id="appt-next">Next</button>
+                    <button type="submit" class="btn" id="submit-btn" hidden>Submit Request</button>
                 </div>
             </form>
         </div>
@@ -497,12 +408,9 @@
                         Your appointment request and intake have been sent to the medical team. A medic will be in touch with you soon.
                     </p>
                     <p>
-                        You can follow it in My Profile, and cancel it there until a medic schedules it.
+                        Review your status in Applications under My Profile in your dashboard. Appointments can be cancelled until scheduled by a medic.
                     </p>
-                    <a href="portal.html?section=my-profile&amp;tab=applications" class="intake-btn">
-                        <span class="material-icons">assignment</span>
-                        View My Requests
-                    </a>
+                    <a href="portal.html?section=my-profile&amp;tab=applications" class="btn">View My Requests</a>
                 </div>
             </div>
         </div>

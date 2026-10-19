@@ -180,7 +180,7 @@
       var r = data.request;
       var hasVisit = data.visits && data.visits.length;
       var msg = hasVisit
-        ? 'This request has a treatment report, so it will be archived (kept with the report, off the lists) rather than deleted. Continue?'
+        ? 'This request will be archived. Continue?'
         : 'Delete the request for ' + r.character_name + '? This cannot be undone.';
       if (!confirm(msg)) return;
       setBusy(true); setErr('');
@@ -245,8 +245,7 @@
             h('input', {
               type: 'text', value: sched.when, placeholder: 'e.g. Fourth Sun, evening',
               onChange: function (e) { setSched(Object.assign({}, sched, { when: e.target.value })); }
-            }),
-            h('span', { className: 'portal-field-help' }, 'The patient sees this in My Profile once scheduled.')
+            })
           )
         ),
         h('div', { className: 'portal-form-actions' },
@@ -270,7 +269,7 @@
           isOpen ? h('button', {
             type: 'button', className: 'btn is-quiet is-small', disabled: busy,
             onClick: function () {
-              if (confirm('Cancel this request? Nothing is posted to Discord.')) patch({ status: 'cancelled' });
+              if (confirm('Cancel this request?')) patch({ status: 'cancelled' });
             }
           }, 'Cancel request') : null,
           !isOpen ? h('button', {
@@ -298,7 +297,7 @@
                 h('button', { type: 'button', className: 'btn is-small', disabled: busy, onClick: createPatient },
                   'Create patient record'),
                 h('span', { className: 'portal-field-help', style: { margin: 0 } },
-                  r.character_name + ' has no patient record yet. Create one from this intake, then write the report.')
+                  r.character_name + ' has no patient record yet.')
               )
         ) : null
       ),

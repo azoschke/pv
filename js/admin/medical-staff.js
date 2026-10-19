@@ -236,9 +236,7 @@
           onChange: function (e) { setField('discord_id', e.target.value); },
           disabled: saving,
           placeholder: 'e.g. 123456789012345678'
-        }),
-        h('p', { className: 'portal-field-help' },
-          'Pinged when an appointment request names this medic. In Discord, turn on Developer Mode, then right-click them → Copy User ID. Not shown publicly.')
+        })
       ),
 
       h('div', { className: 'portal-field' },
@@ -387,7 +385,7 @@
         h('h2', { className: 'portal-card-title' }, 'Appointment Pings')
       ),
       h('p', { className: 'portal-field-help' },
-        'Appointment requests, cancellations and new treatment reports post here. The Medical role is pinged for Any Available Medic, cancellations and treatment reports; a request for a named medic pings that medic instead (by the Discord ID on their profile; no ping without one). Blank uses the IDs built into the Discord worker.'),
+        'Universal Medical role ping and Thread ID for the Phoenix Vanguard Discord.'),
       msg ? h('div', { className: 'portal-flash ' + (msg.ok ? 'success' : 'error') }, msg.text) : null,
       h('form', { onSubmit: save },
         h('div', { className: 'portal-field-row' },

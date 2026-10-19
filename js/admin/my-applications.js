@@ -279,7 +279,7 @@
       h('p', { className: 'portal-head-desc' },
         'Request one from the ',
         h('a', { href: 'appointment-request.html' }, 'Appointment Request'),
-        ' page. A request can be cancelled until a medic schedules it.'
+        ' page. Appointments can be cancelled until scheduled by a medic.'
       ),
       requests.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },

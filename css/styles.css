@@ -1864,16 +1864,26 @@ button.nav-sublink {
   margin-right: 6px;
 }
 
-/* ── Appointment Request: name comes from the signed-in account ───────────── */
-.appt-name-note {
+/* ── Appointment Request: the stepped form ────────────────────────────────── */
+/* Field labels in Stoke (the choices in a checkbox or radio list keep the
+   body font), plain rules under the sub-headings. */
+#appointmentForm .form-group > label {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+#appointmentForm .subsection-heading { border-bottom: 1px solid var(--border-color); }
+#appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
+
+/* A short note under a step's fields, and the restored-draft line. */
+.appt-note {
   margin: 0.35rem 0 0;
   font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   color: var(--text-secondary);
 }
-
-/* ── Appointment Request: the stepped form ────────────────────────────────── */
 .appt-draft-note {
   margin: 0 0 12px;
   font-family: 'Crimson Pro', serif;
@@ -1882,20 +1892,9 @@ button.nav-sublink {
   text-align: center;
   color: var(--text-secondary);
 }
-
-/* A button that reads as a link: Start over, Edit, Rebuild. */
-.appt-link-btn {
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-style: normal;
-  color: var(--accent-red);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-.appt-link-btn:hover { color: var(--text-primary); }
+/* Start over, Edit and Edit from Reason for Visit: plain buttons in a line. */
+.appt-note .btn.is-plain,
+.appt-draft-note .btn.is-plain { padding: 0; font-style: normal; }
 
 /* Progress bar: a numbered tab per step; done steps gold, the current one red. */
 .form-progress {
@@ -1918,7 +1917,7 @@ button.nav-sublink {
   border: none;
   border-top: 3px solid var(--bg-darker);
   background: none;
-  font-family: 'Crimson Pro', serif;
+  font-family: 'Stoke', serif;
   color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease;
@@ -1934,14 +1933,14 @@ button.nav-sublink {
   height: 28px;
   border-radius: 50%;
   background: var(--bg-darker);
-  font-family: 'Stoke', serif;
   font-size: 0.85rem;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .form-progress-label {
-  font-size: 0.9rem;
-  line-height: 1.2;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
   text-align: center;
 }
 
@@ -1950,28 +1949,17 @@ button.nav-sublink {
 .form-progress-step.is-current { border-top-color: var(--accent-red); color: var(--text-primary); }
 .form-progress-step.is-current .form-progress-num { background: var(--accent-red); color: #f5f3ef; }
 
-/* "Patient: Name" at the top of step 2. */
-.appt-patient-line {
-  margin: 0 0 15px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1.05rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
-.appt-patient-line strong { color: var(--text-primary); }
-
-/* Review: each group's heading with its Edit link, then label / answer rows. */
+/* Review: each group's heading with its Edit button, then label / answer rows. */
 .appt-review-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
   margin: 25px 0 10px;
-  border-bottom: 2px dashed var(--bg-darker);
+  border-bottom: 1px solid var(--border-color);
 }
 .appt-review-head:first-child { margin-top: 0; }
-.appt-review-head .subsection-heading { margin: 0; padding-bottom: 4px; border-bottom: none; }
-.appt-review-head .appt-link-btn { font-family: 'Crimson Pro', serif; font-size: 0.95rem; }
+#appointmentForm .appt-review-head .subsection-heading { margin: 0; padding-bottom: 4px; border-bottom: none; }
 
 .appt-review-list {
   display: grid;
@@ -1982,18 +1970,25 @@ button.nav-sublink {
   font-size: 1rem;
   line-height: 1.4;
 }
-.appt-review-list dt { font-weight: 600; color: var(--text-secondary); }
+.appt-review-list dt {
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding-top: 0.15rem;
+  color: var(--text-secondary);
+}
 .appt-review-list dd { margin: 0; color: var(--text-primary); white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* Back: an outline next to the solid Next / Submit. */
-.submit-btn.is-secondary {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--text-secondary);
-  box-shadow: none;
+/* Back on the left, Next / Submit on the right (site buttons). */
+.appt-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
 }
-.submit-btn.is-secondary:hover { background: var(--bg-darker); box-shadow: none; }
-.submit-btn[hidden] { display: none; }
+.appt-actions #appt-next,
+.appt-actions #submit-btn { margin-left: auto; }
+.appt-actions .btn[hidden] { display: none; }
 
 @media (max-width: 600px) {
   /* Numbers only; each step's own heading names it. */
@@ -2009,9 +2004,6 @@ button.nav-sublink {
 
   .appt-review-list { grid-template-columns: 1fr; gap: 2px; }
   .appt-review-list dd { margin-bottom: 8px; }
-
-  /* Back and Next stay side by side. */
-  #appointmentForm .button-group { flex-direction: row; }
 }
 
 

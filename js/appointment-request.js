@@ -7,7 +7,8 @@
 //    4 Pre-Existing Conditions
 //    5 Out of Character        as on the Patient Intake Form
 //    6 Review & Sign           a summary, the symptoms and exposures combined
-//                              into editable boxes, the signature and date
+//                              into boxes to add detail to, the signature and
+//                              date
 //
 //  The page needs a sign-in (Admin Settings → Pages); without one the visitor
 //  is sent to sign in and brought back. GET /appointments/form gives the
@@ -48,9 +49,10 @@
   var step = 1;
   var draftKey = '';
   var saveTimer = null;
-  // Once the combined symptoms / exposures are edited on the review step,
-  // going back and forth keeps the edit.
-  var combinedEdited = { symptoms: false, exposures: false };
+  // What each review box (symptoms, exposures) was last filled from: the
+  // step 3 boxes and detail. It's refilled only when those change, so detail
+  // added on the review step stays.
+  var combinedFrom = { symptoms: null, exposures: null };
 
   function $(id) { return document.getElementById(id); }
 
@@ -105,7 +107,7 @@
         fields[el.name] = el.value;
       }
     });
-    return { step: step, fields: fields, combinedEdited: combinedEdited };
+    return { step: step, fields: fields, combinedFrom: combinedFrom };
   }
   function saveDraftSoon() {
     clearTimeout(saveTimer);
@@ -139,7 +141,7 @@
         el.value = v;
       }
     });
-    combinedEdited = draft.combinedEdited || combinedEdited;
+    combinedFrom = draft.combinedFrom || combinedFrom;
     $('appt-draft-note').hidden = false;
     return Math.min(Math.max(Number(draft.step) || 1, 1), STEPS);
   }
@@ -176,10 +178,6 @@
     // A single available character of your own is chosen for you.
     var available = own.filter(function (c) { return !c.open; });
     if (available.length === 1 && !data.can_submit_for_others) select.value = option(available[0]).value;
-
-    $('appt-character-note').textContent = data.can_submit_for_others
-      ? 'Medics can request for anyone. A request for someone else notes that you submitted it.'
-      : 'Requesting for one of your characters.';
   }
 
   function fillMedics(staff, fallback) {
@@ -202,7 +200,7 @@
   }
 
   function showPatientName() {
-    $('appt-patient-name').textContent = selectedText('appt-character') || '—';
+    $('appt-patient-name').value = selectedText('appt-character');
   }
 
   async function prefillFromRecord() {
@@ -213,15 +211,12 @@
     try { res = await PVAdminAPI.request('GET', '/appointments/form?' + q, undefined, true); }
     catch (_) { return; }
     var p = (res && res.prefill) || {};
-    var any = false;
     PREFILL_FIELDS.forEach(function (f) {
       var el = $(f[0]);
       var v = p[f[1]] || '';
       if (el.tagName === 'SELECT') ensureOption(el, v);
       el.value = v;
-      if (v) any = true;
     });
-    $('appt-prefill-note').hidden = !any;
     saveDraftSoon();
   }
 
@@ -270,20 +265,17 @@
   }
 
   // ── Review ────────────────────────────────────────────────────────────────
-  function recombine(which) {
-    if (which !== 'exposures') {
-      $('review-symptoms').value = M.combineChecked(checked('symptoms'), val('intake-symptoms-detail'));
-      combinedEdited.symptoms = false;
-    }
-    if (which !== 'symptoms') {
-      $('review-exposures').value = M.combineChecked(checked('exposures'), val('intake-exposures-detail'));
-      combinedEdited.exposures = false;
-    }
+  function syncCombined() {
+    [['symptoms', 'intake-symptoms-detail'], ['exposures', 'intake-exposures-detail']].forEach(function (c) {
+      var source = M.combineChecked(checked(c[0]), val(c[1]));
+      if (source === combinedFrom[c[0]]) return;
+      $('review-' + c[0]).value = source;
+      combinedFrom[c[0]] = source;
+    });
   }
 
   function buildReview() {
-    if (!combinedEdited.symptoms) recombine('symptoms');
-    if (!combinedEdited.exposures) recombine('exposures');
+    syncCombined();
 
     var groups = [
       ['Request', [
@@ -332,7 +324,7 @@
       var target = [1, 2, 2, 3, 4, 5][i];
       var edit = document.createElement('button');
       edit.type = 'button';
-      edit.className = 'appt-link-btn';
+      edit.className = 'btn is-plain';
       edit.textContent = 'Edit';
       edit.addEventListener('click', function () { goTo(target); });
       head.appendChild(edit);
@@ -398,7 +390,7 @@
 
     var btn = $('submit-btn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
+    btn.textContent = 'Sending...';
     hideError();
     try {
       await PVAdminAPI.request('POST', '/appointments', payload, true);
@@ -409,7 +401,7 @@
     } catch (e) {
       showError(e && e.message ? e.message : 'Could not send the request. Please try again.');
       btn.disabled = false;
-      btn.innerHTML = '<span class="material-icons">send</span> Submit Request';
+      btn.textContent = 'Submit Request';
     }
   }
 
@@ -457,9 +449,7 @@
     form.addEventListener('submit', submit);
     $('appt-character').addEventListener('change', function () { showPatientName(); prefillFromRecord(); });
     $('intake-patient-date').addEventListener('change', showEorzeanDate);
-    $('review-symptoms').addEventListener('input', function () { combinedEdited.symptoms = true; });
-    $('review-exposures').addEventListener('input', function () { combinedEdited.exposures = true; });
-    $('appt-recombine').addEventListener('click', function () { recombine(); saveDraftSoon(); });
+    $('appt-edit-reason').addEventListener('click', function () { goTo(3); });
     $('appt-next').addEventListener('click', function () { goTo(step + 1); });
     $('appt-back').addEventListener('click', function () { showStep(Math.max(1, step - 1)); });
     Array.prototype.forEach.call(document.querySelectorAll('.form-progress-step'), function (b) {
