@@ -8,7 +8,8 @@
 //    - edit-patient   : edit the patient record
 //    - visits         : visit list for the selected patient; each visit is a
 //                       compact row (date / medic / discharge / complaint).
-//                       Editing or adding opens a modal popup.
+//                       Adding or editing opens the treatment report form
+//                       (js/admin/treatment-report.js) in a modal popup.
 //
 //  Buttons follow the permission grid: medical.edit adds and edits patients
 //  and adds visits, medical.visits_own / medical.visits_all edit visits, and
@@ -16,16 +17,14 @@
 //
 //  Patient ID is auto-assigned by the worker (next sequential number) on
 //  create, and never shown or edited afterwards.
-//  Visits are sorted by sort_date DESC (falls back to visit_date DESC).
-//  sort_date is exposed on the visit form so it can be tuned manually.
+//  Visits are sorted by sort_date DESC (falls back to visit_date DESC); the
+//  treatment report form's date picker sets it.
 // ============================================================================
 
 (function () {
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
-
-  var DISCHARGE_SUGGESTIONS = ['Under Observation', 'Discharged'];
 
   // Option label in the member picker: "Full Name — Nickname" when a nickname
   // exists, so admins can still identify who it is.
@@ -77,29 +76,6 @@
         { key: 'aetheric_abnormalities', label: 'Aetheric Abnormalities', type: 'textarea', fullWidth: true }
       ]
     }
-  ];
-
-  // Visit form layout:
-  // Row 1: visit_date (IC free-text, half)  |  sort_date (real date, half)
-  // Below: every other field is full-width. Follow-up + Discharge Status sit
-  // after Treatment Plan per the workflow (record care first, then outcome).
-  var VISIT_FIELDS = [
-    { key: 'visit_date',           label: 'Visit Date (IC)',       type: 'text', required: true,
-      placeholder: 'e.g. Third Sun of the Second Umbral Moon',
-      help: 'In-character date. Months alternate Astral/Umbral: 1st Astral (month 1), 1st Umbral (month 2), 2nd Astral (month 3), …' },
-    { key: 'sort_date',            label: 'Sort Date (real calendar)', type: 'date',
-      help: 'Real-world date used only to order visits in the list.' },
-    { key: 'attending_medic',      label: 'Attending Medic',       type: 'text',     fullWidth: true },
-    { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea', fullWidth: true },
-    { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea', fullWidth: true },
-    { key: 'recent_exposures',     label: 'Recent Exposures',      type: 'textarea', fullWidth: true },
-    { key: 'clinical_summary',     label: 'Clinical Summary',      type: 'textarea', fullWidth: true },
-    { key: 'diagnosis',            label: 'Diagnosis',             type: 'textarea', fullWidth: true },
-    { key: 'procedures_performed', label: 'Procedures Performed',  type: 'textarea', fullWidth: true },
-    { key: 'treatment_plan',       label: 'Treatment Plan',        type: 'textarea', fullWidth: true },
-    { key: 'follow_up',            label: 'Follow-up',             type: 'textarea', fullWidth: true },
-    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     fullWidth: true, datalist: 'discharge-status' },
-    { key: 'additional_notes',     label: 'Additional Notes',      type: 'textarea', fullWidth: true }
   ];
 
   // --------- Reusable form ----------
@@ -266,8 +242,6 @@
     return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       body,
-      h('datalist', { id: 'discharge-status' },
-        DISCHARGE_SUGGESTIONS.map(function (v) { return h('option', { key: v, value: v }); })),
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
@@ -545,21 +519,17 @@
 
     useEffect(function () { reload(); }, [patientId]);
 
-    async function handleCreate(draft) {
-      var body = Object.assign({}, draft, {
+    // body comes ready from the treatment report form (dates included).
+    async function handleCreate(body) {
+      await PVAdminAPI.request('POST', '/visits', Object.assign({}, body, {
         patient_id: patientId,
-        patient_name: data.patient.patient_name,
-        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
-      });
-      await PVAdminAPI.request('POST', '/visits', body, true);
+        patient_name: data.patient.patient_name
+      }), true);
       setModalVisit(null);
       await reload();
     }
 
-    async function handleUpdate(visitId, draft) {
-      var body = Object.assign({}, draft, {
-        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
-      });
+    async function handleUpdate(visitId, body) {
       await PVAdminAPI.request('PUT', '/visits/' + visitId, body, true);
       setModalVisit(null);
       await reload();
@@ -608,12 +578,10 @@
           h('button', {
             type: 'button',
             className: 'btn is-small',
-            onClick: function () {
-              setModalVisit({ sort_date: new Date().toISOString().slice(0, 10) });
-            }
+            onClick: function () { setModalVisit({}); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
-            h('span', null, 'Add visit')
+            h('span', null, 'Add treatment report')
           )
         ) : null
       ),
@@ -650,20 +618,19 @@
       ),
       modalOpen ? h(window.PVAdminModal, {
         title: modalIsNew
-          ? 'New Visit — ' + p.patient_name
-          : 'Edit Visit — ' + (modalVisit.visit_date || ''),
+          ? 'New Treatment Report — ' + p.patient_name
+          : 'Edit Treatment Report — ' + (modalVisit.visit_date || ''),
         size: 'lg',
         onClose: function () { setModalVisit(null); }
       },
-        h(RecordForm, {
-          fields: VISIT_FIELDS,
+        h(window.PVAdminTreatmentReport, {
+          patient: { patient_id: patientId, patient_name: p.patient_name },
           initial: modalVisit,
-          isNew: modalIsNew,
-          submitLabel: modalIsNew ? 'Add visit' : 'Save visit',
-          onSubmit: function (draft) {
+          submitLabel: modalIsNew ? 'Add treatment report' : 'Save treatment report',
+          onSubmit: function (body) {
             return modalIsNew
-              ? handleCreate(draft)
-              : handleUpdate(modalVisit.visit_id, draft);
+              ? handleCreate(body)
+              : handleUpdate(modalVisit.visit_id, body);
           },
           onCancel: function () { setModalVisit(null); }
         })

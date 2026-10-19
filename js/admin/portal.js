@@ -33,13 +33,13 @@
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
       { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
-      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
       { id: 'factions',         label: 'Factions',           icon: 'shield' }
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
       { id: 'jobs',             label: 'Job Board',          icon: 'work' },
       { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' },
+      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
       { id: 'event-assets',     label: 'Event Assets',       icon: 'photo_library' }
     ] },
     { title: 'Tools & Admin', items: [
@@ -281,6 +281,25 @@
     );
   }
 
+  // Medical Records: Patient Records and Appointment Requests, both opened by
+  // Medical Records view (the section's own key), so there is always a bar.
+  // navParams.tab = 'appointments' opens the queue (the dashboard's tiles).
+  function MedicalSection(props) {
+    var TABS = [
+      { id: 'patients',     label: 'Patient Records' },
+      { id: 'appointments', label: 'Appointment Requests' }
+    ];
+    var wanted = props.initialTab;
+    var tabState = useState(TABS.some(function (t) { return t.id === wanted; }) ? wanted : 'patients');
+    var tab = tabState[0], setTab = tabState[1];
+    return h('div', null,
+      h(window.PVAdminSubnav, { tabs: TABS, active: tab, onChange: setTab }),
+      tab === 'appointments'
+        ? h(window.PVAdminAppointments || Missing('appointments.js'), { session: props.session })
+        : h(window.PVAdminPatients || Missing('patients.js'), { session: props.session })
+    );
+  }
+
   // Factions folds the four division sections into one entry. Each division is
   // gated on its own access rule, so a member with a single division sees just
   // that tab — and PVAdminSubnav renders no bar for a lone tab. Medical uses a
@@ -373,7 +392,10 @@
           initialInterview: (props.navParams && props.navParams.interview) || ''
         });
       case 'medical':
-        return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
+        return h(MedicalSection, {
+          session: session,
+          initialTab: (props.navParams && props.navParams.tab) || null
+        });
       case 'factions':
         return h(FactionsSection, {
           session: session,

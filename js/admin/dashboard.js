@@ -2,8 +2,8 @@
 //  PVAdminDashboard — overview landing for officers / admins.
 //
 //  Aggregates data that already lives behind existing endpoints
-//  (/members, /applications, /jobs) entirely client-side — no dedicated
-//  worker endpoint. Renders:
+//  (/members, /applications, /jobs, /quests/admin, /appointments) entirely
+//  client-side — no dedicated worker endpoint. Renders:
 //    - an Eorzean date in the header (same convention as the medical forms)
 //    - four stat tiles (FC members, new applications, interviews pending,
 //      open positions)
@@ -56,8 +56,9 @@
     var canMembers = PVAdminAPI.can('members.view');
     var canApps = PVAdminAPI.can('jobs.applications_view');
     var canQuests = PVAdminAPI.can('quests.manage');
+    var canAppointments = PVAdminAPI.can('medical.view');
 
-    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [] });
+    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [], appointments: [] });
     var state = st[0], setState = st[1];
 
     useEffect(function () {
@@ -72,17 +73,19 @@
         getList('/members', canMembers),
         getList('/applications', canApps),
         getList('/jobs', true),
-        getList('/quests/admin', canQuests)
+        getList('/quests/admin', canQuests),
+        getList('/appointments?status=open', canAppointments)
       ])
         .then(function (res) {
           if (cancelled) return;
-          if (res[0] === null && res[1] === null && res[2] === null && res[3] === null) {
-            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [], quests: [] });
+          if (res.every(function (r) { return r === null; })) {
+            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [], quests: [], appointments: [] });
             return;
           }
           setState({
             loading: false, error: '',
-            members: res[0] || [], apps: res[1] || [], jobs: res[2] || [], quests: res[3] || []
+            members: res[0] || [], apps: res[1] || [], jobs: res[2] || [], quests: res[3] || [],
+            appointments: res[4] || []
           });
         });
       return function () { cancelled = true; };
@@ -116,6 +119,9 @@
       });
     });
     var bountyReviewCount = pendingQuests.length + pendingEdits.length;
+    // Medical appointment requests: waiting for a medic, and scheduled.
+    var apptRequested = state.appointments.filter(function (r) { return r.status === 'requested'; });
+    var apptScheduled = state.appointments.filter(function (r) { return r.status === 'scheduled'; });
     // Member attention buckets — kept in sync with members.js needsAttention.
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
     var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
@@ -137,17 +143,20 @@
       canMembers ? statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }) : null,
       canApps ? statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
         { view: 'applications', stage: 'new' }) : null,
-      canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null
+      canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null,
+      canAppointments ? statTile(apptRequested.length, 'Appointment Requests', 'medical', apptRequested.length > 0,
+        { tab: 'appointments' }) : null
     ].filter(Boolean);
     // Scheduled work is in progress, not an alert, so these tiles never go red.
     var scheduledTiles = [
       canMembers ? statTile(icScheduled.length, 'IC Interviews', 'members', false, { interview: 'Scheduled' }) : null,
       canApps ? statTile(scheduledApps.length, 'Job Interviews', 'jobs', false,
-        { view: 'applications', stage: 'scheduled' }) : null
+        { view: 'applications', stage: 'scheduled' }) : null,
+      canAppointments ? statTile(apptScheduled.length, 'Appointments', 'medical', false, { tab: 'appointments' }) : null
     ].filter(Boolean);
 
     // Cross-feature attention feed, ordered: applications → job interviews →
-    // IC interviews → inactive members. Each row leads with its state: a red
+    // bounty board → appointment requests → IC interviews → inactive members. Each row leads with its state: a red
     // pill where someone has to act, a brown dot while it is in progress, a
     // gold dot for inactive members.
     var attention = [];
@@ -185,6 +194,25 @@
         name: item.edit.submitted_by_name || 'A member',
         desc: 'proposed an edit to “' + (item.quest.title || 'a quest') + '”',
         source: 'Bounty Board', target: 'bounties'
+      });
+    });
+    apptRequested.forEach(function (r) {
+      var medic = r.requested_medic_id ? ' with ' + r.requested_medic_name : '';
+      attention.push({
+        key: 'appt-' + r.id, tag: 'Appointment', statusCls: 'pill',
+        name: r.character_name,
+        desc: 'requested an appointment' + medic,
+        source: 'Medical Records', target: 'medical',
+        params: { tab: 'appointments' }
+      });
+    });
+    apptScheduled.forEach(function (r) {
+      attention.push({
+        key: 'apptsched-' + r.id, tag: 'Appointment', statusCls: 'status-dot is-brown',
+        name: r.character_name,
+        desc: 'appointment scheduled' + (r.scheduled_when ? ' — ' + r.scheduled_when : ''),
+        source: 'Medical Records', target: 'medical',
+        params: { tab: 'appointments' }
       });
     });
     icPending.forEach(function (m) {
