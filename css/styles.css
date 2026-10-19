@@ -1873,8 +1873,67 @@ button.nav-sublink {
   letter-spacing: 0.02em;
   color: var(--text-primary);
 }
-#appointmentForm .subsection-heading { border-bottom: 1px solid var(--border-color); }
+#appointmentForm .subsection-heading {
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
 #appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
+
+/* The page in Torchlight terms (the shared intake styles above predate it):
+   panels are raised with no shadow and tear at the bottom; fields sit on the
+   well with no border and take the focus ring; ticks are the site's check
+   colour; notes, the authorization and errors are plain text, not boxes. */
+.appt-page .parchment { box-shadow: none; border-radius: 4px; }
+.appt-page .parchment.tear-half { padding-bottom: calc(50px + var(--tear-h)); }
+.appt-page .form-group input,
+.appt-page .form-group select,
+.appt-page .form-group textarea {
+  background-color: var(--form-input-bg);
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+.appt-page .form-group input::placeholder,
+.appt-page .form-group textarea::placeholder { color: var(--form-input-placeholder); }
+.appt-page .form-group input:focus,
+.appt-page .form-group select:focus,
+.appt-page .form-group textarea:focus {
+  border: 0;
+  background-color: var(--form-input-bg);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.appt-page .markup-toolbar {
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--form-input-bg);
+}
+.appt-page .checkbox-label input[type="checkbox"],
+.appt-page .radio-label input[type="radio"] { accent-color: var(--check-color); }
+.appt-page .authorization-text {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-body);
+}
+.appt-page .eorzean-date-display {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.appt-page .error-message,
+[data-theme="dark"] .appt-page .error-message {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent-red);
+}
+.appt-page .confirmation-panel .check-icon { color: var(--accent-brown); }
 /* Checkbox and radio choices as plain, compact lists rather than a tile per
    option (and without the field label's size and bottom margin). */
 #appointmentForm .checkbox-group {
@@ -1913,7 +1972,7 @@ button.nav-sublink {
 .appt-note .btn.is-plain,
 .appt-draft-note .btn.is-plain { padding: 0; font-style: normal; }
 
-/* Progress bar: a numbered tab per step; done steps gold, the current one red. */
+/* Progress bar: a numbered tab per step; done steps brown, the current one gold. */
 .form-progress {
   display: flex;
   gap: 6px;
@@ -1940,15 +1999,16 @@ button.nav-sublink {
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 .form-progress-step:hover { color: var(--text-primary); }
-.form-progress-step:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.form-progress-step:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: 2px; }
 
+/* Square badges: round is kept for avatars. */
 .form-progress-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 4px;
   background: var(--bg-darker);
   font-size: 0.85rem;
   transition: background 0.2s ease, color 0.2s ease;
@@ -1961,10 +2021,10 @@ button.nav-sublink {
   text-align: center;
 }
 
-.form-progress-step.is-done { border-top-color: var(--accent-gold); }
-.form-progress-step.is-done .form-progress-num { background: var(--accent-gold); color: #f5f3ef; }
-.form-progress-step.is-current { border-top-color: var(--accent-red); color: var(--text-primary); }
-.form-progress-step.is-current .form-progress-num { background: var(--accent-red); color: #f5f3ef; }
+.form-progress-step.is-done { border-top-color: var(--accent-brown); }
+.form-progress-step.is-done .form-progress-num { background: var(--accent-brown); color: var(--label); }
+.form-progress-step.is-current { border-top-color: var(--gold); color: var(--text-primary); }
+.form-progress-step.is-current .form-progress-num { background: var(--gold); color: var(--label); }
 
 /* Review: each group's heading with its Edit button, then label / answer rows. */
 .appt-review-head {
@@ -2021,6 +2081,8 @@ button.nav-sublink {
 
   .appt-review-list { grid-template-columns: 1fr; gap: 2px; }
   .appt-review-list dd { margin-bottom: 8px; }
+
+  .appt-page .parchment.tear-half { padding-bottom: calc(1.25rem + var(--tear-h)); }
 }
 
 
