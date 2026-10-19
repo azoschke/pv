@@ -54,6 +54,9 @@
   // step 3 boxes and detail. It's refilled only when those change, so detail
   // added on the review step stays.
   var combinedFrom = { symptoms: null, exposures: null };
+  // True while the characters and medics load: the form shows at once with
+  // its fields disabled and nothing saved to the draft.
+  var loading = false;
 
   function $(id) { return document.getElementById(id); }
 
@@ -111,6 +114,7 @@
     return { step: step, fields: fields, combinedFrom: combinedFrom };
   }
   function saveDraftSoon() {
+    if (loading) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try { localStorage.setItem(draftKey, JSON.stringify(snapshot())); } catch (_) {}
@@ -127,6 +131,15 @@
     opt.textContent = value;
     select.appendChild(opt);
   }
+  // The saved draft's step, or 0 when there is none (read before the form's
+  // options load, so the page opens on the right step).
+  function draftStep() {
+    try {
+      var draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+      return draft && draft.fields ? Math.min(Math.max(Number(draft.step) || 1, 1), STEPS) : 0;
+    } catch (_) { return 0; }
+  }
+
   // Restores a saved draft; returns its step, or 0 when there is none.
   function restoreDraft() {
     var draft = null;
@@ -252,6 +265,7 @@
     $('appt-back').hidden = n === 1;
     $('appt-next').hidden = n === STEPS;
     $('submit-btn').hidden = n !== STEPS;
+    if (loading) return;
     if (n === 2) showPatientName();
     if (n === STEPS) buildReview();
     var top = $('appt-progress');
@@ -407,11 +421,29 @@
   }
 
   // ── Start ─────────────────────────────────────────────────────────────────
+  function setLoading(on) {
+    loading = on;
+    Array.prototype.forEach.call(form.elements, function (el) { el.disabled = on; });
+    Array.prototype.forEach.call(document.querySelectorAll('.form-progress-step'), function (b) { b.disabled = on; });
+    form.setAttribute('aria-busy', on ? 'true' : 'false');
+    if (on) {
+      ['appt-character', 'appt-medic'].forEach(function (id) {
+        $(id).innerHTML = '<option value="">Loading...</option>';
+      });
+    }
+  }
+
   async function init() {
     var session = (window.PVAdminAPI && PVAdminAPI.getSession()) || null;
     if (!session) { PVAdminAPI.redirectToLogin(); return; }
     form = $('appointmentForm');
     draftKey = DRAFT_PREFIX + String(session.username || '').toLowerCase();
+
+    // The form shows straight away, on the draft's step, until its options
+    // arrive.
+    setLoading(true);
+    showStep(draftStep() || 1);
+    $('form-wrapper').style.display = 'block';
 
     var data, staff;
     try {
@@ -422,17 +454,20 @@
       data = results[0];
       staff = results[1];
     } catch (e) {
-      $('form-wrapper').style.display = 'block';
-      $('appointmentForm').hidden = true;
+      // The error shows in place of the steps (it sits inside the form).
+      Array.prototype.forEach.call(form.querySelectorAll('.form-step'), function (sec) { sec.hidden = true; });
+      form.querySelector('.appt-actions').style.display = 'none';
       $('appt-progress').hidden = true;
       showError(e && e.message ? e.message : 'Could not load the form. Please try again.');
       return;
     }
     if (!data.characters || !data.characters.length) {
+      $('form-wrapper').style.display = 'none';
       $('no-character-wrapper').style.display = 'block';
       return;
     }
 
+    setLoading(false);
     fillCharacters(data);
     fillMedics(staff, data.medics);
 
@@ -462,7 +497,6 @@
       window.location.reload();
     });
 
-    $('form-wrapper').style.display = 'block';
     // A fresh form (or one chosen for you) starts from the patient record.
     if (!restoredStep && $('appt-character').value) prefillFromRecord();
     showStep(restoredStep || 1);

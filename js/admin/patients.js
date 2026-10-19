@@ -165,8 +165,14 @@
 
       // Hybrid FC-member link. Choosing a member fills the patient name from
       // that member (nickname first); "Manual entry" leaves the name free-text.
+      // A member has one patient record, so members linked to another record
+      // aren't offered (this record's own member stays).
       if (f.type === 'member-link') {
         var members = props.members || [];
+        var taken = props.takenMemberIds || {};
+        var linkable = members.filter(function (mm) {
+          return !taken[mm.id] || String(mm.id) === String(initial.member_id || '');
+        });
         return h('div', {
           className: 'portal-field is-full', key: f.key
         },
@@ -186,7 +192,7 @@
             }
           },
             h('option', { value: '' }, '— Manual entry (not on FC roster) —'),
-            members.map(function (mm) {
+            linkable.map(function (mm) {
               return h('option', { key: mm.id, value: String(mm.id) }, memberPickerLabel(mm));
             })
           ),
@@ -420,6 +426,7 @@
         initial: p,
         isNew: false,
         members: props.members,
+        takenMemberIds: props.takenMemberIds,
         submitLabel: 'Save patient',
         onSubmit: handleSave
       })
@@ -666,6 +673,7 @@
         initial: {},
         isNew: true,
         members: props.members,
+        takenMemberIds: props.takenMemberIds,
         submitLabel: 'Create patient',
         onSubmit: handleCreate,
         onCancel: onCancel
@@ -736,15 +744,20 @@
     }
     if (loading && view === 'list') return h('div', { className: 'portal-card' }, 'Loading patients…');
 
+    // FC members that already have a patient record (one record each).
+    var takenMemberIds = {};
+    patients.forEach(function (p) { if (p.member_id) takenMemberIds[p.member_id] = true; });
+
     if (view === 'new') {
       return h(PatientNew, {
         members: members,
+        takenMemberIds: takenMemberIds,
         onCreated: function (id) { setSelected(id); setView('edit-patient'); reload(); },
         onCancel: goList
       });
     }
     if (view === 'edit-patient' && selected) {
-      return h(PatientEdit, { patientId: selected, members: members, onBack: goList });
+      return h(PatientEdit, { patientId: selected, members: members, takenMemberIds: takenMemberIds, onBack: goList });
     }
     if (view === 'visits' && selected) {
       return h(PatientVisits, { patientId: selected, onBack: goList });
