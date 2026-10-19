@@ -281,9 +281,17 @@
             updateEorzeanDisplay('treatment-admission-date', 'treatment-eorzean-date');
         }
 
+        // Fonts and images load once: on the form pages when they open, and on
+        // the patient records page the first time something is exported.
+        let assetsReady = null;
+        function ready() {
+            if (!assetsReady) assetsReady = preloadAssets();
+            return assetsReady;
+        }
+
         // Load assets when page is ready
         document.addEventListener('DOMContentLoaded', () => {
-            preloadAssets();
+            ready();
             autoFillDates();
             initMarkdownPreviews();
 
@@ -765,54 +773,118 @@
         }
 
         // Build Intake PDF document (returns jsPDF doc for reuse)
-        function buildIntakePDF() {
+        // ── This page's form → the builders' data ───────────────────────────
+        // The Patient Intake Form and Treatment Report Form pages build their
+        // documents from what is typed in; saved records come through
+        // intakeFromRecord / treatmentFromRecord (PVMedForms, at the end).
+        function fieldValue(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        }
+        function checkedValues(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
+        }
+        function checkedLabel(name) {
+            const el = document.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.parentElement.textContent.trim() : '';
+        }
+        // Ticked boxes and their detail on one line: "Pain, Bleeding - left arm".
+        function joinChecked(checked, detail) {
+            const list = checked.join(', ');
+            if (list && detail) return `${list} - ${detail}`;
+            return list || detail || '';
+        }
+
+        function collectIntakeForm() {
+            const patientDateRaw = fieldValue('intake-patient-date');
+            const patientDateEorzean = convertToEorzeanDate(patientDateRaw);
+            return {
+                patientName: fieldValue('intake-name'),
+                race: fieldValue('intake-race'),
+                age: fieldValue('intake-age'),
+                gender: fieldValue('intake-gender'),
+                emergencyName: fieldValue('intake-emergency-name'),
+                emergencyRelationship: fieldValue('intake-emergency-relationship'),
+                emergencyContact: fieldValue('intake-emergency-contact'),
+                complaint: fieldValue('intake-complaint'),
+                symptoms: joinChecked(checkedValues('symptoms'), fieldValue('intake-symptoms-detail')),
+                exposures: joinChecked(checkedValues('exposures'), fieldValue('intake-exposures-detail')),
+                chronicIllness: fieldValue('intake-chronic'),
+                previousInjuries: fieldValue('intake-injuries'),
+                allergies: fieldValue('intake-allergies'),
+                medications: fieldValue('intake-medications'),
+                aethericAbnormalities: fieldValue('intake-aetheric'),
+                patientSignature: fieldValue('intake-patient-signature'),
+                patientDate: patientDateEorzean ? formatEorzeanDate(patientDateEorzean) : patientDateRaw,
+                severity: checkedLabel('severity'),
+                rpTimeline: checkedLabel('rpTimeline'),
+                conceptDev: checkedLabel('conceptDev'),
+                desiredOutcomes: fieldValue('intake-desired-outcomes'),
+                plotHooks: fieldValue('intake-plot-hooks'),
+                triggers: fieldValue('intake-triggers')
+            };
+        }
+
+        function collectTreatmentForm() {
+            const admissionDateRaw = fieldValue('treatment-admission-date');
+            const admissionDateEorzean = convertToEorzeanDate(admissionDateRaw);
+            const followup = (document.querySelector('input[name="followup"]:checked') || {}).value || '';
+            const appointment = fieldValue('treatment-followup-appointment');
+            const frequency = fieldValue('treatment-followup-frequency');
+            let followUp = '';
+            if (followup === 'None') {
+                followUp = 'No follow-up required - Patient cleared for discharge';
+            } else if (followup === 'Follow-up') {
+                followUp = 'Follow-up required' + (appointment ? ` - Next appointment: ${appointment}` : '');
+            } else if (followup === 'Ongoing') {
+                followUp = 'Ongoing monitoring required' + (frequency ? ` - Frequency: ${frequency}` : '');
+            } else if (followup === 'Referred') {
+                followUp = 'Referred to specialist/external care';
+            }
+            const dischargeChoice = (document.querySelector('input[name="discharge"]:checked') || {}).value || '';
+            const restrictions = fieldValue('treatment-restrictions');
+            const leaveDuration = fieldValue('treatment-leave-duration');
+            let discharge = '';
+            if (dischargeChoice === 'Full duty') {
+                discharge = 'Discharged - Full duty cleared';
+            } else if (dischargeChoice === 'Light duty') {
+                discharge = 'Discharged - Light duty only' + (restrictions ? ` (Restrictions: ${restrictions})` : '');
+            } else if (dischargeChoice === 'Medical leave') {
+                discharge = 'Discharged - Medical leave recommended' + (leaveDuration ? ` (Duration: ${leaveDuration})` : '');
+            } else if (dischargeChoice === 'Admitted') {
+                discharge = 'Admitted for continued observation/treatment';
+            } else if (dischargeChoice === 'Transferred') {
+                discharge = 'Transferred to external facility';
+            }
+            return {
+                patientName: fieldValue('treatment-name'),
+                position: fieldValue('treatment-position'),
+                admissionDate: admissionDateEorzean ? formatEorzeanDate(admissionDateEorzean) : admissionDateRaw,
+                medicName: fieldValue('treatment-medic-name'),
+                clinicalSummary: fieldValue('treatment-clinical-summary'),
+                diagnosis: fieldValue('treatment-diagnosis'),
+                procedures: checkedValues('procedures').join(', '),
+                treatmentPlan: fieldValue('treatment-plan'),
+                followUp: followUp,
+                discharge: discharge,
+                additionalNotes: fieldValue('treatment-notes')
+            };
+        }
+
+        // data: an intake's answers (intakeFromRecord), or this page's form.
+        function buildIntakePDF(data) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
             // Register custom fonts if loaded
             registerFonts(doc);
 
-            // Get form data
-            const patientName = document.getElementById('intake-name').value;
-            const race = document.getElementById('intake-race').value;
-            const age = document.getElementById('intake-age').value;
-            const gender = document.getElementById('intake-gender').value;
-            const emergencyName = document.getElementById('intake-emergency-name').value;
-            const emergencyRelationship = document.getElementById('intake-emergency-relationship').value;
-            const emergencyContact = document.getElementById('intake-emergency-contact').value;
-            const complaint = document.getElementById('intake-complaint').value;
-
-            // Get checked symptoms
-            const symptomsChecked = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
-                .map(cb => cb.value);
-            const symptomsDetail = document.getElementById('intake-symptoms-detail').value;
-
-            // Get checked exposures
-            const exposuresChecked = Array.from(document.querySelectorAll('input[name="exposures"]:checked'))
-                .map(cb => cb.value);
-            const exposuresDetail = document.getElementById('intake-exposures-detail').value;
-            const chronicIllness = document.getElementById('intake-chronic').value;
-            const previousInjuries = document.getElementById('intake-injuries').value;
-            const allergies = document.getElementById('intake-allergies').value;
-            const medications = document.getElementById('intake-medications').value;
-            const aethericAbnormalities = document.getElementById('intake-aetheric').value;
-
-            // Get signature fields
-            const patientSignature = document.getElementById('intake-patient-signature').value;
-            const patientDateRaw = document.getElementById('intake-patient-date').value;
-            const patientDateEorzean = convertToEorzeanDate(patientDateRaw);
-            const patientDate = patientDateEorzean ? formatEorzeanDate(patientDateEorzean) : patientDateRaw;
-
-            // Get OOC fields
-            const severityEl = document.querySelector('input[name="severity"]:checked');
-            const severity = severityEl ? severityEl.parentElement.textContent.trim() : '';
-            const rpTimelineEl = document.querySelector('input[name="rpTimeline"]:checked');
-            const rpTimeline = rpTimelineEl ? rpTimelineEl.parentElement.textContent.trim() : '';
-            const conceptDevEl = document.querySelector('input[name="conceptDev"]:checked');
-            const conceptDev = conceptDevEl ? conceptDevEl.parentElement.textContent.trim() : '';
-            const desiredOutcomes = document.getElementById('intake-desired-outcomes').value;
-            const plotHooks = document.getElementById('intake-plot-hooks').value;
-            const triggers = document.getElementById('intake-triggers').value;
+            const {
+                patientName, race, age, gender, emergencyName, emergencyRelationship,
+                emergencyContact, complaint, symptoms, exposures, chronicIllness, previousInjuries,
+                allergies, medications, aethericAbnormalities, patientSignature, patientDate,
+                severity, rpTimeline, conceptDev, desiredOutcomes, plotHooks, triggers
+            } = data || collectIntakeForm();
 
             // PDF dimensions
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -894,8 +966,8 @@
             y += 5;
 
             // Current Symptoms
-            if (symptomsChecked.length > 0 || symptomsDetail) {
-                const symptomText = symptomsChecked.join(', ') + (symptomsDetail ? ` - ${symptomsDetail}` : '');
+            if (symptoms) {
+                const symptomText = symptoms;
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 setFont(doc, 'Stoke', 'normal');
                 doc.text('Current Symptoms:', margin, y);
@@ -912,8 +984,8 @@
             }
 
             // Recent Exposures
-            if (exposuresChecked.length > 0 || exposuresDetail) {
-                const exposureText = exposuresChecked.join(', ') + (exposuresDetail ? ` - ${exposuresDetail}` : '');
+            if (exposures) {
+                const exposureText = exposures;
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 setFont(doc, 'Stoke', 'normal');
                 doc.text('Recent Exposures:', margin, y);
@@ -1117,7 +1189,8 @@
         }
 
         // Build Treatment PDF document (returns jsPDF doc for reuse)
-        function buildTreatmentPDF() {
+        // data: a visit's treatment report (treatmentFromRecord), or this page's form.
+        function buildTreatmentPDF(data) {
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1125,33 +1198,10 @@
             // Register custom fonts if loaded
             registerFonts(doc);
 
-            // Get form data
-            const patientName = document.getElementById('treatment-name').value;
-            const position = document.getElementById('treatment-position').value;
-            const admissionDateRaw = document.getElementById('treatment-admission-date').value;
-            const admissionDateEorzean = convertToEorzeanDate(admissionDateRaw);
-            const admissionDate = admissionDateEorzean ? formatEorzeanDate(admissionDateEorzean) : admissionDateRaw;
-            const medicName = document.getElementById('treatment-medic-name').value;
-            const medicSpecialty = document.getElementById('treatment-medic-specialty').value;
-            const clinicalSummary = document.getElementById('treatment-clinical-summary').value;
-            const diagnosis = document.getElementById('treatment-diagnosis').value;
-            const proceduresChecked = Array.from(document.querySelectorAll('input[name="procedures"]:checked'))
-                .map(cb => cb.value);
-            const treatmentPlan = document.getElementById('treatment-plan').value;
-
-            // Follow-up fields
-            const followupEl = document.querySelector('input[name="followup"]:checked');
-            const followup = followupEl ? followupEl.value : '';
-            const followupAppointment = document.getElementById('treatment-followup-appointment').value;
-            const followupFrequency = document.getElementById('treatment-followup-frequency').value;
-
-            // Discharge fields
-            const dischargeEl = document.querySelector('input[name="discharge"]:checked');
-            const discharge = dischargeEl ? dischargeEl.value : '';
-            const restrictions = document.getElementById('treatment-restrictions').value;
-            const leaveDuration = document.getElementById('treatment-leave-duration').value;
-
-            const additionalNotes = document.getElementById('treatment-notes').value;
+            const {
+                patientName, position, admissionDate, medicName, clinicalSummary,
+                diagnosis, procedures, treatmentPlan, followUp, discharge, additionalNotes
+            } = data || collectTreatmentForm();
 
             // PDF dimensions
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1227,7 +1277,7 @@
             }
 
             // Procedures Performed (only if any checked)
-            if (proceduresChecked.length > 0) {
+            if (procedures) {
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 doc.setFontSize(12);
                 setFont(doc, 'Stoke', 'normal');
@@ -1236,8 +1286,12 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                doc.text(proceduresChecked.join(', '), margin, y);
-                y += 15;
+                wrapText(doc, procedures, contentWidth).forEach(line => {
+                    y = checkNewPage(doc, y, 6, pageHeight, margin);
+                    doc.text(line, margin, y);
+                    y += 5;
+                });
+                y += 10;
             }
 
             // Treatment Plan (only if filled)
@@ -1255,7 +1309,7 @@
             }
 
             // Follow-up Requirements (only if selected)
-            if (followup) {
+            if (followUp) {
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 doc.setFontSize(12);
                 setFont(doc, 'Stoke', 'normal');
@@ -1264,18 +1318,12 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                let followupText = '';
-                if (followup === 'None') {
-                    followupText = 'No follow-up required - Patient cleared for discharge';
-                } else if (followup === 'Follow-up') {
-                    followupText = 'Follow-up required' + (followupAppointment ? ` - Next appointment: ${followupAppointment}` : '');
-                } else if (followup === 'Ongoing') {
-                    followupText = 'Ongoing monitoring required' + (followupFrequency ? ` - Frequency: ${followupFrequency}` : '');
-                } else if (followup === 'Referred') {
-                    followupText = 'Referred to specialist/external care';
-                }
-                doc.text(followupText, margin, y);
-                y += 15;
+                wrapText(doc, followUp, contentWidth).forEach(line => {
+                    y = checkNewPage(doc, y, 6, pageHeight, margin);
+                    doc.text(line, margin, y);
+                    y += 5;
+                });
+                y += 10;
             }
 
             // Discharge Status (only if selected)
@@ -1288,18 +1336,7 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                let dischargeText = '';
-                if (discharge === 'Full duty') {
-                    dischargeText = 'Discharged - Full duty cleared';
-                } else if (discharge === 'Light duty') {
-                    dischargeText = 'Discharged - Light duty only' + (restrictions ? ` (Restrictions: ${restrictions})` : '');
-                } else if (discharge === 'Medical leave') {
-                    dischargeText = 'Discharged - Medical leave recommended' + (leaveDuration ? ` (Duration: ${leaveDuration})` : '');
-                } else if (discharge === 'Admitted') {
-                    dischargeText = 'Admitted for continued observation/treatment';
-                } else if (discharge === 'Transferred') {
-                    dischargeText = 'Transferred to external facility';
-                }
+                const dischargeText = discharge;
                 const dischargeLines = wrapText(doc, dischargeText, contentWidth);
                 dischargeLines.forEach(line => {
                     y = checkNewPage(doc, y, 6, pageHeight, margin);
@@ -1323,7 +1360,7 @@
             }
 
             // Footer: Medic signature in bottom left, emblem in bottom right
-            if (medicName || medicSpecialty) {
+            if (medicName) {
                 const footerY = pageHeight - margin / 2 - 15;
 
                 // Medic name in cursive (large signature)
@@ -1332,12 +1369,9 @@
                 doc.text(medicName || '', margin, footerY);
 
                 // Label line below
-                const labelParts = [];
-                if (medicName) labelParts.push(medicName.toUpperCase());
-                if (medicSpecialty) labelParts.push(medicSpecialty.toUpperCase());
                 doc.setFontSize(7);
                 setFont(doc, 'Stoke', 'normal');
-                addSpacedText(doc, labelParts.join(', '), margin, footerY + 7);
+                addSpacedText(doc, medicName.toUpperCase(), margin, footerY + 7);
             }
 
             if (emblemImage) {
@@ -1364,57 +1398,63 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
+        // Render a built document to JPGs (one per page) and download them.
+        async function renderJPGs(doc, filename) {
+            if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+            const pdfData = doc.output('arraybuffer');
+
+            const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            const scale = 2; // 2x resolution for crisp output
+
+            const canvases = [];
+            let totalHeight = 0;
+            let maxWidth = 0;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+
+                await page.render({ canvasContext: ctx, viewport }).promise;
+
+                canvases.push(canvas);
+                totalHeight += viewport.height;
+                maxWidth = Math.max(maxWidth, viewport.width);
+            }
+
+            // Download each page as a separate JPG (sequentially to avoid browser dropping downloads)
+            const baseName = filename.replace('.jpg', '');
+            for (let i = 0; i < canvases.length; i++) {
+                const blob = await new Promise(resolve => canvases[i].toBlob(resolve, 'image/jpeg', 0.95));
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = canvases.length === 1
+                    ? filename
+                    : `${baseName}-page-${i + 1}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                if (i < canvases.length - 1) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+        }
+
         async function exportPDFAsJPG(buildFn, filename, btn) {
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Rendering...';
             btn.disabled = true;
 
             try {
-                const doc = buildFn();
-                const pdfData = doc.output('arraybuffer');
-
-                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                const scale = 2; // 2x resolution for crisp output
-
-                const canvases = [];
-                let totalHeight = 0;
-                let maxWidth = 0;
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    const ctx = canvas.getContext('2d');
-
-                    await page.render({ canvasContext: ctx, viewport }).promise;
-
-                    canvases.push(canvas);
-                    totalHeight += viewport.height;
-                    maxWidth = Math.max(maxWidth, viewport.width);
-                }
-
-                // Download each page as a separate JPG (sequentially to avoid browser dropping downloads)
-                const baseName = filename.replace('.jpg', '');
-                for (let i = 0; i < canvases.length; i++) {
-                    const blob = await new Promise(resolve => canvases[i].toBlob(resolve, 'image/jpeg', 0.95));
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = canvases.length === 1
-                        ? filename
-                        : `${baseName}-page-${i + 1}.jpg`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    if (i < canvases.length - 1) {
-                        await new Promise(r => setTimeout(r, 500));
-                    }
-                }
-
+                await renderJPGs(buildFn(), filename);
                 btn.innerHTML = '<span class="material-icons">check</span> Done!';
                 setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
             } catch (error) {
@@ -1436,39 +1476,15 @@
         // Copy for Discord (formatted markdown)
         // =============================================
 
-        function buildIntakeDiscordText() {
+        function buildIntakeDiscordText(data) {
             const lines = [];
 
-            const patientName = document.getElementById('intake-name').value;
-            const race = document.getElementById('intake-race').value;
-            const age = document.getElementById('intake-age').value;
-            const gender = document.getElementById('intake-gender').value;
-            const emergencyName = document.getElementById('intake-emergency-name').value;
-            const emergencyRelationship = document.getElementById('intake-emergency-relationship').value;
-            const emergencyContact = document.getElementById('intake-emergency-contact').value;
-            const complaint = document.getElementById('intake-complaint').value;
-            const symptomsChecked = Array.from(document.querySelectorAll('input[name="symptoms"]:checked')).map(cb => cb.value);
-            const symptomsDetail = document.getElementById('intake-symptoms-detail').value;
-            const exposuresChecked = Array.from(document.querySelectorAll('input[name="exposures"]:checked')).map(cb => cb.value);
-            const exposuresDetail = document.getElementById('intake-exposures-detail').value;
-            const chronicIllness = document.getElementById('intake-chronic').value;
-            const previousInjuries = document.getElementById('intake-injuries').value;
-            const allergies = document.getElementById('intake-allergies').value;
-            const medications = document.getElementById('intake-medications').value;
-            const aethericAbnormalities = document.getElementById('intake-aetheric').value;
-            const patientSignature = document.getElementById('intake-patient-signature').value;
-            const patientDateRaw = document.getElementById('intake-patient-date').value;
-            const patientDateEorzean = convertToEorzeanDate(patientDateRaw);
-            const patientDate = patientDateEorzean ? formatEorzeanDate(patientDateEorzean) : patientDateRaw;
-            const severityEl = document.querySelector('input[name="severity"]:checked');
-            const severity = severityEl ? severityEl.parentElement.textContent.trim() : '';
-            const rpTimelineEl = document.querySelector('input[name="rpTimeline"]:checked');
-            const rpTimeline = rpTimelineEl ? rpTimelineEl.parentElement.textContent.trim() : '';
-            const conceptDevEl = document.querySelector('input[name="conceptDev"]:checked');
-            const conceptDev = conceptDevEl ? conceptDevEl.parentElement.textContent.trim() : '';
-            const desiredOutcomes = document.getElementById('intake-desired-outcomes').value;
-            const plotHooks = document.getElementById('intake-plot-hooks').value;
-            const triggers = document.getElementById('intake-triggers').value;
+            const {
+                patientName, race, age, gender, emergencyName, emergencyRelationship,
+                emergencyContact, complaint, symptoms, exposures, chronicIllness, previousInjuries,
+                allergies, medications, aethericAbnormalities, patientSignature, patientDate,
+                severity, rpTimeline, conceptDev, desiredOutcomes, plotHooks, triggers
+            } = data || collectIntakeForm();
 
             // Header
             lines.push('# PHOENIX VANGUARD — PATIENT INTAKE FORM');
@@ -1499,14 +1515,8 @@
                 lines.push(complaint);
                 lines.push('');
             }
-            if (symptomsChecked.length > 0 || symptomsDetail) {
-                lines.push(`**Current Symptoms:** ${symptomsChecked.join(', ') || '—'}`);
-                if (symptomsDetail) lines.push(`> ${symptomsDetail}`);
-            }
-            if (exposuresChecked.length > 0 || exposuresDetail) {
-                lines.push(`**Recent Exposures:** ${exposuresChecked.join(', ') || '—'}`);
-                if (exposuresDetail) lines.push(`> ${exposuresDetail}`);
-            }
+            if (symptoms) lines.push(`**Current Symptoms:** ${symptoms}`);
+            if (exposures) lines.push(`**Recent Exposures:** ${exposures}`);
             lines.push('');
 
             // Pre-Existing Conditions
@@ -1553,29 +1563,13 @@
             return lines.join('\n');
         }
 
-        function buildTreatmentDiscordText() {
+        function buildTreatmentDiscordText(data) {
             const lines = [];
 
-            const patientName = document.getElementById('treatment-name').value;
-            const position = document.getElementById('treatment-position').value;
-            const admissionDateRaw = document.getElementById('treatment-admission-date').value;
-            const admissionDateEorzean = convertToEorzeanDate(admissionDateRaw);
-            const admissionDate = admissionDateEorzean ? formatEorzeanDate(admissionDateEorzean) : admissionDateRaw;
-            const medicName = document.getElementById('treatment-medic-name').value;
-            const medicSpecialty = document.getElementById('treatment-medic-specialty').value;
-            const clinicalSummary = document.getElementById('treatment-clinical-summary').value;
-            const diagnosis = document.getElementById('treatment-diagnosis').value;
-            const proceduresChecked = Array.from(document.querySelectorAll('input[name="procedures"]:checked')).map(cb => cb.value);
-            const treatmentPlan = document.getElementById('treatment-plan').value;
-            const followupEl = document.querySelector('input[name="followup"]:checked');
-            const followup = followupEl ? followupEl.value : '';
-            const followupAppointment = document.getElementById('treatment-followup-appointment').value;
-            const followupFrequency = document.getElementById('treatment-followup-frequency').value;
-            const dischargeEl = document.querySelector('input[name="discharge"]:checked');
-            const discharge = dischargeEl ? dischargeEl.value : '';
-            const restrictions = document.getElementById('treatment-restrictions').value;
-            const leaveDuration = document.getElementById('treatment-leave-duration').value;
-            const additionalNotes = document.getElementById('treatment-notes').value;
+            const {
+                patientName, position, admissionDate, medicName, clinicalSummary,
+                diagnosis, procedures, treatmentPlan, followUp, discharge, additionalNotes
+            } = data || collectTreatmentForm();
 
             // Header
             lines.push('# PHOENIX VANGUARD — TREATMENT REPORT');
@@ -1590,12 +1584,9 @@
             lines.push('');
 
             // Medic Info
-            if (medicName || medicSpecialty) {
+            if (medicName) {
                 lines.push('## Attending Medic');
-                const medicParts = [];
-                if (medicName) medicParts.push(`**Name:** ${medicName}`);
-                if (medicSpecialty) medicParts.push(`**Specialty:** ${medicSpecialty}`);
-                lines.push(medicParts.join(' | '));
+                lines.push(`**Name:** ${medicName}`);
                 lines.push('');
             }
 
@@ -1614,8 +1605,8 @@
             }
 
             // Procedures
-            if (proceduresChecked.length > 0) {
-                lines.push(`**Procedures Performed:** ${proceduresChecked.join(', ')}`);
+            if (procedures) {
+                lines.push(`**Procedures Performed:** ${procedures}`);
                 lines.push('');
             }
 
@@ -1627,34 +1618,16 @@
             }
 
             // Follow-up
-            if (followup) {
+            if (followUp) {
                 lines.push('## Follow-up Requirements');
-                if (followup === 'None') {
-                    lines.push('No follow-up required — Patient cleared for discharge');
-                } else if (followup === 'Follow-up') {
-                    lines.push('Follow-up required' + (followupAppointment ? ` — Next appointment: ${followupAppointment}` : ''));
-                } else if (followup === 'Ongoing') {
-                    lines.push('Ongoing monitoring required' + (followupFrequency ? ` — Frequency: ${followupFrequency}` : ''));
-                } else if (followup === 'Referred') {
-                    lines.push('Referred to specialist/external care');
-                }
+                lines.push(followUp);
                 lines.push('');
             }
 
             // Discharge
             if (discharge) {
                 lines.push('## Discharge Status');
-                if (discharge === 'Full duty') {
-                    lines.push('Discharged — Full duty cleared');
-                } else if (discharge === 'Light duty') {
-                    lines.push('Discharged — Light duty only' + (restrictions ? ` (Restrictions: ${restrictions})` : ''));
-                } else if (discharge === 'Medical leave') {
-                    lines.push('Discharged — Medical leave recommended' + (leaveDuration ? ` (Duration: ${leaveDuration})` : ''));
-                } else if (discharge === 'Admitted') {
-                    lines.push('Admitted for continued observation/treatment');
-                } else if (discharge === 'Transferred') {
-                    lines.push('Transferred to external facility');
-                }
+                lines.push(discharge);
                 lines.push('');
             }
 
@@ -1693,3 +1666,73 @@
             const text = buildTreatmentDiscordText();
             copyToClipboard(text, btn);
         }
+
+        // =============================================
+        // Saved records (the patient records page)
+        // =============================================
+
+        // A visit's linked intake (GET /patients/:id → visit.intake) as the
+        // intake builders' data. The Out of Character choices are stored by
+        // value and printed by their full label (PVMedical, medical-shared.js).
+        function intakeFromRecord(intake) {
+            const M = window.PVMedical;
+            const ooc = (field, value) => (M ? M.oocLabel(field, value) : value) || '';
+            const r = intake || {};
+            return {
+                patientName: r.character_name || '',
+                race: r.race || '',
+                age: r.age || '',
+                gender: r.gender || '',
+                emergencyName: r.emergency_contact_name || '',
+                emergencyRelationship: r.emergency_contact_relationship || '',
+                emergencyContact: r.emergency_contact_method || '',
+                complaint: r.presenting_complaint || '',
+                symptoms: r.current_symptoms || '',
+                exposures: r.recent_exposures || '',
+                chronicIllness: r.chronic_illness || '',
+                previousInjuries: r.previous_injuries || '',
+                allergies: r.known_allergies || '',
+                medications: r.current_medications || '',
+                aethericAbnormalities: r.aetheric_abnormalities || '',
+                patientSignature: r.patient_signature || '',
+                patientDate: r.signed_ic_date || '',
+                severity: ooc('severity', r.severity),
+                rpTimeline: ooc('rp_timeline', r.rp_timeline),
+                conceptDev: ooc('concept_dev', r.concept_dev),
+                desiredOutcomes: r.desired_outcomes || '',
+                plotHooks: r.plot_hooks || '',
+                triggers: r.triggers || ''
+            };
+        }
+
+        // A saved visit as the treatment report builders' data. position: the
+        // patient's Vanguard position (a linked member's IC rank).
+        function treatmentFromRecord(visit, patientName, position) {
+            const v = visit || {};
+            return {
+                patientName: patientName || v.patient_name || '',
+                position: position || '',
+                admissionDate: v.visit_date || '',
+                medicName: v.attending_medic || '',
+                clinicalSummary: v.clinical_summary || '',
+                diagnosis: v.diagnosis || '',
+                procedures: v.procedures_performed || '',
+                treatmentPlan: v.treatment_plan || '',
+                followUp: v.follow_up || '',
+                discharge: v.discharge_status || '',
+                additionalNotes: v.additional_notes || ''
+            };
+        }
+
+        window.PVMedForms = {
+            ready: ready,
+            intakeFromRecord: intakeFromRecord,
+            treatmentFromRecord: treatmentFromRecord,
+            buildIntakePDF: buildIntakePDF,
+            buildTreatmentPDF: buildTreatmentPDF,
+            buildIntakeDiscordText: buildIntakeDiscordText,
+            buildTreatmentDiscordText: buildTreatmentDiscordText,
+            savePDF: (doc, filename) => doc.save(filename),
+            saveJPG: renderJPGs,
+            copyText: text => navigator.clipboard.writeText(text)
+        };
