@@ -442,7 +442,7 @@
     tags.forEach(function (t) {
       var sp = document.createElement("span");
       sp.className = "venue-card-tag";
-      sp.textContent = "#" + t.replace(/_/g, " ");
+      sp.textContent = t.replace(/_/g, " ");
       tagWrap.appendChild(sp);
     });
     body.appendChild(tagWrap);

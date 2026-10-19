@@ -390,7 +390,7 @@
       s._tags.forEach(function (t) {
         var sp = document.createElement("span");
         sp.className = "venue-card-tag";
-        sp.textContent = "#" + t;
+        sp.textContent = t;
         tagWrap.appendChild(sp);
       });
       body.appendChild(tagWrap);
