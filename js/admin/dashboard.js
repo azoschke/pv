@@ -20,33 +20,18 @@
   var useEffect = React.useEffect;
 
   // ── Eorzean calendar ──────────────────────────────────────────────────────
-  // The same split-day table as PVMedical (js/medical-shared.js), so the
-  // portal date matches the medical forms; shown here in a short form. Months map 1:1 to moons; certain
-  // real-world days split into two Eorzean "suns" — we take the earlier sun.
-  var SPLIT_DAYS = {
-    1: [28], 2: [7, 14, 21], 3: [28], 4: [7, 28], 5: [29], 6: [7, 28],
-    7: [28], 8: [28], 9: [7, 28], 10: [28], 11: [7, 28], 12: [28]
-  };
+  // Today in the medical forms' calendar (PVMedical, js/medical-shared.js),
+  // in the header's short form: "28th Sun · 1st Astral Moon".
   function ordinal(n) {
     var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
-  function eorzeanSun(month, day) {
-    var splits = SPLIT_DAYS[month] || [];
-    var sun = day;
-    for (var i = 0; i < splits.length; i++) {
-      if (day > splits[i]) sun++;
-    }
-    return sun;
-  }
   function eorzeanTodayLabel() {
-    var now = new Date();
-    var mo = now.getMonth() + 1, d = now.getDate();
-    var sun = eorzeanSun(mo, d);
-    if (sun < 1 || sun > 32) return '';
-    var pairNum = Math.ceil(mo / 2);
-    var type = (mo % 2 === 1) ? 'Astral' : 'Umbral';
-    return ordinal(sun) + ' Sun · ' + ordinal(pairNum) + ' ' + type + ' Moon';
+    var M = window.PVMedical;
+    var e = M && M.toEorzean(M.todayISO());
+    if (!e) return '';
+    var mo = new Date().getMonth() + 1;
+    return ordinal(e.sun) + ' Sun · ' + ordinal(Math.ceil(mo / 2)) + ' ' + (mo % 2 ? 'Astral' : 'Umbral') + ' Moon';
   }
 
   // ── Component ─────────────────────────────────────────────────────────────
