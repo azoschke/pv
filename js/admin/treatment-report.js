@@ -9,12 +9,13 @@
 //    Date             a date picker that fills the in-character date
 //                     ("Third Sun of the Second Umbral Moon") as editable text
 //                     and sets the sort date
-//    Attending medic  the published Medical staff roster, or Other
+//    Attending medic  the published Medical staff roster
 //    Request          an optional link to one of the patient's appointment
 //                     requests (medical.view)
 //    Quick picks      procedures add to their box; follow-up and discharge
-//                     fill theirs; Other leaves it empty to type freely
-//    Long fields      the bold / italic / heading / list toolbar
+//                     fill theirs; the box stays free to type in
+//    Long fields      the bold / italic / heading / list toolbar (all but
+//                     symptoms and exposures, which are short lists)
 //
 //  Props:
 //    patient      { patient_id, patient_name }
@@ -80,8 +81,8 @@
   }
 
   // Quick picks above a box. 'add' appends the pick (procedures); 'replace'
-  // sets the box to the pick's wording (follow-up, discharge). Other leaves
-  // the box empty (replace) or as it is (add) and puts the cursor in it.
+  // sets the box to the pick's wording (follow-up, discharge). Either way the
+  // box stays free to type in.
   function QuickPicks(props) {
     function pick(text) {
       var current = props.value || '';
@@ -93,10 +94,6 @@
         next = text;
       }
       props.onChange(next);
-      focusEnd();
-    }
-    function other() {
-      if (props.mode !== 'add') props.onChange('');
       focusEnd();
     }
     function focusEnd() {
@@ -114,8 +111,7 @@
           key: p[0], type: 'button', className: 'btn is-quiet is-small',
           onClick: function () { pick(p[1]); }
         }, p[0]);
-      }),
-      h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: other }, 'Other')
+      })
     );
   }
 
@@ -313,7 +309,7 @@
               value: draft.procedures_performed,
               onChange: function (v) { setField('procedures_performed', v); }
             }),
-            text('procedures_performed', { plain: true, inputRef: proceduresRef })
+            text('procedures_performed', { inputRef: proceduresRef })
           )),
           field('Treatment Plan', text('treatment_plan')),
           field('Follow-up', h('div', null,
@@ -322,7 +318,7 @@
               value: draft.follow_up,
               onChange: function (v) { setField('follow_up', v); }
             }),
-            text('follow_up', { plain: true, inputRef: followUpRef })
+            text('follow_up', { inputRef: followUpRef })
           )),
           field('Discharge Status', h('div', null,
             h(QuickPicks, {
@@ -330,7 +326,7 @@
               value: draft.discharge_status,
               onChange: function (v) { setField('discharge_status', v); }
             }),
-            text('discharge_status', { plain: true, inputRef: dischargeRef })
+            text('discharge_status', { inputRef: dischargeRef })
           )),
           field('Additional Notes', text('additional_notes'))
         )

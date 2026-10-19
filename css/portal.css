@@ -576,9 +576,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- Appointment request detail ---------------
-   Medical Records → Appointment Requests: the status and date on one line,
-   then the request, scheduling, reports and intake as form sections, each
-   answer under a small-caps label. */
+   Medical Records → Appointment Requests: the status and date on one line
+   (View patient request at the right), then the request, scheduling and
+   reports as form sections, each answer under a small-caps label. */
 .appt-detail-head {
   display: flex;
   align-items: center;
@@ -598,6 +598,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
 }
 .appt-visit { margin: 0 0 0.35rem; }
+/* The request's actions (Mark seen, Cancel request, Delete) along the bottom. */
+.appt-detail-actions {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
 
 /* --------------- Grouped form sections ---------------
    Used by sectioned RecordForm (e.g. patient edit form mirrors the

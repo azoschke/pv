@@ -1286,12 +1286,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                wrapText(doc, procedures, contentWidth).forEach(line => {
-                    y = checkNewPage(doc, y, 6, pageHeight, margin);
-                    doc.text(line, margin, y);
-                    y += 5;
-                });
-                y += 10;
+                y = renderMarkdownBlock(doc, procedures, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Treatment Plan (only if filled)
@@ -1318,12 +1314,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                wrapText(doc, followUp, contentWidth).forEach(line => {
-                    y = checkNewPage(doc, y, 6, pageHeight, margin);
-                    doc.text(line, margin, y);
-                    y += 5;
-                });
-                y += 10;
+                y = renderMarkdownBlock(doc, followUp, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Discharge Status (only if selected)
@@ -1336,14 +1328,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                const dischargeText = discharge;
-                const dischargeLines = wrapText(doc, dischargeText, contentWidth);
-                dischargeLines.forEach(line => {
-                    y = checkNewPage(doc, y, 6, pageHeight, margin);
-                    doc.text(line, margin, y);
-                    y += 5;
-                });
-                y += 10;
+                y = renderMarkdownBlock(doc, discharge, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Additional Notes (only if filled)
