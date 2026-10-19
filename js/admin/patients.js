@@ -33,8 +33,8 @@
     return nn ? ((m.name || '') + ' — ' + nn) : (m.name || '');
   }
 
-  // Patient record form laid out to mirror the patient intake form
-  // (patient-intake-form.html), grouped into the same
+  // Patient record form laid out to mirror the patient intake (the
+  // Appointment Request form's intake steps), grouped into the same
   // sections so editing an existing record follows the same flow an
   // intake captures:
   //   1. Patient Information

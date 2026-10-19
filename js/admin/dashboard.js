@@ -20,8 +20,8 @@
   var useEffect = React.useEffect;
 
   // ── Eorzean calendar ──────────────────────────────────────────────────────
-  // Ported from js/med-forms.js so the portal date matches the
-  // convention used across the medical forms. Months map 1:1 to moons; certain
+  // The same split-day table as PVMedical (js/medical-shared.js), so the
+  // portal date matches the medical forms; shown here in a short form. Months map 1:1 to moons; certain
   // real-world days split into two Eorzean "suns" — we take the earlier sun.
   var SPLIT_DAYS = {
     1: [28], 2: [7, 14, 21], 3: [28], 4: [7, 28], 5: [29], 6: [7, 28],

@@ -1450,9 +1450,6 @@ button.nav-sublink {
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
-/* A parchment with another directly below it (Patient Intake). */
-.parchment.is-stacked { margin-bottom: 20px; }
-
 /* Section headings */
 .section-heading {
   font-family: 'Stoke', serif;
@@ -1474,52 +1471,6 @@ button.nav-sublink {
   letter-spacing: 1px;
   padding-bottom: 4px;
   border-bottom: 2px dashed var(--bg-darker);
-}
-
-/* Smaller section headings (Treatment Report). */
-.subsection-heading.is-compact { font-size: 1rem; margin-top: 15px; }
-
-/* Form toggle (intake/report) */
-.form-toggle {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding-bottom: 30px;
-  margin-bottom: 40px;
-  border-bottom: 2px dashed var(--bg-darker);
-}
-
-.toggle-btn {
-  font-family: 'Stoke', serif;
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.05rem;
-  text-transform: uppercase;
-  padding: 12px 24px;
-  border: 1px solid var(--border-color);
-  background: var(--parchment-dark);
-  color: var(--ink-color);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-}
-
-.toggle-btn:hover  { background: var(--accent-gold); color: var(--parchment-bg); }
-.toggle-btn.active { background: var(--accent-red); color: var(--parchment-bg); border-color: var(--accent-red); }
-
-.form-title {
-  font-family: 'Stoke', serif;
-  font-size: 1.6rem;
-  text-align: center;
-  margin-bottom: 40px;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
 .form-group { margin-bottom: 20px; }
@@ -1607,45 +1558,6 @@ button.nav-sublink {
 .markup-btn:hover  { background: rgba(44, 24, 16, 0.15); }
 .markup-btn:active { background: rgba(44, 24, 16, 0.25); }
 
-/* Markdown preview */
-.markdown-preview {
-  display: none;
-  font-family: 'Crimson Pro', serif;
-  font-weight: 500;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  padding: 10px 15px;
-  margin-top: -1px;
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-top: 1px dashed rgba(44, 24, 16, 0.3);
-  border-radius: 0 0 4px 4px;
-}
-
-.markdown-preview::before {
-  content: 'Preview';
-  display: block;
-  font-family: 'Stoke', serif;
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: rgba(44, 24, 16, 0.35);
-  margin-bottom: 5px;
-}
-
-.markdown-preview p           { margin: 0 0 0.3em; }
-.markdown-preview p:last-child { margin-bottom: 0; }
-.markdown-preview strong       { font-weight: 700; }
-.markdown-preview em           { font-style: italic; }
-
-.markdown-preview .md-heading { font-weight: 700; text-transform: uppercase; line-height: 1.4; margin: 0.5em 0 0.3em; }
-.markdown-preview .md-h1 { font-size: 1.1em; }
-.markdown-preview .md-h2 { font-size: 1.05em; }
-.markdown-preview .md-h3 { font-size: 1em; }
-.markdown-preview ul  { list-style-type: disc; padding-left: 20px; margin: 0.2em 0; }
-.markdown-preview li  { margin: 0.1em 0; }
-
 .eorzean-date-display {
   display: none;
   margin-top: 6px;
@@ -1671,8 +1583,6 @@ button.nav-sublink {
   border-left: 3px solid var(--accent-gold);
 }
 
-.signature-line  { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--ink-color); margin-bottom: 10px; }
-.signature-note  { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--accent-gold); font-style: italic; margin: 15px 0; }
 .signature-input { font-family: 'La Belle Aurore', cursive !important; font-size: 1.4rem !important; }
 
 /* Checkbox & radio groups */
@@ -1725,10 +1635,6 @@ button.nav-sublink {
 
 .radio-label input[type="radio"] { margin-top: 2px; flex-shrink: 0; }
 
-.conditional-field         { display: none; margin-left: 26px; margin-top: 8px; }
-.conditional-field.visible { display: block; }
-.conditional-field input   { width: calc(100% - 26px); }
-
 /* Submit / action buttons */
 .submit-btn {
   width: 100%;
@@ -1751,33 +1657,6 @@ button.nav-sublink {
 
 .submit-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
 .submit-btn:active { transform: translateY(0); }
-
-.button-group            { display: flex; gap: 10px; margin-top: 30px; }
-.button-group .submit-btn { flex: 1; margin-top: 0; padding: 15px 10px; }
-.button-group .export-jpg-btn  { background: #5a3a2e; }
-.button-group .export-jpg-btn:hover { background: #6d4a3c; }
-.button-group .discord-btn     { background: #a54d44; }
-.button-group .discord-btn:hover { background: #ac5249; }
-.button-group .discord-btn.copied { background: #3a5c3a; }
-
-/* Ornament & footer */
-.ornament {
-  text-align: center;
-  color: var(--accent-gold);
-  font-size: 1.5rem;
-  margin: 20px 0;
-  opacity: 0.7;
-}
-
-.footer {
-  text-align: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-  font-family: 'La Belle Aurore', cursive;
-  color: var(--accent-gold);
-  font-size: 0.9rem;
-}
 
 /* --- Appointment Request --- */
 #appt-reason { min-height: 100px; }
@@ -1811,33 +1690,6 @@ button.nav-sublink {
   max-width: 500px;
   margin: 0 auto 1.5rem;
   line-height: 1.6;
-}
-
-.confirmation-panel .intake-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  background: #2c1810;
-  color: #f5f3ef;
-  font-family: 'Stoke', serif;
-  font-size: 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 0 4px 15px var(--shadow-color);
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-}
-
-.confirmation-panel .intake-btn:hover {
-  background: #45352f;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--shadow-color);
-}
-
-.confirmation-panel .intake-btn:active {
-  transform: translateY(0);
 }
 
 .error-message {
@@ -3860,15 +3712,10 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 @media (max-width: 600px) {
   .parchment { padding: 1.25rem; }
 
-  .form-toggle { flex-direction: column; }
-  .toggle-btn  { justify-content: center; }
-
   .form-row,
   .form-row-3  { grid-template-columns: 1fr; }
 
   .checkbox-group { grid-template-columns: 1fr; }
-
-  .button-group { flex-direction: column; }
 }
 
 /* --- Print --- */

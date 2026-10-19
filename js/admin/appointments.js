@@ -3,7 +3,8 @@
 //
 //  The queue of appointment requests (from the Appointment Request page),
 //  each with its patient intake. Open requests (requested and scheduled) show
-//  by default; Seen, Cancelled, Archived and All are filters. Opening a
+//  by default; Seen, Cancelled and All are filters (All includes any request
+//  archived before deleting replaced archiving). Opening a
 //  request shows the request and:
 //    - View patient request: its intake (Out of Character included)
 //    - scheduling: the assigned medic (the requested one to start with) and
@@ -39,7 +40,6 @@
     { id: 'open', label: 'Open' },
     { id: 'seen', label: 'Seen' },
     { id: 'cancelled', label: 'Cancelled' },
-    { id: 'archived', label: 'Archived' },
     { id: 'all', label: 'All' }
   ];
 
