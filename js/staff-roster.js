@@ -384,18 +384,6 @@
       "Refer to the full profile for specialties and notes.";
     body.appendChild(desc);
 
-    if (s._tags.length) {
-      var tagWrap = document.createElement("div");
-      tagWrap.className = "venue-card-tags";
-      s._tags.forEach(function (t) {
-        var sp = document.createElement("span");
-        sp.className = "venue-card-tag";
-        sp.textContent = t;
-        tagWrap.appendChild(sp);
-      });
-      body.appendChild(tagWrap);
-    }
-
     card.appendChild(body);
 
     card.addEventListener("click", function () { openModal(s); });

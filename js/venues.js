@@ -436,17 +436,6 @@
     desc.textContent = truncate(v.description, 140);
     body.appendChild(desc);
 
-    var tagWrap = document.createElement("div");
-    tagWrap.className = "venue-card-tags";
-    var tags = (Array.isArray(v.tags) ? v.tags : []).slice();
-    tags.forEach(function (t) {
-      var sp = document.createElement("span");
-      sp.className = "venue-card-tag";
-      sp.textContent = t.replace(/_/g, " ");
-      tagWrap.appendChild(sp);
-    });
-    body.appendChild(tagWrap);
-
     card.appendChild(body);
 
     card.addEventListener("click", function () { openModal(v); });
