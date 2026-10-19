@@ -1972,7 +1972,7 @@ button.nav-sublink {
 .appt-note .btn.is-plain,
 .appt-draft-note .btn.is-plain { padding: 0; font-style: normal; }
 
-/* Progress bar: a numbered tab per step; done steps brown, the current one gold. */
+/* Progress bar: a numbered tab per step; done steps brown, the current one red. */
 .form-progress {
   display: flex;
   gap: 6px;
@@ -2023,8 +2023,8 @@ button.nav-sublink {
 
 .form-progress-step.is-done { border-top-color: var(--accent-brown); }
 .form-progress-step.is-done .form-progress-num { background: var(--accent-brown); color: var(--label); }
-.form-progress-step.is-current { border-top-color: var(--gold); color: var(--text-primary); }
-.form-progress-step.is-current .form-progress-num { background: var(--gold); color: var(--label); }
+.form-progress-step.is-current { border-top-color: var(--accent-red); color: var(--text-primary); }
+.form-progress-step.is-current .form-progress-num { background: var(--accent-red); color: var(--label); }
 
 /* Review: each group's heading with its Edit button, then label / answer rows. */
 .appt-review-head {
