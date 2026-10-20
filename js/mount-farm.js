@@ -118,7 +118,7 @@
   function Avatar(props) {
     var errState = useState(false); var err = errState[0], setErr = errState[1];
     var p = props.person || {};
-    return h('span', { className: 'avatar is-small' + (props.alt ? ' mf-avatar-alt' : ''), 'aria-hidden': 'true' },
+    return h('span', { className: 'avatar is-small' + (props.alt ? ' mf-avatar-alt' : ''), 'aria-hidden': 'true', title: props.title },
       p.image_url && !err
         ? h('img', { src: p.image_url, alt: '', loading: 'lazy', onError: function () { setErr(true); } })
         : initials(p.name));
@@ -327,14 +327,14 @@
         onChange: function (e) { setQ(e.target.value); }
       }),
       needle && !props.full
-        ? h('div', { className: 'tray mf-list mf-results', 'aria-label': 'Matching people' },
+        ? h('div', { className: 'tray mf-results', 'aria-label': 'Matching people' },
             results.map(function (p) {
               return h('button', {
-                key: p.id, type: 'button', className: 'mf-row is-button',
+                key: p.id, type: 'button', className: 'mf-result',
                 onClick: function () { props.onAdd(p.id); setQ(''); }
-              }, avatar(p), h('span', { className: 'mf-row-main mf-name' }, p.name));
+              }, avatar(p, !!p.primary_member_id), h('span', { className: 'mf-person-name' }, p.name));
             }),
-            results.length ? null : h('p', { className: 'mf-row cdb-meta' }, 'No one by that name.'))
+            results.length ? null : h('p', { className: 'mf-none' }, 'No one by that name.'))
         : null);
   }
 
@@ -528,7 +528,7 @@
       : null;
 
     var editable = function (memberId) { return base.can.manage || !!base.mine[memberId]; };
-    var span = cols.length + 2;
+    var span = cols.length + 3;
     // Once anyone else is in view, your own columns are tinted.
     var tint = cols.some(function (c) { return !base.mine[c.id]; });
     var isAlt = {};
@@ -554,6 +554,7 @@
                         h('span', { className: 'mf-col-name' }, shortName(c.name)),
                         h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total));
                     }),
+                    h('th', { className: 'mf-fill', 'aria-hidden': 'true' }),
                     h('th', { scope: 'col', className: 'td-count' }, 'Still need'))),
                 shownGroups.map(function (g) {
                   var isOpen = open[g.key] != null ? open[g.key] : !g.complete;
@@ -584,6 +585,7 @@
                               onClick: function () { toggle(c.id, m.id); }
                             }, have ? svgIcon(null, 'M5 12.5l4.5 4.5L19 7.5', 2.6) : null));
                         }),
+                        h('td', { className: 'mf-fill' }),
                         h('td', { className: 'td-count' },
                           r.need
                             ? h('span', { className: 'mf-need' }, r.need + ' need')
@@ -986,16 +988,17 @@
     }
 
     // The link is set when the event is planned and can't change after.
+    var linkPrefix = '…' + window.location.pathname + '?event=';
     var linkField = isEdit
-      ? h('div', null,
-          h('label', { className: 'cdb-label', htmlFor: 'mf-event-link' }, 'Link'),
-          h('div', { className: 'cdb-inline-row' },
-            h('input', { id: 'mf-event-link', className: 'cdb-input', type: 'text', readOnly: true, value: eventUrl(slugText) }),
-            h('button', { type: 'button', className: 'btn is-quiet', onClick: copyLink }, icon('link'), copied ? 'Copied' : 'Copy link')))
-      : h('div', null,
-          h('label', { className: 'cdb-label', htmlFor: 'mf-event-link' }, 'Link'),
-          h('div', { className: 'cdb-inline-row' },
-            h('span', { className: 'cdb-meta' }, '?event='),
+      ? h('div', { className: 'mf-field is-link' },
+          h('span', { className: 'mf-label' }, 'Link'),
+          h('div', { className: 'mf-link-text' },
+            h('span', { className: 'mf-row-main' }, linkPrefix + slugText),
+            h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: copyLink }, icon('link'), copied ? 'Copied' : 'Copy link')))
+      : h('div', { className: 'mf-field is-link' },
+          h('label', { className: 'mf-label', htmlFor: 'mf-event-link' }, 'Link'),
+          h('div', { className: 'mf-link-input' },
+            h('span', { className: 'mf-link-prefix' }, linkPrefix),
             h('input', {
               id: 'mf-event-link', className: 'cdb-input', type: 'text', placeholder: 'event-name', value: slugText,
               onChange: function (e) { setSlugEdited(true); setSlugText(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }
@@ -1008,40 +1011,42 @@
     return h('div', null,
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, isEdit ? 'Edit Event' : 'Plan an Event')),
-      h('section', { className: 'info-card', 'aria-label': 'Event details' },
-        h('div', { className: 'cdb-grid-3' },
-          h('div', null,
-            h('label', { className: 'cdb-label', htmlFor: 'mf-event-name' }, 'Name'),
+      h('section', { className: 'info-card mf-details', 'aria-label': 'Event details' },
+        h('div', { className: 'mf-fields' },
+          h('div', { className: 'mf-field' },
+            h('label', { className: 'mf-label', htmlFor: 'mf-event-name' }, 'Name'),
             h('input', { id: 'mf-event-name', className: 'cdb-input', type: 'text', placeholder: 'Event name', value: name, onChange: function (e) { onName(e.target.value); } })),
-          h('div', null,
-            h('label', { className: 'cdb-label', htmlFor: 'mf-event-when' }, 'Date and time'),
+          h('div', { className: 'mf-field is-when' },
+            h('label', { className: 'mf-label', htmlFor: 'mf-event-when' }, 'Date and time'),
             h('input', { id: 'mf-event-when', className: 'cdb-input', type: 'datetime-local', value: when, onChange: function (e) { setWhen(e.target.value); } })),
           linkField)),
       h('div', { className: 'mf-split is-side-first' },
-        h('section', { className: 'info-card tear-half', 'aria-labelledby': 'mf-who-title' },
-          h(CardHead, { id: 'mf-who-title', title: 'Who’s coming' },
-            h('span', { className: 'cdb-meta' }, party.length + ' of ' + MAX_PARTY)),
-          h(PeoplePicker, {
-            label: 'Search the FC list', placeholder: 'Search the FC list',
-            full: full, fullText: 'The party is full',
-            pool: pool, exclude: party,
-            onAdd: function (id) { if (party.length < MAX_PARTY && party.indexOf(id) === -1) setParty(party.concat([id])); }
+        h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-who-title' },
+          h('div', { className: 'mf-panel-head is-baseline' },
+            h('h2', { id: 'mf-who-title', className: 'mf-panel-title' }, 'Who’s coming'),
+            h('span', { className: 'mf-panel-count' }, party.length + ' of ' + MAX_PARTY)),
+          h('div', { className: 'mf-panel-body' },
+            h(PeoplePicker, {
+              label: 'Search the FC list', placeholder: 'Search the FC list',
+              full: full, fullText: 'The party is full',
+              pool: pool, exclude: party,
+              onAdd: function (id) { if (party.length < MAX_PARTY && party.indexOf(id) === -1) setParty(party.concat([id])); }
+            })),
+          partyPeople.map(function (p) {
+            var count = countFor(p.id);
+            return h('div', { key: p.id, className: 'mf-added' },
+              avatar(p, !!p.primary_member_id),
+              h('span', { className: 'mf-person-name' }, p.name),
+              count ? h('span', { className: 'mf-sub' }, count + '/' + total) : null,
+              h('button', {
+                type: 'button', className: 'mf-remove', 'aria-label': 'Remove ' + p.name,
+                onClick: function () { setParty(party.filter(function (x) { return x !== p.id; })); }
+              }, svgIcon(null, 'M7 7l10 10M17 7L7 17', 2.2)));
           }),
-          h('div', { className: 'mf-list' },
-            partyPeople.map(function (p) {
-              var count = countFor(p.id);
-              return h('div', { key: p.id, className: 'mf-row' },
-                avatar(p),
-                h('span', { className: 'mf-row-main mf-name' }, p.name),
-                count ? h('span', { className: 'cdb-meta' }, count + '/' + total) : null,
-                h('button', {
-                  type: 'button', className: 'btn is-quiet is-small is-icon', 'aria-label': 'Remove ' + p.name,
-                  onClick: function () { setParty(party.filter(function (x) { return x !== p.id; })); }
-                }, icon('close')));
-            }),
-            partyPeople.length ? null : h('p', { className: 'mf-row cdb-meta' }, 'No one added yet.'))),
-        h('section', { className: 'info-card tear-half', 'aria-labelledby': 'mf-fights-title' },
-          h(CardHead, { id: 'mf-fights-title', title: 'Fights' },
+          partyPeople.length ? null : h('p', { className: 'mf-none' }, 'No one added yet.')),
+        h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-fights-title' },
+          h('div', { className: 'mf-panel-head' },
+            h('h2', { id: 'mf-fights-title', className: 'mf-panel-title' }, 'Fights'),
             h('div', { className: 'seg', role: 'group', 'aria-label': 'Order fights by' },
               h('button', { type: 'button', className: 'seg-btn', 'aria-pressed': sort === 'default' ? 'true' : 'false', onClick: function () { setSort('default'); } }, 'Default'),
               h('button', { type: 'button', className: 'seg-btn', 'aria-pressed': sort === 'need' ? 'true' : 'false', onClick: function () { setSort('need'); } }, 'Most needed'))),
@@ -1056,26 +1061,27 @@
                   party.length ? h('span', { className: 'book-progress-text' }, g.need ? g.need + ' needed' : 'Everyone has these') : null),
                 h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { pickGroup(g); } }, g.all ? 'Clear' : 'Select all')),
               isOpen
-                ? h('div', { className: 'mf-list' },
-                    g.rows.map(function (r) {
-                      var m = r.mount;
-                      return h('label', { key: m.id, className: 'mf-row is-button' },
-                        h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: !!fights[m.id], onChange: function () { toggleFight(m.id); } }),
-                        h('span', { className: 'mf-row-main' },
-                          h('span', { className: 'mf-name' }, m.fight),
-                          ' ',
-                          h('span', { className: 'cdb-meta' }, m.name)),
-                        party.length
-                          ? (r.need
-                              ? h('span', { className: 'status-dot is-red' }, r.need + ' of ' + party.length + ' need')
-                              : h('span', { className: 'status-dot is-quiet' }, 'Everyone has it'))
-                          : null);
-                    }))
+                ? g.rows.map(function (r) {
+                    var m = r.mount;
+                    return h('label', { key: m.id, className: 'mf-pick' },
+                      h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: !!fights[m.id], onChange: function () { toggleFight(m.id); } }),
+                      h('span', { className: 'mf-pick-main' },
+                        h('span', { className: 'mf-pick-fight' }, m.fight),
+                        h('span', { className: 'mf-pick-mount' }, m.name)),
+                      party.length
+                        ? h('span', { className: 'mf-pick-need ' + (r.need ? 'mf-need' : 'atma-complete') },
+                            r.need ? r.need + ' of ' + party.length + ' need' : 'Everyone has it')
+                        : null);
+                  })
                 : null);
           }))),
       err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
       h('div', { className: 'mf-bar' },
-        h('p', { className: 'mf-row-main mf-name' }, summary),
+        partyPeople.length
+          ? h('div', { className: 'mf-stack' },
+              partyPeople.map(function (p) { return h(Avatar, { key: p.id, person: p, alt: !!p.primary_member_id, title: p.name }); }))
+          : null,
+        h('p', { className: 'mf-bar-summary' }, summary),
         isEdit ? h('a', { className: 'btn is-quiet', href: TRACKER_HREF }, 'Cancel') : null,
         h('button', { type: 'button', className: 'btn', onClick: save, disabled: saving }, isEdit ? 'Save changes' : 'Save and get link')));
   }
