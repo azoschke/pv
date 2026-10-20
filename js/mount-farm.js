@@ -428,9 +428,12 @@
     var openState = useState({}); var open = openState[0], setOpen = openState[1];
     var dialogState = useState(null); var dialog = dialogState[0], setDialog = dialogState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
-    // The names row's height: the group rows stick just below it.
+    // The names row's height (the group rows stick just below it) and the
+    // width of the table's visible part (the group rows' toggles are that
+    // wide, so their summary stays in view when the table scrolls sideways).
     var headRef = useRef(null);
-    var headHState = useState(0); var headH = headHState[0], setHeadH = headHState[1];
+    var scrollRef = useRef(null);
+    var sizeState = useState({ head: 0, view: 0 }); var size = sizeState[0], setSize = sizeState[1];
 
     function updatePrefs(patch) {
       setPrefs(function (p) { var next = Object.assign({}, p, patch); savePrefs(next); return next; });
@@ -449,13 +452,17 @@
     var colKey = cols.map(function (c) { return c.id; }).join(',');
 
     useEffect(function () {
-      var el = headRef.current;
-      if (!el) return;
-      function measure() { setHeadH(el.offsetHeight); }
+      var head = headRef.current, view = scrollRef.current;
+      if (!head || !view) return;
+      function measure() {
+        var next = { head: head.offsetHeight, view: view.clientWidth };
+        setSize(function (cur) { return cur.head === next.head && cur.view === next.view ? cur : next; });
+      }
       measure();
       if (!window.ResizeObserver) return;
       var watcher = new ResizeObserver(measure);
-      watcher.observe(el);
+      watcher.observe(head);
+      watcher.observe(view);
       return function () { watcher.disconnect(); };
     }, [ticks === null, colKey === '']);
 
@@ -533,8 +540,11 @@
       : ticks === null
         ? h('p', { className: 'cdb-notice' }, 'Loading…')
         : h('div', { className: 'atma-card tear' },
-            h('div', { className: 'atma-scroll mf-scroll' },
-              h('table', { className: 'task-table atma-table mf-table', style: { '--mf-head-h': headH + 'px' } },
+            h('div', { className: 'atma-scroll mf-scroll', ref: scrollRef },
+              h('table', {
+                className: 'task-table atma-table mf-table',
+                style: { '--mf-head-h': size.head + 'px', '--mf-view-w': size.view ? size.view + 'px' : '100%' }
+              },
                 h('thead', { ref: headRef },
                   h('tr', null,
                     h('th', { scope: 'col', 'aria-label': 'Mount' }),
