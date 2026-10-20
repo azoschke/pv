@@ -1,4 +1,14 @@
-		// Image assets for PDF
+        // ====================================================================
+        //  PVMedForms — the medical documents, built from saved records
+        //
+        //  The Patient Records page (med-database.html) loads this the first
+        //  time something is exported: a visit's Patient Intake and Treatment
+        //  Report as the parchment PDF, as JPGs (via pdf.js) or as text for
+        //  Discord. Needs jsPDF and pdf.js; PVMedical (medical-shared.js) gives
+        //  the Out of Character labels. See window.PVMedForms at the end.
+        // ====================================================================
+
+        // Image assets for PDF
         let textureImage = null;
         let emblemImage = null;
 
@@ -132,386 +142,11 @@
             }
         }
 
-        // ── Eorzean Calendar Conversion ──────────────────────────────────
-
-        const EORZEAN_MOONS = [
-            { name: "First Astral Moon", deity: "Halone", element: "Ice" },
-            { name: "First Umbral Moon", deity: "Menphina", element: "Ice" },
-            { name: "Second Astral Moon", deity: "Thaliak", element: "Water" },
-            { name: "Second Umbral Moon", deity: "Nymeia", element: "Water" },
-            { name: "Third Astral Moon", deity: "Llymlaen", element: "Wind" },
-            { name: "Third Umbral Moon", deity: "Oschon", element: "Wind" },
-            { name: "Fourth Astral Moon", deity: "Byregot", element: "Lightning" },
-            { name: "Fourth Umbral Moon", deity: "Rhalgr", element: "Lightning" },
-            { name: "Fifth Astral Moon", deity: "Azeyma", element: "Fire" },
-            { name: "Fifth Umbral Moon", deity: "Nald'thal", element: "Fire" },
-            { name: "Sixth Astral Moon", deity: "Nophica", element: "Earth" },
-            { name: "Sixth Umbral Moon", deity: "Althyk", element: "Earth" },
-        ];
-
-        // Real-world days within each month that map to TWO Eorzean days (Before Noon / After Noon)
-        const SPLIT_DAYS = {
-            1: [28],        // January (31 days)
-            2: [7, 14, 21], // February (28-29 days)
-            3: [28],        // March (31 days)
-            4: [7, 28],     // April (30 days)
-            5: [29],        // May (31 days)
-            6: [7, 28],     // June (30 days)
-            7: [28],        // July (31 days)
-            8: [28],        // August (31 days)
-            9: [7, 28],     // September (30 days)
-            10: [28],       // October (31 days)
-            11: [7, 28],    // November (30 days)
-            12: [28],       // December (31 days)
-        };
-
-        const EORZEAN_WEEKDAYS = [
-            "Iceday", "Watersday", "Windsday", "Lightningday",
-            "Firesday", "Earthsday", "Lightsday", "Darksday"
-        ];
-
-        const MOON_PHASES = [
-            "New Moon", "Waxing Crescent", "Waxing Half Moon", "Waxing Gibbous",
-            "Full Moon", "Waning Gibbous", "Waning Half Moon", "Waning Crescent"
-        ];
-
-        function getOrdinalSuffix(n) {
-            const s = ['th', 'st', 'nd', 'rd'];
-            const v = n % 100;
-            return n + (s[(v - 20) % 10] || s[v] || s[0]);
-        }
-
-        // Convert a real-world date string (YYYY-MM-DD) to Eorzean calendar info
-        function convertToEorzeanDate(dateString) {
-            if (!dateString) return null;
-
-            const parts = dateString.split('-').map(Number);
-            const month = parts[1];
-            const day = parts[2];
-
-            if (month < 1 || month > 12 || day < 1) return null;
-
-            const moonInfo = EORZEAN_MOONS[month - 1];
-            const splits = SPLIT_DAYS[month];
-
-            let eorzeanDay = day;
-            let isSplitDay = false;
-
-            for (const splitDay of splits) {
-                if (day > splitDay) {
-                    eorzeanDay++;
-                } else if (day === splitDay) {
-                    isSplitDay = true;
-                }
-            }
-
-            if (eorzeanDay < 1 || eorzeanDay > 32) return null;
-
-            if (isSplitDay) {
-                return {
-                    moon: moonInfo.name,
-                    deity: moonInfo.deity,
-                    element: moonInfo.element,
-                    entries: [
-                        {
-                            day: eorzeanDay,
-                            dayOfWeek: EORZEAN_WEEKDAYS[(eorzeanDay - 1) % 8],
-                            moonPhase: MOON_PHASES[Math.floor((eorzeanDay - 1) / 4)],
-                            time: "Before Noon"
-                        },
-                        {
-                            day: eorzeanDay + 1,
-                            dayOfWeek: EORZEAN_WEEKDAYS[eorzeanDay % 8],
-                            moonPhase: MOON_PHASES[Math.floor(eorzeanDay / 4)],
-                            time: "After Noon"
-                        }
-                    ]
-                };
-            } else {
-                return {
-                    moon: moonInfo.name,
-                    deity: moonInfo.deity,
-                    element: moonInfo.element,
-                    entries: [
-                        {
-                            day: eorzeanDay,
-                            dayOfWeek: EORZEAN_WEEKDAYS[(eorzeanDay - 1) % 8],
-                            moonPhase: MOON_PHASES[Math.floor((eorzeanDay - 1) / 4)],
-                            time: null
-                        }
-                    ]
-                };
-            }
-        }
-
-        // Format Eorzean date string
-        function formatEorzeanDate(eorzean) {
-            if (!eorzean) return '';
-            const e = eorzean.entries[0];
-            return `${getOrdinalSuffix(e.day)} Sun of the ${eorzean.moon}`;
-        }
-
-        // Update Eorzean date display for a given date input
-        function updateEorzeanDisplay(inputId, displayId) {
-            const input = document.getElementById(inputId);
-            const display = document.getElementById(displayId);
-            if (!input || !display) return;
-
-            const eorzean = convertToEorzeanDate(input.value);
-            if (eorzean) {
-                display.textContent = formatEorzeanDate(eorzean);
-                display.style.display = 'block';
-            } else {
-                display.textContent = '';
-                display.style.display = 'none';
-            }
-        }
-
-        // ── Auto-fill and date listeners ─────────────────────────────────
-
-        // Auto-fill today's date in signature date fields
-        function autoFillDates() {
-            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-            const field = document.getElementById('intake-patient-date');
-            if (field && !field.value) {
-                field.value = today;
-            }
-            // Update Eorzean displays for any pre-filled dates
-            updateEorzeanDisplay('intake-patient-date', 'intake-eorzean-date');
-            updateEorzeanDisplay('treatment-admission-date', 'treatment-eorzean-date');
-        }
-
-        // Load assets when page is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            preloadAssets();
-            autoFillDates();
-            initMarkdownPreviews();
-
-            // Update Eorzean date when date inputs change
-            const intakeDateField = document.getElementById('intake-patient-date');
-            if (intakeDateField) {
-                intakeDateField.addEventListener('change', () => {
-                    updateEorzeanDisplay('intake-patient-date', 'intake-eorzean-date');
-                });
-            }
-            const treatmentDateField = document.getElementById('treatment-admission-date');
-            if (treatmentDateField) {
-                treatmentDateField.addEventListener('change', () => {
-                    updateEorzeanDisplay('treatment-admission-date', 'treatment-eorzean-date');
-                });
-            }
-        });
-
-        // Form toggle functionality
-        function toggleForm(formType) {
-            document.getElementById('btn-intake').classList.toggle('active', formType === 'intake');
-            document.getElementById('btn-treatment').classList.toggle('active', formType === 'treatment');
-            document.getElementById('form-intake').classList.toggle('active', formType === 'intake');
-            document.getElementById('form-treatment').classList.toggle('active', formType === 'treatment');
-        }
-
-        // Toggle follow-up conditional fields
-        function toggleFollowupFields() {
-            const selected = document.querySelector('input[name="followup"]:checked');
-            const appointmentField = document.getElementById('followup-appointment-field');
-            const frequencyField = document.getElementById('followup-frequency-field');
-
-            // Hide all conditional fields first
-            appointmentField.classList.remove('visible');
-            frequencyField.classList.remove('visible');
-
-            if (selected) {
-                if (selected.value === 'Follow-up') {
-                    appointmentField.classList.add('visible');
-                } else if (selected.value === 'Ongoing') {
-                    frequencyField.classList.add('visible');
-                }
-            }
-        }
-
-        // Toggle discharge conditional fields
-        function toggleDischargeFields() {
-            const selected = document.querySelector('input[name="discharge"]:checked');
-            const restrictionsField = document.getElementById('discharge-restrictions-field');
-            const durationField = document.getElementById('discharge-duration-field');
-
-            // Hide all conditional fields first
-            restrictionsField.classList.remove('visible');
-            durationField.classList.remove('visible');
-
-            if (selected) {
-                if (selected.value === 'Light duty') {
-                    restrictionsField.classList.add('visible');
-                } else if (selected.value === 'Medical leave') {
-                    durationField.classList.add('visible');
-                }
-            }
-        }
-
-        // ── Markup Toolbar ──────────────────────────────────────────────
-
-        function insertMarkup(btn, type) {
-            const toolbar = btn.closest('.markup-toolbar');
-            const textarea = toolbar.parentElement.querySelector('textarea');
-            if (!textarea) return;
-
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
-            const selectedText = text.substring(start, end);
-
-            let newText, cursorStart, cursorEnd;
-
-            if (type === 'bold' || type === 'italic') {
-                const wrapper = type === 'bold' ? '**' : '*';
-                const placeholder = type === 'bold' ? 'bold text' : 'italic text';
-                const insert = selectedText || placeholder;
-
-                newText = text.substring(0, start) + wrapper + insert + wrapper + text.substring(end);
-                cursorStart = start + wrapper.length;
-                cursorEnd = cursorStart + insert.length;
-            } else {
-                // Heading and list operate on whole lines
-                const prefix = type === 'heading' ? '## ' : '- ';
-
-                if (selectedText) {
-                    // Prefix each selected line
-                    const lines = selectedText.split('\n');
-                    const prefixed = lines.map(line => {
-                        if (type === 'heading' && line.startsWith('## ')) return line;
-                        if (type === 'list' && line.startsWith('- ')) return line;
-                        return prefix + line;
-                    }).join('\n');
-
-                    newText = text.substring(0, start) + prefixed + text.substring(end);
-                    cursorStart = start;
-                    cursorEnd = start + prefixed.length;
-                } else {
-                    // No selection: insert prefix + placeholder
-                    const placeholder = type === 'heading' ? 'Heading' : 'List item';
-                    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-                    const beforeCursor = text.substring(lineStart, start);
-
-                    if (beforeCursor.trim() === '') {
-                        // Cursor is at an empty/whitespace-only position on the line
-                        newText = text.substring(0, lineStart) + prefix + placeholder + text.substring(start);
-                        cursorStart = lineStart + prefix.length;
-                        cursorEnd = cursorStart + placeholder.length;
-                    } else {
-                        // Cursor is mid-line, add on a new line
-                        newText = text.substring(0, start) + '\n' + prefix + placeholder + text.substring(end);
-                        cursorStart = start + 1 + prefix.length;
-                        cursorEnd = cursorStart + placeholder.length;
-                    }
-                }
-            }
-
-            textarea.value = newText;
-            textarea.setSelectionRange(cursorStart, cursorEnd);
-            textarea.focus();
-            textarea.dispatchEvent(new Event('input'));
-        }
-
-        // ── Markdown Preview (live rendering in textareas) ─────────────
-
-        // Convert inline markdown to HTML
-        function parseInlineMarkdownToHtml(text) {
-            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            return text;
-        }
-
-        // Extract heading from text that may be wrapped in inline formatting (for HTML preview)
-        function extractHeadingFromText(text) {
-            // Direct heading: ## Text
-            const directMatch = text.match(/^(#{1,3})\s+(.+)/);
-            if (directMatch) {
-                return { level: directMatch[1].length, text: directMatch[2] };
-            }
-            // Heading wrapped in bold: **## Text** or **## Text
-            const boldMatch = text.match(/^\*\*\s*(#{1,3})\s+(.+?)\s*\*?\*?$/);
-            if (boldMatch) {
-                return { level: boldMatch[1].length, text: boldMatch[2].replace(/\*+$/, '') };
-            }
-            // Heading wrapped in italic: *## Text* or *## Text
-            const italicMatch = text.match(/^\*\s*(#{1,3})\s+(.+?)\s*\*?$/);
-            if (italicMatch) {
-                return { level: italicMatch[1].length, text: italicMatch[2].replace(/\*+$/, '') };
-            }
-            return null;
-        }
-
-        // Convert full markdown text to HTML for preview
-        function markdownToHtml(text) {
-            if (!text) return '';
-            const lines = text.split('\n');
-            let html = '';
-            let inList = false;
-
-            for (const line of lines) {
-                if (line.trim() === '') {
-                    if (inList) { html += '</ul>'; inList = false; }
-                    html += '<br>';
-                    continue;
-                }
-
-                // Check for heading (including wrapped in bold/italic)
-                const heading = extractHeadingFromText(line.trim());
-                if (heading) {
-                    if (inList) { html += '</ul>'; inList = false; }
-                    const content = parseInlineMarkdownToHtml(heading.text);
-                    html += '<div class="md-heading md-h' + heading.level + '">' + content + '</div>';
-                    continue;
-                }
-
-                const listMatch = line.match(/^-\s+(.+)/);
-                if (listMatch) {
-                    // Check if list content is a heading
-                    const listHeading = extractHeadingFromText(listMatch[1].trim());
-                    if (listHeading) {
-                        if (inList) { html += '</ul>'; inList = false; }
-                        const content = parseInlineMarkdownToHtml(listHeading.text);
-                        html += '<div class="md-heading md-h' + listHeading.level + '">' + content + '</div>';
-                        continue;
-                    }
-                    if (!inList) { html += '<ul>'; inList = true; }
-                    const content = parseInlineMarkdownToHtml(listMatch[1]);
-                    html += '<li>' + content + '</li>';
-                    continue;
-                }
-
-                if (inList) { html += '</ul>'; inList = false; }
-                const content = parseInlineMarkdownToHtml(line);
-                html += '<p>' + content + '</p>';
-            }
-
-            if (inList) html += '</ul>';
-            return html;
-        }
-
-        // Initialize live markdown previews for all textareas with markup toolbars
-        function initMarkdownPreviews() {
-            const toolbars = document.querySelectorAll('.markup-toolbar');
-            toolbars.forEach(toolbar => {
-                const textarea = toolbar.parentElement.querySelector('textarea');
-                if (!textarea) return;
-
-                const preview = document.createElement('div');
-                preview.className = 'markdown-preview';
-                textarea.after(preview);
-
-                const updatePreview = () => {
-                    if (textarea.value.trim()) {
-                        preview.innerHTML = markdownToHtml(textarea.value);
-                        preview.style.display = 'block';
-                    } else {
-                        preview.innerHTML = '';
-                        preview.style.display = 'none';
-                    }
-                };
-
-                textarea.addEventListener('input', updatePreview);
-            });
+        // Fonts and images load once, the first time something is exported.
+        let assetsReady = null;
+        function ready() {
+            if (!assetsReady) assetsReady = preloadAssets();
+            return assetsReady;
         }
 
         // Helper function to add spaced uppercase text
@@ -764,55 +399,21 @@
             }
         }
 
-        // Build Intake PDF document (returns jsPDF doc for reuse)
-        function buildIntakePDF() {
+        // Build the intake document (a jsPDF doc). data: a saved intake's answers
+        // (intakeFromRecord).
+        function buildIntakePDF(data) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
             // Register custom fonts if loaded
             registerFonts(doc);
 
-            // Get form data
-            const patientName = document.getElementById('intake-name').value;
-            const race = document.getElementById('intake-race').value;
-            const age = document.getElementById('intake-age').value;
-            const gender = document.getElementById('intake-gender').value;
-            const emergencyName = document.getElementById('intake-emergency-name').value;
-            const emergencyRelationship = document.getElementById('intake-emergency-relationship').value;
-            const emergencyContact = document.getElementById('intake-emergency-contact').value;
-            const complaint = document.getElementById('intake-complaint').value;
-
-            // Get checked symptoms
-            const symptomsChecked = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
-                .map(cb => cb.value);
-            const symptomsDetail = document.getElementById('intake-symptoms-detail').value;
-
-            // Get checked exposures
-            const exposuresChecked = Array.from(document.querySelectorAll('input[name="exposures"]:checked'))
-                .map(cb => cb.value);
-            const exposuresDetail = document.getElementById('intake-exposures-detail').value;
-            const chronicIllness = document.getElementById('intake-chronic').value;
-            const previousInjuries = document.getElementById('intake-injuries').value;
-            const allergies = document.getElementById('intake-allergies').value;
-            const medications = document.getElementById('intake-medications').value;
-            const aethericAbnormalities = document.getElementById('intake-aetheric').value;
-
-            // Get signature fields
-            const patientSignature = document.getElementById('intake-patient-signature').value;
-            const patientDateRaw = document.getElementById('intake-patient-date').value;
-            const patientDateEorzean = convertToEorzeanDate(patientDateRaw);
-            const patientDate = patientDateEorzean ? formatEorzeanDate(patientDateEorzean) : patientDateRaw;
-
-            // Get OOC fields
-            const severityEl = document.querySelector('input[name="severity"]:checked');
-            const severity = severityEl ? severityEl.parentElement.textContent.trim() : '';
-            const rpTimelineEl = document.querySelector('input[name="rpTimeline"]:checked');
-            const rpTimeline = rpTimelineEl ? rpTimelineEl.parentElement.textContent.trim() : '';
-            const conceptDevEl = document.querySelector('input[name="conceptDev"]:checked');
-            const conceptDev = conceptDevEl ? conceptDevEl.parentElement.textContent.trim() : '';
-            const desiredOutcomes = document.getElementById('intake-desired-outcomes').value;
-            const plotHooks = document.getElementById('intake-plot-hooks').value;
-            const triggers = document.getElementById('intake-triggers').value;
+            const {
+                patientName, race, age, gender, emergencyName, emergencyRelationship,
+                emergencyContact, complaint, symptoms, exposures, chronicIllness, previousInjuries,
+                allergies, medications, aethericAbnormalities, patientSignature, patientDate,
+                severity, rpTimeline, conceptDev, desiredOutcomes, plotHooks, triggers
+            } = data || {};
 
             // PDF dimensions
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -894,8 +495,8 @@
             y += 5;
 
             // Current Symptoms
-            if (symptomsChecked.length > 0 || symptomsDetail) {
-                const symptomText = symptomsChecked.join(', ') + (symptomsDetail ? ` - ${symptomsDetail}` : '');
+            if (symptoms) {
+                const symptomText = symptoms;
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 setFont(doc, 'Stoke', 'normal');
                 doc.text('Current Symptoms:', margin, y);
@@ -912,8 +513,8 @@
             }
 
             // Recent Exposures
-            if (exposuresChecked.length > 0 || exposuresDetail) {
-                const exposureText = exposuresChecked.join(', ') + (exposuresDetail ? ` - ${exposuresDetail}` : '');
+            if (exposures) {
+                const exposureText = exposures;
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 setFont(doc, 'Stoke', 'normal');
                 doc.text('Recent Exposures:', margin, y);
@@ -1109,15 +710,9 @@
             return doc;
         }
 
-        // Generate Intake PDF (save to file)
-        function generateIntakePDF(event) {
-            event.preventDefault();
-            const doc = buildIntakePDF();
-            doc.save('patient-intake-form.pdf');
-        }
-
-        // Build Treatment PDF document (returns jsPDF doc for reuse)
-        function buildTreatmentPDF() {
+        // Build the treatment report document (a jsPDF doc). data: a visit's
+        // treatment report (treatmentFromRecord).
+        function buildTreatmentPDF(data) {
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1125,33 +720,10 @@
             // Register custom fonts if loaded
             registerFonts(doc);
 
-            // Get form data
-            const patientName = document.getElementById('treatment-name').value;
-            const position = document.getElementById('treatment-position').value;
-            const admissionDateRaw = document.getElementById('treatment-admission-date').value;
-            const admissionDateEorzean = convertToEorzeanDate(admissionDateRaw);
-            const admissionDate = admissionDateEorzean ? formatEorzeanDate(admissionDateEorzean) : admissionDateRaw;
-            const medicName = document.getElementById('treatment-medic-name').value;
-            const medicSpecialty = document.getElementById('treatment-medic-specialty').value;
-            const clinicalSummary = document.getElementById('treatment-clinical-summary').value;
-            const diagnosis = document.getElementById('treatment-diagnosis').value;
-            const proceduresChecked = Array.from(document.querySelectorAll('input[name="procedures"]:checked'))
-                .map(cb => cb.value);
-            const treatmentPlan = document.getElementById('treatment-plan').value;
-
-            // Follow-up fields
-            const followupEl = document.querySelector('input[name="followup"]:checked');
-            const followup = followupEl ? followupEl.value : '';
-            const followupAppointment = document.getElementById('treatment-followup-appointment').value;
-            const followupFrequency = document.getElementById('treatment-followup-frequency').value;
-
-            // Discharge fields
-            const dischargeEl = document.querySelector('input[name="discharge"]:checked');
-            const discharge = dischargeEl ? dischargeEl.value : '';
-            const restrictions = document.getElementById('treatment-restrictions').value;
-            const leaveDuration = document.getElementById('treatment-leave-duration').value;
-
-            const additionalNotes = document.getElementById('treatment-notes').value;
+            const {
+                patientName, position, admissionDate, medicName, clinicalSummary,
+                diagnosis, procedures, treatmentPlan, followUp, discharge, additionalNotes
+            } = data || {};
 
             // PDF dimensions
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1227,7 +799,7 @@
             }
 
             // Procedures Performed (only if any checked)
-            if (proceduresChecked.length > 0) {
+            if (procedures) {
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 doc.setFontSize(12);
                 setFont(doc, 'Stoke', 'normal');
@@ -1236,8 +808,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                doc.text(proceduresChecked.join(', '), margin, y);
-                y += 15;
+                y = renderMarkdownBlock(doc, procedures, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Treatment Plan (only if filled)
@@ -1255,7 +827,7 @@
             }
 
             // Follow-up Requirements (only if selected)
-            if (followup) {
+            if (followUp) {
                 y = checkNewPage(doc, y, 15, pageHeight, margin);
                 doc.setFontSize(12);
                 setFont(doc, 'Stoke', 'normal');
@@ -1264,18 +836,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                let followupText = '';
-                if (followup === 'None') {
-                    followupText = 'No follow-up required - Patient cleared for discharge';
-                } else if (followup === 'Follow-up') {
-                    followupText = 'Follow-up required' + (followupAppointment ? ` - Next appointment: ${followupAppointment}` : '');
-                } else if (followup === 'Ongoing') {
-                    followupText = 'Ongoing monitoring required' + (followupFrequency ? ` - Frequency: ${followupFrequency}` : '');
-                } else if (followup === 'Referred') {
-                    followupText = 'Referred to specialist/external care';
-                }
-                doc.text(followupText, margin, y);
-                y += 15;
+                y = renderMarkdownBlock(doc, followUp, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Discharge Status (only if selected)
@@ -1288,25 +850,8 @@
 
                 doc.setFontSize(10);
                 setFont(doc, 'CrimsonPro', 'normal');
-                let dischargeText = '';
-                if (discharge === 'Full duty') {
-                    dischargeText = 'Discharged - Full duty cleared';
-                } else if (discharge === 'Light duty') {
-                    dischargeText = 'Discharged - Light duty only' + (restrictions ? ` (Restrictions: ${restrictions})` : '');
-                } else if (discharge === 'Medical leave') {
-                    dischargeText = 'Discharged - Medical leave recommended' + (leaveDuration ? ` (Duration: ${leaveDuration})` : '');
-                } else if (discharge === 'Admitted') {
-                    dischargeText = 'Admitted for continued observation/treatment';
-                } else if (discharge === 'Transferred') {
-                    dischargeText = 'Transferred to external facility';
-                }
-                const dischargeLines = wrapText(doc, dischargeText, contentWidth);
-                dischargeLines.forEach(line => {
-                    y = checkNewPage(doc, y, 6, pageHeight, margin);
-                    doc.text(line, margin, y);
-                    y += 5;
-                });
-                y += 10;
+                y = renderMarkdownBlock(doc, discharge, margin, y, contentWidth, pageHeight, margin);
+                y += 5;
             }
 
             // Additional Notes (only if filled)
@@ -1323,7 +868,7 @@
             }
 
             // Footer: Medic signature in bottom left, emblem in bottom right
-            if (medicName || medicSpecialty) {
+            if (medicName) {
                 const footerY = pageHeight - margin / 2 - 15;
 
                 // Medic name in cursive (large signature)
@@ -1332,12 +877,9 @@
                 doc.text(medicName || '', margin, footerY);
 
                 // Label line below
-                const labelParts = [];
-                if (medicName) labelParts.push(medicName.toUpperCase());
-                if (medicSpecialty) labelParts.push(medicSpecialty.toUpperCase());
                 doc.setFontSize(7);
                 setFont(doc, 'Stoke', 'normal');
-                addSpacedText(doc, labelParts.join(', '), margin, footerY + 7);
+                addSpacedText(doc, medicName.toUpperCase(), margin, footerY + 7);
             }
 
             if (emblemImage) {
@@ -1348,127 +890,73 @@
             return doc;
         }
 
-        // Generate Treatment PDF (save to file)
-        function generateTreatmentPDF(event) {
-            event.preventDefault();
-            const doc = buildTreatmentPDF();
-            doc.save('treatment-report.pdf');
-        }
-
         // =============================================
         // Export as JPG (PDF-to-image via pdf.js)
         // =============================================
 
-        // Initialize pdf.js worker
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
-
-        async function exportPDFAsJPG(buildFn, filename, btn) {
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Rendering...';
-            btn.disabled = true;
-
-            try {
-                const doc = buildFn();
-                const pdfData = doc.output('arraybuffer');
-
-                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                const scale = 2; // 2x resolution for crisp output
-
-                const canvases = [];
-                let totalHeight = 0;
-                let maxWidth = 0;
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    const ctx = canvas.getContext('2d');
-
-                    await page.render({ canvasContext: ctx, viewport }).promise;
-
-                    canvases.push(canvas);
-                    totalHeight += viewport.height;
-                    maxWidth = Math.max(maxWidth, viewport.width);
-                }
-
-                // Download each page as a separate JPG (sequentially to avoid browser dropping downloads)
-                const baseName = filename.replace('.jpg', '');
-                for (let i = 0; i < canvases.length; i++) {
-                    const blob = await new Promise(resolve => canvases[i].toBlob(resolve, 'image/jpeg', 0.95));
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = canvases.length === 1
-                        ? filename
-                        : `${baseName}-page-${i + 1}.jpg`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    if (i < canvases.length - 1) {
-                        await new Promise(r => setTimeout(r, 500));
-                    }
-                }
-
-                btn.innerHTML = '<span class="material-icons">check</span> Done!';
-                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
-            } catch (error) {
-                console.error('JPG export failed:', error);
-                btn.innerHTML = '<span class="material-icons">error</span> Failed';
-                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+        // Render a built document to JPGs (one per page) and download them.
+        async function renderJPGs(doc, filename) {
+            if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             }
-        }
+            const pdfData = doc.output('arraybuffer');
 
-        function exportIntakeJPG(btn) {
-            exportPDFAsJPG(buildIntakePDF, 'patient-intake-form.jpg', btn);
-        }
+            const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            const scale = 2; // 2x resolution for crisp output
 
-        function exportTreatmentJPG(btn) {
-            exportPDFAsJPG(buildTreatmentPDF, 'treatment-report.jpg', btn);
+            const canvases = [];
+            let totalHeight = 0;
+            let maxWidth = 0;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+
+                await page.render({ canvasContext: ctx, viewport }).promise;
+
+                canvases.push(canvas);
+                totalHeight += viewport.height;
+                maxWidth = Math.max(maxWidth, viewport.width);
+            }
+
+            // Download each page as a separate JPG (sequentially to avoid browser dropping downloads)
+            const baseName = filename.replace('.jpg', '');
+            for (let i = 0; i < canvases.length; i++) {
+                const blob = await new Promise(resolve => canvases[i].toBlob(resolve, 'image/jpeg', 0.95));
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = canvases.length === 1
+                    ? filename
+                    : `${baseName}-page-${i + 1}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                if (i < canvases.length - 1) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
         }
 
         // =============================================
         // Copy for Discord (formatted markdown)
         // =============================================
 
-        function buildIntakeDiscordText() {
+        function buildIntakeDiscordText(data) {
             const lines = [];
 
-            const patientName = document.getElementById('intake-name').value;
-            const race = document.getElementById('intake-race').value;
-            const age = document.getElementById('intake-age').value;
-            const gender = document.getElementById('intake-gender').value;
-            const emergencyName = document.getElementById('intake-emergency-name').value;
-            const emergencyRelationship = document.getElementById('intake-emergency-relationship').value;
-            const emergencyContact = document.getElementById('intake-emergency-contact').value;
-            const complaint = document.getElementById('intake-complaint').value;
-            const symptomsChecked = Array.from(document.querySelectorAll('input[name="symptoms"]:checked')).map(cb => cb.value);
-            const symptomsDetail = document.getElementById('intake-symptoms-detail').value;
-            const exposuresChecked = Array.from(document.querySelectorAll('input[name="exposures"]:checked')).map(cb => cb.value);
-            const exposuresDetail = document.getElementById('intake-exposures-detail').value;
-            const chronicIllness = document.getElementById('intake-chronic').value;
-            const previousInjuries = document.getElementById('intake-injuries').value;
-            const allergies = document.getElementById('intake-allergies').value;
-            const medications = document.getElementById('intake-medications').value;
-            const aethericAbnormalities = document.getElementById('intake-aetheric').value;
-            const patientSignature = document.getElementById('intake-patient-signature').value;
-            const patientDateRaw = document.getElementById('intake-patient-date').value;
-            const patientDateEorzean = convertToEorzeanDate(patientDateRaw);
-            const patientDate = patientDateEorzean ? formatEorzeanDate(patientDateEorzean) : patientDateRaw;
-            const severityEl = document.querySelector('input[name="severity"]:checked');
-            const severity = severityEl ? severityEl.parentElement.textContent.trim() : '';
-            const rpTimelineEl = document.querySelector('input[name="rpTimeline"]:checked');
-            const rpTimeline = rpTimelineEl ? rpTimelineEl.parentElement.textContent.trim() : '';
-            const conceptDevEl = document.querySelector('input[name="conceptDev"]:checked');
-            const conceptDev = conceptDevEl ? conceptDevEl.parentElement.textContent.trim() : '';
-            const desiredOutcomes = document.getElementById('intake-desired-outcomes').value;
-            const plotHooks = document.getElementById('intake-plot-hooks').value;
-            const triggers = document.getElementById('intake-triggers').value;
+            const {
+                patientName, race, age, gender, emergencyName, emergencyRelationship,
+                emergencyContact, complaint, symptoms, exposures, chronicIllness, previousInjuries,
+                allergies, medications, aethericAbnormalities, patientSignature, patientDate,
+                severity, rpTimeline, conceptDev, desiredOutcomes, plotHooks, triggers
+            } = data || {};
 
             // Header
             lines.push('# PHOENIX VANGUARD — PATIENT INTAKE FORM');
@@ -1499,14 +987,8 @@
                 lines.push(complaint);
                 lines.push('');
             }
-            if (symptomsChecked.length > 0 || symptomsDetail) {
-                lines.push(`**Current Symptoms:** ${symptomsChecked.join(', ') || '—'}`);
-                if (symptomsDetail) lines.push(`> ${symptomsDetail}`);
-            }
-            if (exposuresChecked.length > 0 || exposuresDetail) {
-                lines.push(`**Recent Exposures:** ${exposuresChecked.join(', ') || '—'}`);
-                if (exposuresDetail) lines.push(`> ${exposuresDetail}`);
-            }
+            if (symptoms) lines.push(`**Current Symptoms:** ${symptoms}`);
+            if (exposures) lines.push(`**Recent Exposures:** ${exposures}`);
             lines.push('');
 
             // Pre-Existing Conditions
@@ -1553,29 +1035,13 @@
             return lines.join('\n');
         }
 
-        function buildTreatmentDiscordText() {
+        function buildTreatmentDiscordText(data) {
             const lines = [];
 
-            const patientName = document.getElementById('treatment-name').value;
-            const position = document.getElementById('treatment-position').value;
-            const admissionDateRaw = document.getElementById('treatment-admission-date').value;
-            const admissionDateEorzean = convertToEorzeanDate(admissionDateRaw);
-            const admissionDate = admissionDateEorzean ? formatEorzeanDate(admissionDateEorzean) : admissionDateRaw;
-            const medicName = document.getElementById('treatment-medic-name').value;
-            const medicSpecialty = document.getElementById('treatment-medic-specialty').value;
-            const clinicalSummary = document.getElementById('treatment-clinical-summary').value;
-            const diagnosis = document.getElementById('treatment-diagnosis').value;
-            const proceduresChecked = Array.from(document.querySelectorAll('input[name="procedures"]:checked')).map(cb => cb.value);
-            const treatmentPlan = document.getElementById('treatment-plan').value;
-            const followupEl = document.querySelector('input[name="followup"]:checked');
-            const followup = followupEl ? followupEl.value : '';
-            const followupAppointment = document.getElementById('treatment-followup-appointment').value;
-            const followupFrequency = document.getElementById('treatment-followup-frequency').value;
-            const dischargeEl = document.querySelector('input[name="discharge"]:checked');
-            const discharge = dischargeEl ? dischargeEl.value : '';
-            const restrictions = document.getElementById('treatment-restrictions').value;
-            const leaveDuration = document.getElementById('treatment-leave-duration').value;
-            const additionalNotes = document.getElementById('treatment-notes').value;
+            const {
+                patientName, position, admissionDate, medicName, clinicalSummary,
+                diagnosis, procedures, treatmentPlan, followUp, discharge, additionalNotes
+            } = data || {};
 
             // Header
             lines.push('# PHOENIX VANGUARD — TREATMENT REPORT');
@@ -1590,12 +1056,9 @@
             lines.push('');
 
             // Medic Info
-            if (medicName || medicSpecialty) {
+            if (medicName) {
                 lines.push('## Attending Medic');
-                const medicParts = [];
-                if (medicName) medicParts.push(`**Name:** ${medicName}`);
-                if (medicSpecialty) medicParts.push(`**Specialty:** ${medicSpecialty}`);
-                lines.push(medicParts.join(' | '));
+                lines.push(`**Name:** ${medicName}`);
                 lines.push('');
             }
 
@@ -1614,8 +1077,8 @@
             }
 
             // Procedures
-            if (proceduresChecked.length > 0) {
-                lines.push(`**Procedures Performed:** ${proceduresChecked.join(', ')}`);
+            if (procedures) {
+                lines.push(`**Procedures Performed:** ${procedures}`);
                 lines.push('');
             }
 
@@ -1627,34 +1090,16 @@
             }
 
             // Follow-up
-            if (followup) {
+            if (followUp) {
                 lines.push('## Follow-up Requirements');
-                if (followup === 'None') {
-                    lines.push('No follow-up required — Patient cleared for discharge');
-                } else if (followup === 'Follow-up') {
-                    lines.push('Follow-up required' + (followupAppointment ? ` — Next appointment: ${followupAppointment}` : ''));
-                } else if (followup === 'Ongoing') {
-                    lines.push('Ongoing monitoring required' + (followupFrequency ? ` — Frequency: ${followupFrequency}` : ''));
-                } else if (followup === 'Referred') {
-                    lines.push('Referred to specialist/external care');
-                }
+                lines.push(followUp);
                 lines.push('');
             }
 
             // Discharge
             if (discharge) {
                 lines.push('## Discharge Status');
-                if (discharge === 'Full duty') {
-                    lines.push('Discharged — Full duty cleared');
-                } else if (discharge === 'Light duty') {
-                    lines.push('Discharged — Light duty only' + (restrictions ? ` (Restrictions: ${restrictions})` : ''));
-                } else if (discharge === 'Medical leave') {
-                    lines.push('Discharged — Medical leave recommended' + (leaveDuration ? ` (Duration: ${leaveDuration})` : ''));
-                } else if (discharge === 'Admitted') {
-                    lines.push('Admitted for continued observation/treatment');
-                } else if (discharge === 'Transferred') {
-                    lines.push('Transferred to external facility');
-                }
+                lines.push(discharge);
                 lines.push('');
             }
 
@@ -1667,29 +1112,72 @@
             return lines.join('\n');
         }
 
-        async function copyToClipboard(text, btn) {
-            const originalText = btn.innerHTML;
-            try {
-                await navigator.clipboard.writeText(text);
-                btn.classList.add('copied');
-                btn.innerHTML = '<span class="material-icons">check</span> Copied!';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('copied');
-                }, 2000);
-            } catch (error) {
-                console.error('Copy failed:', error);
-                btn.innerHTML = '<span class="material-icons">error</span> Failed';
-                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-            }
+        // =============================================
+        // Saved records (the patient records page)
+        // =============================================
+
+        // A visit's linked intake (GET /patients/:id → visit.intake) as the
+        // intake builders' data. The Out of Character choices are stored by
+        // value and printed by their full label (PVMedical, medical-shared.js).
+        function intakeFromRecord(intake) {
+            const M = window.PVMedical;
+            const ooc = (field, value) => (M ? M.oocLabel(field, value) : value) || '';
+            const r = intake || {};
+            return {
+                patientName: r.character_name || '',
+                race: r.race || '',
+                age: r.age || '',
+                gender: r.gender || '',
+                emergencyName: r.emergency_contact_name || '',
+                emergencyRelationship: r.emergency_contact_relationship || '',
+                emergencyContact: r.emergency_contact_method || '',
+                complaint: r.presenting_complaint || '',
+                symptoms: r.current_symptoms || '',
+                exposures: r.recent_exposures || '',
+                chronicIllness: r.chronic_illness || '',
+                previousInjuries: r.previous_injuries || '',
+                allergies: r.known_allergies || '',
+                medications: r.current_medications || '',
+                aethericAbnormalities: r.aetheric_abnormalities || '',
+                patientSignature: r.patient_signature || '',
+                patientDate: r.signed_ic_date || '',
+                severity: ooc('severity', r.severity),
+                rpTimeline: ooc('rp_timeline', r.rp_timeline),
+                conceptDev: ooc('concept_dev', r.concept_dev),
+                desiredOutcomes: r.desired_outcomes || '',
+                plotHooks: r.plot_hooks || '',
+                triggers: r.triggers || ''
+            };
         }
 
-        function copyIntakeDiscord(btn) {
-            const text = buildIntakeDiscordText();
-            copyToClipboard(text, btn);
+        // A saved visit as the treatment report builders' data. position: the
+        // patient's Vanguard position (a linked member's IC rank).
+        function treatmentFromRecord(visit, patientName, position) {
+            const v = visit || {};
+            return {
+                patientName: patientName || v.patient_name || '',
+                position: position || '',
+                admissionDate: v.visit_date || '',
+                medicName: v.attending_medic || '',
+                clinicalSummary: v.clinical_summary || '',
+                diagnosis: v.diagnosis || '',
+                procedures: v.procedures_performed || '',
+                treatmentPlan: v.treatment_plan || '',
+                followUp: v.follow_up || '',
+                discharge: v.discharge_status || '',
+                additionalNotes: v.additional_notes || ''
+            };
         }
 
-        function copyTreatmentDiscord(btn) {
-            const text = buildTreatmentDiscordText();
-            copyToClipboard(text, btn);
-        }
+        window.PVMedForms = {
+            ready: ready,
+            intakeFromRecord: intakeFromRecord,
+            treatmentFromRecord: treatmentFromRecord,
+            buildIntakePDF: buildIntakePDF,
+            buildTreatmentPDF: buildTreatmentPDF,
+            buildIntakeDiscordText: buildIntakeDiscordText,
+            buildTreatmentDiscordText: buildTreatmentDiscordText,
+            savePDF: (doc, filename) => doc.save(filename),
+            saveJPG: renderJPGs,
+            copyText: text => navigator.clipboard.writeText(text)
+        };

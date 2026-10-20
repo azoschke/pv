@@ -33,13 +33,13 @@
     { title: 'People', items: [
       { id: 'members',          label: 'FC Members',         icon: 'group' },
       { id: 'member-profiles',  label: 'Member Profiles',    icon: 'contact_page' },
-      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
       { id: 'factions',         label: 'Factions',           icon: 'shield' }
     ] },
     { title: 'Operations', items: [
       { id: 'venues',           label: 'Venues',             icon: 'storefront' },
       { id: 'jobs',             label: 'Job Board',          icon: 'work' },
       { id: 'bounties',         label: 'Bounty Board',       icon: 'flag' },
+      { id: 'medical',          label: 'Medical Records',    icon: 'folder_shared' },
       { id: 'event-assets',     label: 'Event Assets',       icon: 'photo_library' }
     ] },
     { title: 'Tools & Admin', items: [
@@ -63,7 +63,7 @@
   // "awaiting approval" notice instead.
   var PROFILE_TABS = {
     'profile-profile':      ['profile.own'],
-    'profile-applications': ['jobs.apply', 'quests.submit', 'quests.signup'],
+    'profile-applications': ['jobs.apply', 'quests.submit', 'quests.signup', 'site.appointment-request.view'],
     'profile-items':        ['items.own']
   };
   var FACTION_TABS = {
@@ -218,11 +218,21 @@
   }
 
   // --------- Top bar (mobile/tablet only) ----------
+  // The drawer's brand (logo, then Phoenix Vanguard over Management Portal)
+  // centred, the hamburger on the right, and the site's torn edge along the
+  // bottom. The section's own header names the page, so the bar doesn't
+  // repeat it.
   function PortalTopBar(props) {
     var onOpenDrawer = props.onOpenDrawer;
-    var activeMeta = props.activeMeta;
 
-    return h('header', { className: 'portal-topbar' },
+    return h('header', { className: 'portal-topbar tear' },
+      h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
+        h('span', { className: 'site-logo sidebar-logo', role: 'img', 'aria-label': '' }),
+        h('span', { className: 'sidebar-brand-text' },
+          h('span', { className: 'sidebar-brand-title' }, 'Phoenix Vanguard'),
+          h('span', { className: 'sidebar-brand-subtitle' }, 'Management Portal')
+        )
+      ),
       h('button', {
         type: 'button',
         className: 'btn is-quiet is-icon portal-topbar-hamburger',
@@ -230,12 +240,6 @@
         onClick: onOpenDrawer
       },
         h('span', null), h('span', null), h('span', null)
-      ),
-      h('a', { href: 'index.html', className: 'portal-topbar-brand', 'aria-label': 'Phoenix Vanguard' },
-        h('span', { className: 'site-logo portal-topbar-logo', role: 'img', 'aria-label': '' })
-      ),
-      h('span', { className: 'portal-topbar-title' },
-        activeMeta ? activeMeta.label : ''
       )
     );
   }
@@ -274,6 +278,25 @@
     return h('div', null,
       h(window.PVAdminSubnav, { tabs: TABS, active: active, onChange: setTab }),
       body
+    );
+  }
+
+  // Medical Records: Patient Records and Appointment Requests, both opened by
+  // Medical Records view (the section's own key), so there is always a bar.
+  // navParams.tab = 'appointments' opens the queue (the dashboard's tiles).
+  function MedicalSection(props) {
+    var TABS = [
+      { id: 'patients',     label: 'Patient Records' },
+      { id: 'appointments', label: 'Appointment Requests' }
+    ];
+    var wanted = props.initialTab;
+    var tabState = useState(TABS.some(function (t) { return t.id === wanted; }) ? wanted : 'patients');
+    var tab = tabState[0], setTab = tabState[1];
+    return h('div', null,
+      h(window.PVAdminSubnav, { tabs: TABS, active: tab, onChange: setTab }),
+      tab === 'appointments'
+        ? h(window.PVAdminAppointments || Missing('appointments.js'), { session: props.session })
+        : h(window.PVAdminPatients || Missing('patients.js'), { session: props.session })
     );
   }
 
@@ -369,7 +392,10 @@
           initialInterview: (props.navParams && props.navParams.interview) || ''
         });
       case 'medical':
-        return h(window.PVAdminPatients || Missing('patients.js'), { session: session });
+        return h(MedicalSection, {
+          session: session,
+          initialTab: (props.navParams && props.navParams.tab) || null
+        });
       case 'factions':
         return h(FactionsSection, {
           session: session,
@@ -506,12 +532,23 @@
       return function () { window.removeEventListener('pv:session', onSession); };
     }, []);
 
-    // Close drawer with ESC
+    // Close drawer with ESC, and lock the page behind it while it's open
+    // (PVScrollLock, js/pv-session.js). Widening past the mobile layout
+    // (portal.css, 900px) hides the drawer and its hamburger, so that closes
+    // it too rather than leave the page locked.
     useEffect(function () {
       if (!drawerOpen) return;
       function onKey(e) { if (e.key === 'Escape') setDrawerOpen(false); }
       document.addEventListener('keydown', onKey);
-      return function () { document.removeEventListener('keydown', onKey); };
+      var mobile = window.matchMedia('(max-width: 900px)');
+      function onLayout() { if (!mobile.matches) setDrawerOpen(false); }
+      mobile.addEventListener('change', onLayout);
+      var unlock = PVScrollLock.lock();
+      return function () {
+        document.removeEventListener('keydown', onKey);
+        mobile.removeEventListener('change', onLayout);
+        unlock();
+      };
     }, [drawerOpen]);
 
     // Keep the URL in step with the active section so a refresh (or a copied
@@ -578,8 +615,7 @@
 
       // Mobile top bar
       h(PortalTopBar, {
-        onOpenDrawer: function () { setDrawerOpen(true); },
-        activeMeta: activeMeta
+        onOpenDrawer: function () { setDrawerOpen(true); }
       }),
 
       // Mobile drawer (always rendered; positioned offscreen when closed)

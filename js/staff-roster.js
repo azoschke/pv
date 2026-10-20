@@ -144,6 +144,7 @@
   // ── Sidebar (campaign pattern) ───────────────────────────────────────────
   function openSidebar() {
     if (isMobile()) {
+      PVScrollLock.lock("filter-drawer");
       sidebarEl.classList.add("sidebar-open");
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
@@ -153,6 +154,7 @@
     }
   }
   function closeSidebar() {
+    PVScrollLock.unlock("filter-drawer");
     if (isMobile()) {
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
@@ -382,18 +384,6 @@
       "Refer to the full profile for specialties and notes.";
     body.appendChild(desc);
 
-    if (s._tags.length) {
-      var tagWrap = document.createElement("div");
-      tagWrap.className = "venue-card-tags";
-      s._tags.forEach(function (t) {
-        var sp = document.createElement("span");
-        sp.className = "venue-card-tag";
-        sp.textContent = "#" + t;
-        tagWrap.appendChild(sp);
-      });
-      body.appendChild(tagWrap);
-    }
-
     card.appendChild(body);
 
     card.addEventListener("click", function () { openModal(s); });
@@ -457,7 +447,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    PVScrollLock.lock("staff-modal");
   }
 
   function closeModal() {
@@ -468,7 +458,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    PVScrollLock.unlock("staff-modal");
     modalBody.innerHTML = "";
   }
 

@@ -8,7 +8,8 @@
 //    - edit-patient   : edit the patient record
 //    - visits         : visit list for the selected patient; each visit is a
 //                       compact row (date / medic / discharge / complaint).
-//                       Editing or adding opens a modal popup.
+//                       Adding or editing opens the treatment report form
+//                       (js/admin/treatment-report.js) in a modal popup.
 //
 //  Buttons follow the permission grid: medical.edit adds and edits patients
 //  and adds visits, medical.visits_own / medical.visits_all edit visits, and
@@ -16,16 +17,14 @@
 //
 //  Patient ID is auto-assigned by the worker (next sequential number) on
 //  create, and never shown or edited afterwards.
-//  Visits are sorted by sort_date DESC (falls back to visit_date DESC).
-//  sort_date is exposed on the visit form so it can be tuned manually.
+//  Visits are sorted by sort_date DESC (falls back to visit_date DESC); the
+//  treatment report form's date picker sets it.
 // ============================================================================
 
 (function () {
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
-
-  var DISCHARGE_SUGGESTIONS = ['Under Observation', 'Discharged'];
 
   // Option label in the member picker: "Full Name — Nickname" when a nickname
   // exists, so admins can still identify who it is.
@@ -34,8 +33,8 @@
     return nn ? ((m.name || '') + ' — ' + nn) : (m.name || '');
   }
 
-  // Patient record form laid out to mirror the patient intake form
-  // (patient-intake-form.html), grouped into the same
+  // Patient record form laid out to mirror the patient intake (the
+  // Appointment Request form's intake steps), grouped into the same
   // sections so editing an existing record follows the same flow an
   // intake captures:
   //   1. Patient Information
@@ -79,35 +78,19 @@
     }
   ];
 
-  // Visit form layout:
-  // Row 1: visit_date (IC free-text, half)  |  sort_date (real date, half)
-  // Below: every other field is full-width. Follow-up + Discharge Status sit
-  // after Treatment Plan per the workflow (record care first, then outcome).
-  var VISIT_FIELDS = [
-    { key: 'visit_date',           label: 'Visit Date (IC)',       type: 'text', required: true,
-      placeholder: 'e.g. Third Sun of the Second Umbral Moon',
-      help: 'In-character date. Months alternate Astral/Umbral: 1st Astral (month 1), 1st Umbral (month 2), 2nd Astral (month 3), …' },
-    { key: 'sort_date',            label: 'Sort Date (real calendar)', type: 'date',
-      help: 'Real-world date used only to order visits in the list.' },
-    { key: 'attending_medic',      label: 'Attending Medic',       type: 'text',     fullWidth: true },
-    { key: 'presenting_complaint', label: 'Presenting Complaint',  type: 'textarea', fullWidth: true },
-    { key: 'current_symptoms',     label: 'Current Symptoms',      type: 'textarea', fullWidth: true },
-    { key: 'recent_exposures',     label: 'Recent Exposures',      type: 'textarea', fullWidth: true },
-    { key: 'clinical_summary',     label: 'Clinical Summary',      type: 'textarea', fullWidth: true },
-    { key: 'diagnosis',            label: 'Diagnosis',             type: 'textarea', fullWidth: true },
-    { key: 'procedures_performed', label: 'Procedures Performed',  type: 'textarea', fullWidth: true },
-    { key: 'treatment_plan',       label: 'Treatment Plan',        type: 'textarea', fullWidth: true },
-    { key: 'follow_up',            label: 'Follow-up',             type: 'textarea', fullWidth: true },
-    { key: 'discharge_status',     label: 'Discharge Status',      type: 'text',     fullWidth: true, datalist: 'discharge-status' },
-    { key: 'additional_notes',     label: 'Additional Notes',      type: 'textarea', fullWidth: true }
-  ];
-
   // --------- Reusable form ----------
   // Accepts either:
   //   - props.fields   : flat [{key, label, type, ...}]
   //   - props.sections : grouped [{ id, title, fields: [...] }]
   // When `sections` is provided, fields render grouped under subsection
   // headings (mirrors the layout of the patient intake form).
+  // Admins (an admin role, or the root admin): the only ones who can change an
+  // existing record's FC member link.
+  function isAdmin() {
+    var s = PVAdminAPI.getSession();
+    return !!s && (!!s.is_root || (s.roles || []).indexOf('admin') !== -1);
+  }
+
   function RecordForm(props) {
     var sections = props.sections || null;
     var fields = props.fields || (sections
@@ -166,9 +149,7 @@
         },
           h('label', null, f.label),
           h('input', { type: 'text', value: linkedName, readOnly: true, disabled: true }),
-          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null,
-          h('span', { className: 'portal-field-help' },
-            'Name comes from the linked FC member. Edit the member to change it.')
+          otherName ? h('span', { className: 'portal-field-help' }, 'Other name: ' + otherName) : null
         );
       }
 
@@ -182,17 +163,25 @@
           style: f.fullWidth ? { gridColumn: '1 / -1' } : undefined
         },
           h('label', null, f.label),
-          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true }),
-          h('span', { className: 'portal-field-help' }, 'From the linked FC member’s IC Rank.')
+          h('input', { type: 'text', value: vpVal, readOnly: true, disabled: true })
         );
       }
 
       // Hybrid FC-member link. Choosing a member fills the patient name from
       // that member (nickname first); "Manual entry" leaves the name free-text.
+      // A member has one patient record, so members linked to another record
+      // aren't offered (this record's own member stays). On an existing
+      // record only admins see it, in an inset.
       if (f.type === 'member-link') {
+        if (!isNew && !isAdmin()) return null;
         var members = props.members || [];
-        return h('div', {
-          className: 'portal-field is-full', key: f.key
+        var taken = props.takenMemberIds || {};
+        var linkable = members.filter(function (mm) {
+          return !taken[mm.id] || String(mm.id) === String(initial.member_id || '');
+        });
+        var linkField = h('div', {
+          className: 'portal-field is-full', key: f.key,
+          style: isNew ? undefined : { marginBottom: 0 }
         },
           h('label', null, f.label),
           h('select', {
@@ -210,15 +199,16 @@
             }
           },
             h('option', { value: '' }, '— Manual entry (not on FC roster) —'),
-            members.map(function (mm) {
+            linkable.map(function (mm) {
               return h('option', { key: mm.id, value: String(mm.id) }, memberPickerLabel(mm));
             })
           ),
-          h('span', { className: 'portal-field-help' },
-            draft.member_id
-              ? 'Linked to an FC member. Removing that member from FC Members also removes this patient record.'
-              : 'Link this patient to an FC member, or leave as “Manual entry” and type a name below.')
+          draft.member_id ? null : h('span', { className: 'portal-field-help' },
+            'Link this patient to an FC member, or leave as “Manual entry” and type a name below.')
         );
+        return isNew ? linkField : h('div', {
+          className: 'portal-card is-inset', key: f.key, style: { gridColumn: '1 / -1' }
+        }, linkField);
       }
 
       var input;
@@ -266,8 +256,6 @@
     return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'portal-flash error' }, err) : null,
       body,
-      h('datalist', { id: 'discharge-status' },
-        DISCHARGE_SUGGESTIONS.map(function (v) { return h('option', { key: v, value: v }); })),
       h('div', { className: 'portal-form-actions' },
         h('button', {
           type: 'submit',
@@ -437,8 +425,7 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title' },
-          'Edit Patient — ' + p.patient_name)
+        h('h2', { className: 'portal-card-title' }, 'Edit Patient')
       ),
       saved ? h('div', { className: 'portal-flash success' }, 'Saved.') : null,
       h(RecordForm, {
@@ -446,6 +433,7 @@
         initial: p,
         isNew: false,
         members: props.members,
+        takenMemberIds: props.takenMemberIds,
         submitLabel: 'Save patient',
         onSubmit: handleSave
       })
@@ -545,21 +533,17 @@
 
     useEffect(function () { reload(); }, [patientId]);
 
-    async function handleCreate(draft) {
-      var body = Object.assign({}, draft, {
+    // body comes ready from the treatment report form (dates included).
+    async function handleCreate(body) {
+      await PVAdminAPI.request('POST', '/visits', Object.assign({}, body, {
         patient_id: patientId,
-        patient_name: data.patient.patient_name,
-        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
-      });
-      await PVAdminAPI.request('POST', '/visits', body, true);
+        patient_name: data.patient.patient_name
+      }), true);
       setModalVisit(null);
       await reload();
     }
 
-    async function handleUpdate(visitId, draft) {
-      var body = Object.assign({}, draft, {
-        sort_date: (draft.sort_date || '').trim() || new Date().toISOString().slice(0, 10)
-      });
+    async function handleUpdate(visitId, body) {
       await PVAdminAPI.request('PUT', '/visits/' + visitId, body, true);
       setModalVisit(null);
       await reload();
@@ -602,18 +586,15 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'arrow_back'),
           h('span', null, 'All patients')
         ),
-        h('h2', { className: 'portal-card-title' },
-          'Visits — ' + p.patient_name),
+        h('h2', { className: 'portal-card-title' }, 'Visits'),
         PVAdminAPI.can('medical.edit') ? h('div', { className: 'portal-card-actions' },
           h('button', {
             type: 'button',
             className: 'btn is-small',
-            onClick: function () {
-              setModalVisit({ sort_date: new Date().toISOString().slice(0, 10) });
-            }
+            onClick: function () { setModalVisit({}); }
           },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'add'),
-            h('span', null, 'Add visit')
+            h('span', null, 'Add treatment report')
           )
         ) : null
       ),
@@ -650,20 +631,19 @@
       ),
       modalOpen ? h(window.PVAdminModal, {
         title: modalIsNew
-          ? 'New Visit — ' + p.patient_name
-          : 'Edit Visit — ' + (modalVisit.visit_date || ''),
+          ? 'New Treatment Report — ' + p.patient_name
+          : 'Edit Treatment Report — ' + (modalVisit.visit_date || ''),
         size: 'lg',
         onClose: function () { setModalVisit(null); }
       },
-        h(RecordForm, {
-          fields: VISIT_FIELDS,
+        h(window.PVAdminTreatmentReport, {
+          patient: { patient_id: patientId, patient_name: p.patient_name },
           initial: modalVisit,
-          isNew: modalIsNew,
-          submitLabel: modalIsNew ? 'Add visit' : 'Save visit',
-          onSubmit: function (draft) {
+          submitLabel: modalIsNew ? 'Add treatment report' : 'Save treatment report',
+          onSubmit: function (body) {
             return modalIsNew
-              ? handleCreate(draft)
-              : handleUpdate(modalVisit.visit_id, draft);
+              ? handleCreate(body)
+              : handleUpdate(modalVisit.visit_id, body);
           },
           onCancel: function () { setModalVisit(null); }
         })
@@ -699,6 +679,7 @@
         initial: {},
         isNew: true,
         members: props.members,
+        takenMemberIds: props.takenMemberIds,
         submitLabel: 'Create patient',
         onSubmit: handleCreate,
         onCancel: onCancel
@@ -769,15 +750,20 @@
     }
     if (loading && view === 'list') return h('div', { className: 'portal-card' }, 'Loading patients…');
 
+    // FC members that already have a patient record (one record each).
+    var takenMemberIds = {};
+    patients.forEach(function (p) { if (p.member_id) takenMemberIds[p.member_id] = true; });
+
     if (view === 'new') {
       return h(PatientNew, {
         members: members,
+        takenMemberIds: takenMemberIds,
         onCreated: function (id) { setSelected(id); setView('edit-patient'); reload(); },
         onCancel: goList
       });
     }
     if (view === 'edit-patient' && selected) {
-      return h(PatientEdit, { patientId: selected, members: members, onBack: goList });
+      return h(PatientEdit, { patientId: selected, members: members, takenMemberIds: takenMemberIds, onBack: goList });
     }
     if (view === 'visits' && selected) {
       return h(PatientVisits, { patientId: selected, onBack: goList });

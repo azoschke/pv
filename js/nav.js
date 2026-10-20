@@ -195,7 +195,7 @@
     sidebar.setAttribute('aria-hidden', 'false');
     if (overlay) overlay.classList.add('visible');
     if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('nav-sidebar-open');
+    PVScrollLock.lock('nav-sidebar');
   }
 
   function closeSidebar() {
@@ -207,7 +207,7 @@
     sidebar.setAttribute('aria-hidden', 'true');
     if (overlay) overlay.classList.remove('visible');
     if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
-    document.body.classList.remove('nav-sidebar-open');
+    PVScrollLock.unlock('nav-sidebar');
   }
 
   function wireSidebar() {
@@ -219,7 +219,8 @@
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
 
-    // Sidebar section toggles
+    // Sidebar section toggles. One section is open at a time (as with the
+    // desktop dropdowns), so opening one closes any other.
     document.querySelectorAll('.nav-sidebar-section').forEach(function (section) {
       const toggle = section.querySelector('.nav-sidebar-toggle');
       const submenu = section.querySelector('.nav-sidebar-submenu');
@@ -227,6 +228,13 @@
       toggle.addEventListener('click', function () {
         const isOpen = section.classList.toggle('open');
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (!isOpen) return;
+        section.parentElement.querySelectorAll('.nav-sidebar-section.open').forEach(function (other) {
+          if (other === section) return;
+          other.classList.remove('open');
+          const otherToggle = other.querySelector('.nav-sidebar-toggle');
+          if (otherToggle) otherToggle.setAttribute('aria-expanded', 'false');
+        });
       });
     });
   }

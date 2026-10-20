@@ -77,6 +77,7 @@
       room_number: '',
       description: '',
       image_url: '',
+      dark_image_url: '',
       gallery_images: ['', '', ''],
       tags: [],
       extra_tags: [],
@@ -112,6 +113,7 @@
       room_number: v.room_number != null ? String(v.room_number) : '',
       description: v.description || '',
       image_url: v.image_url || '',
+      dark_image_url: v.dark_image_url || '',
       gallery_images: galleryImages,
       tags: Array.isArray(v.tags) ? v.tags.slice() : [],
       extra_tags: Array.isArray(v.extra_tags) ? v.extra_tags.slice() : [],
@@ -132,6 +134,7 @@
       room_number: !allowsRoom || draft.room_number === '' ? null : Number(draft.room_number),
       description: draft.description.trim() || null,
       image_url: draft.image_url.trim() || null,
+      dark_image_url: draft.dark_image_url.trim() || null,
       gallery_images: (draft.gallery_images || [])
         .map(function (g) { return (g || '').trim(); })
         .filter(function (g) { return !!g; }),
@@ -355,6 +358,16 @@
         kind: 'venue',
         name: draft.name.trim(),
         help: 'Paste a URL, or upload an image. The venue must be named prior to uploading an image. The first image will be part of the gallery, please do not upload the same image twice!'
+      }),
+
+      h(PVAdminImageUpload.ImageField, {
+        label: 'Dark mode image URL',
+        value: draft.dark_image_url,
+        onChange: function (v) { setField('dark_image_url', v); },
+        disabled: saving,
+        blockedReason: uploadBlocked,
+        kind: 'venue',
+        name: draft.name.trim()
       }),
 
       h('div', { className: 'portal-field' },

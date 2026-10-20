@@ -189,6 +189,10 @@ a {
 }
 
 [data-theme="dark"] {
+  /* The browser draws its own controls (date pickers and their icon, a
+     dropdown's open list) in its dark version too. */
+  color-scheme: dark;
+
   /* Surfaces */
   --bg-primary:    #1a1614;
   --bg-card:       #231f1d;
@@ -323,6 +327,18 @@ pre {
 ::-webkit-scrollbar-thumb  { background: var(--accent-brown); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
+/* A table box the mouse can drag to scroll (js/pv-session.js marks it while
+   it can scroll). Fields and labels keep their own cursor; while dragging the
+   whole box grabs and nothing in it selects. */
+.is-drag-scroll { cursor: grab; }
+.is-drag-scroll :is(input, select, textarea, label) { cursor: auto; }
+.is-drag-scroll.is-dragging,
+.is-drag-scroll.is-dragging * {
+  cursor: grabbing;
+  -webkit-user-select: none;
+          user-select: none;
+}
+
 
 /* =============================================================================
    5. SHARED NAV
@@ -337,12 +353,17 @@ pre {
    making a stacking context, so the dropdowns still stack against the page.
    The negative top margin cancels .container's top padding so the band meets
    the top of the window; min-height holds the nav's space before it arrives
-   (the 70px logo, the nav's padding and the tear). */
+   (the 70px logo, the nav's padding and the tear). While a popup locks the
+   page (PVScrollLock, js/pv-session.js) the scrollbar is gone, so the band
+   grows by half its width (--scroll-lock-gap) to still reach the edge. */
+/* The nav sits 0.5rem into the tear's band. The rip only ever cuts the band's
+   bottom 45%, so that part is always solid, and the gap from the logo down to
+   the rip then averages the nav's 0.75rem above it. */
 #nav-placeholder {
   position: relative;
-  min-height: calc(70px + 0.9rem + var(--tear-h));
+  min-height: calc(70px + 0.25rem + var(--tear-h));
   margin: -1.5rem 0 1.5rem;
-  padding-bottom: var(--tear-h);
+  padding-bottom: calc(var(--tear-h) - 0.65rem);
 }
 
 #nav-placeholder::before {
@@ -352,7 +373,7 @@ pre {
   top: 0;
   bottom: 0;
   left: 50%;
-  width: 100vw;
+  width: calc(100vw + var(--scroll-lock-gap, 0px) / 2);
   margin-left: -50vw;
   background-color: var(--bg-card);
 }
@@ -1429,9 +1450,6 @@ button.nav-sublink {
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
-/* A parchment with another directly below it (Patient Intake). */
-.parchment.is-stacked { margin-bottom: 20px; }
-
 /* Section headings */
 .section-heading {
   font-family: 'Stoke', serif;
@@ -1453,52 +1471,6 @@ button.nav-sublink {
   letter-spacing: 1px;
   padding-bottom: 4px;
   border-bottom: 2px dashed var(--bg-darker);
-}
-
-/* Smaller section headings (Treatment Report). */
-.subsection-heading.is-compact { font-size: 1rem; margin-top: 15px; }
-
-/* Form toggle (intake/report) */
-.form-toggle {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding-bottom: 30px;
-  margin-bottom: 40px;
-  border-bottom: 2px dashed var(--bg-darker);
-}
-
-.toggle-btn {
-  font-family: 'Stoke', serif;
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.05rem;
-  text-transform: uppercase;
-  padding: 12px 24px;
-  border: 1px solid var(--border-color);
-  background: var(--parchment-dark);
-  color: var(--ink-color);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-}
-
-.toggle-btn:hover  { background: var(--accent-gold); color: var(--parchment-bg); }
-.toggle-btn.active { background: var(--accent-red); color: var(--parchment-bg); border-color: var(--accent-red); }
-
-.form-title {
-  font-family: 'Stoke', serif;
-  font-size: 1.6rem;
-  text-align: center;
-  margin-bottom: 40px;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
 .form-group { margin-bottom: 20px; }
@@ -1586,45 +1558,6 @@ button.nav-sublink {
 .markup-btn:hover  { background: rgba(44, 24, 16, 0.15); }
 .markup-btn:active { background: rgba(44, 24, 16, 0.25); }
 
-/* Markdown preview */
-.markdown-preview {
-  display: none;
-  font-family: 'Crimson Pro', serif;
-  font-weight: 500;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  padding: 10px 15px;
-  margin-top: -1px;
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-top: 1px dashed rgba(44, 24, 16, 0.3);
-  border-radius: 0 0 4px 4px;
-}
-
-.markdown-preview::before {
-  content: 'Preview';
-  display: block;
-  font-family: 'Stoke', serif;
-  font-size: 0.65rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: rgba(44, 24, 16, 0.35);
-  margin-bottom: 5px;
-}
-
-.markdown-preview p           { margin: 0 0 0.3em; }
-.markdown-preview p:last-child { margin-bottom: 0; }
-.markdown-preview strong       { font-weight: 700; }
-.markdown-preview em           { font-style: italic; }
-
-.markdown-preview .md-heading { font-weight: 700; text-transform: uppercase; line-height: 1.4; margin: 0.5em 0 0.3em; }
-.markdown-preview .md-h1 { font-size: 1.1em; }
-.markdown-preview .md-h2 { font-size: 1.05em; }
-.markdown-preview .md-h3 { font-size: 1em; }
-.markdown-preview ul  { list-style-type: disc; padding-left: 20px; margin: 0.2em 0; }
-.markdown-preview li  { margin: 0.1em 0; }
-
 .eorzean-date-display {
   display: none;
   margin-top: 6px;
@@ -1650,8 +1583,6 @@ button.nav-sublink {
   border-left: 3px solid var(--accent-gold);
 }
 
-.signature-line  { font-family: 'Crimson Pro', serif; font-size: 0.9rem; color: var(--ink-color); margin-bottom: 10px; }
-.signature-note  { font-family: 'Crimson Pro', serif; font-size: 0.85rem; color: var(--accent-gold); font-style: italic; margin: 15px 0; }
 .signature-input { font-family: 'La Belle Aurore', cursive !important; font-size: 1.4rem !important; }
 
 /* Checkbox & radio groups */
@@ -1704,10 +1635,6 @@ button.nav-sublink {
 
 .radio-label input[type="radio"] { margin-top: 2px; flex-shrink: 0; }
 
-.conditional-field         { display: none; margin-left: 26px; margin-top: 8px; }
-.conditional-field.visible { display: block; }
-.conditional-field input   { width: calc(100% - 26px); }
-
 /* Submit / action buttons */
 .submit-btn {
   width: 100%;
@@ -1730,33 +1657,6 @@ button.nav-sublink {
 
 .submit-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
 .submit-btn:active { transform: translateY(0); }
-
-.button-group            { display: flex; gap: 10px; margin-top: 30px; }
-.button-group .submit-btn { flex: 1; margin-top: 0; padding: 15px 10px; }
-.button-group .export-jpg-btn  { background: #5a3a2e; }
-.button-group .export-jpg-btn:hover { background: #6d4a3c; }
-.button-group .discord-btn     { background: #a54d44; }
-.button-group .discord-btn:hover { background: #ac5249; }
-.button-group .discord-btn.copied { background: #3a5c3a; }
-
-/* Ornament & footer */
-.ornament {
-  text-align: center;
-  color: var(--accent-gold);
-  font-size: 1.5rem;
-  margin: 20px 0;
-  opacity: 0.7;
-}
-
-.footer {
-  text-align: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-  font-family: 'La Belle Aurore', cursive;
-  color: var(--accent-gold);
-  font-size: 0.9rem;
-}
 
 /* --- Appointment Request --- */
 #appt-reason { min-height: 100px; }
@@ -1792,33 +1692,6 @@ button.nav-sublink {
   line-height: 1.6;
 }
 
-.confirmation-panel .intake-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  background: #2c1810;
-  color: #f5f3ef;
-  font-family: 'Stoke', serif;
-  font-size: 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 0 4px 15px var(--shadow-color);
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-}
-
-.confirmation-panel .intake-btn:hover {
-  background: #45352f;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--shadow-color);
-}
-
-.confirmation-panel .intake-btn:active {
-  transform: translateY(0);
-}
-
 .error-message {
   display: none;
   background: #f9eded;
@@ -1843,17 +1716,225 @@ button.nav-sublink {
   margin-right: 6px;
 }
 
-/* ── Appointment Request: name comes from the signed-in account ───────────── */
-.appt-name-note {
-  margin: 0.35rem 0 0;
-  font-family: 'Crimson Pro', serif;
-  font-size: 0.85rem;
+/* ── Appointment Request: the stepped form ────────────────────────────────── */
+/* Field labels in Stoke (the choices in a checkbox or radio list keep the
+   body font), plain rules under the sub-headings. */
+#appointmentForm .form-group > label {
+  font-family: 'Stoke', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+#appointmentForm .subsection-heading {
+  font-size: 0.84rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+#appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
+
+/* The page in Torchlight terms (the shared intake styles above predate it):
+   panels are raised with no shadow and tear at the bottom; fields sit on the
+   well with no border and take the focus ring; ticks are the site's check
+   colour; notes, the authorization and errors are plain text, not boxes. */
+.appt-page .parchment { box-shadow: none; border-radius: 4px; }
+.appt-page .parchment.tear-half { padding-bottom: calc(50px + var(--tear-h)); }
+.appt-page .form-group input,
+.appt-page .form-group select,
+.appt-page .form-group textarea {
+  background-color: var(--form-input-bg);
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+.appt-page .form-group input::placeholder,
+.appt-page .form-group textarea::placeholder { color: var(--form-input-placeholder); }
+.appt-page .form-group input:focus,
+.appt-page .form-group select:focus,
+.appt-page .form-group textarea:focus {
+  border: 0;
+  background-color: var(--form-input-bg);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.appt-page .markup-toolbar {
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--form-input-bg);
+}
+.appt-page .checkbox-label input[type="checkbox"],
+.appt-page .radio-label input[type="radio"] { accent-color: var(--check-color); }
+.appt-page .authorization-text {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-body);
+}
+.appt-page .eorzean-date-display {
+  padding: 0;
+  background: none;
+  border: 0;
   font-style: italic;
   color: var(--text-secondary);
 }
-#appt-name[readonly] {
-  opacity: 0.85;
-  cursor: not-allowed;
+.appt-page .error-message,
+[data-theme="dark"] .appt-page .error-message {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent-red);
+}
+.appt-page .confirmation-panel .check-icon { color: var(--accent-brown); }
+/* Checkbox and radio choices as plain, compact lists rather than a tile per
+   option (and without the field label's size and bottom margin). */
+#appointmentForm .checkbox-group {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 4px 16px;
+}
+#appointmentForm .radio-group { gap: 4px; }
+#appointmentForm .checkbox-label,
+#appointmentForm .radio-label,
+#appointmentForm .checkbox-label:hover,
+#appointmentForm .radio-label:hover {
+  margin: 0;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+  font-size: 1rem;
+}
+
+/* A short note under a step's fields, and the restored-draft line. */
+.appt-note {
+  margin: 0.35rem 0 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.appt-draft-note {
+  margin: 0 0 12px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--text-secondary);
+}
+/* Start over, Edit and Edit from Reason for Visit: plain buttons in a line. */
+.appt-note .btn.is-plain,
+.appt-draft-note .btn.is-plain { padding: 0; font-style: normal; }
+
+/* Progress bar: a numbered tab per step; done steps brown, the current one red. */
+.form-progress {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.form-progress[hidden] { display: none; }
+.form-progress li { flex: 1 1 0; min-width: 0; }
+
+.form-progress-step {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px 6px;
+  border: none;
+  border-top: 3px solid var(--bg-darker);
+  background: none;
+  font-family: 'Stoke', serif;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.form-progress-step:hover { color: var(--text-primary); }
+.form-progress-step:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: 2px; }
+
+/* Square badges: round is kept for avatars. */
+.form-progress-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--bg-darker);
+  font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.form-progress-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.form-progress-step.is-done { border-top-color: var(--accent-brown); }
+.form-progress-step.is-done .form-progress-num { background: var(--accent-brown); color: var(--label); }
+.form-progress-step.is-current { border-top-color: var(--accent-red); color: var(--text-primary); }
+.form-progress-step.is-current .form-progress-num { background: var(--accent-red); color: var(--label); }
+
+/* Review: each group's heading with its Edit button, then label / answer rows. */
+.appt-review-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 25px 0 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+.appt-review-head:first-child { margin-top: 0; }
+#appointmentForm .appt-review-head .subsection-heading { margin: 0; padding-bottom: 4px; border-bottom: none; }
+
+.appt-review-list {
+  display: grid;
+  grid-template-columns: minmax(140px, 35%) 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.appt-review-list dt {
+  font-family: 'Stoke', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding-top: 0.15rem;
+  color: var(--text-secondary);
+}
+.appt-review-list dd { margin: 0; color: var(--text-primary); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Back on the left, Next / Submit on the right (site buttons). */
+.appt-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.appt-actions #appt-next,
+.appt-actions #submit-btn { margin-left: auto; }
+.appt-actions .btn[hidden] { display: none; }
+
+@media (max-width: 600px) {
+  /* Numbers only; each step's own heading names it. */
+  .form-progress { gap: 4px; }
+  .form-progress-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .appt-review-list { grid-template-columns: 1fr; gap: 2px; }
+  .appt-review-list dd { margin-bottom: 8px; }
+
+  .appt-page .parchment.tear-half { padding-bottom: calc(1.25rem + var(--tear-h)); }
 }
 
 
@@ -2058,12 +2139,13 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
    It sits behind the nav band (z-index -2, the band's ::before is -1), pulled
    up under the band's torn edge so the photo shows through the tear, and it
    tears into the page at the bottom. The negative top margin cancels the nav
-   placeholder's bottom margin and its tear. */
+   placeholder's bottom margin and its tear. Like the nav band, it grows by
+   half of --scroll-lock-gap while a popup locks the page. */
 .home-band {
   position: relative;
   z-index: -2;
   left: 50%;
-  width: 100vw;
+  width: calc(100vw + var(--scroll-lock-gap, 0px) / 2);
   margin: calc(-1.5rem - var(--tear-h)) 0 0 -50vw;
 }
 
@@ -3053,10 +3135,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   opacity: 1;
 }
 
-body.nav-sidebar-open {
-  overflow: hidden;
-}
-
 .nav-sidebar-header {
   display: flex;
   align-items: center;
@@ -3122,17 +3200,33 @@ body.nav-sidebar-open {
   transform: rotate(180deg);
 }
 
+/* Each section is a two-row grid: its toggle, then its submenu in a row that
+   animates between 0fr and 1fr, which is between nothing and the list's own
+   height. Opening and closing so run their full time at the list's real size
+   (and in step, when opening one section closes another), with no cap on how
+   long a list can be. The links fade a little as they go. */
+.nav-sidebar-section {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-sidebar-section.open {
+  grid-template-rows: auto 1fr;
+}
+
 .nav-sidebar-submenu {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 0;
+  min-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease;
+  opacity: 0;
+  transition: opacity 0.22s ease;
 }
 
 .nav-sidebar-section.open > .nav-sidebar-submenu {
-  max-height: 500px;
+  opacity: 1;
 }
 
 .nav-sidebar-submenu .nav-submenu-label {
@@ -3144,12 +3238,23 @@ body.nav-sidebar-open {
 }
 
 
-/* --- Nav breakpoint: show hamburger, hide desktop nav-links --- */
+/* --- Nav breakpoint: show hamburger, hide desktop nav-links ---
+   The bar becomes three columns: an empty one, the logo centred, the
+   hamburger at the right. The outer two share the spare width equally, so
+   the logo sits at the bar's centre. Everything else in the bar is hidden
+   or (the theme toggle) fixed, so it takes no column. */
 @media (max-width: 900px) {
+  .site-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .site-nav > .site-brand { grid-column: 2; }
+
   .hamburger {
     display: inline-flex;
-    margin-left: auto;
-    order: 2;
+    grid-column: 3;
+    justify-self: end;
   }
 
   .nav-links {
@@ -3607,15 +3712,10 @@ body.nav-sidebar-open {
 @media (max-width: 600px) {
   .parchment { padding: 1.25rem; }
 
-  .form-toggle { flex-direction: column; }
-  .toggle-btn  { justify-content: center; }
-
   .form-row,
   .form-row-3  { grid-template-columns: 1fr; }
 
   .checkbox-group { grid-template-columns: 1fr; }
-
-  .button-group { flex-direction: column; }
 }
 
 /* --- Print --- */

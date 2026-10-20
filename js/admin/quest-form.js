@@ -107,6 +107,7 @@
       reward: quest ? (quest.reward || '') : '',
       contact: quest ? (quest.contact || '') : '',
       image_url: quest ? (quest.image_url || '') : '',
+      dark_image_url: quest ? (quest.dark_image_url || '') : '',
       schedule_mode: quest ? (quest.schedule_mode || 'tbd') : 'tbd',
       scheduled_local: quest ? utcToLocalInput(quest.scheduled_at) : '',
       cadence_note: quest ? (quest.cadence_note || '') : '',
@@ -139,6 +140,7 @@
         reward: draft.reward.trim() || null,
         contact: draft.contact.trim() || null,
         image_url: draft.image_url.trim() || null,
+        dark_image_url: draft.dark_image_url.trim() || null,
         schedule_mode: draft.schedule_mode,
         scheduled_at: draft.schedule_mode === 'tbd' ? null : localInputToUtc(draft.scheduled_local),
         cadence_note: draft.schedule_mode === 'repeatable' ? (draft.cadence_note.trim() || null) : null
@@ -261,6 +263,15 @@
         kind: 'quest',
         name: draft.title.trim(),
         help: 'Paste a URL or upload an image. Shown on the public bounty board card.'
+      }),
+
+      h(ImageField, {
+        label: 'Dark mode image',
+        value: draft.dark_image_url,
+        onChange: function (v) { setField('dark_image_url', v); },
+        disabled: saving,
+        kind: 'quest',
+        name: draft.title.trim()
       }),
 
       h('div', { className: 'portal-field' },

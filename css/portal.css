@@ -63,23 +63,28 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin-bottom: 0.75rem;
   text-decoration: none;
 }
-.portal-sidebar .sidebar-logo {
+/* The brand's logo and two lines also head the mobile top bar. */
+.portal-sidebar .sidebar-logo,
+.portal-topbar .sidebar-logo {
   height: 44px;
   width: 44px;
 }
-.portal-sidebar .sidebar-brand-text {
+.portal-sidebar .sidebar-brand-text,
+.portal-topbar .sidebar-brand-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.portal-sidebar .sidebar-brand-title {
+.portal-sidebar .sidebar-brand-title,
+.portal-topbar .sidebar-brand-title {
   font-family: 'Stoke', serif;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
   line-height: 1.1;
 }
-.portal-sidebar .sidebar-brand-subtitle {
+.portal-sidebar .sidebar-brand-subtitle,
+.portal-topbar .sidebar-brand-subtitle {
   font-family: 'La Belle Aurore', cursive;
   font-size: 1rem;
   color: var(--accent-brown);
@@ -254,19 +259,31 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
 }
 
-/* --------------- Top bar (mobile/tablet) --------------- */
+/* --------------- Top bar (mobile/tablet) ---------------
+   Three columns: an empty one, the brand centred, the hamburger at the right.
+   The outer two share the spare width equally, so the brand sits at the
+   bar's centre. It tears along the bottom like the site's header band
+   (.tear in the markup), and the negative bottom margin lays that torn strip
+   over the top of .portal-main, so the main area's grain shows through the
+   rip; .portal-main's mobile padding clears it. The rip only ever cuts the
+   bottom 45% of the tear's band, so the brand sits 0.6rem into the band's
+   always-solid top: the gap from the logo down to the rip then averages the
+   0.6rem above it. */
 .portal-topbar {
   display: none;
   grid-area: topbar;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1rem calc(var(--tear-h) - 0.6rem);
+  margin-bottom: calc(-1 * var(--tear-h));
   background: var(--bg-card);
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
 }
 /* A quiet icon button (.btn.is-quiet.is-icon) holding three bars. */
 .portal-topbar-hamburger {
+  grid-column: 3;
+  justify-self: end;
   flex-direction: column;
   gap: 4px;
 }
@@ -277,21 +294,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: currentColor;
   border-radius: 2px;
 }
+/* Laid out like the drawer's .sidebar-brand (its logo and text rules cover
+   both). */
 .portal-topbar-brand {
+  grid-column: 2;
   display: inline-flex;
   align-items: center;
+  gap: 0.75rem;
   text-decoration: none;
-}
-.portal-topbar-logo {
-  height: 32px;
-  width: 32px;
-}
-.portal-topbar-title {
-  font-family: 'Stoke', serif;
-  letter-spacing: 0.02em;
-  font-size: 1rem;
-  color: var(--text-primary);
-  margin-left: auto;
 }
 
 /* --------------- Mobile drawer --------------- */
@@ -470,12 +480,16 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .btn .material-icons { font-size: 18px; }
 
 /* --------------- Form fields --------------- */
+/* Form rhythm (Torchlight): 7px from a label to its control, 26px between
+   fields (stacked or in a row, with or without help text), 18px from the
+   last field to the buttons, 10px between buttons. */
 .portal-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.45rem;
   margin-bottom: 0.75rem;
 }
+.portal-field + .portal-field { margin-top: 0.875rem; }
 .portal-field label {
   font-family: 'Stoke', serif;
   font-size: 0.92rem;
@@ -488,6 +502,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    }
 .portal-field input[type="text"],
 .portal-field input[type="date"],
+.portal-field input[type="datetime-local"],
 .portal-field input[type="number"],
 .portal-field textarea,
 .portal-field select, .portal-select {
@@ -503,6 +518,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    heights. (The select chevron is drawn with .portal-filter-select above.) */
 .portal-field input[type="text"],
 .portal-field input[type="date"],
+.portal-field input[type="datetime-local"],
 .portal-field input[type="number"],
 .portal-field select, .portal-select {
   line-height: 1.25;
@@ -528,20 +544,80 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   font-style: italic;
   margin: 0.35rem 0 0.85rem;
 }
+/* Inside a field the field's gap spaces it, so a field with help text sits
+   as far from the next one as a field without. */
+.portal-field > .portal-field-help { margin: 0; }
 .portal-field-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 0.875rem 0.85rem;
 }
+/* In a row the grid spaces the fields; an inset in a row spaces like one. */
+.portal-field-row > .portal-field + .portal-field { margin-top: 0; }
+.portal-field-row > .portal-card.is-inset { margin-bottom: 0.75rem; }
 .portal-field-row-triple {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .portal-form-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   margin-top: 1rem;
   flex-wrap: wrap;
+}
+.portal-field + .portal-form-actions,
+.portal-field-row + .portal-form-actions,
+.portal-field + .portal-btn-row,
+.portal-field-row + .portal-btn-row { margin-top: 0.375rem; }
+
+/* The formatting toolbar (styles.css) over a portal textarea: the field's own
+   well tone, no border, sitting flush on the box. Quick picks are a wrapping
+   row of small quiet buttons above their box. */
+/* The toolbar and its box as one block, the full width of the field. */
+.markup-field { display: flex; flex-direction: column; }
+.portal-field .markup-toolbar {
+  border: 0;
+  background-color: var(--form-input-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+.portal-field .markup-toolbar + textarea {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.portal-quick-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+/* --------------- Appointment request detail ---------------
+   Medical Records → Appointment Requests: the status and date on one line
+   (View patient request at the right), then the request, scheduling and
+   reports as form sections, each answer under a small-caps label. */
+.appt-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.appt-field { margin-bottom: 0.6rem; }
+.appt-field-label {
+  font-family: 'Stoke', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.appt-field-value {
+  white-space: pre-wrap;
+  color: var(--text-primary);
+}
+.appt-visit { margin: 0 0 0.35rem; }
+/* The request's actions (Mark seen, Cancel request, Delete) along the bottom. */
+.appt-detail-actions {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* --------------- Grouped form sections ---------------
@@ -551,10 +627,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-form-section {
   margin-bottom: 1.25rem;
 }
-.portal-form-section + .portal-form-section {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
+.portal-form-section + .portal-form-section { padding-top: 0.5rem; }
 /* Group header: ink small caps with a rule underneath. */
 .portal-form-section-title {
   margin: 0 0 0.75rem;
@@ -771,16 +844,32 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   cursor: pointer;
 }
 
-/* --------------- Modal --------------- */
+/* --------------- Modal ---------------
+   The overlay covers the visible part of the window: while a popup is open
+   the scroll lock (js/pv-session.js) keeps --vv-top and --vv-height on the
+   root, which shrink to the space above an on-screen keyboard and follow
+   mobile Safari when it slides the view. Without them it is the full window.
+   The modal never outgrows the overlay (100%, inside its padding), so its
+   body is the only thing that scrolls and its foot is always in reach, and
+   on a large screen it stops at 94dvh. dvh follows mobile browsers' toolbar,
+   where vh is measured as if the toolbar were hidden; browsers without dvh
+   keep the vh lines. The scrim also runs well past the overlay's edges (the
+   shadow), so if Safari moves the view before the overlay catches up, the
+   page around it is still dimmed. */
 .portal-modal-overlay {
   position: fixed;
-  inset: 0;
+  top: var(--vv-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--vv-height, 100%);
   z-index: 60;
   background: var(--scrim);
+  box-shadow: 0 0 0 100vmax var(--scrim);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding: 3vh 1rem 1rem;
+  padding: 3dvh 1rem 1rem;
   overflow-y: auto;
 }
 .portal-modal {
@@ -792,6 +881,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   flex-direction: column;
   max-height: 94vh;
+  max-height: min(94dvh, 100%);
 }
 .portal-modal-lg { max-width: 880px; }
 /* Title and a small quiet close button, with a rule under them. */
@@ -1353,9 +1443,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Forms */
 .portal-field.is-full { grid-column: 1 / -1; }
 .portal-field.is-tight { margin-bottom: 0.6rem; }
+.portal-field.is-tight + .portal-field { margin-top: 0; }   /* tight lists keep their own spacing */
 .btn.is-end { margin-left: auto; }
 .portal-form-title { margin-top: 0; }   /* "New … / Edit …" heading of a form card */
-.portal-btn-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }   /* Save / Cancel */
+.portal-btn-row { display: flex; gap: 0.625rem; margin-top: 0.5rem; }   /* Save / Cancel */
 .portal-card.is-tight { margin-bottom: 0.6rem; }
 /* A card inside a card drops back to a recessed tray. */
 .portal-card.is-inset { background-color: var(--bg-primary); background-image: var(--grain); margin-bottom: 0.5rem; }
@@ -1407,9 +1498,9 @@ textarea.cmp-code,
   .division-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
-  .dash-attention-row { flex-wrap: wrap; }
-  .dash-attention-text { flex-basis: 100%; order: 2; }
-  .dash-open { margin-left: auto; }
+  /* Needs Attention rows stack: the state tag, the text, then Open below. */
+  .dash-attention-row { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
+  .dash-open { justify-self: end; }
   .portal-shell {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
@@ -1419,7 +1510,7 @@ textarea.cmp-code,
   }
   .portal-sidebar-rail { display: none; }
   .portal-topbar {
-    display: flex;
+    display: grid;
     /* Keep the top bar pinned so it stays visible after modal saves / form
        rerenders on mobile — without this, some viewport changes (virtual
        keyboard, momentum scroll) could leave the shell scrolled with the
@@ -1440,7 +1531,8 @@ textarea.cmp-code,
   .portal-sidebar-drawer .portal-sidebar-body { min-height: 0; flex: 0 0 auto; }
   .portal-sidebar-drawer .sidebar-nav { flex: 0 0 auto; }
   .portal-drawer-overlay { display: block; }
-  .portal-main { padding: 1rem 1rem 3rem; }
+  /* The top padding also clears the top bar's torn strip laid over it. */
+  .portal-main { padding: calc(1rem + var(--tear-h)) 1rem 3rem; }
   .portal-field-row,
   .portal-field-row-triple { grid-template-columns: 1fr; }
   .portal-search { min-width: 0; width: 100%; }

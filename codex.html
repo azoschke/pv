@@ -94,7 +94,8 @@
     FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.</p>
   </footer>
 
-  <!-- Shared markdown utilities, then page logic -->
+  <!-- Sign-in and scroll lock, shared markdown utilities, then page logic -->
+  <script src="js/pv-session.js"></script>
   <script src="js/campaigns.js"></script>
   <script>
   (function () {
@@ -195,6 +196,7 @@
     // ── Sidebar (campaigns/venues pattern) ────────────────────────────────────
     function openSidebar() {
       if (isMobile()) {
+        PVScrollLock.lock('filter-drawer');
         sidebarEl.classList.add('sidebar-open');
         overlay.classList.add('active');
         overlay.setAttribute('aria-hidden', 'false');
@@ -204,6 +206,7 @@
       }
     }
     function closeSidebar() {
+      PVScrollLock.unlock('filter-drawer');
       if (isMobile()) {
         sidebarEl.classList.remove('sidebar-open');
         overlay.classList.remove('active');
@@ -438,9 +441,7 @@
       }
       // Lock scroll without the layout shift that removing the scrollbar causes
       // (which read as the row "shrinking" on click).
-      var sw = window.innerWidth - document.documentElement.clientWidth;
-      if (sw > 0) document.body.style.paddingRight = sw + 'px';
-      document.body.style.overflow = 'hidden';
+      PVScrollLock.lock('codex-modal');
 
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
@@ -461,8 +462,7 @@
       }
       modalOverlay.classList.remove('is-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
+      PVScrollLock.unlock('codex-modal');
       modalBody.innerHTML = '';
       try { history.replaceState(null, '', window.location.pathname); } catch (_) {}
     }
@@ -521,7 +521,6 @@
   })();
   </script>
 
-  <script src="js/pv-session.js"></script>
   <script src="js/nav.js"></script>
 </body>
 </html>

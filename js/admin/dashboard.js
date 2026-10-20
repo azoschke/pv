@@ -2,8 +2,8 @@
 //  PVAdminDashboard — overview landing for officers / admins.
 //
 //  Aggregates data that already lives behind existing endpoints
-//  (/members, /applications, /jobs) entirely client-side — no dedicated
-//  worker endpoint. Renders:
+//  (/members, /applications, /jobs, /quests/admin, /appointments) entirely
+//  client-side — no dedicated worker endpoint. Renders:
 //    - an Eorzean date in the header (same convention as the medical forms)
 //    - four stat tiles (FC members, new applications, interviews pending,
 //      open positions)
@@ -20,33 +20,18 @@
   var useEffect = React.useEffect;
 
   // ── Eorzean calendar ──────────────────────────────────────────────────────
-  // Ported from js/med-forms.js so the portal date matches the
-  // convention used across the medical forms. Months map 1:1 to moons; certain
-  // real-world days split into two Eorzean "suns" — we take the earlier sun.
-  var SPLIT_DAYS = {
-    1: [28], 2: [7, 14, 21], 3: [28], 4: [7, 28], 5: [29], 6: [7, 28],
-    7: [28], 8: [28], 9: [7, 28], 10: [28], 11: [7, 28], 12: [28]
-  };
+  // Today in the medical forms' calendar (PVMedical, js/medical-shared.js),
+  // in the header's short form: "28th Sun · 1st Astral Moon".
   function ordinal(n) {
     var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
-  function eorzeanSun(month, day) {
-    var splits = SPLIT_DAYS[month] || [];
-    var sun = day;
-    for (var i = 0; i < splits.length; i++) {
-      if (day > splits[i]) sun++;
-    }
-    return sun;
-  }
   function eorzeanTodayLabel() {
-    var now = new Date();
-    var mo = now.getMonth() + 1, d = now.getDate();
-    var sun = eorzeanSun(mo, d);
-    if (sun < 1 || sun > 32) return '';
-    var pairNum = Math.ceil(mo / 2);
-    var type = (mo % 2 === 1) ? 'Astral' : 'Umbral';
-    return ordinal(sun) + ' Sun · ' + ordinal(pairNum) + ' ' + type + ' Moon';
+    var M = window.PVMedical;
+    var e = M && M.toEorzean(M.todayISO());
+    if (!e) return '';
+    var mo = new Date().getMonth() + 1;
+    return ordinal(e.sun) + ' Sun · ' + ordinal(Math.ceil(mo / 2)) + ' ' + (mo % 2 ? 'Astral' : 'Umbral') + ' Moon';
   }
 
   // ── Component ─────────────────────────────────────────────────────────────
@@ -56,8 +41,9 @@
     var canMembers = PVAdminAPI.can('members.view');
     var canApps = PVAdminAPI.can('jobs.applications_view');
     var canQuests = PVAdminAPI.can('quests.manage');
+    var canAppointments = PVAdminAPI.can('medical.view');
 
-    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [] });
+    var st = useState({ loading: true, error: '', members: [], apps: [], jobs: [], quests: [], appointments: [] });
     var state = st[0], setState = st[1];
 
     useEffect(function () {
@@ -72,17 +58,19 @@
         getList('/members', canMembers),
         getList('/applications', canApps),
         getList('/jobs', true),
-        getList('/quests/admin', canQuests)
+        getList('/quests/admin', canQuests),
+        getList('/appointments?status=open', canAppointments)
       ])
         .then(function (res) {
           if (cancelled) return;
-          if (res[0] === null && res[1] === null && res[2] === null && res[3] === null) {
-            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [], quests: [] });
+          if (res.every(function (r) { return r === null; })) {
+            setState({ loading: false, error: 'Could not load dashboard data.', members: [], apps: [], jobs: [], quests: [], appointments: [] });
             return;
           }
           setState({
             loading: false, error: '',
-            members: res[0] || [], apps: res[1] || [], jobs: res[2] || [], quests: res[3] || []
+            members: res[0] || [], apps: res[1] || [], jobs: res[2] || [], quests: res[3] || [],
+            appointments: res[4] || []
           });
         });
       return function () { cancelled = true; };
@@ -116,6 +104,9 @@
       });
     });
     var bountyReviewCount = pendingQuests.length + pendingEdits.length;
+    // Medical appointment requests: waiting for a medic, and scheduled.
+    var apptRequested = state.appointments.filter(function (r) { return r.status === 'requested'; });
+    var apptScheduled = state.appointments.filter(function (r) { return r.status === 'scheduled'; });
     // Member attention buckets — kept in sync with members.js needsAttention.
     var icPending     = members.filter(function (m) { return m.interview === 'Not Started'; });
     var icScheduled   = members.filter(function (m) { return m.interview === 'Scheduled'; });
@@ -137,17 +128,20 @@
       canMembers ? statTile(icPending.length, 'IC Interviews', 'members', icPending.length > 0, { interview: 'Not Started' }) : null,
       canApps ? statTile(newApps.length, 'Job Applications', 'jobs', newApps.length > 0,
         { view: 'applications', stage: 'new' }) : null,
-      canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null
+      canQuests ? statTile(bountyReviewCount, 'Bounty Quests', 'bounties', bountyReviewCount > 0) : null,
+      canAppointments ? statTile(apptRequested.length, 'Appointment Requests', 'medical', apptRequested.length > 0,
+        { tab: 'appointments' }) : null
     ].filter(Boolean);
     // Scheduled work is in progress, not an alert, so these tiles never go red.
     var scheduledTiles = [
       canMembers ? statTile(icScheduled.length, 'IC Interviews', 'members', false, { interview: 'Scheduled' }) : null,
       canApps ? statTile(scheduledApps.length, 'Job Interviews', 'jobs', false,
-        { view: 'applications', stage: 'scheduled' }) : null
+        { view: 'applications', stage: 'scheduled' }) : null,
+      canAppointments ? statTile(apptScheduled.length, 'Appointments', 'medical', false, { tab: 'appointments' }) : null
     ].filter(Boolean);
 
     // Cross-feature attention feed, ordered: applications → job interviews →
-    // IC interviews → inactive members. Each row leads with its state: a red
+    // bounty board → appointment requests → IC interviews → inactive members. Each row leads with its state: a red
     // pill where someone has to act, a brown dot while it is in progress, a
     // gold dot for inactive members.
     var attention = [];
@@ -185,6 +179,26 @@
         name: item.edit.submitted_by_name || 'A member',
         desc: 'proposed an edit to “' + (item.quest.title || 'a quest') + '”',
         source: 'Bounty Board', target: 'bounties'
+      });
+    });
+    apptRequested.forEach(function (r) {
+      var medic = r.requested_medic_id ? ' with ' + r.requested_medic_name : '';
+      attention.push({
+        key: 'appt-' + r.id, tag: 'Appointment', statusCls: 'pill',
+        name: r.character_name,
+        desc: 'requested an appointment' + medic,
+        source: 'Medical Records', target: 'medical',
+        params: { tab: 'appointments' }
+      });
+    });
+    apptScheduled.forEach(function (r) {
+      var when = PVAdminAppointmentUtils.whenLabel(r);
+      attention.push({
+        key: 'apptsched-' + r.id, tag: 'Appointment', statusCls: 'status-dot is-brown',
+        name: r.character_name,
+        desc: 'appointment scheduled' + (when ? ' — ' + when : ''),
+        source: 'Medical Records', target: 'medical',
+        params: { tab: 'appointments' }
       });
     });
     icPending.forEach(function (m) {

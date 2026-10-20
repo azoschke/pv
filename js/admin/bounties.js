@@ -44,6 +44,7 @@
     ['reward', 'Reward'],
     ['contact', 'Contact'],
     ['image_url', 'Image'],
+    ['dark_image_url', 'Dark mode image'],
     ['description', 'Description']
   ];
 
@@ -95,6 +96,17 @@
   // --------- Read-only quest details (for reviewing submissions) ----------
   function QuestPreview(props) {
     var q = props.quest;
+    function imageRow(label, src) {
+      if (!src) return null;
+      return h('div', { className: 'portal-field is-tight' },
+        h('label', null, label),
+        h('img', {
+          src: src, alt: '',
+          style: { maxWidth: '320px', maxHeight: '180px', border: '1px solid var(--border-color)', borderRadius: '0.3rem', objectFit: 'cover' },
+          onError: function (e) { e.target.style.display = 'none'; }
+        })
+      );
+    }
     function row(label, value) {
       if (!value) return null;
       return h('div', { className: 'portal-field is-tight' },
@@ -111,14 +123,8 @@
       row('Schedule', U.scheduleSummary(q)),
       row('Reward', q.reward),
       row('Contact', q.contact),
-      q.image_url ? h('div', { className: 'portal-field is-tight' },
-        h('label', null, 'Image'),
-        h('img', {
-          src: q.image_url, alt: '',
-          style: { maxWidth: '320px', maxHeight: '180px', border: '1px solid var(--border-color)', borderRadius: '0.3rem', objectFit: 'cover' },
-          onError: function (e) { e.target.style.display = 'none'; }
-        })
-      ) : null,
+      imageRow('Image', q.image_url),
+      imageRow('Dark mode image', q.dark_image_url),
       row('Description', q.description)
     );
   }

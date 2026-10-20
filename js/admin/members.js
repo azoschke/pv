@@ -169,40 +169,49 @@
     return interviewPending || untalkedInactive;
   }
 
-  function NoteCell(props) {
-    var value = props.value || '';
-    var label = props.label || 'Notes';
-    var member = props.member;
-    var allMembers = props.allMembers || [];
-    var openState = useState(false);
-    var open = openState[0], setOpen = openState[1];
-
-    // The shared block (Discord / Joined / linked characters) shows alongside
-    // the freeform notes, so this info reads as one shared block per group.
+  // The shared block (Discord / Joined / linked characters) shows alongside
+  // the freeform notes, so this info reads as one shared block per group.
+  function hasSharedInfo(member, allMembers) {
     var g = member ? groupFor(member, allMembers) : null;
     var head = g ? (g.head || member) : null;
-    var hasShared = !!(head && (head.discord_tag || head.date_joined || (g && g.members.length > 1)));
+    return !!(head && (head.discord_tag || head.date_joined || (g && g.members.length > 1)));
+  }
 
-    if (!value && !hasShared) return h('span', { className: 'portal-muted' }, '—');
+  // The Notes button in the grid. The popup itself (NotesModal) is rendered by
+  // Members outside the table card: the card's torn-edge mask would otherwise
+  // clip the popup to the card and trap it beneath anything outside it.
+  function NoteCell(props) {
+    var member = props.member;
+    var allMembers = props.allMembers || [];
 
-    return h(React.Fragment, null,
-      h('button', {
-        type: 'button',
-        className: 'notes-link',
-        onClick: function () { setOpen(true); }
-      },
-        h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '18px' } }, 'sticky_note_2'),
-        h('span', null, 'Notes')
-      ),
-      open ? h(window.PVAdminModal, {
-        title: label,
-        onClose: function () { setOpen(false); }
-      },
-        hasShared ? h(SharedBlock, { member: member, allMembers: allMembers }) : null,
-        value
-          ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
-          : null
-      ) : null
+    if (!member.notes && !hasSharedInfo(member, allMembers)) {
+      return h('span', { className: 'portal-muted' }, '—');
+    }
+
+    return h('button', {
+      type: 'button',
+      className: 'notes-link',
+      onClick: function () { props.onOpen(member); }
+    },
+      h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '18px' } }, 'sticky_note_2'),
+      h('span', null, 'Notes')
+    );
+  }
+
+  function NotesModal(props) {
+    var member = props.member;
+    var allMembers = props.allMembers || [];
+    var value = member.notes || '';
+    var hasShared = hasSharedInfo(member, allMembers);
+
+    return h(window.PVAdminModal, {
+      title: 'Notes — ' + (member.name || ''),
+      onClose: props.onClose
+    },
+      hasShared ? h(SharedBlock, { member: member, allMembers: allMembers }) : null,
+      value
+        ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
+        : null
     );
   }
 
@@ -563,7 +572,7 @@
             : null
         )
       ),
-      h('td', null, h(NoteCell, { value: m.notes, label: 'Notes — ' + (m.name || ''), member: m, allMembers: props.allMembers })),
+      h('td', null, h(NoteCell, { member: m, allMembers: props.allMembers, onOpen: props.onOpenNotes })),
       h('td', { className: 'portal-col-actions' },
         canEdit ? h('button', {
           type: 'button',
@@ -591,6 +600,11 @@
     // modalMember: null = closed, {} = adding, <member> = editing.
     var modalState = useState(null);
     var modalMember = modalState[0], setModalMember = modalState[1];
+
+    // notesMemberId: null = closed, <id> = showing that member's notes. The id
+    // is looked up in members each render, so the popup stays current.
+    var notesState = useState(null);
+    var notesMemberId = notesState[0], setNotesMemberId = notesState[1];
 
     // Seed the search from a navigation param (e.g. opened from a dashboard
     // Needs Attention row) so the member is filtered in on arrival.
@@ -733,6 +747,8 @@
 
     var modalOpen = modalMember !== null;
     var modalIsNew = modalOpen && !modalMember.id;
+    var notesMember = notesMemberId == null ? null
+      : members.filter(function (m) { return m.id === notesMemberId; })[0] || null;
 
     function filterSelect(value, onChange, placeholder, options) {
       return h('select', {
@@ -830,6 +846,7 @@
                             member: m,
                             allMembers: members,
                             onEdit: function (member) { setModalMember(member); },
+                            onOpenNotes: function (member) { setNotesMemberId(member.id); },
                             onToggleTalkedTo: handleToggleTalkedTo,
                             canEdit: allowEdit
                           });
@@ -845,6 +862,11 @@
               )
             )
           ),
+      notesMember ? h(NotesModal, {
+        member: notesMember,
+        allMembers: members,
+        onClose: function () { setNotesMemberId(null); }
+      }) : null,
       modalOpen ? h(window.PVAdminModal, {
         title: modalIsNew ? 'New Member' : 'Edit Member — ' + (modalMember.name || ''),
         size: 'lg',

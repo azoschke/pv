@@ -138,6 +138,7 @@
   // ── Sidebar (campaign pattern) ───────────────────────────────────────────
   function openSidebar() {
     if (isMobile()) {
+      PVScrollLock.lock("filter-drawer");
       sidebarEl.classList.add("sidebar-open");
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
@@ -147,6 +148,7 @@
     }
   }
   function closeSidebar() {
+    PVScrollLock.unlock("filter-drawer");
     if (isMobile()) {
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
@@ -359,13 +361,12 @@
     media.className = "job-card-media tear-half " + mediaClass(j);
 
     if (j.image_url) {
-      var img = document.createElement("img");
-      img.src = j.image_url;
-      img.alt = "";
-      img.loading = "lazy";
-      img.className = "job-card-img";
-      img.addEventListener("error", function () { img.remove(); });
-      media.appendChild(img);
+      // With a dark-mode version, the image swaps with the theme.
+      PVThemeImage.elements(j.image_url, j.dark_image_url, function (img) {
+        img.loading = "lazy";
+        img.className = "job-card-img";
+        img.addEventListener("error", function () { img.remove(); });
+      }).forEach(function (img) { media.appendChild(img); });
     }
 
     var catBadge = document.createElement("span");
@@ -431,7 +432,7 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(j) {
     if (j.image_url) {
-      return '<img src="' + escapeHTML(j.image_url) + '" alt="" class="job-modal-img tear">';
+      return PVThemeImage.html(j.image_url, j.dark_image_url, "job-modal-img tear");
     }
     return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
   }
@@ -467,7 +468,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    PVScrollLock.lock("job-modal");
   }
 
   // ── Apply / withdraw ─────────────────────────────────────────────────────
@@ -588,7 +589,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    PVScrollLock.unlock("job-modal");
     modalBody.innerHTML = "";
   }
 

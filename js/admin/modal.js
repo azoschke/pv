@@ -1,6 +1,7 @@
 // ============================================================================
 //  PVAdminModal — centered modal dialog with overlay, ESC + backdrop close,
-//  and body scroll lock. Pure React 18 UMD component (no portals).
+//  and page scroll lock (PVScrollLock, js/pv-session.js). Pure React 18 UMD
+//  component (no portals).
 //
 //  Usage:
 //    h(PVAdminModal, { title: 'Edit member', onClose: fn }, childContent)
@@ -20,13 +21,13 @@
         if (e.key === 'Escape' && onClose) onClose();
       }
       document.addEventListener('keydown', onKey);
-      var prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
       return function () {
         document.removeEventListener('keydown', onKey);
-        document.body.style.overflow = prev;
       };
     }, [onClose]);
+
+    // Lock the page for as long as the modal is mounted (pv-session.js).
+    useEffect(function () { return PVScrollLock.lock(); }, []);
 
     return h('div', {
       className: 'portal-modal-overlay',

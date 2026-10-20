@@ -285,6 +285,7 @@
   // ── Sidebar (campaign pattern) ─────────────────────────────────────────────
   function openSidebar() {
     if (isMobile()) {
+      PVScrollLock.lock("filter-drawer");
       sidebarEl.classList.add("sidebar-open");
       overlay.classList.add("active");
       overlay.setAttribute("aria-hidden", "false");
@@ -294,6 +295,7 @@
     }
   }
   function closeSidebar() {
+    PVScrollLock.unlock("filter-drawer");
     if (isMobile()) {
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
@@ -629,6 +631,7 @@
       modalBody.innerHTML = bodyHtml;              // image is warm → paints at once
       modalOverlay.classList.add("is-open");        // styles.css reveals via .is-open
       modalOverlay.setAttribute("aria-hidden", "false");
+      PVScrollLock.lock("calendar-modal");
     }
 
     // Preload the hero image so it opens WITH the modal. A slight delay is
@@ -649,6 +652,7 @@
   function closeModal() {
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
+    PVScrollLock.unlock("calendar-modal");
   }
 
   // ── Data ───────────────────────────────────────────────────────────────────
@@ -695,6 +699,7 @@
       // Into inline mode: clear any drawer state and keep it collapsed unless it
       // was open, so it doesn't spring into view.
       var wasOpen = sidebarEl.classList.contains("sidebar-open");
+      PVScrollLock.unlock("filter-drawer");
       sidebarEl.classList.remove("sidebar-open");
       overlay.classList.remove("active");
       overlay.setAttribute("aria-hidden", "true");

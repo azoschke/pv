@@ -247,12 +247,10 @@
           '<p class="landing-row-desc">Patient intake, treatment reports, appointment requests, and the records archive for the medical division.</p>' +
           '<div class="home-tool-groups">' +
             '<div><p class="group-label">Patient resources</p><ul class="tool-list">' +
-              toolItem("patient-intake-form.html", "Patient Intake Form") +
               toolItem("appointment-request.html", "Appointment Request") +
               toolItem("staff-roster.html", "Medical Staff") +
             "</ul></div>" +
             '<div><p class="group-label">Staff</p><ul class="tool-list">' +
-              toolItem("treatment-report-form.html", "Treatment Report Form", "staff only") +
               toolItem("med-database.html", "Patient Records", "staff only") +
             "</ul></div>" +
           "</div>" +

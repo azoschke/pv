@@ -175,6 +175,48 @@
   margin: 1.25rem 0;
 }
 
+/* A subsection heading with its export buttons (PDF, JPG, Copy for Discord):
+   small quiet icon buttons at the right. */
+.visit-subsection-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.visit-subsection-head .visit-subsection-label { margin-bottom: 0; }
+.visit-export { display: flex; gap: 4px; flex-shrink: 0; }
+.visit-export .btn.is-small.is-icon { width: 26px; min-height: 26px; }
+.visit-export .btn .material-icons { font-size: 16px; }
+
+/* Out of Character, folded until opened. */
+.visit-ooc {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+.visit-ooc > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  cursor: pointer;
+  font-family: 'Stoke', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.visit-ooc > summary::-webkit-details-marker { display: none; }
+.visit-ooc > summary::after {
+  content: '\25BE';
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+.visit-ooc > summary:hover { color: var(--text-primary); }
+.visit-ooc[open] > summary { margin-bottom: 1rem; }
+.visit-ooc[open] > summary::after { transform: rotate(180deg); }
+
 /* ── Loading / error states ────────────────────────────────────── */
 .v2-state-msg {
   font-family: 'La Belle Aurore', cursive;
