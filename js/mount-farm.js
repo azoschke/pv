@@ -107,10 +107,10 @@
     return (words[0] || '?').slice(0, 2).toUpperCase();
   }
 
-  // "Fiora Acaeus" → "Fiora A.", for the tracker's narrow columns.
-  function shortName(name) {
-    var words = String(name || '').trim().split(/\s+/).filter(Boolean);
-    return words.length >= 2 ? words[0] + ' ' + words[words.length - 1].charAt(0) + '.' : (words[0] || '');
+  // "Fiora Acaeus" → "Fiora", for the tracker's columns (the full name shows
+  // on hover).
+  function firstName(name) {
+    return String(name || '').trim().split(/\s+/)[0] || '';
   }
 
   // Initials, or the person's My Profile picture when they have one. Alts
@@ -553,7 +553,7 @@
                         h('span', { className: 'mf-col-head' },
                           avatar(c, isAlt[c.id]),
                           h('span', null,
-                            h('span', { className: 'mf-col-name' }, shortName(c.name)),
+                            h('span', { className: 'mf-col-name' }, firstName(c.name)),
                             h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total))));
                     }),
                     h('th', { className: 'mf-fill', 'aria-hidden': 'true' }),
