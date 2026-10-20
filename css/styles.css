@@ -5578,10 +5578,20 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    (a book header) over each expansion. */
 .mf-table th:first-child,
 .mf-table td:first-child { width: auto; }
-.mf-table .mf-col-person { min-width: 88px; text-align: center; }
-.mf-table .mf-col-person > :not(.avatar) { display: block; }
+.mf-table thead th { vertical-align: bottom; }
+.mf-table .mf-col-person {
+  width: 1%;
+  min-width: 76px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  text-align: center;
+}
+.mf-table th.mf-col-person { font-size: 0.78rem; line-height: 1.3; white-space: nowrap; }
+.mf-table th.mf-col-person > :not(.avatar) { display: block; }
+.mf-table th.mf-col-person .mf-name { margin-top: 3px; }
 .mf-table .mf-group-row td { padding: 0; background-color: var(--bg-group-row); }
 .mf-table .book-header { padding: 0.6rem 26px; }
+.mf-table .book-progress-bar { box-shadow: inset 0 0 0 1px var(--border-color); }
 
 /* Plan an event: each group's header, with Select all beside it. */
 .mf-group-head {

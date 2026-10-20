@@ -107,9 +107,16 @@
     return (words[0] || '?').slice(0, 2).toUpperCase();
   }
 
-  function avatar(name) {
-    return h('span', { className: 'avatar is-small', 'aria-hidden': 'true' }, initials(name));
+  // Initials, or the person's My Profile picture when they have one.
+  function Avatar(props) {
+    var errState = useState(false); var err = errState[0], setErr = errState[1];
+    var p = props.person || {};
+    return h('span', { className: 'avatar is-small', 'aria-hidden': 'true' },
+      p.image_url && !err
+        ? h('img', { src: p.image_url, alt: '', loading: 'lazy', onError: function () { setErr(true); } })
+        : initials(p.name));
   }
+  function avatar(person) { return h(Avatar, { person: person }); }
 
   // Ticks are kept as a set of "member:mount" keys; the worker sends pairs.
   function tickKey(memberId, mountId) { return memberId + ':' + mountId; }
@@ -311,7 +318,7 @@
               return h('button', {
                 key: p.id, type: 'button', className: 'mf-row is-button',
                 onClick: function () { props.onAdd(p.id); setQ(''); }
-              }, avatar(p.name), h('span', { className: 'mf-row-main mf-name' }, p.name));
+              }, avatar(p), h('span', { className: 'mf-row-main mf-name' }, p.name));
             }),
             results.length ? null : h('p', { className: 'mf-row cdb-meta' }, 'No one by that name.'))
         : null);
@@ -373,11 +380,11 @@
             h('div', { className: 'tray mf-list' },
               h('label', { className: 'mf-row' },
                 h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: true, disabled: true }),
-                avatar(base.me.name), h('span', { className: 'mf-row-main mf-name' }, base.me.name)),
+                avatar(base.me), h('span', { className: 'mf-row-main mf-name' }, base.me.name)),
               base.alts.map(function (a) {
                 return h('label', { key: a.id, className: 'mf-row is-button' },
                   h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: prefs.hiddenAlts.indexOf(a.id) === -1, onChange: function () { toggleAlt(a.id); } }),
-                  avatar(a.name), h('span', { className: 'mf-row-main mf-name' }, a.name));
+                  avatar(a), h('span', { className: 'mf-row-main mf-name' }, a.name));
               })))
         : null,
       h('div', null,
@@ -392,7 +399,7 @@
         h('div', { className: 'mf-list' },
           added.map(function (p) {
             return h('div', { key: p.id, className: 'mf-row' },
-              avatar(p.name), h('span', { className: 'mf-row-main mf-name' }, p.name),
+              avatar(p), h('span', { className: 'mf-row-main mf-name' }, p.name),
               h('button', {
                 type: 'button', className: 'btn is-quiet is-small is-icon', 'aria-label': 'Remove ' + p.name + ' from your view',
                 onClick: function () { props.updatePrefs({ added: prefs.added.filter(function (x) { return x !== p.id; }) }); }
@@ -415,13 +422,13 @@
 
     // Your columns first (you, then your alts), then anyone added in Edit view.
     var cols = [];
-    if (base.me) cols.push({ id: base.me.id, name: base.me.name });
+    if (base.me) cols.push(base.me);
     base.alts.forEach(function (a) {
-      if (prefs.hiddenAlts.indexOf(a.id) === -1) cols.push({ id: a.id, name: a.name });
+      if (prefs.hiddenAlts.indexOf(a.id) === -1) cols.push(a);
     });
     prefs.added.forEach(function (id) {
       var p = base.people[id];
-      if (p && !base.mine[id]) cols.push({ id: p.id, name: p.name });
+      if (p && !base.mine[id]) cols.push(p);
     });
     var colKey = cols.map(function (c) { return c.id; }).join(',');
 
@@ -501,11 +508,11 @@
                     h('th', { scope: 'col' }, 'Mount'),
                     cols.map(function (c, i) {
                       return h('th', { key: c.id, scope: 'col', className: 'mf-col-person' },
-                        avatar(c.name),
-                        h('span', null, c.name),
+                        avatar(c),
+                        h('span', { className: 'mf-name' }, c.name),
                         h('span', null, colCounts[i] + '/' + total));
                     }),
-                    h('th', { scope: 'col', className: 'td-count-header' }, 'Still need'))),
+                    h('th', { scope: 'col', className: 'td-count' }, 'Still need'))),
                 shownGroups.map(function (g) {
                   var isOpen = open[g.key] != null ? open[g.key] : !g.complete;
                   return h('tbody', { key: g.key },
@@ -548,7 +555,7 @@
         h('p', { className: 'app-subtitle' }, 'Trial and Savage mounts')),
       eventsCard,
       base.me ? null : h('p', { className: 'cdb-notice' }, 'Your account isn’t linked to an FC member.'),
-      h('div', { className: 'top-controls top-controls-right' },
+      h('div', { className: 'top-controls' },
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'view' }); } }, icon('tune'), 'Edit view'),
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { updatePrefs({ hideCompleted: !prefs.hideCompleted }); } },
           prefs.hideCompleted ? 'Show completed' : 'Hide completed')),
@@ -765,7 +772,7 @@
                     disabled: !(base.can.manage || base.mine[p.id]),
                     onClick: function () { toggle(p.id, m.id); }
                   },
-                    avatar(p.name),
+                    avatar(p),
                     h('span', { className: 'mf-row-main mf-name' }, p.name),
                     have
                       ? h('span', { className: 'status-dot is-quiet' }, 'Has it')
@@ -980,7 +987,7 @@
             partyPeople.map(function (p) {
               var count = countFor(p.id);
               return h('div', { key: p.id, className: 'mf-row' },
-                avatar(p.name),
+                avatar(p),
                 h('span', { className: 'mf-row-main mf-name' }, p.name),
                 count ? h('span', { className: 'cdb-meta' }, count + '/' + total) : null,
                 h('button', {
