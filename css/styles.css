@@ -1086,6 +1086,7 @@ button.nav-sublink {
 }
 
 .top-controls-right { justify-content: flex-end; }
+.top-controls-center { justify-content: center; }
 
 /* --- Site footer (text from Admin Settings → Pages → Site Defaults) ---
    Outside .container; the text keeps to the same 1300px column as the page. */
@@ -5499,4 +5500,124 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   background-image: var(--grain);
   border-radius: 4px;
   font-size: 0.92rem;
+}
+
+/* =============================================================================
+   18. MOUNT FARM — trial and Savage mount tracker
+   Built from the shared pieces (info cards, the Atma table, book headers,
+   the .cdb-* form parts, status dots); these rules only lay them out.
+   ========================================================================== */
+
+/* A main column beside a narrow card (Most needed), or the narrow card
+   first (Who's coming). One column on narrow screens. */
+.mf-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 0 1.25rem;
+  align-items: start;
+}
+.mf-split.is-side-first { grid-template-columns: 340px minmax(0, 1fr); }
+
+.mf-fight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  column-gap: 1.25rem;
+  align-items: start;
+}
+
+/* A card's heading, with a button or a count on the right. */
+.mf-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.mf-card-title { margin: 0; font-size: 1.2rem; line-height: 1.25; }
+
+/* Lists of people, events and mounts. In a tray they get a little padding;
+   a row that is a button (or a label) lights up on hover. */
+.mf-list { display: flex; flex-direction: column; gap: 2px; }
+* + .mf-list { margin-top: 0.6rem; }
+.tray.mf-list { padding: 4px; }
+.mf-results { max-height: 260px; overflow-y: auto; }
+
+.mf-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 4px;
+}
+.mf-row.is-button {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mf-row.is-button:hover:not(:disabled) { background-color: var(--bg-darker); }
+.mf-row.is-button:disabled { cursor: default; }
+.mf-row-main { flex: 1; min-width: 0; }
+.mf-name { color: var(--text-primary); }
+
+/* A book header that is a button: the groups open and close. */
+.mf-book-toggle {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+/* The tracker: the Atma table with a column per person and a group row
+   (a book header) over each expansion. */
+.mf-table th:first-child,
+.mf-table td:first-child { width: auto; }
+.mf-table .mf-col-person { min-width: 88px; text-align: center; }
+.mf-table .mf-col-person > :not(.avatar) { display: block; }
+.mf-table .mf-group-row td { padding: 0; background-color: var(--bg-group-row); }
+.mf-table .book-header { padding: 0.6rem 26px; }
+
+/* Plan an event: each group's header, with Select all beside it. */
+.mf-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.mf-group-head .book-header { padding: 0.6rem 0.4rem; }
+
+/* The summary and Save, kept in view at the bottom of the form. */
+.mf-bar {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  box-shadow: var(--shadow-float);
+}
+
+.mf-dialog { max-width: 520px; }
+.mf-dialog .cdb-select { width: 100%; }
+.mf-push-left { margin-right: auto; }
+
+/* "This Event Isn't Available" and the like. */
+.mf-notice { max-width: 560px; margin: 3rem auto; text-align: center; }
+
+/* The theme button floats bottom right here, so the bar stops following. */
+@media (max-width: 900px) {
+  .mf-split,
+  .mf-split.is-side-first { grid-template-columns: minmax(0, 1fr); }
+  .mf-bar { position: static; }
 }
