@@ -107,16 +107,30 @@
     return (words[0] || '?').slice(0, 2).toUpperCase();
   }
 
-  // Initials, or the person's My Profile picture when they have one.
+  // "Fiora Acaeus" → "Fiora A.", for the tracker's narrow columns.
+  function shortName(name) {
+    var words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    return words.length >= 2 ? words[0] + ' ' + words[words.length - 1].charAt(0) + '.' : (words[0] || '');
+  }
+
+  // Initials, or the person's My Profile picture when they have one. Alts
+  // get the quiet circle.
   function Avatar(props) {
     var errState = useState(false); var err = errState[0], setErr = errState[1];
     var p = props.person || {};
-    return h('span', { className: 'avatar is-small', 'aria-hidden': 'true' },
+    return h('span', { className: 'avatar is-small' + (props.alt ? ' mf-avatar-alt' : ''), 'aria-hidden': 'true' },
       p.image_url && !err
         ? h('img', { src: p.image_url, alt: '', loading: 'lazy', onError: function () { setErr(true); } })
         : initials(p.name));
   }
-  function avatar(person) { return h(Avatar, { person: person }); }
+  function avatar(person, alt) { return h(Avatar, { person: person, alt: alt }); }
+
+  function svgIcon(className, d, strokeWidth) {
+    return h('svg', {
+      className: className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: strokeWidth,
+      strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false'
+    }, h('path', { d: d }));
+  }
 
   // Ticks are kept as a set of "member:mount" keys; the worker sends pairs.
   function tickKey(memberId, mountId) { return memberId + ':' + mountId; }
@@ -324,16 +338,15 @@
         : null);
   }
 
-  // A group of mounts that opens and closes: the Book Farm's header row. The
-  // arrow points up when open; inside a .book the book's own rule turns it.
+  // A group of mounts that opens and closes: the Book Farm's header row, with
+  // a chevron that points right and turns down when open.
   function GroupToggle(props) {
-    var arrow = props.open && !props.inBook ? 'expand_less' : 'expand_more';
     return h('button', {
       type: 'button', className: 'book-header mf-book-toggle', 'aria-expanded': props.open ? 'true' : 'false',
       onClick: props.onToggle
     },
       h('span', { className: 'book-header-left' },
-        h('span', { className: 'material-symbols-outlined book-expand-icon', 'aria-hidden': 'true' }, arrow),
+        svgIcon('mf-chevron' + (props.open ? ' is-open' : ''), 'M9 6l6 6-6 6', 2),
         h('span', { className: 'book-name' }, props.name)),
       h('span', { className: 'book-header-right' }, props.children));
   }
@@ -495,6 +508,11 @@
 
     var editable = function (memberId) { return base.can.manage || !!base.mine[memberId]; };
     var span = cols.length + 2;
+    // Once anyone else is in view, your own columns are tinted.
+    var tint = cols.some(function (c) { return !base.mine[c.id]; });
+    var isAlt = {};
+    base.alts.forEach(function (a) { isAlt[a.id] = true; });
+    function colClass(c) { return 'mf-col-person' + (tint && base.mine[c.id] ? ' is-mine' : ''); }
 
     var table = !cols.length
       ? h('p', { className: 'cdb-notice' }, 'No one in your view.')
@@ -507,10 +525,10 @@
                   h('tr', null,
                     h('th', { scope: 'col' }, 'Mount'),
                     cols.map(function (c, i) {
-                      return h('th', { key: c.id, scope: 'col', className: 'mf-col-person' },
-                        avatar(c),
-                        h('span', { className: 'mf-name' }, c.name),
-                        h('span', null, colCounts[i] + '/' + total));
+                      return h('th', { key: c.id, scope: 'col', className: colClass(c), title: c.name },
+                        avatar(c, isAlt[c.id]),
+                        h('span', { className: 'mf-col-name' }, shortName(c.name)),
+                        h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total));
                     }),
                     h('th', { scope: 'col', className: 'td-count' }, 'Still need'))),
                 shownGroups.map(function (g) {
@@ -527,27 +545,29 @@
                             h('span', { className: 'book-progress-bar-fill', style: { width: g.pct + '%', display: 'block' } }))))),
                     isOpen ? g.rows.map(function (r) {
                       var m = r.mount;
-                      return h('tr', { key: m.id },
-                        h('td', null,
-                          h('div', { className: 'mf-name' }, m.name),
-                          h('div', { className: 'cdb-meta' }, m.fight)),
+                      return h('tr', { key: m.id, className: 'mf-mount-row' },
+                        h('td', { className: 'mf-mount' },
+                          h('div', { className: 'mf-mount-name' }, m.name),
+                          h('div', { className: 'mf-mount-fight' }, m.fight)),
                         cols.map(function (c) {
                           var have = !!ticks[tickKey(c.id, m.id)];
-                          return h('td', { key: c.id, className: 'mf-col-person' },
-                            h('input', {
-                              type: 'checkbox', checked: have, disabled: !editable(c.id),
+                          return h('td', { key: c.id, className: colClass(c) },
+                            h('button', {
+                              type: 'button', className: 'mf-tick' + (have ? ' is-have' : ''),
+                              'aria-pressed': have ? 'true' : 'false',
                               'aria-label': c.name + ' has ' + m.name,
-                              onChange: function () { toggle(c.id, m.id); }
-                            }));
+                              disabled: !editable(c.id),
+                              onClick: function () { toggle(c.id, m.id); }
+                            }, have ? svgIcon(null, 'M5 12.5l4.5 4.5L19 7.5', 2.6) : null));
                         }),
                         h('td', { className: 'td-count' },
                           r.need
-                            ? h('span', { className: 'status-dot is-red' }, r.need + ' need')
+                            ? h('span', { className: 'mf-need' }, r.need + ' need')
                             : h('span', { className: 'atma-complete' }, 'All have')));
                     }) : null);
                 }),
                 shownGroups.length ? null : h('tbody', null,
-                  h('tr', null, h('td', { colSpan: span, className: 'cdb-empty-state' }, 'Everything’s complete.'))))));
+                  h('tr', null, h('td', { colSpan: span, className: 'mf-done' }, 'Everything’s complete.'))))));
 
     return h('div', null,
       h('header', { className: 'app-header' },
@@ -1095,7 +1115,7 @@
         var isOpen = !!open[g.key];
         return h('section', { key: g.key, className: 'book' + (isOpen ? ' active' : ''), 'aria-label': g.name },
           h(GroupToggle, {
-            name: g.name, open: isOpen, inBook: true,
+            name: g.name, open: isOpen,
             onToggle: function () { var next = Object.assign({}, open); next[g.key] = !isOpen; setOpen(next); }
           },
             h('span', { className: 'book-progress-text' }, g.mounts.length ? g.mounts.length + (g.mounts.length === 1 ? ' mount' : ' mounts') : 'No mounts yet')),
