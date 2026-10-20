@@ -428,6 +428,9 @@
     var openState = useState({}); var open = openState[0], setOpen = openState[1];
     var dialogState = useState(null); var dialog = dialogState[0], setDialog = dialogState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
+    // The names row's height: the group rows stick just below it.
+    var headRef = useRef(null);
+    var headHState = useState(0); var headH = headHState[0], setHeadH = headHState[1];
 
     function updatePrefs(patch) {
       setPrefs(function (p) { var next = Object.assign({}, p, patch); savePrefs(next); return next; });
@@ -444,6 +447,17 @@
       if (p && !base.mine[id]) cols.push(p);
     });
     var colKey = cols.map(function (c) { return c.id; }).join(',');
+
+    useEffect(function () {
+      var el = headRef.current;
+      if (!el) return;
+      function measure() { setHeadH(el.offsetHeight); }
+      measure();
+      if (!window.ResizeObserver) return;
+      var watcher = new ResizeObserver(measure);
+      watcher.observe(el);
+      return function () { watcher.disconnect(); };
+    }, [ticks === null, colKey === '']);
 
     // Only the ticks of the people in view.
     useEffect(function () {
@@ -519,11 +533,11 @@
       : ticks === null
         ? h('p', { className: 'cdb-notice' }, 'Loading…')
         : h('div', { className: 'atma-card tear' },
-            h('div', { className: 'atma-scroll' },
-              h('table', { className: 'task-table atma-table mf-table' },
-                h('thead', null,
+            h('div', { className: 'atma-scroll mf-scroll' },
+              h('table', { className: 'task-table atma-table mf-table', style: { '--mf-head-h': headH + 'px' } },
+                h('thead', { ref: headRef },
                   h('tr', null,
-                    h('th', { scope: 'col' }, 'Mount'),
+                    h('th', { scope: 'col', 'aria-label': 'Mount' }),
                     cols.map(function (c, i) {
                       return h('th', { key: c.id, scope: 'col', className: colClass(c), title: c.name },
                         avatar(c, isAlt[c.id]),
