@@ -5518,12 +5518,125 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 .mf-split.is-side-first { grid-template-columns: 360px minmax(0, 1fr); }
 
+/* The event page, as in the design: fight cards (at least 430px) beside
+   Most needed. Each card has its fight in Stoke over the mount in italics,
+   the count still needing it, a bar, and the party as tiles two to a row,
+   brown once they have it. */
+.mf-event { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; }
 .mf-fight-grid {
+  flex: 999 1 640px;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  column-gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr));
+  gap: 20px;
   align-items: start;
 }
+.mf-fight {
+  padding: 20px 22px calc(18px + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px 4px 0 0;
+}
+.mf-fight-head { display: flex; align-items: flex-start; gap: 12px; }
+.mf-fight-title { margin: 0; font-size: 1.45rem; line-height: 1.2; }
+.mf-fight-mount { margin: 2px 0 0; font-size: 1rem; font-style: italic; color: var(--text-secondary); }
+.btn.is-plain.mf-fight-remove { font-size: 0.85rem; }
+.mf-fight-need { margin: 16px 0 14px; }
+.mf-fight-need p { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 1.05rem; }
+.mf-fight-count {
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.mf-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mf-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.mf-tile:hover:not(:disabled) { background-color: color-mix(in srgb, var(--bg-darker) 78%, var(--accent-brown)); }
+.mf-tile.is-have { background-color: var(--accent-brown); color: var(--label); }
+.mf-tile.is-have:hover:not(:disabled) { background-color: var(--accent-brown-hover); }
+.mf-tile.is-have .avatar { background-color: var(--label); color: var(--accent-brown); }
+.mf-tile:disabled { cursor: default; }
+.mf-tile-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mf-tile-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Stoke', Georgia, serif;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.mf-tile-state svg { width: 18px; height: 18px; flex: none; }
+.mf-tile-state.is-need { gap: 7px; }
+.mf-tile-state.is-need::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-red);
+}
+
+/* Most needed: rows with rules between, each with Add for the planner. */
+.mf-suggest {
+  flex: 1 1 300px;
+  min-width: 0;
+  padding: 18px 0 calc(10px + var(--tear-h));
+  background-color: var(--bg-card);
+  border-radius: 4px 4px 0 0;
+}
+.mf-suggest-title { margin: 0 22px 10px; font-size: 1.2rem; }
+.mf-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 8px 22px;
+  border-top: 1px solid var(--border-color);
+  line-height: 1.25;
+}
+.mf-suggest-sub { font-size: 0.92rem; color: var(--text-secondary); }
+.mf-suggest .mf-none { border-top: 1px solid var(--border-color); }
+
+/* Manage mounts: each group a book, its mounts in rows with rules between,
+   the mount in Stoke over its fight in italics. */
+.mf-manage .book-header { min-height: 56px; padding: 0 22px; gap: 12px; }
+.mf-manage .book-progress-text { font-size: 0.95rem; }
+.mf-manage .book-body { padding: 0; border-top: 0; }
+.mf-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-height: 56px;
+  padding: 8px 22px;
+  border-top: 1px solid var(--border-color);
+}
+.mf-item-main { flex: 1; min-width: 220px; line-height: 1.25; }
+.mf-item-name { font-family: 'Stoke', Georgia, serif; font-size: 1rem; color: var(--text-primary); }
+.mf-manage .mf-none { border-top: 1px solid var(--border-color); }
 
 /* A card's heading, with a button or a count on the right. */
 .mf-card-head {

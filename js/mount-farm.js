@@ -792,58 +792,62 @@
         canManage ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog(true); } },
           event.live ? 'End event' : 'Delete event') : null),
       err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
-      h('div', { className: 'mf-split' },
+      h('div', { className: 'mf-event' },
         h('div', { className: 'mf-fight-grid' },
           fights.map(function (m) {
             var need = needCount(m);
             var haveCount = party.length - need;
-            return h('section', { key: m.id, className: 'info-card tear-half', 'aria-label': m.fight },
-              h(CardHead, { title: m.fight, meta: m.name },
+            return h('section', { key: m.id, className: 'mf-fight tear-half', 'aria-label': m.fight },
+              h('div', { className: 'mf-fight-head' },
+                h('div', { className: 'mf-row-main' },
+                  h('h2', { className: 'mf-fight-title' }, m.fight),
+                  h('p', { className: 'mf-fight-mount' }, m.name)),
                 canManage
                   ? h('button', {
-                      type: 'button', className: 'btn is-plain', disabled: busy,
+                      type: 'button', className: 'btn is-plain mf-fight-remove', disabled: busy,
                       onClick: function () { setFights(ev.mountIds.filter(function (id) { return id !== m.id; })); }
                     }, 'Remove')
                   : null),
-              h('p', { className: 'cdb-meta' },
-                h('span', { className: 'cdb-stat-text' }, need ? need + ' of ' + party.length : 'Everyone'),
-                need ? ' still need it' : ' has it'),
-              h('div', { className: 'progress-bar', role: 'img', 'aria-label': haveCount + ' of ' + party.length + ' have ' + m.name },
-                h('div', { className: 'progress-bar-fill', style: { width: (party.length ? Math.round((haveCount / party.length) * 100) : 0) + '%' } })),
-              h('div', { className: 'tray mf-list' },
+              h('div', { className: 'mf-fight-need' },
+                h('p', null,
+                  h('span', { className: 'mf-fight-count' }, need ? need + ' of ' + party.length : 'Everyone'),
+                  h('span', null, need ? 'still need it' : 'has it')),
+                h('div', { className: 'progress-bar', role: 'img', 'aria-label': haveCount + ' of ' + party.length + ' have ' + m.name },
+                  h('div', { className: 'progress-bar-fill', style: { width: (party.length ? Math.round((haveCount / party.length) * 100) : 0) + '%' } }))),
+              h('div', { className: 'mf-tiles' },
                 party.map(function (p) {
                   var have = has(p.id, m.id);
                   return h('button', {
-                    key: p.id, type: 'button', className: 'mf-row is-button',
+                    key: p.id, type: 'button', className: 'mf-tile' + (have ? ' is-have' : ''), title: p.name,
                     'aria-pressed': have ? 'true' : 'false',
                     'aria-label': p.name + (have ? ' has ' : ' needs ') + m.name,
                     disabled: !(base.can.manage || base.mine[p.id]),
                     onClick: function () { toggle(p.id, m.id); }
                   },
                     avatar(p),
-                    h('span', { className: 'mf-row-main mf-name' }, p.name),
+                    h('span', { className: 'mf-tile-name' }, firstName(p.name)),
                     have
-                      ? h('span', { className: 'status-dot is-quiet' }, 'Has it')
-                      : h('span', { className: 'status-dot is-red' }, 'Needs'));
+                      ? h('span', { className: 'mf-tile-state' }, svgIcon(null, 'M5 12.5l4.5 4.5L19 7.5', 2.6), 'Has it')
+                      : h('span', { className: 'mf-tile-state is-need' }, 'Needs'));
                 })));
           }),
           fights.length ? null : h('p', { className: 'cdb-notice' }, 'No fights yet.')),
-        h('aside', { className: 'info-card tear-half', 'aria-labelledby': 'mf-suggest-title' },
-          h(CardHead, { id: 'mf-suggest-title', title: 'Most needed' }),
-          h('div', { className: 'mf-list' },
-            suggestions.map(function (x) {
-              return h('div', { key: x.mount.id, className: 'mf-row' },
-                h('div', { className: 'mf-row-main' },
-                  h('div', { className: 'mf-name' }, x.mount.fight),
-                  h('div', { className: 'cdb-meta' }, x.mount.name + ' · ' + x.need + ' of ' + party.length + ' need')),
-                canManage
-                  ? h('button', {
-                      type: 'button', className: 'btn is-quiet is-small', disabled: busy,
-                      onClick: function () { setFights(ev.mountIds.concat([x.mount.id])); }
-                    }, 'Add')
-                  : null);
-            }),
-            suggestions.length ? null : h('p', { className: 'cdb-meta' }, 'Nothing else is needed.')))),
+        h('aside', { className: 'mf-suggest tear-half', 'aria-labelledby': 'mf-suggest-title' },
+          h('h2', { id: 'mf-suggest-title', className: 'mf-suggest-title' }, 'Most needed'),
+          suggestions.map(function (x) {
+            return h('div', { key: x.mount.id, className: 'mf-suggest-row' },
+              h('div', { className: 'mf-row-main' },
+                h('div', { className: 'mf-pick-fight' }, x.mount.fight),
+                h('div', { className: 'mf-suggest-sub' },
+                  h('em', null, x.mount.name), ' · ' + x.need + ' of ' + party.length + ' need')),
+              canManage
+                ? h('button', {
+                    type: 'button', className: 'btn is-quiet is-small', disabled: busy,
+                    onClick: function () { setFights(ev.mountIds.concat([x.mount.id])); }
+                  }, 'Add')
+                : null);
+          }),
+          suggestions.length ? null : h('p', { className: 'mf-none' }, 'Nothing else is needed.'))),
       dialog
         ? h(ConfirmDialog, {
             title: (event.live ? 'End ' : 'Delete ') + event.name + '?',
@@ -1138,7 +1142,7 @@
     function close() { setDialog(null); }
     function saved() { return props.reload().then(close); }
 
-    return h('div', null,
+    return h('div', { className: 'mf-manage' },
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, 'Manage Mounts')),
       h('div', { className: 'top-controls top-controls-right' },
@@ -1152,20 +1156,18 @@
           },
             h('span', { className: 'book-progress-text' }, g.mounts.length ? g.mounts.length + (g.mounts.length === 1 ? ' mount' : ' mounts') : 'No mounts yet')),
           h('div', { className: 'book-body' },
-            g.mounts.length
-              ? h('div', { className: 'mf-list' },
-                  g.mounts.map(function (m) {
-                    return h('div', { key: m.id, className: 'mf-row' },
-                      h('div', { className: 'mf-row-main' },
-                        h('div', { className: 'mf-name' }, m.name),
-                        h('div', { className: 'cdb-meta' }, m.fight)),
-                      h('div', { className: 'cdb-form-actions' },
-                        h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'edit', mount: m }); } }, 'Edit'),
-                        base.can.delete
-                          ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog({ type: 'remove', mount: m }); } }, 'Remove')
-                          : null));
-                  }))
-              : h('p', { className: 'mf-row cdb-meta' }, 'No mounts yet.')));
+            g.mounts.map(function (m) {
+              return h('div', { key: m.id, className: 'mf-item' },
+                h('div', { className: 'mf-item-main' },
+                  h('div', { className: 'mf-item-name' }, m.name),
+                  h('div', { className: 'mf-mount-fight' }, m.fight)),
+                h('div', { className: 'cdb-form-actions' },
+                  h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'edit', mount: m }); } }, 'Edit'),
+                  base.can.delete
+                    ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog({ type: 'remove', mount: m }); } }, 'Remove')
+                    : null));
+            }),
+            g.mounts.length ? null : h('p', { className: 'mf-none' }, 'No mounts yet.')));
       }),
       dialog && (dialog.type === 'add' || dialog.type === 'edit')
         ? h(MountDialog, { mount: dialog.mount || null, onClose: close, onSaved: saved })
