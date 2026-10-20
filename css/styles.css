@@ -5583,7 +5583,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 .mf-chevron.is-open { transform: rotate(90deg); }
 
-/* The tracker: the Atma table with an 85px column per person and a group
+/* The tracker: the Atma table with a 120px column per person and a group
    row over each expansion. The mount column keeps at least 240px; past
    that the table scrolls sideways. It scrolls inside its card, at most the
    window's height, so the names row and the group rows can stay pinned to
@@ -5598,13 +5598,19 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   overflow: auto;
 }
 .mf-table { --mf-ring: color-mix(in srgb, var(--text-primary) 26%, transparent); }
-/* The names row is card-toned with the grain, so it reads as the head of
-   the card and covers what scrolls under it. */
+/* Trial: a tone of its own for table heads, between the page and the
+   card. Only Mount Farm uses it for now; if it stays, it moves up to the
+   palette in section 2. */
+:root { --table-head: #f3efe7; }
+[data-theme="dark"] { --table-head: #1c1817; }
+
+/* The names row: the table-head tone with the grain. It's solid, so what
+   scrolls under it doesn't show through. */
 .mf-table thead th {
   position: sticky;
   top: 0;
   z-index: 3;
-  background-color: var(--bg-card);
+  background-color: var(--table-head);
   background-image: var(--grain);
 }
 .mf-table thead th:first-child { left: 0; z-index: 4; }
@@ -5630,7 +5636,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-table thead th:first-child,
 .mf-table td.mf-mount { width: 1%; }
 .mf-table .mf-fill { padding: 0; }
-.mf-table thead th { vertical-align: bottom; }
+.mf-table thead th { vertical-align: middle; }
 .mf-table .td-count { width: 104px; }
 .mf-table th.td-count { text-align: right; }
 
@@ -5641,9 +5647,9 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-table .book-progress-bar { box-shadow: inset 0 0 0 1px var(--border-color); }
 
 /* A mount: its name in Stoke over the fight in italics. */
-.mf-mount-row { height: 56px; }
+.mf-mount-row { height: 52px; }
 .mf-table .mf-mount-row:hover td { background-color: var(--bg-row-hover); }
-.mf-table .mf-mount { padding: 6px 12px 6px 26px; }
+.mf-table .mf-mount { padding: 4px 12px 4px 26px; }
 .mf-mount-name {
   min-width: 240px;
   font-family: 'Stoke', Georgia, serif;
@@ -5660,18 +5666,20 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-mount-name,
 .mf-mount-fight { white-space: nowrap; }
 
-/* A person's column: avatar, short name and count over the squares. Your
-   own columns are tinted once anyone else is in view. */
+/* A person's column: the avatar beside their short name and count, over
+   the squares. Your own columns are tinted once anyone else is in view. */
 .mf-table .mf-col-person {
-  width: 85px;
-  min-width: 85px;
-  padding: 6px 0;
+  width: 120px;
+  min-width: 120px;
+  padding: 4px 0;
   text-align: center;
 }
-.mf-table th.mf-col-person { padding: 12px 0 10px; line-height: 1; }
+.mf-table th.mf-col-person { padding: 10px 6px; line-height: 1; }
 .mf-table .mf-col-person.is-mine { background-color: var(--bg-row-hover); background-image: none; }
+.mf-col-head { display: inline-flex; align-items: center; gap: 7px; text-align: left; }
 .mf-col-name,
-.mf-col-count { display: block; margin-top: 3px; white-space: nowrap; }
+.mf-col-count { display: block; white-space: nowrap; }
+.mf-col-count { margin-top: 2px; }
 .mf-col-name {
   font-size: 0.9rem;
   line-height: 1.2;

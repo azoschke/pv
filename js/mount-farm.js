@@ -550,9 +550,11 @@
                     h('th', { scope: 'col', 'aria-label': 'Mount' }),
                     cols.map(function (c, i) {
                       return h('th', { key: c.id, scope: 'col', className: colClass(c), title: c.name },
-                        avatar(c, isAlt[c.id]),
-                        h('span', { className: 'mf-col-name' }, shortName(c.name)),
-                        h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total));
+                        h('span', { className: 'mf-col-head' },
+                          avatar(c, isAlt[c.id]),
+                          h('span', null,
+                            h('span', { className: 'mf-col-name' }, shortName(c.name)),
+                            h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total))));
                     }),
                     h('th', { className: 'mf-fill', 'aria-hidden': 'true' }),
                     h('th', { scope: 'col', className: 'td-count' }, 'Still need'))),
