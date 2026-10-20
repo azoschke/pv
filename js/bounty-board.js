@@ -415,13 +415,12 @@
     media.className = "job-card-media tear-half " + mediaClass(q);
 
     if (q.image_url) {
-      var img = document.createElement("img");
-      img.src = q.image_url;
-      img.alt = "";
-      img.loading = "lazy";
-      img.className = "job-card-img";
-      img.addEventListener("error", function () { img.remove(); });
-      media.appendChild(img);
+      // With a dark-mode version, the image swaps with the theme.
+      PVThemeImage.elements(q.image_url, q.dark_image_url, function (img) {
+        img.loading = "lazy";
+        img.className = "job-card-img";
+        img.addEventListener("error", function () { img.remove(); });
+      }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (q.mission_type) {
@@ -508,7 +507,7 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(q) {
     if (q.image_url) {
-      return '<img src="' + escapeHTML(q.image_url) + '" alt="" class="job-modal-img tear">';
+      return PVThemeImage.html(q.image_url, q.dark_image_url, "job-modal-img tear");
     }
     return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
   }

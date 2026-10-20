@@ -393,13 +393,12 @@
     media.className = "venue-card-media tear-half " + mediaClass(v);
 
     if (v.image_url) {
-      var img = document.createElement("img");
-      img.src = v.image_url;
-      img.alt = "";
-      img.loading = "lazy";
-      img.className = "venue-card-img";
-      img.addEventListener("error", function () { img.remove(); });
-      media.appendChild(img);
+      // With a dark-mode version, the image swaps with the theme.
+      PVThemeImage.elements(v.image_url, v.dark_image_url, function (img) {
+        img.loading = "lazy";
+        img.className = "venue-card-img";
+        img.addEventListener("error", function () { img.remove(); });
+      }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (v.featured) {
@@ -476,14 +475,16 @@
       return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
     }
 
+    // The primary image (the first) swaps with the theme when it has a
+    // dark-mode version; its two copies share slide 0.
+    var dark = v.image_url ? v.dark_image_url : null;
     if (imgs.length === 1) {
-      return '<img src="' + escapeHTML(imgs[0]) + '" alt="" class="venue-modal-img tear">';
+      return PVThemeImage.html(imgs[0], dark, "venue-modal-img tear");
     }
 
     var slides = imgs.map(function (src, i) {
-      return '<img src="' + escapeHTML(src) + '" alt="" ' +
-        'class="venue-gallery-slide' + (i === 0 ? ' is-active' : '') + '" ' +
-        'data-index="' + i + '">';
+      return PVThemeImage.html(src, i === 0 ? dark : null,
+        "venue-gallery-slide" + (i === 0 ? " is-active" : ""), 'data-index="' + i + '"');
     }).join("");
 
     var dots = imgs.map(function (_, i) {
@@ -505,11 +506,13 @@
     var slides = gallery.querySelectorAll(".venue-gallery-slide");
     var dots   = gallery.querySelectorAll(".venue-gallery-dot");
     if (!slides.length) return;
+    // One dot per image; a slide's light and dark copies share its index.
+    var count = dots.length || slides.length;
     var idx = 0;
 
     function show(i) {
-      idx = (i + slides.length) % slides.length;
-      slides.forEach(function (s, j) { s.classList.toggle("is-active", j === idx); });
+      idx = (i + count) % count;
+      slides.forEach(function (s) { s.classList.toggle("is-active", Number(s.dataset.index) === idx); });
       dots.forEach(function (d, j) { d.classList.toggle("is-active", j === idx); });
     }
 

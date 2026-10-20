@@ -74,7 +74,8 @@
       status: 'open',
       description: '',
       contact: '',
-      image_url: ''
+      image_url: '',
+      dark_image_url: ''
     };
   }
 
@@ -88,7 +89,8 @@
       status: j.status || 'open',
       description: j.description || '',
       contact: j.contact || '',
-      image_url: j.image_url || ''
+      image_url: j.image_url || '',
+      dark_image_url: j.dark_image_url || ''
     };
   }
 
@@ -100,7 +102,8 @@
       status: draft.status,
       description: draft.description.trim() || null,
       contact: draft.contact.trim() || null,
-      image_url: draft.image_url.trim() || null
+      image_url: draft.image_url.trim() || null,
+      dark_image_url: draft.dark_image_url.trim() || null
     };
   }
 
@@ -200,6 +203,16 @@
         kind: 'job',
         name: draft.title.trim(),
         help: 'Paste a URL, or upload an image. The posting must be titled before uploading.'
+      }),
+
+      h(PVAdminImageUpload.ImageField, {
+        label: 'Dark mode image',
+        value: draft.dark_image_url,
+        onChange: function (v) { setField('dark_image_url', v); },
+        disabled: saving,
+        blockedReason: titleReady ? null : 'Enter the job title above before uploading an image.',
+        kind: 'job',
+        name: draft.title.trim()
       }),
 
       h('div', { className: 'portal-field' },

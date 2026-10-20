@@ -6,7 +6,8 @@
 //  avatar_url, roles, permissions, is_root, expires_at }). This file reads
 //  and writes it, answers permission checks, signs out, and sends requests to
 //  the workers. It also holds the page scroll lock (PVScrollLock) that every
-//  popup and drawer shares, and lets the mouse drag scrolling tables.
+//  popup and drawer shares, lets the mouse drag scrolling tables, and draws
+//  images that have a dark-mode version (PVThemeImage).
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in or opens a popup:
@@ -377,6 +378,40 @@
   }
 
   global.PVScrollLock = { lock: lockScroll, unlock: unlockScroll };
+
+  // ── Images with a dark-mode version ──────────────────────────────────────
+  // A light image, shown in both themes, and an optional dark one. With both,
+  // both are drawn and the site's .light-only / .dark-only rules show the one
+  // for the current theme, so it swaps with the theme toggle.
+  //   PVThemeImage.elements(light, dark, setup)
+  //     → [img] or [lightImg, darkImg]; setup(img) adds the page's classes,
+  //       lazy loading, error handling and so on
+  //   PVThemeImage.html(light, dark, className, attrs)
+  //     → the same as markup: <img src class="className light-only" attrs>…
+  function themeImageElements(light, dark, setup) {
+    var pair = light && dark;
+    return (pair ? [[light, 'light-only'], [dark, 'dark-only']] : [[light || dark, '']]).map(function (p) {
+      var img = document.createElement('img');
+      img.src = p[0];
+      img.alt = '';
+      if (setup) setup(img);
+      if (p[1]) img.classList.add(p[1]);
+      return img;
+    });
+  }
+  function escapeAttr(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+  function themeImageHtml(light, dark, className, attrs) {
+    var pair = light && dark;
+    return (pair ? [[light, 'light-only'], [dark, 'dark-only']] : [[light || dark, '']]).map(function (p) {
+      var cls = [className, p[1]].filter(Boolean).join(' ');
+      return '<img src="' + escapeAttr(p[0]) + '" alt=""' + (cls ? ' class="' + cls + '"' : '') +
+        (attrs ? ' ' + attrs : '') + '>';
+    }).join('');
+  }
+
+  global.PVThemeImage = { elements: themeImageElements, html: themeImageHtml };
 
   // ── Drag to scroll ───────────────────────────────────────────────────────
   // On desktop, a table wider (or taller) than its box can be dragged with
