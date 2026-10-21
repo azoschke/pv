@@ -194,7 +194,7 @@
 .cal-panel p { color: var(--text-secondary); margin: 0 0 1.25rem; }
 .cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
 
-/* Detail modal reuses .job-modal-* from styles.css. The hero image bleeds
+/* The event popup is the shared .detail-modal (styles.css). The hero image bleeds
    to the modal edges (the modal's own overflow:hidden rounds its corners);
    only the text content is padded. */
 .cal-modal-media { display: block; width: 100%; height: auto; border: 0; margin: 0; }

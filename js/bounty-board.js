@@ -507,9 +507,9 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(q) {
     if (q.image_url) {
-      return PVThemeImage.html(q.image_url, q.dark_image_url, "job-modal-img tear");
+      return PVThemeImage.html(q.image_url, q.dark_image_url, "detail-modal-img tear");
     }
-    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
   }
 
   function scheduleDetailHtml(q) {
@@ -524,13 +524,13 @@
       parts.push(formatLocal(t) + (isPast(q) ? " — this date has passed" : ""));
     }
     if (!parts.length) return "";
-    return '<p class="job-modal-contact"><span class="job-modal-contact-label">When</span>' +
+    return '<p class="detail-modal-fact"><span class="detail-modal-fact-label">When</span>' +
       escapeHTML(parts.join(" · ")) + '</p>';
   }
 
   function metaRow(label, value) {
     if (!value) return "";
-    return '<p class="job-modal-contact"><span class="job-modal-contact-label">' +
+    return '<p class="detail-modal-fact"><span class="detail-modal-fact-label">' +
       escapeHTML(label) + '</span>' + escapeHTML(value) + '</p>';
   }
 
@@ -555,7 +555,7 @@
   function participantsHtml(q) {
     var signups = q.signups || [];
     var html = '<div class="quest-participants">' +
-      '<p class="job-modal-contact-label" style="display:block; margin-bottom:0.4rem;">Signed up (' + signups.length + ')</p>';
+      '<p class="detail-modal-fact-label" style="display:block; margin-bottom:0.4rem;">Signed up (' + signups.length + ')</p>';
     if (!signups.length) {
       html += '<p style="color:var(--text-secondary); margin:0;"><em>No one yet — be the first.</em></p>';
     } else {
@@ -637,16 +637,16 @@
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="job-modal-content">' +
-        '<div class="job-modal-badges">' + badges + '</div>' +
-        '<h2 class="job-modal-title" id="quest-modal-title">' + escapeHTML(q.title || "Untitled quest") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="quest-modal-title">' + escapeHTML(q.title || "Untitled quest") + '</h2>' +
         scheduleDetailHtml(q) +
         metaRow("Difficulty", difficultyStars(q.difficulty)) +
         metaRow("Group size", q.group_size) +
         metaRow("Reward", q.reward) +
         metaRow("Contact", q.contact) +
         metaRow("Posted by", q.submitted_by_name) +
-        '<div class="job-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         participantsHtml(q) +
         actionHtml(q) +
         '<p id="quest-action-error" class="quest-action-error" style="display:none;"></p>' +

@@ -417,8 +417,8 @@
     var primary = primaryPosition(s._positions);
 
     var imgHtml = s.image_url
-      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img tear">'
-      : '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(primary) + '"></div>';
+      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="detail-modal-img tear">'
+      : '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(primary) + '"></div>';
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
@@ -429,7 +429,7 @@
     }).join("");
 
     var tagsHtml = s._tags.length
-      ? '<div class="venue-card-tags venue-modal-tags">' +
+      ? '<div class="venue-card-tags detail-modal-tags">' +
         s._tags.map(function (t) {
           return '<span class="venue-card-tag">' + escapeHTML("#" + t) + '</span>';
         }).join("") +
@@ -438,10 +438,10 @@
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="venue-modal-content">' +
-        '<div class="venue-modal-badges">' + badges + '</div>' +
-        '<h2 class="venue-modal-title" id="staff-modal-title">' + escapeHTML(s.name || "Unnamed") + '</h2>' +
-        '<div class="venue-modal-desc">' + descHtml + '</div>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="staff-modal-title">' + escapeHTML(s.name || "Unnamed") + '</h2>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
 

@@ -410,27 +410,27 @@
 
   function buildImageHtml(m) {
     if (m.image_url) {
-      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img tear">';
+      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="detail-modal-img tear">';
     }
-    return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(m) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(m) + '"></div>';
   }
 
   function openModal(m) {
     // In the open modal, skills get their own labeled section as plain text.
     var skillsHtml = (m.skills || []).length
-      ? '<p class="venue-modal-location is-section">SKILLS</p>' +
-        '<div class="venue-modal-desc"><p>' +
+      ? '<p class="detail-modal-meta is-section">SKILLS</p>' +
+        '<div class="detail-modal-desc"><p>' +
           m.skills.map(function (s) { return escapeHTML(s); }).join(", ") +
         '</p></div>'
       : "";
 
     var descHtml = m.description
-      ? '<div class="venue-modal-desc">' + md(m.description) + '</div>'
-      : '<div class="venue-modal-desc"><p class="modal-empty-note"><em>No description provided.</em></p></div>';
+      ? '<div class="detail-modal-desc">' + md(m.description) + '</div>'
+      : '<div class="detail-modal-desc"><p class="modal-empty-note"><em>No description provided.</em></p></div>';
 
     var hooksHtml = m.rp_hooks
-      ? '<p class="venue-modal-location is-section">RP HOOKS</p>' +
-        '<div class="venue-modal-desc">' + md(m.rp_hooks) + '</div>'
+      ? '<p class="detail-modal-meta is-section">RP HOOKS</p>' +
+        '<div class="detail-modal-desc">' + md(m.rp_hooks) + '</div>'
       : "";
 
     var urlHtml = m.url
@@ -448,9 +448,9 @@
 
     modalBody.innerHTML =
       buildImageHtml(m) +
-      '<div class="venue-modal-content">' +
-        (badgesHtml ? '<div class="venue-modal-badges">' + badgesHtml + '</div>' : '') +
-        '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        (badgesHtml ? '<div class="detail-modal-badges">' + badgesHtml + '</div>' : '') +
+        '<h2 class="detail-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
         descHtml +
         hooksHtml +
         skillsHtml +

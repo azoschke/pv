@@ -986,8 +986,8 @@ button.nav-sublink {
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .venue-modal,
-  .job-modal, .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *) {
+  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .detail-modal,
+  .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *) {
   --bg-darker: var(--bg-card);
   --form-input-bg: var(--bg-card);
   --progress-bg: var(--bg-card);
@@ -997,8 +997,8 @@ button.nav-sublink {
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .venue-modal,
-  .job-modal, .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *)
+  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .detail-modal,
+  .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *)
   .seg-btn:is(.is-active, [aria-pressed="true"]) {
   background-color: var(--page-control-active);
 }
@@ -1555,6 +1555,176 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 @media (max-width: 768px) {
   .filter-sidebar { width: 280px; }
   .browse-toolbar .filter-select { width: 100%; }
+}
+
+
+/* --- Sketch wash --- */
+/* Sketch wash — the shared tint for the site's illustrations. Put it on the
+   box that holds the artwork (a card's media tile, a thumb, a modal image
+   wrapper) and it lends that box's contents the theme's wash colour
+   (--sketch-wash-color).
+   Blended on colour, not laid over as a veil: the illustration keeps its own
+   luminance, so linework stays exactly as dark as it was drawn.
+
+   Gated on :has(img), so a container that swaps between artwork and a text or
+   gradient fallback can carry the class unconditionally and only be washed
+   when there is something to wash.
+
+   A torn edge (.tear / .tear-half) on the same box cuts the wash along with
+   the art, so the two can share a box.
+
+   --sketch-wash-alpha sets the strength (0.5 in both themes); a surface can
+   override it. */
+.sketch-wash {
+  --sketch-wash-alpha: 0.5;
+  position: relative;
+  /* Own stacking context, so the blend composites against the artwork inside
+     the box and not whatever sits behind it. */
+  isolation: isolate;
+}
+
+.sketch-wash:has(img)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--sketch-wash-color) calc(var(--sketch-wash-alpha) * 100%), transparent);
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+/* --- Detail popup ---
+   The popup a card opens on the directory pages (venues, jobs, quests,
+   rosters, codex, calendar events, My Profile): an optional image across
+   the top, then badges, the title, a meta line, facts, the description and
+   tags. */
+.detail-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: 200;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
+  overflow-y: auto;
+}
+
+.detail-modal-overlay.is-open { display: flex; }
+
+.detail-modal {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-float);
+}
+
+/* Close button: a small quiet icon button (.btn.is-quiet.is-small.is-icon)
+   pinned top right. */
+.modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
+/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
+   work from the moment they appear. That is a focus move, not a focus stop —
+   the box should not draw the global ring. Controls inside it still do. */
+.detail-modal:focus,
+.detail-modal:focus-visible { outline: none; }
+
+.detail-modal-img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.detail-modal-img-fallback {
+  position: relative;
+}
+
+.detail-modal-content {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.detail-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.detail-modal-title {
+  font-family: var(--font-ui);
+  font-size: 1.55rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+}
+
+/* The line under a popup's title (location, rank): muted italic, set close
+   under the title. */
+.detail-modal-title + .detail-modal-meta { margin-top: -0.25rem; }
+.detail-modal-meta {
+  font-family: var(--font-text);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+}
+/* A labelled section further down the popup (roster SKILLS / RP HOOKS): a
+   group header in ink small caps. */
+.detail-modal-meta.is-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  font-style: normal;
+  letter-spacing: var(--track-section);
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.detail-modal-desc {
+  font-family: var(--font-text);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.detail-modal-desc p { margin: 0 0 0.85rem; }
+.detail-modal-desc p:last-child { margin-bottom: 0; }
+/* A fact on its own line (Contact, When, ...): the label sits on the
+   value's line at a fixed width, so the values line up. */
+.detail-modal-fact {
+  font-family: var(--font-text);
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+}
+.detail-modal-fact-label {
+  display: inline-block;
+  min-width: 6.5rem;
+  margin-right: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* "No description provided." in a popup. */
+.modal-empty-note { color: var(--text-secondary); }
+
+.detail-modal-tags { margin-top: 1.1rem; }
+
+@media (max-width: 768px) {
+  .detail-modal-overlay { padding: 1rem; }
+  .detail-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
 }
 
 
@@ -4578,90 +4748,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   color: var(--text-secondary);
 }
 
-/* ── Venue modal ─────────────────────────────────────────────────────────── */
-.venue-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--scrim);
-  z-index: 200;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 3rem 1rem;
-  overflow-y: auto;
-}
-
-.venue-modal-overlay.is-open { display: flex; }
-
-.venue-modal {
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-  background: var(--bg-card);
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: var(--shadow-float);
-}
-
-/* Close button for the detail popups (venue, job, roster, codex...): a small
-   quiet icon button (.btn.is-quiet.is-small.is-icon) pinned top right. */
-.modal-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  z-index: 2;
-}
-
-/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
-   work from the moment they appear. That is a focus move, not a focus stop —
-   the box should not draw the global ring. Controls inside it still do. */
-.venue-modal:focus,
-.venue-modal:focus-visible { outline: none; }
-
-.venue-modal-img {
-  width: 100%;
-  display: block;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-}
-
-.venue-modal-img-fallback {
-  position: relative;
-}
-
-/* Sketch wash — the shared tint for the site's illustrations. Put it on the
-   box that holds the artwork (a card's media tile, a thumb, a modal image
-   wrapper) and it lends that box's contents the theme's wash colour
-   (--sketch-wash-color).
-   Blended on colour, not laid over as a veil: the illustration keeps its own
-   luminance, so linework stays exactly as dark as it was drawn.
-
-   Gated on :has(img), so a container that swaps between artwork and a text or
-   gradient fallback can carry the class unconditionally and only be washed
-   when there is something to wash.
-
-   A torn edge (.tear / .tear-half) on the same box cuts the wash along with
-   the art, so the two can share a box.
-
-   --sketch-wash-alpha sets the strength (0.5 in both themes); a surface can
-   override it. */
-.sketch-wash {
-  --sketch-wash-alpha: 0.5;
-  position: relative;
-  /* Own stacking context, so the blend composites against the artwork inside
-     the box and not whatever sits behind it. */
-  isolation: isolate;
-}
-
-.sketch-wash:has(img)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--sketch-wash-color) calc(var(--sketch-wash-alpha) * 100%), transparent);
-  mix-blend-mode: color;
-  pointer-events: none;
-}
-
 .venue-gallery {
   position: relative;
   width: 100%;
@@ -4726,64 +4812,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   background: var(--media-ink);
 }
 
-.venue-modal-content {
-  padding: 1.5rem 1.75rem 1.75rem;
-}
-
-.venue-modal-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.65rem;
-}
-
-.venue-modal-title {
-  font-family: var(--font-ui);
-  font-size: 1.55rem;
-  font-weight: 400;
-  margin: 0 0 0.25rem;
-  color: var(--text-primary);
-}
-
-/* The line under a popup's title (location): muted italic. */
-.venue-modal-location {
-  font-family: var(--font-text);
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--text-secondary);
-  margin: 0 0 1rem;
-}
-/* A labelled section further down the popup (roster SKILLS / RP HOOKS): a
-   group header in ink small caps. */
-.venue-modal-location.is-section {
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
-  font-family: var(--font-ui);
-  font-size: var(--fs-section);
-  font-style: normal;
-  letter-spacing: var(--track-section);
-  text-transform: uppercase;
-  color: var(--text-primary);
-}
-
-.venue-modal-desc {
-  font-family: var(--font-text);
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.venue-modal-desc p { margin: 0 0 0.85rem; }
-.venue-modal-desc p:last-child { margin-bottom: 0; }
-/* "No description provided." in a venue / job / roster popup. */
-.modal-empty-note { color: var(--text-secondary); }
-
-.venue-modal-tags { margin-top: 1.1rem; }
-
-@media (max-width: 768px) {
-  .venue-modal-overlay { padding: 1rem; }
-  .venue-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
-}
 
 
 /* =============================================================================
@@ -4988,99 +5016,11 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex: 1;
 }
 
-/* ── Job modal ───────────────────────────────────────────────────────────── */
-.job-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--scrim);
-  z-index: 200;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 3rem 1rem;
-  overflow-y: auto;
-}
-
-.job-modal-overlay.is-open { display: flex; }
-
-.job-modal {
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-  background: var(--bg-card);
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: var(--shadow-float);
-}
-
-.job-modal-img {
-  width: 100%;
-  display: block;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-}
-
-.job-modal-img-fallback {
-  position: relative;
-}
-
-.job-modal-content {
-  padding: 1.5rem 1.75rem 1.75rem;
-}
-
-.job-modal-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.65rem;
-}
-
-.job-modal-title {
-  font-family: var(--font-ui);
-  font-size: 1.55rem;
-  font-weight: 400;
-  margin: 0 0 0.5rem;
-  color: var(--text-primary);
-}
-
-.job-modal-contact {
-  font-family: var(--font-text);
-  font-size: 1rem;
-  color: var(--text-primary);
-  margin: 0 0 1rem;
-}
-
-.job-modal-contact-label {
-  font-family: var(--font-ui);
-  font-size: var(--fs-caps);
-  color: var(--text-secondary);
-  margin-right: 0.5rem;
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  display: inline-block;
-  min-width: 6.5rem;
-}
-
-.job-modal-desc {
-  font-family: var(--font-text);
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.job-modal-desc p { margin: 0 0 0.85rem; }
-.job-modal-desc p:last-child { margin-bottom: 0; }
-
-@media (max-width: 768px) {
-  .job-modal-overlay { padding: 1rem; }
-  .job-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
-}
-
 
 
 /* =============================================================================
    18. BOUNTY BOARD + FACTION ROSTERS — public pages
-   Reuses the job-card / job-modal and venue-card / venue-modal patterns; the
+   Reuses the job-card / detail-modal and venue-card / detail-modal patterns; the
    classes below cover the member action row (sign up / apply, shared
    buttons) shown inside detail modals.
    ========================================================================== */
@@ -5093,11 +5033,9 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-size: 0.85rem;
 }
 
-/* Popup facts (Contact, When, ...): the label sits on the value's line at a
-   fixed width, so the values line up; the participants list's label is a
-   heading of its own. */
+/* The participants list's label is a heading of its own. */
 .quest-participants { margin-top: 1.1rem; }
-.quest-participants .job-modal-contact-label { display: block; }
+.quest-participants .detail-modal-fact-label { display: block; }
 
 .quest-modal-actions {
   margin-top: 1.25rem;
@@ -5480,24 +5418,24 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 /* ── Venue modal "View Menu" link ──────────────────────────────────────────
    A small quiet button between the location line and the description; its
    arrow nudges forward on hover. */
-.venue-modal-menu-link {
+.detail-modal-link {
   /* The location already carries 1rem beneath it, so only a gap below. */
   margin: 0 0 1.1rem;
 }
 
-.venue-modal-menu-arrow {
+.detail-modal-link-arrow {
   transition: transform 0.18s ease;
 }
 
-.venue-modal-menu-link:hover .venue-modal-menu-arrow,
-.venue-modal-menu-link:focus-visible .venue-modal-menu-arrow {
+.detail-modal-link:hover .detail-modal-link-arrow,
+.detail-modal-link:focus-visible .detail-modal-link-arrow {
   transform: translateX(0.15rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .venue-modal-menu-arrow { transition: none; }
-  .venue-modal-menu-link:hover .venue-modal-menu-arrow,
-  .venue-modal-menu-link:focus-visible .venue-modal-menu-arrow { transform: none; }
+  .detail-modal-link-arrow { transition: none; }
+  .detail-modal-link:hover .detail-modal-link-arrow,
+  .detail-modal-link:focus-visible .detail-modal-link-arrow { transform: none; }
 }
 
 @media (max-width: 1024px) {

@@ -432,9 +432,9 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(j) {
     if (j.image_url) {
-      return PVThemeImage.html(j.image_url, j.dark_image_url, "job-modal-img tear");
+      return PVThemeImage.html(j.image_url, j.dark_image_url, "detail-modal-img tear");
     }
-    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
   }
 
   function openModal(j) {
@@ -449,17 +449,17 @@
       '<span class="tag">' + escapeHTML(STATUS_LABEL[j.status] || "") + '</span>';
 
     var contactHtml = j.contact
-      ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
+      ? '<p class="detail-modal-fact"><span class="detail-modal-fact-label">Contact</span>' +
         escapeHTML(j.contact) + '</p>'
       : "";
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="job-modal-content">' +
-        '<div class="job-modal-badges">' + badges + '</div>' +
-        '<h2 class="job-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
         contactHtml +
-        '<div class="job-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         applyHtml(j) +
         '<p id="job-action-error" class="quest-action-error" style="display:none;"></p>' +
       '</div>';
@@ -468,7 +468,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    PVScrollLock.lock("job-modal");
+    PVScrollLock.lock("detail-modal");
   }
 
   // ── Apply / withdraw ─────────────────────────────────────────────────────
@@ -589,7 +589,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    PVScrollLock.unlock("job-modal");
+    PVScrollLock.unlock("detail-modal");
     modalBody.innerHTML = "";
   }
 

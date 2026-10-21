@@ -79,10 +79,10 @@
     <div class="browse-overlay" id="codex-overlay" aria-hidden="true"></div>
 
     <!-- Detail modal (reuses the venue modal shell) -->
-    <div class="venue-modal-overlay" id="codex-modal-overlay" aria-hidden="true">
-      <div class="venue-modal" id="codex-modal" role="dialog" aria-modal="true" aria-labelledby="codex-modal-title" tabindex="-1">
+    <div class="detail-modal-overlay" id="codex-modal-overlay" aria-hidden="true">
+      <div class="detail-modal" id="codex-modal" role="dialog" aria-modal="true" aria-labelledby="codex-modal-title" tabindex="-1">
         <button type="button" class="btn is-quiet is-small is-icon modal-close" id="codex-modal-close" aria-label="Close">&#10005;</button>
-        <div class="venue-modal-body" id="codex-modal-body">
+        <div class="detail-modal-body" id="codex-modal-body">
           <!-- populated by JS -->
         </div>
       </div>
@@ -424,13 +424,13 @@
       modalBody.innerHTML =
         (e.image_url
           ? '<div class="sketch-wash tear">' +
-              '<img src="' + escapeHtml(e.image_url) + '" alt="" class="venue-modal-img" onerror="this.parentElement.remove()">' +
+              '<img src="' + escapeHtml(e.image_url) + '" alt="" class="detail-modal-img" onerror="this.parentElement.remove()">' +
             '</div>'
           : '') +
-        '<div class="venue-modal-content">' +
-          '<h2 class="venue-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
+        '<div class="detail-modal-content">' +
+          '<h2 class="detail-modal-title" id="codex-modal-title">' + escapeHtml(e.name) + '</h2>' +
           (authorLine ? '<p class="codex-modal-sub">' + escapeHtml(authorLine) + '</p>' : '') +
-          '<div class="venue-modal-desc codex-modal-desc">' + descHtml + '</div>' +
+          '<div class="detail-modal-desc codex-modal-desc">' + descHtml + '</div>' +
           tagsHtml +
         '</div>';
 

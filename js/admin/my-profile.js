@@ -251,21 +251,21 @@
     useEffect(function () { return PVScrollLock.lock(); }, []);
 
     var media = it.image_url
-      ? h('img', { className: 'venue-modal-img tear', src: it.image_url, alt: '' })
-      : h('div', { className: 'venue-modal-img venue-modal-img-fallback media-ph tear' });
+      ? h('img', { className: 'detail-modal-img tear', src: it.image_url, alt: '' })
+      : h('div', { className: 'detail-modal-img detail-modal-img-fallback media-ph tear' });
 
     var abilities = it.abilities || [];
     return h('div', {
-      className: 'venue-modal-overlay is-open',
+      className: 'detail-modal-overlay is-open',
       onMouseDown: function (e) { if (e.target === e.currentTarget && onClose) onClose(); }
     },
-      h('div', { className: 'venue-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
+      h('div', { className: 'detail-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
         h('button', { type: 'button', className: 'btn is-quiet is-small is-icon modal-close', 'aria-label': 'Close', onClick: onClose }, '✕'),
         media,
-        h('div', { className: 'venue-modal-content' },
-          h('h2', { className: 'venue-modal-title' }, it.name),
+        h('div', { className: 'detail-modal-content' },
+          h('h2', { className: 'detail-modal-title' }, it.name),
           it.description
-            ? h('p', { className: 'venue-modal-desc portal-pre' }, it.description)
+            ? h('p', { className: 'detail-modal-desc portal-pre' }, it.description)
             : null,
           abilities.length
             ? h('div', { className: 'pv-item-abilities' },

@@ -472,14 +472,14 @@
     var imgs = venueImages(v);
 
     if (!imgs.length) {
-      return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
+      return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
     }
 
     // The primary image (the first) swaps with the theme when it has a
     // dark-mode version; its two copies share slide 0.
     var dark = v.image_url ? v.dark_image_url : null;
     if (imgs.length === 1) {
-      return PVThemeImage.html(imgs[0], dark, "venue-modal-img tear");
+      return PVThemeImage.html(imgs[0], dark, "detail-modal-img tear");
     }
 
     var slides = imgs.map(function (src, i) {
@@ -536,7 +536,7 @@
       .concat(Array.isArray(v.tags) ? v.tags.map(function (t) { return "#" + t.replace(/_/g, " "); }) : [])
       .concat(Array.isArray(v.extra_tags) ? v.extra_tags.map(function (t) { return "#" + t; }) : []);
     var tagsHtml = allTags.length
-      ? '<div class="venue-card-tags venue-modal-tags">' +
+      ? '<div class="venue-card-tags detail-modal-tags">' +
         allTags.map(function (t) {
           return '<span class="venue-card-tag">' + escapeHTML(t) + '</span>';
         }).join("") +
@@ -550,21 +550,21 @@
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="btn is-quiet is-small venue-modal-menu-link" href="menus.html?venue=' +
+      ? '<a class="btn is-quiet is-small detail-modal-link" href="menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
           'View Menu' +
-          '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +
+          '<span class="detail-modal-link-arrow" aria-hidden="true">&rarr;</span>' +
         '</a>'
       : "";
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="venue-modal-content">' +
-        '<div class="venue-modal-badges">' + badges + '</div>' +
-        '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
-        '<p class="venue-modal-location">' + escapeHTML(locationLine(v)) + '</p>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
+        '<p class="detail-modal-meta">' + escapeHTML(locationLine(v)) + '</p>' +
         menuLinkHtml +
-        '<div class="venue-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
 
@@ -572,7 +572,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    PVScrollLock.lock("venue-modal");
+    PVScrollLock.lock("detail-modal");
   }
 
   function closeModal() {
@@ -583,7 +583,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    PVScrollLock.unlock("venue-modal");
+    PVScrollLock.unlock("detail-modal");
     modalBody.innerHTML = "";
   }
 
