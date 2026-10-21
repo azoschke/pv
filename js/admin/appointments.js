@@ -304,7 +304,7 @@
           h('div', { className: 'portal-field' },
             h('label', null, 'Assigned medic'),
             h('select', {
-              className: 'portal-filter-select', value: sched.assigned,
+              className: 'field is-filter', value: sched.assigned,
               onChange: function (e) { setSched(Object.assign({}, sched, { assigned: e.target.value })); }
             },
               sched.assigned ? null : h('option', { value: '' }, 'Select a medic…'),

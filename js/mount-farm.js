@@ -355,7 +355,7 @@
       : [];
     return h('div', null,
       h('input', {
-        className: 'cdb-input', type: 'search', autoComplete: 'off', 'aria-label': props.label,
+        className: 'field is-block', type: 'search', autoComplete: 'off', 'aria-label': props.label,
         placeholder: props.full ? props.fullText : props.placeholder,
         disabled: !!props.full, value: q,
         onChange: function (e) { setQ(e.target.value); }
@@ -402,7 +402,7 @@
       arrow(before, 'Previous', 'M15 6l-6 6 6 6'),
       props.id ? h('label', { className: 'mf-picker-count', htmlFor: props.id }, (at + 1) + ' of ' + groups.length) : null,
       h('select', {
-        id: props.id, className: 'mf-picker-select', 'aria-label': props.label, value: groups[at].key,
+        id: props.id, className: 'field mf-picker-select', 'aria-label': props.label, value: groups[at].key,
         onChange: function (e) { props.onPick(e.target.value); }
       }, groups.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name + ' · ' + props.status(g)); })),
       arrow(after, 'Next', 'M9 6l6 6-6 6'));
@@ -1099,16 +1099,16 @@
     var linkPrefix = '…' + window.location.pathname + '?event=';
     var linkField = isEdit
       ? h('div', { className: 'mf-field is-link' },
-          h('span', { className: 'mf-label' }, 'Link'),
+          h('span', { className: 'field-label' }, 'Link'),
           h('div', { className: 'mf-link-text' },
             h('span', { className: 'mf-row-main' }, linkPrefix + slugText),
             h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: copyLink }, icon('link'), copied ? 'Copied' : 'Copy link')))
       : h('div', { className: 'mf-field is-link' },
-          h('label', { className: 'mf-label', htmlFor: 'mf-event-link' }, 'Link'),
+          h('label', { className: 'field-label', htmlFor: 'mf-event-link' }, 'Link'),
           h('div', { className: 'mf-link-input' },
             h('span', { className: 'mf-link-prefix' }, linkPrefix),
             h('input', {
-              id: 'mf-event-link', className: 'cdb-input', type: 'text', placeholder: 'event-name', value: slugText,
+              id: 'mf-event-link', className: 'field is-block', type: 'text', placeholder: 'event-name', value: slugText,
               onChange: function (e) { setSlugEdited(true); setSlugText(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }
             })));
 
@@ -1122,11 +1122,11 @@
       h('section', { className: 'info-card mf-details', 'aria-label': 'Event details' },
         h('div', { className: 'mf-fields' },
           h('div', { className: 'mf-field' },
-            h('label', { className: 'mf-label', htmlFor: 'mf-event-name' }, 'Name'),
-            h('input', { id: 'mf-event-name', className: 'cdb-input', type: 'text', placeholder: 'Event name', value: name, onChange: function (e) { onName(e.target.value); } })),
+            h('label', { className: 'field-label', htmlFor: 'mf-event-name' }, 'Name'),
+            h('input', { id: 'mf-event-name', className: 'field is-block', type: 'text', placeholder: 'Event name', value: name, onChange: function (e) { onName(e.target.value); } })),
           h('div', { className: 'mf-field is-when' },
-            h('label', { className: 'mf-label', htmlFor: 'mf-event-when' }, 'Date and time'),
-            h('input', { id: 'mf-event-when', className: 'cdb-input', type: 'datetime-local', value: when, onChange: function (e) { setWhen(e.target.value); } })),
+            h('label', { className: 'field-label', htmlFor: 'mf-event-when' }, 'Date and time'),
+            h('input', { id: 'mf-event-when', className: 'field is-block', type: 'datetime-local', value: when, onChange: function (e) { setWhen(e.target.value); } })),
           linkField)),
       h('div', { className: 'mf-split is-side-first' },
         h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-who-title' },
@@ -1231,13 +1231,13 @@
     },
       h('div', null,
         h('label', { className: 'field-label', htmlFor: 'mf-mount-name' }, 'Mount'),
-        h('input', { id: 'mf-mount-name', className: 'cdb-input', type: 'text', placeholder: 'Mount name', value: name, onChange: function (e) { setName(e.target.value); } })),
+        h('input', { id: 'mf-mount-name', className: 'field is-block', type: 'text', placeholder: 'Mount name', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', null,
         h('label', { className: 'field-label', htmlFor: 'mf-mount-fight' }, 'Drops from'),
-        h('input', { id: 'mf-mount-fight', className: 'cdb-input', type: 'text', placeholder: 'The fight name', value: fight, onChange: function (e) { setFight(e.target.value); } })),
+        h('input', { id: 'mf-mount-fight', className: 'field is-block', type: 'text', placeholder: 'The fight name', value: fight, onChange: function (e) { setFight(e.target.value); } })),
       h('div', null,
         h('label', { className: 'field-label', htmlFor: 'mf-mount-group' }, 'Expansion'),
-        h('select', { id: 'mf-mount-group', className: 'cdb-select', value: grp, onChange: function (e) { setGrp(e.target.value); } },
+        h('select', { id: 'mf-mount-group', className: 'field', value: grp, onChange: function (e) { setGrp(e.target.value); } },
           grp ? null : h('option', { value: '', disabled: true }, 'Pick an expansion'),
           GROUPS.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name); }))),
       h('fieldset', { className: 'mf-choice' },

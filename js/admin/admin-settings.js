@@ -454,7 +454,7 @@
               type: 'search',
               name: 'account-search',
               autoComplete: 'off',
-              className: 'portal-search',
+              className: 'field is-search',
               placeholder: 'Filter by username or display name…',
               value: filter,
               onChange: function (e) { setFilter(e.target.value); }

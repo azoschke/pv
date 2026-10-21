@@ -1379,7 +1379,7 @@
             h('div', { style: { display: 'flex', gap: '0.5rem 1rem', flexWrap: 'wrap', alignItems: 'center' } },
               h('label', { className: 'rp-rule-check' },
                 h('input', { type: 'checkbox', checked: !!hk.single, onChange: function (e) { setHeal(o.value, { single: e.target.checked }); } }), 'Single heal'),
-              h('select', { className: 'portal-select', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
+              h('select', { className: 'field', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
                 'aria-label': o.label + ' single heal target', onChange: function (e) { setHeal(o.value, { single_scope: e.target.value }); } },
                 h('option', { value: 'self' }, 'Self only'),
                 h('option', { value: 'party' }, 'Anyone in the party')),
@@ -2120,7 +2120,7 @@
                             h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove')));
                       })),
                   h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-                    h('select', { className: 'portal-select rp-grow-select', value: campBossPick, onChange: function (e) { setCampBossPick(e.target.value); } },
+                    h('select', { className: 'field rp-grow-select', value: campBossPick, onChange: function (e) { setCampBossPick(e.target.value); } },
                       h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
                       bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
                     h('button', { type: 'button', className: 'btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
@@ -2142,7 +2142,7 @@
       tab === 'items' && canItems ? h('div', null,
         itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
-          h('input', { type: 'search', className: 'portal-search', value: itemQuery,
+          h('input', { type: 'search', className: 'field is-search', value: itemQuery,
             placeholder: 'Search items by name…',
             onChange: function (e) { setItemQuery(e.target.value); } }),
           itemForm ? null : h('button', { type: 'button', className: 'btn',
@@ -2168,7 +2168,7 @@
       tab === 'bosses' && showBosses ? h('div', null,
         bossForm ? h(BossForm, { onSubmit: createBoss, onCancel: function () { setBossForm(false); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
-          h('input', { type: 'search', className: 'portal-search', value: bossQuery,
+          h('input', { type: 'search', className: 'field is-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
           canEditAllBosses ? (function () {
@@ -2178,7 +2178,7 @@
               var row = members ? members.filter(function (m) { return String(m.id) === id; })[0] : null;
               return { id: id, label: row ? row.name : (members == null ? 'Member #' + id : 'Former member') };
             }).sort(function (a, b) { return a.label.localeCompare(b.label); });
-            return h('select', { className: 'portal-filter-select', value: bossCreator,
+            return h('select', { className: 'field is-filter', value: bossCreator,
               onChange: function (e) { setBossCreator(e.target.value); } },
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));

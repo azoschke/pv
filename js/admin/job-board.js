@@ -361,7 +361,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Job Board'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search postings…'

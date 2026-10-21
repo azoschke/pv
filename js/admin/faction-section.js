@@ -151,7 +151,7 @@
       h('div', { className: 'portal-filter-row' },
         h('input', {
           type: 'search',
-          className: 'portal-search',
+          className: 'field is-search',
           placeholder: 'Search name…',
           value: nameFilter,
           onChange: function (e) { setNameFilter(e.target.value); }

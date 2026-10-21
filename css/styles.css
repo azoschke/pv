@@ -1271,6 +1271,58 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 
+/* --- Fields ---
+   One look for every text field, dropdown and text box: the well, with no
+   border or outline of its own, 38px tall so it lines up with .btn (30px
+   with .is-small, like .btn.is-small). Focus is the ring from section 3.
+   Dropdowns draw their chevron in the ink colour from two gradients, so it
+   follows the theme (a data-URI SVG can't read CSS variables) and Safari
+   takes the padding and height. The bare fields inside a .portal-field (the
+   admin forms) take the same look without the class.
+     .is-block   full width          .is-small  30px, for dense rows
+     .is-search  a wider search box  .is-filter a filter dropdown's width
+     .is-mono    code (macros, ids) */
+.field,
+.portal-field :is(input[type="text"], input[type="date"], input[type="datetime-local"], input[type="number"], select, textarea) {
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--form-input-bg);
+  color: var(--text-primary);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+textarea.field,
+.portal-field textarea {
+  min-height: 5rem;
+  padding: 0.55rem 0.75rem;
+  resize: vertical;
+}
+select.field,
+.portal-field select {
+  -webkit-appearance: none;
+          appearance: none;
+  padding-right: 2rem;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-primary) 50%),
+    linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.field::placeholder,
+.portal-field :is(input, textarea)::placeholder { color: var(--form-input-placeholder); }
+.field.is-block  { display: block; width: 100%; }
+.field.is-small  { min-height: 30px; padding: 0 0.5rem; font-size: 0.85rem; }
+select.field.is-small { padding-right: 1.75rem; }
+.field.is-search { min-width: 16rem; }
+.field.is-filter { min-width: 11rem; }
+.field.is-mono   { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+
 /* --- Forms ---
    The pieces the tool pages (Crafting Database, Cosmic Exploration, Mount
    Farm) build their forms from: a panel with a title, a column of fields
@@ -1313,11 +1365,12 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   gap: 0.5rem;
 }
 
+/* A field's label: Stoke at the UI size, 7px above its control. */
 .field-label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 7px;
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
   color: var(--text-primary);
 }
 
@@ -1509,30 +1562,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   gap: 0.4rem;
 }
 
-.filter-label {
-  font-family: var(--font-ui);
-  font-size: 0.92rem;
-  color: var(--text-primary);
-}
-
-/* Inputs sit in the well, with no outline of their own. */
-.filter-input,
-.filter-select {
-  width: 100%;
-  min-height: 40px;
-  padding: 0 0.75rem;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  border: 0;
-  border-radius: 4px;
-}
-
-.filter-input::placeholder {
-  color: var(--text-secondary);
-}
-
 .filter-list {
   list-style: none;
   margin: 0;
@@ -1580,13 +1609,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   gap: 0.45rem;
 }
 
-.browse-sort-label {
-  font-family: var(--font-ui);
-  font-size: 0.92rem;
-  color: var(--text-primary);
-}
-
-.browse-sort .filter-select {
+.browse-sort .field {
   width: auto;
   min-width: 11rem;
 }
@@ -1661,7 +1684,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 @media (max-width: 768px) {
   .filter-sidebar { width: 280px; }
-  .browse-toolbar .filter-select { width: 100%; }
+  .browse-toolbar .field { width: 100%; }
 }
 
 
@@ -1974,18 +1997,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   font-weight: 400;
   font-size: 1rem;
   white-space: nowrap;
-}
-
-.job-selector select {
-  font-family: var(--font-text);
-  font-size: 1rem;
-  min-height: 38px;
-  padding: 0 0.7rem;
-  border: 0;
-  border-radius: 4px;
-  background-color: var(--form-input-bg);
-  color: var(--text-primary);
-  cursor: pointer;
 }
 
 /* Book sections: raised cards, 8px apart. */
@@ -2734,15 +2745,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   margin: 0;
 }
 
-/* Form inputs (shared with Crafting DB) */
-.form-input {
-  background-color: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-}
-
-.form-input::placeholder { color: var(--form-input-placeholder); }
-.form-label               { color: var(--text-primary); }
 
 
 /* =============================================================================
@@ -4056,7 +4058,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   .top-controls { flex-direction: column; align-items: stretch; }
 
   .job-selector { justify-content: space-between; }
-  .job-selector select { flex: 1; }
+  .job-selector .field { flex: 1; }
 
   .theme-toggle { align-self: flex-end; }
 
@@ -4142,14 +4144,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .chapter-select {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 38px;
-  padding: 0 0.7rem;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  color: var(--text-primary);
-  background-color: var(--bg-darker);
-  border: 0;
-  border-radius: 4px;
 }
 
 .chapter-view {
@@ -4365,26 +4359,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .cdb-search-bar { width: 100%; }
 
-/* Inputs and selects sit in the well, with no outline of their own. */
-.cdb-input,
-.cdb-select {
-  min-height: 40px;
-  padding: 0 0.8rem;
-  border: 0;
-  border-radius: 4px;
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  font-family: var(--font-text);
-  font-size: 1rem;
-}
-
-.cdb-input { width: 100%; }
-.cdb-select { cursor: pointer; }
-.cdb-input::placeholder { color: var(--text-secondary); }
-textarea.cdb-input { padding: 0.6rem 0.8rem; }
-
-.cdb-input-mono { font-family: monospace; font-size: 0.85rem; }
-.cdb-input-sm   { min-height: 30px; padding: 0 0.5rem; font-size: 0.85rem; }
 
 
 .filters-row {
@@ -4675,7 +4649,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   align-items: center;
 }
 
-.cdb-numeric-row .cdb-input { flex: 1; min-width: 120px; }
+.cdb-numeric-row .field { flex: 1; min-width: 120px; }
 
 /* Data reward chips (used both in display and edit modes) */
 .cdb-data-chip-row {
@@ -4767,7 +4741,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 @media (max-width: 768px) {
-  .cdb-numeric-row .cdb-input { flex: 1 1 100%; }
+  .cdb-numeric-row .field { flex: 1 1 100%; }
   .cdb-cosmic-item-grid { grid-template-columns: 1fr; }
 }
 
@@ -5620,15 +5594,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-picker-select {
   flex: 0 1 360px;
   min-width: 0;
-  min-height: 38px;
-  padding: 0 0.7rem;
-  border: 0;
-  border-radius: 4px;
-  background-color: var(--bg-darker);
-  color: var(--text-primary);
-  font-family: var(--font-text);
-  font-size: 1rem;
-  cursor: pointer;
 }
 
 /* One grid for the whole table; each row borrows its columns (subgrid).
@@ -5888,13 +5853,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-field { flex: 1 1 240px; min-width: 0; }
 .mf-field.is-when { flex: 1 1 220px; }
 .mf-field.is-link { flex: 2 1 380px; }
-.mf-label {
-  display: block;
-  margin-bottom: 7px;
-  font-family: var(--font-ui);
-  font-size: 0.92rem;
-  color: var(--text-primary);
-}
 .mf-link-input {
   display: flex;
   align-items: center;
@@ -5902,7 +5860,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   background-color: var(--bg-darker);
 }
 .mf-link-prefix { padding-left: 0.8rem; color: var(--text-secondary); white-space: nowrap; }
-.mf-link-input .cdb-input { padding-left: 2px; }
+.mf-link-input .field { padding-left: 2px; }
 .mf-link-text {
   display: flex;
   align-items: center;
@@ -6059,7 +6017,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .mf-dialog { max-width: 520px; }
-.mf-dialog .cdb-select { width: 100%; }
+.mf-dialog select.field { width: 100%; }
 .mf-push-left { margin-right: auto; }
 
 /* "This Event Isn't Available" and the like. */

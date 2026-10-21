@@ -135,7 +135,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Member Profiles'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search name, faction, skill…'

@@ -588,7 +588,7 @@
         },
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Menus'),
           h('select', {
-            className: 'portal-search',
+            className: 'field is-search',
             value: venueId,
             onChange: function (e) { setVenueId(e.target.value); },
             disabled: loading || !venues.length,

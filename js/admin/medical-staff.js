@@ -510,7 +510,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Medical Division Roster'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search name, position, tag…'

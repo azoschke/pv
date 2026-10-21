@@ -400,7 +400,7 @@
             h('input', {
               type: 'number',
               placeholder: '0',
-              className: 'cdb-input cdb-input-sm',
+              className: 'field is-block is-small',
               value: dataReward[level.key] || 0,
               onChange: (e) => onChange(level.key, parseInt(e.target.value) || 0)
             })
@@ -411,7 +411,7 @@
           h('input', {
             type: 'number',
             placeholder: '0',
-            className: 'cdb-input cdb-input-sm',
+            className: 'field is-block is-small',
             value: dataReward.cosmicPoints || 0,
             onChange: (e) => onChange('cosmicPoints', parseInt(e.target.value) || 0)
           })
@@ -548,7 +548,7 @@
             type: 'text',
             value: formData.questName,
             onChange: (e) => updateField('questName', e.target.value),
-            className: 'cdb-input',
+            className: 'field is-block',
             required: true
           })
         ),
@@ -558,7 +558,7 @@
             h('select', {
               value: formData.location,
               onChange: (e) => updateField('location', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...LOCATIONS.map(loc => h('option', { key: loc, value: loc }, loc))
             )
@@ -568,7 +568,7 @@
             h('select', {
               value: formData.job,
               onChange: (e) => updateField('job', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...JOBS.map(job => h('option', { key: job, value: job }, job))
             )
@@ -578,7 +578,7 @@
             h('select', {
               value: formData.category,
               onChange: (e) => updateField('category', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
             )
@@ -597,7 +597,7 @@
           formData.foodRequired && h('select', {
             value: formData.foodType,
             onChange: (e) => updateField('foodType', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
           )
@@ -618,7 +618,7 @@
                   h('label', { className: 'field-label is-small' }, 'Item Name'),
                   h('input', {
                     type: 'text',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     placeholder: 'Item Name',
                     value: item.name,
                     onChange: (e) => updateItem(index, 'name', e.target.value)
@@ -628,7 +628,7 @@
                   h('label', { className: 'field-label is-small' }, 'Difficulty'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.difficulty,
                     onChange: (e) => updateItem(index, 'difficulty', e.target.value)
                   })
@@ -637,7 +637,7 @@
                   h('label', { className: 'field-label is-small' }, 'Quality'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.quality,
                     onChange: (e) => updateItem(index, 'quality', e.target.value)
                   })
@@ -648,7 +648,7 @@
                   h('label', { className: 'field-label is-small' }, 'Durability'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.durability,
                     onChange: (e) => updateItem(index, 'durability', e.target.value)
                   })
@@ -666,7 +666,7 @@
                   'Macro for ' + (item.name || `Item ${index + 1}`)
                 ),
                 h('textarea', {
-                  className: 'cdb-input cdb-input-mono',
+                  className: 'field is-block is-mono',
                   rows: 6,
                   value: formData.macros[index] ? formData.macros[index].macro : '',
                   onChange: (e) => updateMacro(index, e.target.value),
@@ -678,7 +678,7 @@
           !multipleItems && h('div', null,
             h('label', { className: 'field-label' }, 'Macro'),
             h('textarea', {
-              className: 'cdb-input cdb-input-mono',
+              className: 'field is-block is-mono',
               rows: 6,
               value: formData.macros[0] ? formData.macros[0].macro : '',
               onChange: (e) => updateMacro(0, e.target.value),
@@ -697,7 +697,7 @@
         h('div', null,
           h('label', { className: 'field-label' }, 'Notes'),
           h('textarea', {
-            className: 'cdb-input',
+            className: 'field is-block',
             rows: 3,
             value: formData.notes,
             onChange: (e) => updateField('notes', e.target.value),
@@ -905,7 +905,7 @@
           type: 'text',
           value: editFormData.questName || '',
           onChange: (e) => updateEditField('questName', e.target.value),
-          className: 'cdb-input',
+          className: 'field is-block',
           required: true
         })
       ),
@@ -915,7 +915,7 @@
           h('select', {
             value: editFormData.location || LOCATIONS[0],
             onChange: (e) => updateEditField('location', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             // Preserve legacy slash-separated value if present
             editFormData.location && !LOCATIONS.includes(editFormData.location) &&
@@ -928,7 +928,7 @@
           h('select', {
             value: editFormData.job || JOBS[0],
             onChange: (e) => updateEditField('job', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...JOBS.map(job => h('option', { key: job, value: job }, job))
           )
@@ -938,7 +938,7 @@
           h('select', {
             value: editFormData.category || 'Class D',
             onChange: (e) => updateEditField('category', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
           )
@@ -957,7 +957,7 @@
         editFormData.foodRequired && h('select', {
           value: editFormData.foodType || 'None',
           onChange: (e) => updateEditField('foodType', e.target.value),
-          className: 'cdb-input'
+          className: 'field is-block'
         },
           ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
         )
@@ -978,7 +978,7 @@
                 h('label', { className: 'field-label is-small' }, 'Item Name'),
                 h('input', {
                   type: 'text',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.name || '',
                   onChange: (e) => updateEditItem(idx, 'name', e.target.value)
                 })
@@ -987,7 +987,7 @@
                 h('label', { className: 'field-label is-small' }, 'Difficulty'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.difficulty || 0,
                   onChange: (e) => updateEditItem(idx, 'difficulty', e.target.value)
                 })
@@ -996,7 +996,7 @@
                 h('label', { className: 'field-label is-small' }, 'Quality'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.quality || 0,
                   onChange: (e) => updateEditItem(idx, 'quality', e.target.value)
                 })
@@ -1007,7 +1007,7 @@
                 h('label', { className: 'field-label is-small' }, 'Durability'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.durability || 0,
                   onChange: (e) => updateEditItem(idx, 'durability', e.target.value)
                 })
@@ -1025,7 +1025,7 @@
                 'Macro for ' + (item.name || `Item ${idx + 1}`)
               ),
               h('textarea', {
-                className: 'cdb-input cdb-input-mono',
+                className: 'field is-block is-mono',
                 rows: 6,
                 value: (editFormData.macros[idx] && editFormData.macros[idx].macro) || '',
                 onChange: (e) => updateEditMacro(idx, e.target.value)
@@ -1036,7 +1036,7 @@
         !multipleEditItems && h('div', null,
           h('label', { className: 'field-label' }, 'Macro'),
           h('textarea', {
-            className: 'cdb-input cdb-input-mono',
+            className: 'field is-block is-mono',
             rows: 8,
             value: (editFormData.macros[0] && editFormData.macros[0].macro) || '',
             onChange: (e) => updateEditMacro(0, e.target.value)
@@ -1054,7 +1054,7 @@
       h('div', null,
         h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
-          className: 'cdb-input',
+          className: 'field is-block',
           rows: 3,
           value: editFormData.notes || '',
           onChange: (e) => updateEditField('notes', e.target.value)
@@ -1210,21 +1210,21 @@
             h('input', {
               type: 'number',
               placeholder: 'Difficulty (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: difficultySearch,
               onChange: (e) => setDifficultySearch(e.target.value)
             }),
             h('input', {
               type: 'number',
               placeholder: 'Quality (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: qualitySearch,
               onChange: (e) => setQualitySearch(e.target.value)
             }),
             h('input', {
               type: 'number',
               placeholder: 'Durability (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: durabilitySearch,
               onChange: (e) => setDurabilitySearch(e.target.value)
             }),
@@ -1241,7 +1241,7 @@
         : h('input', {
             type: 'text',
             placeholder: 'Search quests, items, or data rewards...',
-            className: 'cdb-input',
+            className: 'field is-block',
             value: searchTerm,
             onChange: (e) => setSearchTerm(e.target.value)
           })
@@ -1429,7 +1429,7 @@
           h('select', {
             value: sortBy,
             onChange: (e) => setSortBy(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'questName' }, 'Sort by Quest Name'),
             h('option', { value: 'category' }, 'Sort by Class (A\u2192D)'),
@@ -1439,7 +1439,7 @@
           h('select', {
             value: filterCategory,
             onChange: (e) => setFilterCategory(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Classes'),
             ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
@@ -1447,7 +1447,7 @@
           h('select', {
             value: filterLocation,
             onChange: (e) => setFilterLocation(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             ...locationOptions.map(loc =>
               h('option', { key: loc, value: loc }, loc === 'all' ? 'All Locations' : loc)
@@ -1456,7 +1456,7 @@
           h('select', {
             value: filterJob,
             onChange: (e) => setFilterJob(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Jobs'),
             ...JOBS.map(job => h('option', { key: job, value: job }, job))

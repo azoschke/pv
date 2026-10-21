@@ -41,10 +41,10 @@
         <div class="filter-body">
 
           <div class="filter-group">
-            <label class="filter-label" for="jobs-search">Search</label>
+            <label class="field-label is-flush" for="jobs-search">Search</label>
             <input
               id="jobs-search"
-              class="filter-input"
+              class="field is-block"
               type="search"
               placeholder="Title or keyword..."
               autocomplete="off"
@@ -52,17 +52,17 @@
           </div>
 
           <div class="filter-group" id="filter-category-group">
-            <span class="filter-label">Division</span>
+            <span class="field-label is-flush">Division</span>
             <ul class="filter-list" id="filter-category-list" role="list"></ul>
           </div>
 
           <div class="filter-group" id="filter-type-group">
-            <span class="filter-label">Job Type</span>
+            <span class="field-label is-flush">Job Type</span>
             <ul class="filter-list" id="filter-type-list" role="list"></ul>
           </div>
 
           <div class="filter-group">
-            <span class="filter-label">Status</span>
+            <span class="field-label is-flush">Status</span>
             <label class="filter-check">
               <input type="checkbox" id="filter-show-closed" />
               <span>Show closed &amp; filled</span>
@@ -83,8 +83,8 @@
           </button>
           <span class="result-count" id="jobs-count" aria-live="polite"></span>
           <div class="browse-sort">
-            <label for="jobs-sort-select" class="browse-sort-label">Sort:</label>
-            <select id="jobs-sort-select" class="filter-select">
+            <label for="jobs-sort-select" class="field-label is-flush">Sort:</label>
+            <select id="jobs-sort-select" class="field is-block">
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="title">Title (A &rarr; Z)</option>

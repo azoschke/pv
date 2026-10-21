@@ -37,10 +37,10 @@
         <div class="filter-body">
 
           <div class="filter-group">
-            <label class="filter-label" for="quests-search">Search</label>
+            <label class="field-label is-flush" for="quests-search">Search</label>
             <input
               id="quests-search"
-              class="filter-input"
+              class="field is-block"
               type="search"
               placeholder="Title or keyword..."
               autocomplete="off"
@@ -48,17 +48,17 @@
           </div>
 
           <div class="filter-group" id="filter-type-group">
-            <span class="filter-label">Mission Type</span>
+            <span class="field-label is-flush">Mission Type</span>
             <ul class="filter-list" id="filter-type-list" role="list"></ul>
           </div>
 
           <div class="filter-group" id="filter-schedule-group">
-            <span class="filter-label">Schedule</span>
+            <span class="field-label is-flush">Schedule</span>
             <ul class="filter-list" id="filter-schedule-list" role="list"></ul>
           </div>
 
           <div class="filter-group">
-            <span class="filter-label">History</span>
+            <span class="field-label is-flush">History</span>
             <label class="filter-check">
               <input type="checkbox" id="filter-show-past" />
               <span>Show past quests</span>
@@ -79,8 +79,8 @@
           </button>
           <span class="result-count" id="quests-count" aria-live="polite"></span>
           <div class="browse-sort">
-            <label for="quests-sort-select" class="browse-sort-label">Sort:</label>
-            <select id="quests-sort-select" class="filter-select">
+            <label for="quests-sort-select" class="field-label is-flush">Sort:</label>
+            <select id="quests-sort-select" class="field is-block">
               <option value="soonest">Soonest first</option>
               <option value="newest">Newest</option>
               <option value="title">Title (A &rarr; Z)</option>

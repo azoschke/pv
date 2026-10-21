@@ -32,15 +32,13 @@
 .rp-card { background: var(--bg-card); border-radius: 4px; padding: 1rem 1.1rem; }
 
 /* Filled wells — inputs, selects, number fields. No border; focus = soft ring. */
-.rp-input, .rp-select, .rp-buff-val, .rp-hp-input, .rp-hits-input {
+.rp-buff-val, .rp-hp-input, .rp-hits-input {
   font-family: inherit; color: var(--text-primary); background: var(--bg-darker); border: 0; border-radius: 4px; box-sizing: border-box; }
-.rp-input:focus, .rp-select:focus, .rp-buff-val:focus, .rp-hp-input:focus, .rp-hits-input:focus,
+.rp-buff-val:focus, .rp-hp-input:focus, .rp-hits-input:focus,
 .rp-roll-hero:focus-within, .rp-item-tile:focus-visible, .rp-party-row.is-pickable:focus-visible,
 .rp-boss-card.is-pickable:focus-visible, .rp-skills-btn:focus-visible { outline: none; box-shadow: var(--rp-ring); }
-.rp-input { display: block; width: 100%; padding: 0.5rem 0.6rem; font-size: 1.05rem; }
 .rp-input-label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
-.rp-input-label .rp-input { margin-top: 0.25rem; }
-.rp-select { padding: 0.4rem 0.55rem; font-size: 1rem; }
+.rp-input-label .field { margin-top: 0.25rem; }
 
 .rp-note { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--text-secondary); }
 .rp-note-warn { color: var(--accent-red); }
@@ -367,8 +365,6 @@
 .rp-dm-session { display: flex; gap: 0.4rem; margin: 0.4rem 0 0; flex-wrap: wrap; }
 .rp-dm-scene { display: flex; align-items: center; gap: 0.4rem; margin: 0.75rem 0 0; flex-wrap: wrap; }
 .rp-dm-scene-label { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
-.rp-scene-select { font: inherit; font-size: 0.85rem; min-height: 32px; padding: 0 0.5rem; border-radius: 4px;
-  border: 0; background: var(--bg-darker); color: var(--text-primary); }
 .rp-scene-chip { display: inline-flex; align-items: center; gap: 0.28rem; margin: 0.25rem 0 0;
   font-size: 0.78rem; color: var(--text-secondary); }
 .rp-scene-chip .material-symbols-outlined { font-size: 1em; line-height: 1; vertical-align: -0.15em; }
@@ -398,7 +394,7 @@
 .rp-effect-meta { font-family: var(--font-text); font-size: 0.85rem; color: var(--text-secondary); }
 .rp-effect-ctl { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
-.rp-boss-add .rp-select { flex: 1 1 14rem; }
+.rp-boss-add .field { flex: 1 1 14rem; }
 .rp-dm-boss.is-down { opacity: 0.55; }
 .rp-dm-boss-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .rp-dm-boss-head strong { font-family: var(--font-ui); }
@@ -554,7 +550,7 @@
   flex-wrap: wrap;
   margin-bottom: 1rem;
 }
-.rp-catalogue-toolbar .portal-search { flex: 1 1 14rem; }
+.rp-catalogue-toolbar .field.is-search { flex: 1 1 14rem; }
 
 /* Editor modal: item fields + abilities/modifiers all in one place so editing
    no longer expands cards inline and shifts the grid around. */

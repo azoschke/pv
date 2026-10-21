@@ -185,7 +185,7 @@
         },
           h('label', null, f.label),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: draft.member_id ? String(draft.member_id) : '',
             onChange: function (e) {
               var val = e.target.value;
@@ -298,7 +298,7 @@
         h('div', { className: 'portal-card-actions' },
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             placeholder: 'Filter by name…',
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }

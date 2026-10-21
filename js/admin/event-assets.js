@@ -521,7 +521,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Event Assets'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search assets…'
@@ -538,7 +538,7 @@
         // Filters on their own line: type + tag dropdowns.
         h('div', { className: 'portal-filter-row', style: { marginBottom: 0 } },
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: typeFilter,
             onChange: function (e) { setTypeFilter(e.target.value); },
             'aria-label': 'Filter by type'
@@ -547,7 +547,7 @@
             TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
           ),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: tagFilter,
             onChange: function (e) { setTagFilter(e.target.value); },
             'aria-label': 'Filter by tag'

@@ -515,7 +515,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Cosmic Exploration Catalog'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search quests or items…'
@@ -523,7 +523,7 @@
           h('select', {
             value: filterJob,
             onChange: function (e) { setFilterJob(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All jobs'),
             jobs.map(function (j) { return h('option', { key: j.name, value: j.name }, j.name); })
@@ -531,7 +531,7 @@
           h('select', {
             value: filterLoc,
             onChange: function (e) { setFilterLoc(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All locations'),
             locations.map(function (l) { return h('option', { key: l.name, value: l.name }, l.name); })
@@ -539,7 +539,7 @@
           h('select', {
             value: filterCat,
             onChange: function (e) { setFilterCat(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All classes'),
             categories.map(function (c) { return h('option', { key: c.name, value: c.name }, c.name); })

@@ -376,58 +376,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   flex-wrap: wrap;
 }
 
-/* Inputs and selects sit in the well, with no outline of their own. */
-.portal-search {
-  background: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  min-height: 38px;
-  padding: 0 0.75rem;
-  border-radius: 4px;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  line-height: 1.25;
-  box-sizing: border-box;
-  min-width: 16rem;
-}
-.portal-search::placeholder { color: var(--form-input-placeholder); }
-
 .portal-filter-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.6rem;
   align-items: center;
   margin: 0.35rem 0 0.85rem;
-}
-/* Dropdown chevron in the ink colour, drawn from two gradients so it follows
-   the theme tokens (a data-URI SVG can't read CSS variables). */
-.portal-filter-select,
-.portal-field select,
-.portal-select {
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--text-primary) 50%),
-    linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-}
-.portal-filter-select {
-  background-color: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  /* Same box as .portal-search so dropdowns line up with inputs. Safari's
-     native select ignores padding/height, so appearance is dropped above. */
-  min-height: 38px;
-  padding: 0 2rem 0 0.65rem;
-  border-radius: 4px;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  line-height: 1.25;
-  box-sizing: border-box;
-  min-width: 11rem;
 }
 
 /* --------------- Tables ---------------
@@ -500,32 +454,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
        letter-spacing: 0;
        text-transform: none;
    }
-.portal-field input[type="text"],
-.portal-field input[type="date"],
-.portal-field input[type="datetime-local"],
-.portal-field input[type="number"],
-.portal-field textarea,
-.portal-field select, .portal-select {
-  background-color: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  padding: 0.55rem 0.65rem;
-  border-radius: 4px;
-  font-family: var(--font-text);
-  font-size: 1rem;
-}
-/* Same line-height on inputs and dropdowns so equal padding gives equal
-   heights. (The select chevron is drawn with .portal-filter-select above.) */
-.portal-field input[type="text"],
-.portal-field input[type="date"],
-.portal-field input[type="datetime-local"],
-.portal-field input[type="number"],
-.portal-field select, .portal-select {
-  line-height: 1.25;
-}
-.portal-field select, .portal-select { padding-right: 2rem; }
-.portal-field input::placeholder,
-.portal-field textarea::placeholder { color: var(--form-input-placeholder); }
+/* The fields themselves are the shared .field look (styles.css). */
 /* Standalone section-title style (Stoke small caps) — used only on the
    specific campaign-panel titles, never grouped with the form inputs above. */
 .portal-block-label {
@@ -537,7 +466,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   color: var(--text-primary);
 }
-.portal-field textarea { min-height: 5rem; resize: vertical; }
 .portal-field-help {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -1528,7 +1456,7 @@ textarea.cmp-code,
   .portal-main { padding: calc(1rem + var(--tear-h)) 1rem 3rem; }
   .portal-field-row,
   .portal-field-row-triple { grid-template-columns: 1fr; }
-  .portal-search { min-width: 0; width: 100%; }
+  .field.is-search { min-width: 0; width: 100%; }
   .portal-card-actions { width: 100%; }
   /* Section headers with extra content (dashboard date, FC Members search +
      add button) wrap instead of overflowing the viewport. */

@@ -37,10 +37,10 @@
         <div class="filter-body">
 
           <div class="filter-group">
-            <label class="filter-label" for="venues-search">Search</label>
+            <label class="field-label is-flush" for="venues-search">Search</label>
             <input
               id="venues-search"
-              class="filter-input"
+              class="field is-block"
               type="search"
               placeholder="Name or keyword..."
               autocomplete="off"
@@ -48,18 +48,18 @@
           </div>
 
           <div class="filter-group" id="filter-size-group">
-            <span class="filter-label">Size</span>
+            <span class="field-label is-flush">Size</span>
             <ul class="filter-list" id="filter-size-list" role="list"></ul>
           </div>
 
           <div class="filter-group" id="filter-type-group">
-            <span class="filter-label">Type</span>
+            <span class="field-label is-flush">Type</span>
             <ul class="filter-list" id="filter-type-list" role="list"></ul>
           </div>
 
           <div class="filter-group">
-            <label class="filter-label" for="filter-district">District</label>
-            <select id="filter-district" class="filter-select">
+            <label class="field-label is-flush" for="filter-district">District</label>
+            <select id="filter-district" class="field is-block">
               <option value="">Any district</option>
               <option value="mist">Mist</option>
               <option value="lavender_beds">Lavender Beds</option>
@@ -70,7 +70,7 @@
           </div>
 
           <div class="filter-group">
-            <span class="filter-label">Featured</span>
+            <span class="field-label is-flush">Featured</span>
             <label class="filter-check">
               <input type="checkbox" id="filter-featured" />
               <span>Featured only</span>
@@ -91,8 +91,8 @@
           </button>
           <span class="result-count" id="venues-count" aria-live="polite"></span>
           <div class="browse-sort">
-            <label for="venues-sort-select" class="browse-sort-label">Sort:</label>
-            <select id="venues-sort-select" class="filter-select">
+            <label for="venues-sort-select" class="field-label is-flush">Sort:</label>
+            <select id="venues-sort-select" class="field is-block">
               <option value="featured">Featured</option>
               <option value="size_asc">Size (small &rarr; large)</option>
               <option value="size_desc">Size (large &rarr; small)</option>

@@ -621,7 +621,7 @@
         draft.foodRequired && h('select', {
           value: draft.foodType,
           onChange: (e) => setDraft(d => ({ ...d, foodType: e.target.value })),
-          className: 'cdb-select'
+          className: 'field'
         },
           // include current value even if it isn't in the canonical list,
           // so legacy/custom food labels survive editing
@@ -638,7 +638,7 @@
           return h('div', { key: item.id, className: 'cdb-item-block' },
             h('label', { className: 'field-label is-small' }, 'Macro for ' + (item.name || 'Item')),
             h('textarea', {
-              className: 'cdb-input cdb-input-mono',
+              className: 'field is-block is-mono',
               rows: 6,
               value: cur.macro || '',
               onChange: (e) => setDraft(d => ({
@@ -662,7 +662,7 @@
       h('div', null,
         h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
-          className: 'cdb-input',
+          className: 'field is-block',
           rows: 3,
           value: draft.notes || '',
           onChange: (e) => setDraft(d => ({ ...d, notes: e.target.value })),
@@ -1034,11 +1034,11 @@
           ),
           searchMode === 'numeric'
             ? h('div', { className: 'cdb-numeric-row' },
-                h('input', { type: 'number', placeholder: 'Difficulty (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Difficulty (exact)', className: 'field is-block',
                   value: difficultySearch, onChange: (e) => setDifficultySearch(e.target.value) }),
-                h('input', { type: 'number', placeholder: 'Quality (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Quality (exact)', className: 'field is-block',
                   value: qualitySearch, onChange: (e) => setQualitySearch(e.target.value) }),
-                h('input', { type: 'number', placeholder: 'Durability (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Durability (exact)', className: 'field is-block',
                   value: durabilitySearch, onChange: (e) => setDurabilitySearch(e.target.value) }),
                 h('button', {
                   type: 'button',
@@ -1047,13 +1047,13 @@
                 }, 'Clear')
               )
             : h('input', {
-                type: 'text', placeholder: 'Search quests, items, or job...', className: 'cdb-input',
+                type: 'text', placeholder: 'Search quests, items, or job...', className: 'field is-block',
                 value: searchTerm, onChange: (e) => setSearchTerm(e.target.value)
               })
         ),
 
         h('div', { className: 'filters-row' },
-          h('select', { value: sortBy, onChange: (e) => setSortBy(e.target.value), className: 'cdb-select' },
+          h('select', { value: sortBy, onChange: (e) => setSortBy(e.target.value), className: 'field' },
             h('option', { value: 'questName' }, 'Sort by Quest Name'),
             h('option', { value: 'category' }, 'Sort by Class (A→D)'),
             h('option', { value: 'difficulty' }, 'Sort by Difficulty'),
@@ -1062,7 +1062,7 @@
           h('select', {
             value: filterCategory,
             onChange: (e) => setFilterCategory(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Classes'),
             ...categoryOptions.map(cat => h('option', { key: cat, value: cat }, cat))
@@ -1070,7 +1070,7 @@
           h('select', {
             value: filterLocation,
             onChange: (e) => setFilterLocation(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Locations'),
             ...locationOptions.map(loc => h('option', { key: loc, value: loc }, loc))
@@ -1078,7 +1078,7 @@
           h('select', {
             value: filterJob,
             onChange: (e) => setFilterJob(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Jobs'),
             ...jobOptions.map(job => h('option', { key: job, value: job }, job))

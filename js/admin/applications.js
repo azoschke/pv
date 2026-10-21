@@ -356,7 +356,7 @@
       h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
       h('td', null,
         canEdit ? h('select', {
-          className: 'portal-filter-select',
+          className: 'field is-filter',
           value: a.stage,
           onChange: function (e) { onStage(a, e.target.value); }
         }, STAGES.map(function (s) {
@@ -541,7 +541,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Applications'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search applications…'
@@ -557,7 +557,7 @@
         ),
         h('div', { className: 'portal-filter-row', style: { marginTop: '0.6rem' } },
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: divisionFilter,
             onChange: function (e) { setDivisionFilter(e.target.value); }
           },
@@ -565,7 +565,7 @@
             DIVISIONS.map(function (d) { return h('option', { key: d.value, value: d.value }, d.label); })
           ),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: stageFilter,
             onChange: function (e) { setStageFilter(e.target.value); }
           },

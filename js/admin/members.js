@@ -456,7 +456,7 @@
                       });
                       return h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
                         h('select', {
-                          className: 'portal-filter-select',
+                          className: 'field is-filter',
                           value: altPick,
                           style: { flex: '1 1 12rem' },
                           onChange: function (e) { setAltPick(e.target.value); }
@@ -752,7 +752,7 @@
 
     function filterSelect(value, onChange, placeholder, options) {
       return h('select', {
-        className: 'portal-filter-select',
+        className: 'field is-filter',
         value: value,
         onChange: function (e) { onChange(e.target.value); }
       },
@@ -771,7 +771,7 @@
         h('div', { className: 'members-header-actions' },
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             placeholder: 'Search name or notes…',
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }

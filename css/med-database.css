@@ -241,19 +241,6 @@
   padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
 }
-.patient-search {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 38px;
-  padding: 0 0.7rem;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  color: var(--text-primary);
-  background: var(--bg-darker);
-  border: 0;
-  border-radius: 4px;
-}
-.patient-search::placeholder { color: var(--text-secondary); }
 /* Fixed 9-column grid: 26 letters + "#" = exactly 3 even rows, so the
    last row lines up instead of stretching a few letters across. */
 .patient-az-bar {
