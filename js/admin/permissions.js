@@ -64,7 +64,7 @@
 
   function PermCell(props) {
     var v = props.value;
-    var cls = 'perm-cell' + (v ? ' is-' + v : ' is-blank') + (props.pending ? ' is-pending' : '') + (props.warn ? ' is-warn' : '');
+    var cls = 'tick perm-cell' + (v === 'allow' ? ' is-on' : v === 'deny' ? ' is-no' : '') + (props.pending ? ' is-pending' : '') + (props.warn ? ' is-warn' : '');
     return h('td', { className: 'perm-cell-td' },
       h('button', {
         type: 'button',

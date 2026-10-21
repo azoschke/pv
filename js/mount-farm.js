@@ -558,7 +558,7 @@
     function tickButton(c, m) {
       var have = has(c.id, m);
       return h('button', {
-        type: 'button', className: 'mf-tick' + (have ? ' is-have' : ''),
+        type: 'button', className: 'tick' + (have ? ' is-on' : ''),
         'aria-pressed': have ? 'true' : 'false',
         'aria-label': c.name + ' has ' + m.name,
         title: c.name + ' · ' + m.name + (have ? ': has it' : ': needs it'),
