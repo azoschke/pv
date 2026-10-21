@@ -29,7 +29,7 @@
 /* Keep the action composer in view while a long roster scrolls. */
 @media (min-width: 861px) { .rp-action-col { position: sticky; top: 1rem; align-self: start; } }
 
-.rp-card { background: var(--bg-card); border-radius: 4px; padding: 1rem 1.1rem; }
+.rp-card { padding: 1rem 1.1rem; }
 
 /* Filled wells — inputs, selects, number fields. No border; focus = soft ring. */
 .rp-buff-val, .rp-hp-input, .rp-hits-input {
@@ -65,7 +65,7 @@
 .rp-tab.is-active .rp-tab-icon, .rp-tab.is-active .rp-tab-sub { color: var(--rp-btn-ink); }
 .rp-tab.is-unavail:not(.is-active) { opacity: 0.5; }
 
-.rp-composer-wrap { background: var(--bg-card); border-radius: 4px; padding: 1rem 1.1rem; }
+.rp-composer-wrap { padding: 1rem 1.1rem; }
 .rp-composer { display: flex; flex-direction: column; gap: 0.85rem; }
 
 /* Hero roll input + chip breakdown, side by side (wraps on mobile). */
@@ -229,7 +229,7 @@
 .rp-item-thumb { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; }
 .rp-item-thumb-img { width: 100%; height: 100%; object-fit: cover; }
 .rp-item-tile-name { font-size: 0.82rem; text-align: center; line-height: 1.15; overflow-wrap: anywhere; padding: 0.35rem 0.4rem 0.45rem; }
-.rp-item-detail { margin-top: 1rem; background: var(--bg-card); border-radius: 4px; padding: 1rem 1.1rem; }
+.rp-item-detail { margin-top: 1rem; padding: 1rem 1.1rem; }
 .rp-item-detail-name { font-family: var(--font-ui); margin: 0 0 0.3rem; }
 .rp-item-detail-desc { color: var(--text-secondary); white-space: pre-wrap; margin: 0 0 0.75rem; }
 .rp-item-abilities { display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: stretch; }
@@ -330,7 +330,7 @@
    Raised, tearing along its bottom edge (.tear). Its sections are recessed
    trays; the boss cards and skills inside them are raised again, and the
    lists inside those flatten into rule-separated rows. */
-.rp-deck { background: var(--bg-card); border-radius: 4px 4px 0 0; padding-bottom: var(--tear-h); margin-bottom: 1.5rem; overflow: hidden; }
+.rp-deck { border-radius: 4px 4px 0 0; padding-bottom: var(--tear-h); margin-bottom: 1.5rem; overflow: hidden; }
 .rp-deck-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; padding: 0.65rem 0.9rem; }
 .rp-deck-title { display: flex; align-items: center; gap: 0.5rem; background: none; border: 0; color: var(--text-primary); font: inherit;
   font-family: var(--font-ui); font-size: 1.1rem; cursor: pointer; }

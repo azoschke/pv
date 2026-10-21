@@ -341,9 +341,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    Raised, with no border or shadow. The big ones (a table, a board) tear
    along the bottom (.tear / .tear-half in the markup). */
 .portal-card {
-  background: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
   padding: 1.25rem 1.25rem;
   margin-bottom: 1.25rem;
 }

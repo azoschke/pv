@@ -985,7 +985,7 @@ button.nav-sublink {
 :root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
-  .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
+  .form-progress):not(:is(.portal-card, .card, .atma-card, .rp-card, .rp-deck,
   .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
   .mf-panel, .mf-person-card, .mf-manage) *) {
   --bg-darker: var(--bg-card);
@@ -996,7 +996,7 @@ button.nav-sublink {
 :root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
-  .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
+  .form-progress):not(:is(.portal-card, .card, .atma-card, .rp-card, .rp-deck,
   .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
   .mf-panel, .mf-person-card, .mf-manage) *)
   .seg-btn:is(.is-active, [aria-pressed="true"]) {
@@ -1276,21 +1276,29 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   transition: width 0.3s ease;
 }
 
-/* --- Info card ---
-   A raised card of guidance above a tool. The big ones tear (add .tear). */
-.info-card {
-  margin-bottom: 1.25rem;
-  padding: 1.25rem 1.6rem;
+/* --- Card ---
+   The raised surface everything sits on: the card colour, no border or
+   shadow, the site radius. .card is the plain one (padding, a gap below,
+   .tear / .tear-half for a torn foot); the page cards share the same
+   surface here and set only their own spacing. */
+.card,
+.portal-card, .record-card, .form-panel, .notice-panel, .craft-card, .cdb-search-section,
+.chapter-view, .atma-card, .mf-panel, .home-board, .home-onboard,
+.rp-card, .rp-deck, .rp-composer-wrap, .rp-item-detail {
   background-color: var(--bg-card);
   border: 0;
   border-radius: 4px;
 }
+.card {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.6rem;
+}
 
-.info-card.tear,
-.info-card.tear-half { padding-bottom: calc(1.1rem + var(--tear-h)); }
+.card.tear,
+.card.tear-half { padding-bottom: calc(1.1rem + var(--tear-h)); }
 
-.info-card p { margin: 0 0 0.6rem; }
-.info-card p:last-child { margin-bottom: 0; }
+.card p { margin: 0 0 0.6rem; }
+.card p:last-child { margin-bottom: 0; }
 
 /* --- Top controls bar --- */
 .top-controls {
@@ -1429,11 +1437,8 @@ select.field.is-small { padding-right: 1.75rem; }
    card's footer, plus a muted meta line and a notice card. */
 /* A form on a card of its own (Add / Edit). */
 .form-panel {
-  border-radius: 4px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  background-color: var(--bg-card);
-  border: 0;
 }
 
 .form-title {
@@ -1763,9 +1768,6 @@ select.field.is-small { padding-right: 1.75rem; }
   font-family: var(--font-text);
   font-size: 1.1rem;
   color: var(--text-primary);
-  background: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
   padding: 2rem 1.5rem;
   text-align: center;
 }
@@ -2349,7 +2351,6 @@ select.field.is-small { padding-right: 1.75rem; }
    one rule under it. It scrolls sideways on narrow screens, inside the card
    so the scrollbar stays clear of the tear. */
 .atma-card {
-  background-color: var(--bg-card);
   border-radius: 4px 4px 0 0;
   padding-bottom: var(--tear-h);
   overflow: hidden;
@@ -2879,8 +2880,6 @@ select.field.is-small { padding-right: 1.75rem; }
 .craft-card {
   position: relative;
   padding: 10px 16px 12px;
-  background-color: var(--bg-card);
-  border-radius: 4px;
 }
 
 .craft-name {
@@ -3495,8 +3494,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   gap: 1.75rem 2rem;
   margin-top: 2.5rem;
   padding: 1.75rem 1.75rem calc(1.5rem + var(--tear-h));
-  background-color: var(--bg-card);
-  border-radius: 4px;
 }
 
 .home-onboard-photo {
@@ -3656,8 +3653,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   display: flex;
   flex-direction: column;
   padding: 1.6rem 1.6rem calc(1.4rem + var(--tear-h));
-  background-color: var(--bg-card);
-  border-radius: 4px;
 }
 
 .home-board-intro { margin: 0 0 1rem; }
@@ -4299,8 +4294,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .chapter-view {
-  background-color: var(--bg-card);
-  border: 0;
   border-radius: 4px 4px 0 0;
   padding: 34px 48px calc(36px + var(--tear-h));
 }
@@ -4506,8 +4499,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   flex-direction: column;
   gap: 14px;
   padding: 20px 22px;
-  background-color: var(--bg-card);
-  border-radius: 4px;
 }
 
 .cdb-search-bar { width: 100%; }
@@ -5938,7 +5929,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 /* Plan / Edit an event, as in the design. The details card: Name, Date and
    time, and a wider Link, labels in Stoke. A new event's link is one well
    with the address before the part you type. */
-.info-card.mf-details { padding: 20px 22px 22px; }
+.card.mf-details { padding: 20px 22px 22px; }
 .mf-fields { display: flex; flex-wrap: wrap; gap: 18px; }
 .mf-field { flex: 1 1 240px; min-width: 0; }
 .mf-field.is-when { flex: 1 1 220px; }
@@ -5964,7 +5955,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .mf-panel {
   margin-bottom: 1.25rem;
   padding-bottom: var(--tear-h);
-  background-color: var(--bg-card);
   border-radius: 4px 4px 0 0;
 }
 .mf-panel-head {

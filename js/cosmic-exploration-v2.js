@@ -979,7 +979,7 @@
         h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
       ),
 
-      h('div', { className: 'info-card tear-half' },
+      h('div', { className: 'card tear-half' },
         h('p', null,
           'Recipe stats are provided as they are at level 100. At lower levels, they will scale down.'
         )

@@ -573,7 +573,7 @@
 
     var events = base.events;
     var eventsCard = (events.length || base.can.plan)
-      ? h('section', { className: 'info-card', 'aria-labelledby': 'mf-events-title' },
+      ? h('section', { className: 'card', 'aria-labelledby': 'mf-events-title' },
           h(CardHead, { id: 'mf-events-title', title: 'Your events' },
             base.can.plan ? h('a', { className: 'btn is-quiet is-small', href: '?plan' }, 'Plan an event') : null),
           events.length
@@ -1119,7 +1119,7 @@
     return h('div', null,
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, isEdit ? 'Edit Event' : 'Plan an Event')),
-      h('section', { className: 'info-card mf-details', 'aria-label': 'Event details' },
+      h('section', { className: 'card mf-details', 'aria-label': 'Event details' },
         h('div', { className: 'mf-fields' },
           h('div', { className: 'mf-field' },
             h('label', { className: 'field-label', htmlFor: 'mf-event-name' }, 'Name'),

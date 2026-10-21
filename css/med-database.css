@@ -6,9 +6,6 @@
 
 /* ── Patient record cards ──────────────────────────────────────── */
 .record-card {
-  background-color: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
   padding: 1.75rem 2rem;
   margin-bottom: 1rem;
 }
