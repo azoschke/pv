@@ -2,8 +2,8 @@
 //  MountFarm — the FC's trial and Savage mount tracker (mount-farm.html)
 //
 //  One page, with the view picked by the address:
-//    mount-farm.html                 the tracker: your columns, anyone added
-//                                    in Edit view, and Your events
+//    mount-farm.html                 the tracker: you, anyone added in Edit
+//                                    view, and Your events
 //    mount-farm.html?event=<link>    an event's page
 //    mount-farm.html?plan            plan a new event
 //    mount-farm.html?edit=<link>     edit an event
@@ -23,8 +23,8 @@
 //                                            members, events }
 //    GET    /mount-farm/owned?members=1,2  { owned: [[member_id, mount_id]] }
 //    PUT    /mount-farm/owned              { member_id, mount_id, have }
-//    POST   /mount-farm/mounts             { name, fight, grp }
-//    PATCH  /mount-farm/mounts/:id         { name, fight, grp }
+//    POST   /mount-farm/mounts             { name, fight, grp, kind }
+//    PATCH  /mount-farm/mounts/:id         { name, fight, grp, kind }
 //    DELETE /mount-farm/mounts/:id
 //    POST   /mount-farm/events             { name, slug, starts_at, member_ids,
 //                                            mount_ids }
@@ -35,6 +35,10 @@
 //    PATCH  /mount-farm/events/:id         any of { name, starts_at,
 //                                            member_ids, mount_ids }
 //    DELETE /mount-farm/events/:id         ends or deletes the event
+//
+//  Each mount belongs to an expansion (grp) and is a trial, Savage or collab
+//  mount (kind); in an expansion the trials come first, then Savage, then
+//  collabs.
 //
 //  Loading: the tracker asks only for the ticks of the people in your view.
 //  An event's page loads its people's ticks once, then every 30 seconds asks
@@ -53,7 +57,7 @@
   var SUGGESTION_COUNT = 5;
   var PREFS_KEY = 'pv-mount-farm.view.';
 
-  // Display order of the groups. Mounts keep their release order inside each.
+  // Display order of the expansions.
   var GROUPS = [
     { key: 'arr', name: 'A Realm Reborn' },
     { key: 'hw', name: 'Heavensward' },
@@ -61,12 +65,16 @@
     { key: 'shb', name: 'Shadowbringers' },
     { key: 'ew', name: 'Endwalker' },
     { key: 'dt', name: 'Dawntrail' },
-    { key: 'ec', name: 'Evercold' },
-    { key: 'mh', name: 'Monster Hunter Collab' },
-    { key: 'sav', name: 'Savage' }
+    { key: 'ec', name: 'Evercold' }
   ];
-  // Never suggested under Most needed: not everyone can clear these.
-  var NOT_SUGGESTED = ['mh', 'sav'];
+  // The kinds of mount, in their order within an expansion, each after a
+  // line (or under its title, in a list). Only trials are suggested under
+  // Most needed: not everyone can clear the others.
+  var KINDS = [
+    { key: 'trial', name: 'Trial' },
+    { key: 'savage', name: 'Savage', title: 'Savage' },
+    { key: 'collab', name: 'Collab', title: 'Collaboration' }
+  ];
   var NEW_MOUNT_GROUP = 'ec';
 
   function api(method, path, body) {
@@ -84,11 +92,37 @@
     return GROUPS.length;
   }
 
-  // Display order: by group, then release order within the group.
+  function kindOf(mount) { return mount.kind || 'trial'; }
+  function kindIndex(kind) {
+    for (var i = 0; i < KINDS.length; i++) if (KINDS[i].key === kind) return i;
+    return 0;
+  }
+  // "Savage" or "Collaboration"; trials have no title.
+  function kindTitle(kind) { return KINDS[kindIndex(kind)].title || ''; }
+
+  // Display order: by expansion, then trials, Savage and collabs, each in
+  // release order.
   function sortMounts(mounts) {
     return mounts.slice().sort(function (a, b) {
-      return (groupIndex(a.grp) - groupIndex(b.grp)) || (a.sort - b.sort) || (a.id - b.id);
+      return (groupIndex(a.grp) - groupIndex(b.grp)) || (kindIndex(kindOf(a)) - kindIndex(kindOf(b))) ||
+        (a.sort - b.sort) || (a.id - b.id);
     });
+  }
+
+  // A list's rows, with "Savage" or "Collaboration" over the first of each.
+  // mountOf finds an item's mount (the item itself when left out).
+  function withTitles(items, renderRow, mountOf) {
+    var out = [];
+    var prev = null;
+    items.forEach(function (item, i) {
+      var kind = kindOf(mountOf ? mountOf(item) : item);
+      if (kind !== prev && kindTitle(kind)) {
+        out.push(h('div', { key: 'kind-' + kind, className: 'mf-kind-title' }, kindTitle(kind)));
+      }
+      prev = kind;
+      out.push(renderRow(item, i));
+    });
+    return out;
   }
 
   function groupsWithMounts(mounts, keepEmpty) {
@@ -351,6 +385,34 @@
       h('span', { className: 'book-header-right' }, props.children));
   }
 
+  // Previous, a list of the expansions, next: the campaign chapter bar's
+  // pattern. Each option says what's left there (status(group)). With an id,
+  // "3 of 6" shows before the list.
+  function ExpansionPicker(props) {
+    var groups = props.groups, at = props.at;
+    var before = groups[at - 1], after = groups[at + 1];
+    function arrow(to, label, d) {
+      return h('button', {
+        type: 'button', className: 'btn is-quiet is-icon', disabled: !to,
+        'aria-label': to ? label + ': ' + to.name : label + ' expansion', title: to ? label + ': ' + to.name : null,
+        onClick: function () { if (to) props.onPick(to.key); }
+      }, svgIcon(null, d, 2));
+    }
+    return h('nav', { className: 'mf-picker', 'aria-label': props.label },
+      arrow(before, 'Previous', 'M15 6l-6 6 6 6'),
+      props.id ? h('label', { className: 'mf-picker-count', htmlFor: props.id }, (at + 1) + ' of ' + groups.length) : null,
+      h('select', {
+        id: props.id, className: 'mf-picker-select', 'aria-label': props.label, value: groups[at].key,
+        onChange: function (e) { props.onPick(e.target.value); }
+      }, groups.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name + ' · ' + props.status(g)); })),
+      arrow(after, 'Next', 'M9 6l6 6-6 6'));
+  }
+
+  function indexOfKey(list, key) {
+    for (var i = 0; i < list.length; i++) if (list[i].key === key) return i;
+    return 0;
+  }
+
   // ── Tracker ────────────────────────────────────────────────────────────────
 
   function EventRow(props) {
@@ -421,25 +483,25 @@
           added.length ? null : h('p', { className: 'mf-row cdb-meta' }, 'No one added.'))));
   }
 
+  // One expansion at a time, picked from a list. Its mounts run across the
+  // top, the people in view down the side (you, your alts, then anyone added
+  // in Edit view), with how many still need each mount between. On a phone
+  // each person gets a card instead, closed until tapped, with its own list.
   function Tracker(props) {
     var base = props.base;
     var prefsState = useState(loadPrefs); var prefs = prefsState[0], setPrefs = prefsState[1];
     var ticksState = useState(null); var ticks = ticksState[0], setTicks = ticksState[1];
-    var openState = useState({}); var open = openState[0], setOpen = openState[1];
+    var tabState = useState(null); var tab = tabState[0], setTab = tabState[1];
+    var cardTabState = useState({}); var cardTab = cardTabState[0], setCardTab = cardTabState[1];
+    var openedState = useState({}); var opened = openedState[0], setOpened = openedState[1];
     var dialogState = useState(null); var dialog = dialogState[0], setDialog = dialogState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
-    // The names row's height (the group rows stick just below it) and the
-    // width of the table's visible part (the group rows' toggles are that
-    // wide, so their summary stays in view when the table scrolls sideways).
-    var headRef = useRef(null);
-    var scrollRef = useRef(null);
-    var sizeState = useState({ head: 0, view: 0 }); var size = sizeState[0], setSize = sizeState[1];
 
     function updatePrefs(patch) {
       setPrefs(function (p) { var next = Object.assign({}, p, patch); savePrefs(next); return next; });
     }
 
-    // Your columns first (you, then your alts), then anyone added in Edit view.
+    // You, then your alts, then anyone added in Edit view.
     var cols = [];
     if (base.me) cols.push(base.me);
     base.alts.forEach(function (a) {
@@ -450,21 +512,6 @@
       if (p && !base.mine[id]) cols.push(p);
     });
     var colKey = cols.map(function (c) { return c.id; }).join(',');
-
-    useEffect(function () {
-      var head = headRef.current, view = scrollRef.current;
-      if (!head || !view) return;
-      function measure() {
-        var next = { head: head.offsetHeight, view: view.clientWidth };
-        setSize(function (cur) { return cur.head === next.head && cur.view === next.view ? cur : next; });
-      }
-      measure();
-      if (!window.ResizeObserver) return;
-      var watcher = new ResizeObserver(measure);
-      watcher.observe(head);
-      watcher.observe(view);
-      return function () { watcher.disconnect(); };
-    }, [ticks === null, colKey === '']);
 
     // Only the ticks of the people in view.
     useEffect(function () {
@@ -491,27 +538,34 @@
       });
     }
 
-    var total = base.mounts.length;
-    var colCounts = cols.map(function (c) {
-      return base.mounts.filter(function (m) { return ticks && ticks[tickKey(c.id, m.id)]; }).length;
-    });
+    function has(memberId, mount) { return !!(ticks && ticks[tickKey(memberId, mount.id)]); }
+    var editable = function (memberId) { return base.can.manage || !!base.mine[memberId]; };
+    var isAlt = {};
+    base.alts.forEach(function (a) { isAlt[a.id] = true; });
 
-    var groups = groupsWithMounts(base.mounts).map(function (g) {
-      var have = 0;
-      var rows = g.mounts.map(function (m) {
-        var need = 0;
-        cols.forEach(function (c) { if (ticks && ticks[tickKey(c.id, m.id)]) have++; else need++; });
-        return { mount: m, need: need };
-      });
-      var cells = rows.length * cols.length;
-      var missing = cells - have;
-      return {
-        key: g.key, name: g.name, complete: cells > 0 && missing === 0, missing: missing,
-        pct: cells ? Math.round((have / cells) * 100) : 0,
-        rows: prefs.hideCompleted ? rows.filter(function (r) { return r.need > 0; }) : rows
-      };
+    var total = base.mounts.length;
+    var counts = cols.map(function (c) {
+      return base.mounts.filter(function (m) { return has(c.id, m); }).length;
     });
-    var shownGroups = prefs.hideCompleted ? groups.filter(function (g) { return !g.complete; }) : groups;
+    var expansions = groupsWithMounts(base.mounts);
+
+    // Opens on the first expansion with anything left (left(group) > 0).
+    function firstLeft(list, left) {
+      var found = list.filter(function (g) { return left(g) > 0; })[0];
+      return (found || list[0]).key;
+    }
+
+    function tickButton(c, m) {
+      var have = has(c.id, m);
+      return h('button', {
+        type: 'button', className: 'mf-tick' + (have ? ' is-have' : ''),
+        'aria-pressed': have ? 'true' : 'false',
+        'aria-label': c.name + ' has ' + m.name,
+        title: c.name + ' · ' + m.name + (have ? ': has it' : ': needs it'),
+        disabled: !editable(c.id),
+        onClick: function () { toggle(c.id, m.id); }
+      }, have ? svgIcon(null, 'M5 12.5l4.5 4.5L19 7.5', 2.6) : null);
+    }
 
     function closeEvent(ev) {
       setDialog({ type: 'close', event: ev });
@@ -527,75 +581,116 @@
             : h('p', { className: 'cdb-meta' }, 'No events planned.'))
       : null;
 
-    var editable = function (memberId) { return base.can.manage || !!base.mine[memberId]; };
-    var span = cols.length + 3;
-    // Once anyone else is in view, your own columns are tinted.
-    var tint = cols.some(function (c) { return !base.mine[c.id]; });
-    var isAlt = {};
-    base.alts.forEach(function (a) { isAlt[a.id] = true; });
-    function colClass(c) { return 'mf-col-person' + (tint && base.mine[c.id] ? ' is-mine' : ''); }
+    function trackerTable() {
+      var groups = expansions.map(function (g) {
+        var missing = 0;
+        g.mounts.forEach(function (m) { cols.forEach(function (c) { if (!has(c.id, m)) missing++; }); });
+        return { key: g.key, name: g.name, mounts: g.mounts, missing: missing };
+      });
+      var at = indexOfKey(groups, tab || firstLeft(groups, function (g) { return g.missing; }));
+      var active = groups[at];
+      // Hide completed drops the mounts everyone in view has.
+      var shown = prefs.hideCompleted
+        ? active.mounts.filter(function (m) { return cols.some(function (c) { return !has(c.id, m); }); })
+        : active.mounts;
+      // A line before the first Savage mount, and before the first collab.
+      function split(i) { return i > 0 && kindOf(shown[i]) !== kindOf(shown[i - 1]) ? ' is-split' : ''; }
 
-    var table = !cols.length
+      return h('section', { className: 'atma-card tear mf-table-card', 'aria-label': 'Mounts' },
+        h(ExpansionPicker, {
+          id: 'mf-expansion', label: 'Expansion', groups: groups, at: at, onPick: setTab,
+          status: function (g) { return g.missing ? g.missing + ' needed' : 'done'; }
+        }),
+        shown.length
+          ? h('div', { className: 'mf-grid-scroll' },
+              h('div', {
+                className: 'mf-grid', role: 'table', 'aria-label': active.name,
+                // The people column fits the longest first name; each mount
+                // column is at least as wide as its longest word.
+                style: { gridTemplateColumns: 'max-content repeat(' + shown.length + ', minmax(min-content, 1fr))' }
+              },
+                h('div', { className: 'mf-grid-head', role: 'row' },
+                  h('div', { className: 'mf-grid-person', role: 'columnheader', 'aria-label': 'Person' }),
+                  shown.map(function (m, j) {
+                    var title = kindTitle(kindOf(m));
+                    return h('div', {
+                      key: m.id, className: 'mf-grid-mount' + split(j), role: 'columnheader',
+                      title: m.name + ' · ' + m.fight + (title ? ' (' + title + ')' : '')
+                    },
+                      h('span', { className: 'mf-grid-mount-name' }, m.name),
+                      h('span', { className: 'mf-grid-mount-fight' }, m.fight));
+                  })),
+                // With one person this would repeat their own row.
+                cols.length > 1
+                  ? h('div', { className: 'mf-grid-need', role: 'row' },
+                      h('div', { className: 'mf-grid-person', role: 'rowheader' }, 'Still need'),
+                      shown.map(function (m, j) {
+                        var need = cols.filter(function (c) { return !has(c.id, m); }).length;
+                        return h('div', { key: m.id, role: 'cell', className: 'mf-grid-cell ' + (need ? 'mf-need' : 'atma-complete') + split(j) },
+                          need ? need + ' need' : 'All have');
+                      }))
+                  : null,
+                cols.map(function (c, i) {
+                  return h('div', { key: c.id, className: 'mf-grid-row', role: 'row' },
+                    h('div', { className: 'mf-grid-person', role: 'rowheader', title: c.name + ': ' + counts[i] + ' of ' + total + ' mounts' },
+                      avatar(c, isAlt[c.id]),
+                      h('span', { className: 'mf-grid-name' }, firstName(c.name))),
+                    shown.map(function (m, j) {
+                      return h('div', { key: m.id, className: 'mf-grid-cell' + split(j), role: 'cell' }, tickButton(c, m));
+                    }));
+                })))
+          : h('p', { className: 'mf-none' }, 'Everyone in view has every ' + active.name + ' mount.'));
+    }
+
+    function personCards() {
+      return h('div', { className: 'mf-cards' },
+        cols.map(function (c, i) {
+          var own = expansions.map(function (g) {
+            var left = g.mounts.filter(function (m) { return !has(c.id, m); }).length;
+            return { key: g.key, name: g.name, mounts: g.mounts, left: left };
+          });
+          var at = indexOfKey(own, cardTab[c.id] || firstLeft(own, function (g) { return g.left; }));
+          var g = own[at];
+          var isOpen = !!opened[c.id];
+          var list = prefs.hideCompleted ? g.mounts.filter(function (m) { return !has(c.id, m); }) : g.mounts;
+          var pct = total ? Math.round((counts[i] / total) * 100) : 0;
+          return h('section', { key: c.id, className: 'mf-person-card' + (isOpen ? ' is-open' : ''), 'aria-label': c.name },
+            h('button', {
+              type: 'button', className: 'mf-person-toggle', 'aria-expanded': isOpen ? 'true' : 'false',
+              onClick: function () { var next = Object.assign({}, opened); next[c.id] = !isOpen; setOpened(next); }
+            },
+              avatar(c, isAlt[c.id]),
+              h('span', { className: 'mf-person-label', title: c.name }, firstName(c.name)),
+              h('span', { className: 'book-progress-text' }, counts[i] + '/' + total),
+              h('span', { className: 'book-progress-bar', 'aria-hidden': 'true' },
+                h('span', { className: 'book-progress-bar-fill', style: { width: pct + '%', display: 'block' } })),
+              svgIcon('mf-person-chevron', 'M6 9l6 6 6-6', 2)),
+            isOpen
+              ? h('div', { className: 'mf-person-body' },
+                  h(ExpansionPicker, {
+                    label: firstName(c.name) + ': expansion', groups: own, at: at,
+                    onPick: function (key) { var next = Object.assign({}, cardTab); next[c.id] = key; setCardTab(next); },
+                    status: function (o) { return o.left ? o.left + ' to go' : 'done'; }
+                  }),
+                  withTitles(list, function (m) {
+                    return h('div', { key: m.id, className: 'mf-person-row' },
+                      h('div', { className: 'mf-person-mount' },
+                        h('div', { className: 'mf-person-mount-name' }, m.name),
+                        h('div', { className: 'mf-person-mount-fight' }, m.fight)),
+                      tickButton(c, m));
+                  }),
+                  list.length ? null : h('p', { className: 'mf-none' }, firstName(c.name) + ' has every ' + g.name + ' mount.'))
+              : null);
+        }));
+    }
+
+    var tracker = !cols.length
       ? h('p', { className: 'cdb-notice' }, 'No one in your view.')
       : ticks === null
         ? h('p', { className: 'cdb-notice' }, 'Loading…')
-        : h('div', { className: 'atma-card tear' },
-            h('div', { className: 'atma-scroll mf-scroll', ref: scrollRef },
-              h('table', {
-                className: 'task-table atma-table mf-table',
-                style: { '--mf-head-h': size.head + 'px', '--mf-view-w': size.view ? size.view + 'px' : '100%' }
-              },
-                h('thead', { ref: headRef },
-                  h('tr', null,
-                    h('th', { scope: 'col', 'aria-label': 'Mount' }),
-                    cols.map(function (c, i) {
-                      return h('th', { key: c.id, scope: 'col', className: colClass(c), title: c.name },
-                        h('span', { className: 'mf-col-head' },
-                          avatar(c, isAlt[c.id]),
-                          h('span', null,
-                            h('span', { className: 'mf-col-name' }, firstName(c.name)),
-                            h('span', { className: 'mf-col-count' }, colCounts[i] + '/' + total))));
-                    }),
-                    h('th', { className: 'mf-fill', 'aria-hidden': 'true' }),
-                    h('th', { scope: 'col', className: 'td-count' }, 'Still need'))),
-                shownGroups.map(function (g) {
-                  var isOpen = open[g.key] != null ? open[g.key] : !g.complete;
-                  return h('tbody', { key: g.key },
-                    h('tr', { className: 'mf-group-row' },
-                      h('td', { colSpan: span },
-                        h(GroupToggle, {
-                          name: g.name, open: isOpen,
-                          onToggle: function () { var next = Object.assign({}, open); next[g.key] = !isOpen; setOpen(next); }
-                        },
-                          h('span', { className: 'book-progress-text' }, g.complete ? 'Complete' : g.missing + ' still needed'),
-                          h('span', { className: 'book-progress-bar', 'aria-hidden': 'true' },
-                            h('span', { className: 'book-progress-bar-fill', style: { width: g.pct + '%', display: 'block' } }))))),
-                    isOpen ? g.rows.map(function (r) {
-                      var m = r.mount;
-                      return h('tr', { key: m.id, className: 'mf-mount-row' },
-                        h('td', { className: 'mf-mount' },
-                          h('div', { className: 'mf-mount-name' }, m.name),
-                          h('div', { className: 'mf-mount-fight' }, m.fight)),
-                        cols.map(function (c) {
-                          var have = !!ticks[tickKey(c.id, m.id)];
-                          return h('td', { key: c.id, className: colClass(c) },
-                            h('button', {
-                              type: 'button', className: 'mf-tick' + (have ? ' is-have' : ''),
-                              'aria-pressed': have ? 'true' : 'false',
-                              'aria-label': c.name + ' has ' + m.name,
-                              disabled: !editable(c.id),
-                              onClick: function () { toggle(c.id, m.id); }
-                            }, have ? svgIcon(null, 'M5 12.5l4.5 4.5L19 7.5', 2.6) : null));
-                        }),
-                        h('td', { className: 'mf-fill' }),
-                        h('td', { className: 'td-count' },
-                          r.need
-                            ? h('span', { className: 'mf-need' }, r.need + ' need')
-                            : h('span', { className: 'atma-complete' }, 'All have')));
-                    }) : null);
-                }),
-                shownGroups.length ? null : h('tbody', null,
-                  h('tr', null, h('td', { colSpan: span, className: 'mf-done' }, 'Everything’s complete.'))))));
+        : !expansions.length
+          ? h('p', { className: 'cdb-notice' }, 'No mounts yet.')
+          : h('div', null, trackerTable(), personCards());
 
     return h('div', null,
       h('header', { className: 'app-header' },
@@ -603,12 +698,14 @@
         h('p', { className: 'app-subtitle' }, 'Trial and Savage mounts')),
       eventsCard,
       base.me ? null : h('p', { className: 'cdb-notice' }, 'Your account isn’t linked to an FC member.'),
-      h('div', { className: 'top-controls' },
-        h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'view' }); } }, icon('tune'), 'Edit view'),
+      h('div', { className: 'top-controls mf-toolbar' },
+        h('div', { className: 'mf-toolbar-start' },
+          h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'view' }); } }, icon('tune'), 'Edit view'),
+          h('span', { className: 'mf-people-count' }, cols.length === 1 ? '1 person in view' : cols.length + ' people in view')),
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { updatePrefs({ hideCompleted: !prefs.hideCompleted }); } },
           prefs.hideCompleted ? 'Show completed' : 'Hide completed')),
       err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
-      table,
+      tracker,
       base.can.manage
         ? h('div', { className: 'cdb-card-footer' }, h('a', { className: 'btn is-plain', href: '?mounts' }, 'Manage mounts'))
         : null,
@@ -759,7 +856,7 @@
     var candidates = base.mounts.map(function (m, i) {
       return { mount: m, need: needCount(m), order: i };
     }).filter(function (x) {
-      return x.need > 0 && ev.mountIds.indexOf(x.mount.id) === -1 && NOT_SUGGESTED.indexOf(x.mount.grp) === -1;
+      return x.need > 0 && ev.mountIds.indexOf(x.mount.id) === -1 && kindOf(x.mount) === 'trial';
     });
     var suggestions = candidates.filter(function (x) { return tonight[x.mount.grp]; })
       .concat(candidates.filter(function (x) { return !tonight[x.mount.grp]; }))
@@ -945,7 +1042,12 @@
         if (fights[m.id]) { picked++; groupPicked++; needed += need; }
         return { mount: m, need: need, order: i };
       });
-      if (sort === 'need') rows.sort(function (a, b) { return (b.need - a.need) || (a.order - b.order); });
+      // Most needed sorts within the trials, the Savage and the collabs.
+      if (sort === 'need') {
+        rows.sort(function (a, b) {
+          return (kindIndex(kindOf(a.mount)) - kindIndex(kindOf(b.mount))) || (b.need - a.need) || (a.order - b.order);
+        });
+      }
       return { key: g.key, name: g.name, rows: rows, need: groupNeed, picked: groupPicked, all: groupPicked === rows.length };
     });
 
@@ -1067,7 +1169,7 @@
                   party.length ? h('span', { className: 'book-progress-text' }, g.need ? g.need + ' needed' : 'Everyone has these') : null),
                 h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { pickGroup(g); } }, g.all ? 'Clear' : 'Select all')),
               isOpen
-                ? g.rows.map(function (r) {
+                ? withTitles(g.rows, function (r) {
                     var m = r.mount;
                     return h('label', { key: m.id, className: 'mf-pick' },
                       h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: !!fights[m.id], onChange: function () { toggleFight(m.id); } }),
@@ -1078,7 +1180,7 @@
                         ? h('span', { className: 'mf-pick-need ' + (r.need ? 'mf-need' : 'atma-complete') },
                             r.need ? r.need + ' of ' + party.length + ' need' : 'Everyone has it')
                         : null);
-                  })
+                  }, function (r) { return r.mount; })
                 : null);
           }))),
       err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
@@ -1094,18 +1196,24 @@
 
   // ── Manage mounts ──────────────────────────────────────────────────────────
 
+  // A mount's expansion, and whether it's a trial, Savage or collab mount.
+  // A mount from before the expansions held Savage and collabs has none
+  // yet, and must be given one.
   function MountDialog(props) {
     var mount = props.mount;
+    var startGrp = !mount ? NEW_MOUNT_GROUP : groupIndex(mount.grp) < GROUPS.length ? mount.grp : '';
     var nameState = useState(mount ? mount.name : ''); var name = nameState[0], setName = nameState[1];
     var fightState = useState(mount ? mount.fight : ''); var fight = fightState[0], setFight = fightState[1];
-    var grpState = useState(mount ? mount.grp : NEW_MOUNT_GROUP); var grp = grpState[0], setGrp = grpState[1];
+    var grpState = useState(startGrp); var grp = grpState[0], setGrp = grpState[1];
+    var kindState = useState(mount ? kindOf(mount) : 'trial'); var kind = kindState[0], setKind = kindState[1];
     var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     function save() {
       if (!name.trim() || !fight.trim()) { setErr('Fill in the mount and the fight.'); return; }
+      if (!grp) { setErr('Pick an expansion.'); return; }
       setBusy(true); setErr('');
-      var body = { name: name.trim(), fight: fight.trim(), grp: grp };
+      var body = { name: name.trim(), fight: fight.trim(), grp: grp, kind: kind };
       var req = mount
         ? api('PATCH', '/mount-farm/mounts/' + mount.id, body)
         : api('POST', '/mount-farm/mounts', body);
@@ -1128,9 +1236,22 @@
         h('label', { className: 'cdb-label', htmlFor: 'mf-mount-fight' }, 'Drops from'),
         h('input', { id: 'mf-mount-fight', className: 'cdb-input', type: 'text', placeholder: 'The fight name', value: fight, onChange: function (e) { setFight(e.target.value); } })),
       h('div', null,
-        h('label', { className: 'cdb-label', htmlFor: 'mf-mount-group' }, 'Group'),
+        h('label', { className: 'cdb-label', htmlFor: 'mf-mount-group' }, 'Expansion'),
         h('select', { id: 'mf-mount-group', className: 'cdb-select', value: grp, onChange: function (e) { setGrp(e.target.value); } },
+          grp ? null : h('option', { value: '', disabled: true }, 'Pick an expansion'),
           GROUPS.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name); }))),
+      h('fieldset', { className: 'mf-choice' },
+        h('legend', { className: 'cdb-label' }, 'Kind'),
+        h('div', { className: 'mf-choice-row' },
+          KINDS.map(function (k) {
+            return h('label', { key: k.key, className: 'mf-choice-item' },
+              h('input', {
+                type: 'radio', className: 'cdb-checkbox', name: 'mf-mount-kind', value: k.key,
+                checked: kind === k.key, onChange: function () { setKind(k.key); }
+              }),
+              k.name);
+          })),
+        h('p', { className: 'mf-choice-hint' }, 'Savage, then collab mounts, sit at the end of their expansion, each after a line.')),
       err ? h('p', { className: 'cdb-notice is-error' }, err) : null);
   }
 
@@ -1142,12 +1263,18 @@
     function close() { setDialog(null); }
     function saved() { return props.reload().then(close); }
 
+    // Each expansion, with its Savage and collab mounts under their titles.
+    // Any mount without an expansion is listed last, to be given one.
+    var books = groupsWithMounts(base.mounts, true);
+    var lost = base.mounts.filter(function (m) { return groupIndex(m.grp) === GROUPS.length; });
+    if (lost.length) books = books.concat([{ key: 'none', name: 'No expansion', mounts: lost }]);
+
     return h('div', { className: 'mf-manage' },
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, 'Manage Mounts')),
       h('div', { className: 'top-controls top-controls-right' },
         h('button', { type: 'button', className: 'btn', onClick: function () { setDialog({ type: 'add' }); } }, icon('add'), 'Add mount')),
-      groupsWithMounts(base.mounts, true).map(function (g) {
+      books.map(function (g) {
         var isOpen = !!open[g.key];
         return h('section', { key: g.key, className: 'book' + (isOpen ? ' active' : ''), 'aria-label': g.name },
           h(GroupToggle, {
@@ -1156,7 +1283,7 @@
           },
             h('span', { className: 'book-progress-text' }, g.mounts.length ? g.mounts.length + (g.mounts.length === 1 ? ' mount' : ' mounts') : 'No mounts yet')),
           h('div', { className: 'book-body' },
-            g.mounts.map(function (m) {
+            withTitles(g.mounts, function (m) {
               return h('div', { key: m.id, className: 'mf-item' },
                 h('div', { className: 'mf-item-main' },
                   h('div', { className: 'mf-item-name' }, m.name),
