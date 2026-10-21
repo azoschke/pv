@@ -8,12 +8,15 @@
    recessed tray (.tray / --bg-tray), and the well is for controls only.
    ============================================================================ */
 
+/* Unscoped on purpose: portal.css loads only on portal.html, and scoping
+   this to the shell (body:has(.portal-shell)) would let the page scroll
+   while the portal is still loading. */
 html, body { height: 100%; }
 body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 .portal-boot {
   padding: 2rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   color: var(--text-secondary);
 }
@@ -77,7 +80,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-sidebar .sidebar-brand-title,
 .portal-topbar .sidebar-brand-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -85,7 +88,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-sidebar .sidebar-brand-subtitle,
 .portal-topbar .sidebar-brand-subtitle {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1rem;
   color: var(--accent-brown);
   line-height: 1.2;
@@ -98,7 +101,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.75rem;
   padding: 0.25rem 1.25rem 0.9rem;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-user-text { min-width: 0; }
@@ -115,7 +118,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 50%;
   background: var(--accent-brown);
   color: var(--label);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1;
 }
@@ -125,7 +128,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   object-fit: cover;
 }
 .portal-sidebar .sidebar-user .sidebar-user-name {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   color: var(--text-primary);
   font-weight: 500;
   font-size: .9rem;
@@ -179,7 +182,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   letter-spacing: 0.02em;
   text-align: left;
@@ -212,7 +215,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-secondary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: .85rem;
   letter-spacing: 0.02em;
   text-align: left;
@@ -237,7 +240,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background-color: var(--bg-primary);
   background-image: var(--grain);
   background-attachment: local;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.05rem;
 }
 .portal-main .portal-section-header {
@@ -252,7 +255,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-main .portal-section-header h1 {
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.6rem;
   letter-spacing: 0.02em;
@@ -350,7 +353,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card.tear,
 .portal-card.tear-half { padding-bottom: calc(1.25rem + var(--tear-h)); }
 .portal-card .portal-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1rem;
   letter-spacing: 0.1em;
@@ -381,7 +384,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   min-height: 38px;
   padding: 0 0.75rem;
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.25;
   box-sizing: border-box;
@@ -420,7 +423,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   min-height: 38px;
   padding: 0 2rem 0 0.65rem;
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.25;
   box-sizing: border-box;
@@ -436,7 +439,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.05rem;
 }
 .portal-table thead th {
@@ -476,10 +479,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card > .portal-table-wrap .portal-table th:last-child,
 .portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
 
-/* --------------- Inline buttons ---------------
-   Portal buttons are the shared .btn (css/styles.css). */
-.btn .material-icons { font-size: 18px; }
-
 /* --------------- Form fields --------------- */
 /* Form rhythm (Torchlight): 7px from a label to its control, 26px between
    fields (stacked or in a row, with or without help text), 18px from the
@@ -492,7 +491,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-field + .portal-field { margin-top: 0.875rem; }
 .portal-field label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -512,7 +511,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
   padding: 0.55rem 0.65rem;
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
 }
 /* Same line-height on inputs and dropdowns so equal padding gives equal
@@ -650,7 +649,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: baseline;
   gap: 0.55rem;
   margin: 0.5rem 0 0.75rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   color: var(--text-primary);
 }
@@ -677,7 +676,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .member-profiles-table tbody td { vertical-align: middle; }
 /* Member name (first column) and IC rank (second). Group/empty rows span all
    columns and keep their own style. */
-.members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.93rem; }
+.members-table tbody td:first-child:not([colspan]) { font-family: var(--font-ui); font-size: 0.93rem; }
 .members-table tbody td:nth-child(2) { font-style: italic; color: var(--text-secondary); }
 
 /* --------------- Activity cell (status + inline talked-to) --------------- */
@@ -728,14 +727,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 4px;
 }
 .pv-item-ability strong {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
 }
 .pv-item-ability p {
   margin: 0.15rem 0 0;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   color: var(--text-secondary);
   white-space: pre-wrap;
 }
@@ -761,7 +760,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   cursor: pointer;
   text-transform: none;
@@ -785,7 +784,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   min-height: 50vh;
   text-align: center;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .portal-coming-soon .material-icons {
   font-size: 64px;
@@ -793,7 +792,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin-bottom: 0.75rem;
 }
 .portal-coming-soon h2 {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.3rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -819,7 +818,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   color: var(--text-primary);
   user-select: none;
@@ -877,7 +876,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-modal-title {
   margin: 0;
   flex: 1;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1rem;
   letter-spacing: 0.1em;
@@ -892,7 +891,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* --------------- Dashboard --------------- */
 .dashboard-header .dashboard-date {
   margin-left: auto;
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1.2rem;
   color: var(--accent-brown);
   white-space: nowrap;
@@ -953,7 +952,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .dash-stat:hover { transform: translateY(-1px); }
 .dash-stat:active { transform: none; }
 .dash-stat-num {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 2.4rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -987,7 +986,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .dash-attention-head .portal-card-title { flex: 1; }
 .dash-attention-meta {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -1043,13 +1042,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card-subtitle {
   margin: -0.25rem 0 0.9rem;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.98rem;
 }
 .portal-card-count {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   white-space: nowrap;
 }
 
@@ -1064,7 +1063,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .ic-interview-row:first-child { border-top: none; }
 .ic-interview-name {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -1082,7 +1081,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .bulletin-title {
   flex: 1 1 auto;
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.05rem;
   color: var(--text-primary);
@@ -1104,7 +1103,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background-color: var(--bg-tray);
   text-align: center;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 
 /* --------------- FC Members directory --------------- */
@@ -1139,7 +1138,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   color: var(--text-secondary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -1161,7 +1160,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: none;
   border: none;
   color: var(--accent-brown);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.02rem;
   white-space: nowrap;
   cursor: pointer;
@@ -1234,7 +1233,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: none;
   border: none;
   cursor: pointer;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.85rem;
   color: var(--accent-brown);
   text-decoration: underline;
@@ -1259,7 +1258,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-collapse: separate;
   border-spacing: 0;
   min-width: 100%;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
 }
 .perm-grid thead th {
@@ -1300,7 +1299,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .perm-row-label.is-tab { padding-left: 2.5rem; }
 .perm-row-label.is-tab-action { padding-left: 3.6rem; }
 .perm-row-sub { display: block; font-size: 0.8rem; color: var(--text-secondary); }
-.perm-page-name { font-family: 'Stoke', serif; font-size: 0.88rem; letter-spacing: 0.02em; color: var(--text-primary); }
+.perm-page-name { font-family: var(--font-ui); font-size: 0.88rem; letter-spacing: 0.02em; color: var(--text-primary); }
 .perm-tab-name { font-style: italic; }
 .perm-toggle {
   display: inline-flex;
@@ -1376,7 +1375,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: var(--bg-card);
   border-top: 1px solid var(--border-color);
 }
-.perm-savebar-count { margin-right: auto; font-family: 'Crimson Pro', serif; color: var(--text-primary); }
+.perm-savebar-count { margin-right: auto; font-family: var(--font-text); color: var(--text-primary); }
 .perm-loading { color: var(--text-secondary); margin: 0; }
 
 /* Roles list + add form */
@@ -1388,7 +1387,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.5rem 0.75rem;
   padding: 0.45rem 0;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .perm-role-label { font-weight: 600; min-width: 9rem; }
 .perm-role-input { min-width: 9rem; }
@@ -1438,7 +1437,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 /* First cell: the row's name, with any badges beside it. */
 .portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
-.portal-row-title { font-family: Stoke, serif; font-size: 0.9rem; }
+.portal-row-title { font-family: var(--font-ui); font-size: 0.9rem; }
 
 /* Forms */
 .portal-field.is-full { grid-column: 1 / -1; }
@@ -1598,7 +1597,7 @@ textarea.cmp-code,
   background: var(--bg-card);
   border: 0;
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .nav-ed-row.is-dragging { opacity: 0.45; }
 .nav-ed-row.is-over { box-shadow: 0 -3px 0 0 var(--accent-brown); }
@@ -1622,7 +1621,7 @@ textarea.cmp-code,
 }
 .nav-ed-sub { color: var(--text-secondary); font-size: 0.85rem; }
 .nav-ed-heading {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1639,7 +1638,7 @@ textarea.cmp-code,
   border: 1px dashed transparent;
   border-radius: 0.375rem;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.85rem;
 }
 .nav-ed-end .nav-ed-hint { visibility: hidden; }

@@ -177,7 +177,7 @@
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Member'),
-        h('p', { style: { margin: 0, fontFamily: '"La Belle Aurore", cursive', fontSize: '1.4rem', color: 'var(--accent-brown)' } },
+        h('p', { style: { margin: 0, fontFamily: 'var(--font-script)', fontSize: '1.4rem', color: 'var(--accent-brown)' } },
           row.member.name
         )
       ),

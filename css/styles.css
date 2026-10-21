@@ -2,16 +2,26 @@
    styles.css — Unified stylesheet for crafting-tools.github.io
    Sections:
      1. Fonts & Reset
-     2. CSS Variables (light + dark theme)
+     2. CSS Variables (light + dark theme, type roles)
      3. Base / Body
      4. Scrollbar
      5. Shared Nav
-     6. Shared Utilities (progress bars, info cards, site footer)
+     6. Shared Utilities (header, buttons, segmented control, controls on the
+        page, checkboxes and radios, pills, tags, avatars, cards, icons)
      7. Zodiac Weapons — Book Farm & Atma Farm
-     8. Phoenix Vanguard — shared (parchment, header, forms)
-     9. (removed — old medical records sidebar; now uses campaign-sidebar)
-     10. Crafting Macro Database
-     11. Responsive
+     8. Phoenix Vanguard — shared (parchment, forms, appointment request)
+     9. Crafting Macro Database
+    10. Landing Page (home, about)
+    11. Responsive
+    12. Campaigns — selection page + chapter viewer
+    13. Crafting Database — component classes
+    14. Cosmic Exploration
+    15. Venues
+    16. Codex
+    17. Job Board
+    18. Bounty Board + Faction Rosters
+    19. Venue Menus
+    20. Mount Farm
    ============================================================================= */
 
 
@@ -89,7 +99,7 @@ p {
   margin: 0;
 }
 a {
-  color: var(--accent-brown);
+  color: var(--text-link);
 }
 /* Zero specificity, so any link styled by class keeps its own hover colour. */
 :where(a:hover) {
@@ -123,7 +133,7 @@ a {
   --bg-card:       #faf7f0;
   --bg-darker:     #ece6d8;
   /* = well. Every use is a control, hover or selected state. */
-  --bg-card-light: #ece6d8;
+  --bg-card-light: var(--bg-darker);
   --bg-tray:       #f3efe6;   /* flat boxes nested in a card */
   --table-head:    #ded7c8;   /* table and grid head bands */
 
@@ -141,22 +151,19 @@ a {
   --gold:          #806836;   /* UI gold on raised surfaces (stars, highlights) */
 
   /* Progress */
-  --progress-bg:   #ece6d8;
-  --progress-fill: #6a573e;
+  --progress-bg:   var(--bg-darker);
+  --progress-fill: var(--accent-brown);
 
   /* Completion */
-  --check-color:   #6a573e;
+  --check-color:   var(--accent-brown);
 
   /* Stars (Crafting DB) */
-  --star-filled: #806836;
+  --star-filled: var(--gold);
   --star-empty:  #cbc4b5;
 
   /* Form inputs */
-  --form-input-bg:          #ece6d8;
-  --form-input-placeholder: #5f574c;
-
-  /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #faf7f0;
+  --form-input-bg:          var(--bg-darker);
+  --form-input-placeholder: var(--text-secondary);
 
   /* Table rows: the hover tint, and group rows a step past it */
   --bg-row-hover: #f7f3ea;
@@ -217,12 +224,9 @@ a {
   --grain:  url("../assets/grain-light.svg");
   --tear-h: 26px;
 
-  /* Phoenix Vanguard — parchment world (PDF / parchment forms) */
-  --parchment-bg:    #e3ded3;
-  --parchment-dark:  #d6d0c4;
-  --ink-color:       #2c1810;
+  /* Phoenix Vanguard: the older shared form styles' accent (section 8),
+     the same in both themes */
   --accent-gold:     #6b4423;
-  --shadow-color:    rgba(44, 24, 16, 0.3);
 }
 
 [data-theme="dark"] {
@@ -234,7 +238,6 @@ a {
   --bg-primary:    #1a1613;
   --bg-card:       #231f1c;
   --bg-darker:     #302c29;
-  --bg-card-light: #302c29;
   --bg-tray:       #292522;
   --table-head:    #2c2825;
 
@@ -251,23 +254,9 @@ a {
   --accent-red:    #c9655b;
   --gold:          #aa8e53;   /* matched to light's contrast, so a gold dot never outshines red */
 
-  /* Progress */
-  --progress-bg:   #302c29;
-  --progress-fill: #b8a082;
-
-  /* Completion */
-  --check-color: #b8a082;
-
-  /* Stars */
-  --star-filled: #aa8e53;
+  /* Stars (the other progress, completion and form tokens are aliases of
+     the palette above, so they follow the theme on their own) */
   --star-empty:  #4b4541;
-
-  /* Form inputs */
-  --form-input-bg:          #302c29;
-  --form-input-placeholder: #c1b5a6;
-
-  /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #231f1c;
 
   /* Table rows */
   --bg-row-hover: #26221f;
@@ -285,14 +274,6 @@ a {
 
   /* Paper grain */
   --grain: url("../assets/grain-dark.svg");
-
-  /* Phoenix Vanguard dark — parchment world stays light-ish by design
-     (background image handles darkness); only tweak ink/shadow */
-  --parchment-bg:   #e3ded3;
-  --parchment-dark: #d6d0c4;
-  --ink-color:      #2c1810;
-  --accent-gold:    #6b4423;
-  --shadow-color:   rgba(44, 24, 16, 0.4);
 }
 
 
@@ -305,7 +286,7 @@ a {
    background-attachment: fixed). overflow-x: clip keeps the full-bleed header
    band (section 5) from adding a sideways scroll where scrollbars take width. */
 body {
-  font-family: 'Crimson Pro', Georgia, serif;
+  font-family: var(--font-text);
   font-size: 18px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -320,7 +301,7 @@ body {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   color: var(--text-primary);
 }
@@ -467,7 +448,7 @@ pre {
   gap: 0.6rem;
   color: var(--text-primary);
   text-decoration: none;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   letter-spacing: 0.03em;
   flex-shrink: 0;
@@ -507,7 +488,7 @@ pre {
   gap: 0.35rem;
   min-height: 38px;
   padding: 0 0.75rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -532,7 +513,7 @@ pre {
 }
 
 /* --- Dropdowns --- */
-.nav-dropdown-toggle { font-family: 'Stoke', serif; }
+.nav-dropdown-toggle { font-family: var(--font-ui); }
 
 .nav-caret {
   font-size: 0.7em;
@@ -590,7 +571,7 @@ pre {
   display: flex;
   align-items: center;
   padding: 5px 10px;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: .85rem;
   color: var(--text-body);
   text-decoration: none;
@@ -655,7 +636,7 @@ pre {
   border: 0;
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -711,7 +692,7 @@ button.nav-sublink {
   border-radius: 50%;
   background: var(--accent-brown);
   color: var(--label);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   line-height: 1;
 }
@@ -755,7 +736,7 @@ button.nav-sublink {
 .app-header:has(+ .landing-intro:not([hidden])) { margin-bottom: 0; }
 
 .app-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 2.5rem;
   line-height: 1.1;
@@ -765,7 +746,7 @@ button.nav-sublink {
 }
 
 .app-subtitle {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1.6rem;
   line-height: 1.2;
   color: var(--accent-brown);
@@ -855,7 +836,7 @@ button.nav-sublink {
   border-radius: 4px;
   background-color: var(--accent-brown);
   color: var(--label);
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   font-weight: 400;
   line-height: 1.2;
@@ -977,7 +958,7 @@ button.nav-sublink {
   border-radius: 4px;
   background: transparent;
   color: var(--text-secondary);
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -1080,7 +1061,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
    Category labels are italic text or a small square tag in the well. */
 .pill {
   display: inline-block;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.7rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -1117,7 +1098,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 .tag {
   display: inline-block;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.78rem;
   letter-spacing: 0.02em;
   line-height: 1.4;
@@ -1142,7 +1123,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   border-radius: 50%;
   background-color: var(--accent-brown);
   color: var(--label);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -1166,7 +1147,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
    capitals overrun the line above.) */
 .drop::first-letter {
   float: left;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 3.05em;
   line-height: 1;
@@ -1185,7 +1166,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   align-items: baseline;
   gap: 0.75rem;
   margin-bottom: 0.6rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.15rem;
   color: var(--text-primary);
 }
@@ -1308,7 +1289,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 .job-selector select {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   min-height: 38px;
   padding: 0 0.7rem;
@@ -1357,7 +1338,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .book-check.completed { color: var(--check-color); }
 
 .book-name {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -1414,7 +1395,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .category { margin-top: 1rem; }
 
 .category-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 0.95rem;
   color: var(--text-primary);
@@ -1547,7 +1528,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   border: 0;
   border-radius: 4px;
   background: none;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.15rem;
   line-height: 1;
   color: var(--text-primary);
@@ -1571,7 +1552,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   border: 0;
   background: none;
   text-align: center;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.02rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
@@ -1597,7 +1578,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 /* Section headings */
 .section-heading {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.2rem;
   text-align: center;
   color: var(--text-secondary);
@@ -1609,7 +1590,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .section-heading:first-of-type { margin-top: 0; }
 
 .subsection-heading {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.2rem;
   color: var(--text-secondary);
   margin: 25px 0 15px;
@@ -1621,7 +1602,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .form-group { margin-bottom: 20px; }
 
 .form-group label {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.2rem;
   margin-bottom: 8px;
   color: var(--text-secondary);
@@ -1635,7 +1616,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -1707,7 +1688,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   display: none;
   margin-top: 6px;
   padding: 6px 10px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.85rem;
   color: var(--accent-red);
   background: rgba(165, 77, 68, 0.08);
@@ -1717,7 +1698,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 /* Authorization block */
 .authorization-text {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.2;
   color: var(--text-secondary);
@@ -1728,7 +1709,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   border-left: 3px solid var(--accent-gold);
 }
 
-.signature-input { font-family: 'La Belle Aurore', cursive !important; font-size: 1.4rem !important; }
+.signature-input { font-family: var(--font-script) !important; font-size: 1.4rem !important; }
 
 /* Checkbox & radio groups */
 .checkbox-group {
@@ -1765,7 +1746,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 .radio-label {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   color: var(--text-primary);
 }
@@ -1773,29 +1754,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 /* The box lines up with the first line of its text. */
 .checkbox-label input,
 .radio-label input { margin-top: 3px; }
-
-/* Submit / action buttons */
-.submit-btn {
-  width: 100%;
-  padding: 15px 30px;
-  font-family: 'Stoke', serif;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  background: var(--ink-color);
-  color: var(--parchment-bg);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 30px;
-  box-shadow: 0 4px 15px var(--shadow-color);
-}
-
-.submit-btn:hover  { background: #45352f; transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow-color); }
-.submit-btn:active { transform: translateY(0); }
 
 /* --- Appointment Request --- */
 #appt-reason { min-height: 100px; }
@@ -1811,19 +1769,19 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 .confirmation-panel .check-icon {
   font-size: 3rem;
-  color: #a54d44;
+  color: var(--accent-brown);
   margin-bottom: 1rem;
 }
 
 .confirmation-panel h2 {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.5rem;
   color: var(--text-primary);
   margin: 0 0 0.75rem;
 }
 
 .confirmation-panel p {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   color: var(--text-secondary);
   max-width: 500px;
@@ -1831,22 +1789,13 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   line-height: 1.6;
 }
 
+/* Errors are plain red text, not boxes. */
 .error-message {
   display: none;
-  background: #f9eded;
-  border: 1px solid #d4a5a5;
-  border-radius: 4px;
-  padding: 12px 16px;
   margin-top: 16px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
-  color: #7a2e2e;
-}
-
-[data-theme="dark"] .error-message {
-  background: #3a2020;
-  border-color: #7a4040;
-  color: #e5a0a0;
+  color: var(--accent-red);
 }
 
 .error-message .material-icons {
@@ -1859,7 +1808,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 /* Field labels in Stoke (the choices in a checkbox or radio list keep the
    body font), plain rules under the sub-headings. */
 #appointmentForm .form-group > label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -1916,14 +1865,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   font-style: italic;
   color: var(--text-secondary);
 }
-.appt-page .error-message,
-[data-theme="dark"] .appt-page .error-message {
-  padding: 0;
-  background: none;
-  border: 0;
-  color: var(--accent-red);
-}
-.appt-page .confirmation-panel .check-icon { color: var(--accent-brown); }
 /* Checkbox and radio choices as plain, compact lists rather than a tile per
    option (and without the field label's size and bottom margin). */
 #appointmentForm .checkbox-group {
@@ -1945,14 +1886,14 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 /* A short note under a step's fields, and the restored-draft line. */
 .appt-note {
   margin: 0.35rem 0 0;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   color: var(--text-secondary);
 }
 .appt-draft-note {
   margin: 0 0 12px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   text-align: center;
@@ -1983,7 +1924,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   border: none;
   border-top: 3px solid var(--bg-darker);
   background: none;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   color: var(--text-secondary);
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease;
@@ -2033,12 +1974,12 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   grid-template-columns: minmax(140px, 35%) 1fr;
   gap: 6px 16px;
   margin: 0;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.4;
 }
 .appt-review-list dt {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   letter-spacing: 0.02em;
   padding-top: 0.15rem;
@@ -2078,7 +2019,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 
 /* =============================================================================
-   10. CRAFTING MACRO DATABASE
+   9. CRAFTING MACRO DATABASE
    (React-rendered; most layout is handled in JS — only shared overrides here)
    ============================================================================= */
 
@@ -2092,7 +2033,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 .craft-name {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -2117,7 +2058,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 
 /* =============================================================================
-   11. LANDING PAGE
+   10. LANDING PAGE
    ============================================================================= */
 
 /* The lead paragraph under a page's title: body size and colour. */
@@ -2164,7 +2105,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 .landing-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.25rem;
   letter-spacing: 0.02em;
@@ -2198,7 +2139,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .landing-card-cta {
   display: inline-block;
   margin-top: 1rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   color: var(--accent-brown);
@@ -2211,7 +2152,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 
 /* The lead under a page's title on the 404 page. */
 .landing-tagline {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1em;
   color: var(--text-body);
   text-align: center;
@@ -2401,7 +2342,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .home-quick-value {
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   color: var(--text-primary);
 }
@@ -2470,7 +2411,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .landing-row-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.7rem;
   letter-spacing: 0.01em;
@@ -2576,7 +2517,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .home-pin-note-addr {
   margin: 0.3rem 0 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   line-height: 1.35;
   color: var(--text-primary);
 }
@@ -2654,7 +2595,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .home-council-name {
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   color: var(--text-primary);
 }
 
@@ -2699,7 +2640,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .home-signin-strip p { margin: 0; }
 
 .home-signin-strip strong {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   color: var(--text-primary);
 }
@@ -2762,7 +2703,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .home-onboard-progress span {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   color: var(--text-primary);
   white-space: nowrap;
@@ -2794,7 +2735,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .home-step-top .status-dot { font-size: 0.95rem; }
 
 .home-step-num {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 2rem;
   line-height: 1;
   color: var(--accent-brown);
@@ -2843,7 +2784,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .home-step-done .home-icon { width: 22px; height: 22px; }
 
 .home-step-done strong {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   color: var(--text-primary);
 }
@@ -2917,7 +2858,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .home-board-row-title {
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   line-height: 1.3;
   color: var(--text-primary);
 }
@@ -2968,7 +2909,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   border-radius: 4px;
   color: var(--text-primary);
   text-decoration: none;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
 }
 
@@ -2995,7 +2936,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 /* Officer Core's groups (Leaders, Phoenix Council...) and the people in them:
    card-tone bios two to a row. */
 .about-subtitle {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.25rem;
   color: var(--text-primary);
@@ -3045,7 +2986,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .about-names li {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.15rem;
 }
 
@@ -3123,7 +3064,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   border-radius: 4px;
   text-decoration: none;
   color: var(--text-primary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   line-height: 1.3;
   letter-spacing: 0.02em;
@@ -3147,7 +3088,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .tool-list-note {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   letter-spacing: 0;
@@ -3215,7 +3156,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 
 /* =============================================================================
-   12. RESPONSIVE
+   11. RESPONSIVE
    ============================================================================= */
 
 /* --- Hamburger button (hidden on desktop) ---
@@ -3303,7 +3244,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   width: 100%;
   min-height: 42px;
   padding: 0 0.75rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -3452,7 +3393,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   justify-content: center;
   gap: 0.4rem;
   margin: 0.6rem 0 0;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1em;
 }
 
@@ -3516,7 +3457,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .campaign-sidebar-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.15rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -3558,7 +3499,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .chapter-list-btn-title {
   display: block;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   font-weight: 400;
   color: inherit;
@@ -3609,7 +3550,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .chapter-bar-count {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -3620,7 +3561,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   min-width: 0;
   min-height: 38px;
   padding: 0 0.7rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   color: var(--text-primary);
   background-color: var(--bg-darker);
@@ -3651,14 +3592,14 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .chapter-view-label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .chapter-view-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.9rem;
   font-weight: 400;
   line-height: 1.2;
@@ -3694,13 +3635,13 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .chapter-next-link small {
   display: block;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
 .chapter-next-link strong {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.1rem;
 }
@@ -3712,23 +3653,20 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .chapter-next-arrow {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.2rem;
   color: var(--accent-brown);
 }
 
 /* ── Rendered chapter markdown ───────────────────────────────────────────────── */
 
+/* A chapter's text, and a medical record's field values (also markdown). */
 .chapter-body, .record-field-value {
-  font-family: 'Crimson Pro', serif;
-  font-size: 1em;
-  line-height: 1.65;
+  font-family: var(--font-text);
   color: var(--text-body);
 }
-.chapter-body {
-  font-size: 1.25rem;
-  line-height: 1.6;
-}
+.chapter-body       { font-size: 1.25rem; line-height: 1.6; }
+.record-field-value { font-size: 1em;     line-height: 1.65; }
 
 /*
  * H1 in chapter content is narrative body text (the author uses # for paragraphs).
@@ -3736,7 +3674,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
  */
 .chapter-body h1,
 .chapter-body p {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1em;
   font-weight: 400;
   line-height: 1.6;
@@ -3751,7 +3689,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 /* H2 is used for named section headers within the chapter */
 .chapter-body h2 {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.25rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -3759,7 +3697,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 .chapter-body h3 {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -3781,17 +3719,14 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 .chapter-loading,
 .chapter-error {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 1.05rem;
-  color: var(--text-secondary);
   padding: 2rem 0;
   text-align: center;
 }
-
-.chapter-error {
-  color: var(--accent-red);
-}
+.chapter-loading { color: var(--text-secondary); }
+.chapter-error   { color: var(--accent-red); }
 
 /* Campaigns landing: loading / error text spans the whole card grid. */
 .landing-grid > .chapter-loading,
@@ -3901,7 +3836,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   border-radius: 4px;
   background-color: var(--bg-darker);
   color: var(--text-primary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
 }
 
@@ -4063,7 +3998,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .cdb-subheading {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 0.95rem;
   margin: 0 0 8px;
@@ -4110,7 +4045,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .cdb-form-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.4rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -4305,14 +4240,14 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   padding: 0.22rem 0.65rem;
   border-radius: 3px;
   background-color: var(--bg-darker);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
 }
 
 .cdb-data-chip-label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
@@ -4350,7 +4285,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .cdb-cosmic-item-name {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -4385,7 +4320,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 
 /* =============================================================================
-   14. VENUES — directory page (public)
+   15. VENUES — directory page (public)
    ============================================================================= */
 
 /* ── Filter sidebar ───────────────────────────────────────────────────────── */
@@ -4407,7 +4342,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venues-filter-label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -4418,7 +4353,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   width: 100%;
   min-height: 40px;
   padding: 0 0.75rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   background-color: var(--bg-darker);
   color: var(--text-primary);
@@ -4445,7 +4380,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   align-items: center;
   gap: 10px;
   min-height: 38px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   color: var(--text-primary);
   cursor: pointer;
@@ -4471,7 +4406,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venues-result-count {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -4485,7 +4420,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venues-sort-label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -4505,7 +4440,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .venues-empty {
   grid-column: 1 / -1;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -4569,7 +4504,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.78rem;
   letter-spacing: 0.02em;
   line-height: 1.4;
@@ -4601,7 +4536,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.18rem;
   font-weight: 400;
   margin: 0;
@@ -4610,7 +4545,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* The line under the name (IC rank, location, position): muted italic. */
 .venue-card-location {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -4618,7 +4553,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-card-desc {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.98rem;
   line-height: 1.5;
   color: var(--text-body);
@@ -4634,7 +4569,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-card-tag {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -4800,7 +4735,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-modal-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.55rem;
   font-weight: 400;
   margin: 0 0 0.25rem;
@@ -4809,7 +4744,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* The line under a popup's title (location): muted italic. */
 .venue-modal-location {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -4829,7 +4764,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .venue-modal-desc {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--text-primary);
@@ -4851,7 +4786,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 
 /* =============================================================================
-   14b. CODEX — directory page (public)
+   16. CODEX — directory page (public)
    Quiet list grouped by type; name + small subtitle + preview, click-to-open.
    ========================================================================== */
 .codex-list { display: flex; flex-direction: column; }
@@ -4906,14 +4841,14 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .codex-row-main { flex: 1 1 auto; min-width: 0; }
 .codex-row-name {
   display: block;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.12rem;
   color: var(--text-primary);
 }
 .codex-row-sub {
   display: block;
   margin-top: 0.1rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.92rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -4921,7 +4856,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .codex-row-preview {
   display: block;
   margin-top: 0.3rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.4;
   color: var(--text-body);
@@ -4932,7 +4867,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 /* Modal byline under the title (Written by X) */
 .codex-modal-sub {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   letter-spacing: 0.03em;
   color: var(--text-secondary);
@@ -4970,7 +4905,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 
 /* =============================================================================
-   15. JOB BOARD — directory page (public)
+   17. JOB BOARD — directory page (public)
    Reuses the generic campaign-* layout and venues-filter-* / venues-grid
    primitives; only the cards, badges, and modal are job-specific.
    ============================================================================= */
@@ -5028,7 +4963,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.18rem;
   font-weight: 400;
   margin: 0;
@@ -5036,7 +4971,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-card-meta {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   font-style: italic;
   color: var(--text-secondary);
@@ -5044,7 +4979,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-card-desc {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.98rem;
   line-height: 1.5;
   color: var(--text-body);
@@ -5100,7 +5035,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-modal-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.55rem;
   font-weight: 400;
   margin: 0 0 0.5rem;
@@ -5108,7 +5043,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-modal-contact {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   color: var(--text-primary);
   margin: 0 0 1rem;
@@ -5126,7 +5061,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-modal-desc {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--text-primary);
@@ -5143,7 +5078,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 
 /* =============================================================================
-   16. BOUNTY BOARD + FACTION ROSTERS — public pages
+   18. BOUNTY BOARD + FACTION ROSTERS — public pages
    Reuses the job-card / job-modal and venue-card / venue-modal patterns; the
    classes below cover the member action row (sign up / apply, shared
    buttons) shown inside detail modals.
@@ -5172,7 +5107,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .quest-action-note {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   color: var(--text-secondary);
   font-size: 0.95rem;
 }
@@ -5194,7 +5129,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 
 /* =============================================================================
-   17. VENUE MENUS — public menus page
+   19. VENUE MENUS — public menus page
    A "menu sheet" rather than the wide card grid used by the venues directory:
    a torn card holding the venue's banner, an index of its sections and the
    items. Items flow into two columns on desktop beneath each section heading,
@@ -5256,7 +5191,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-venue-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.18rem;
   color: var(--text-primary);
 }
@@ -5339,7 +5274,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-sheet-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 2.2rem;
   letter-spacing: 0.02em;
@@ -5349,7 +5284,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-sheet-location {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1.3rem;
   color: var(--media-ink);
   margin: 8px 0 0;
@@ -5375,7 +5310,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   border-radius: 4px;
   color: var(--text-primary);
   text-decoration: none;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   letter-spacing: 0.02em;
   transition: background-color 0.15s ease;
@@ -5394,7 +5329,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-empty {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.05rem;
   color: var(--text-secondary);
   text-align: center;
@@ -5410,7 +5345,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   margin: 2.75rem 0 1.6rem;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.4rem;
   color: var(--text-primary);
@@ -5504,7 +5439,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .menu-item-name {
   flex: 0 1 auto;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.2rem;
   line-height: 1.3;
@@ -5525,7 +5460,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-item-cost {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-weight: 600;
   font-size: 1rem;
   white-space: nowrap;
@@ -5533,7 +5468,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .menu-item-desc {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-style: italic;
   font-size: 1rem;
   line-height: 1.5;
@@ -5638,7 +5573,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 /* =============================================================================
-   18. MOUNT FARM — trial and Savage mount tracker
+   20. MOUNT FARM — trial and Savage mount tracker
    Built from the shared pieces (info cards, the Atma table, book headers,
    the .cdb-* form parts, status dots); these rules only lay them out.
    ========================================================================== */
@@ -5678,7 +5613,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-fight-need { margin: 16px 0 14px; }
 .mf-fight-need p { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 1.05rem; }
 .mf-fight-count {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 1.6rem;
   line-height: 1;
   color: var(--text-primary);
@@ -5710,7 +5645,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5719,7 +5654,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   white-space: nowrap;
 }
@@ -5770,7 +5705,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   border-top: 1px solid var(--border-color);
 }
 .mf-item-main { flex: 1; min-width: 220px; line-height: 1.25; }
-.mf-item-name { font-family: 'Stoke', Georgia, serif; font-size: 1rem; color: var(--text-primary); }
+.mf-item-name { font-family: var(--font-ui); font-size: 1rem; color: var(--text-primary); }
 .mf-manage .mf-none { border-top: 1px solid var(--border-color); }
 
 /* A card's heading, with a button or a count on the right. */
@@ -5848,7 +5783,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   border-bottom: 1px solid var(--border-color);
 }
 .mf-picker-count {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -5862,7 +5797,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   border-radius: 4px;
   background-color: var(--bg-darker);
   color: var(--text-primary);
-  font-family: 'Crimson Pro', Georgia, serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   cursor: pointer;
 }
@@ -5903,7 +5838,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-grid-mount-name {
   align-self: end;
   max-width: 100%;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.74rem;
   color: var(--text-primary);
 }
@@ -5954,13 +5889,13 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-grid-need .mf-grid-person {
   padding-top: 0;
   padding-bottom: 0;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   line-height: 1.2;
   color: var(--text-secondary);
 }
 .mf-grid-name {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.88rem;
   line-height: 1.2;
   color: var(--text-primary);
@@ -6009,7 +5944,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* Still need: the count in Stoke; "All have" in italics (.atma-complete). */
 .mf-need {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   color: var(--text-primary);
 }
@@ -6040,7 +5975,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-person-label {
   flex: 1;
   min-width: 0;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1.3;
   color: var(--text-primary);
@@ -6066,7 +6001,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   border-bottom: 1px solid var(--border-color);
 }
 .mf-person-mount { flex: 1; min-width: 0; line-height: 1.2; }
-.mf-person-mount-name { font-family: 'Stoke', Georgia, serif; font-size: 0.88rem; color: var(--text-primary); }
+.mf-person-mount-name { font-family: var(--font-ui); font-size: 0.88rem; color: var(--text-primary); }
 .mf-person-mount-fight { margin-top: 1px; font-size: 0.8rem; font-style: italic; color: var(--text-secondary); }
 .mf-person-body .mf-none { padding: 12px 16px; }
 
@@ -6075,7 +6010,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-kind-title {
   padding: 8px 16px 4px;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.74rem;
   line-height: 1.2;
   letter-spacing: 0.04em;
@@ -6095,7 +6030,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   align-items: center;
   gap: 8px;
   min-height: 30px;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
   cursor: pointer;
@@ -6127,7 +6062,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-label {
   display: block;
   margin-bottom: 7px;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -6165,7 +6100,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-panel-head.is-baseline { align-items: baseline; }
 .mf-panel-title { flex: 1; margin: 0; font-size: 1.3rem; }
 .mf-panel-count {
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
@@ -6193,7 +6128,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-person-name {
   flex: 1;
   min-width: 0;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 0.98rem;
   color: var(--text-primary);
 }
@@ -6260,7 +6195,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 .mf-pick:hover { background-color: var(--bg-row-hover); }
 .mf-pick-main { display: flex; flex: 1; flex-direction: column; min-width: 0; line-height: 1.25; }
-.mf-pick-fight { font-family: 'Stoke', Georgia, serif; font-size: 0.98rem; color: var(--text-primary); }
+.mf-pick-fight { font-family: var(--font-ui); font-size: 0.98rem; color: var(--text-primary); }
 .mf-pick-mount { font-size: 0.92rem; font-style: italic; color: var(--text-secondary); }
 .mf-pick-need { text-align: right; white-space: nowrap; }
 
@@ -6289,7 +6224,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex: 1;
   min-width: 220px;
   margin: 0;
-  font-family: 'Stoke', Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   color: var(--text-primary);
 }

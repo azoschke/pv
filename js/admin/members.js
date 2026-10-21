@@ -210,7 +210,7 @@
     },
       hasShared ? h(SharedBlock, { member: member, allMembers: allMembers }) : null,
       value
-        ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
+        ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'var(--font-text)', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
         : null
     );
   }

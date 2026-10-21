@@ -198,7 +198,7 @@
       title: 'Password reset link — ' + result.display_name,
       onClose: onClose
     },
-      h('p', { style: { fontFamily: 'Crimson Pro, serif', margin: '0 0 0.75rem' } },
+      h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.75rem' } },
         'Send this one-time link to ',
         h('strong', null, result.display_name),
         ' over Discord. ',
@@ -275,7 +275,7 @@
       title: 'Edit roles — ' + (user.display_name || user.username),
       onClose: onClose
     },
-      h('p', { style: { fontFamily: 'Crimson Pro, serif', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
+      h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },

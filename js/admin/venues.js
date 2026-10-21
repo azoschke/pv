@@ -449,7 +449,7 @@
               background: 'var(--bg-card-light)',
               border: '1px solid var(--border-color)',
               borderRadius: '0.25rem',
-              fontFamily: '"La Belle Aurore", cursive',
+              fontFamily: 'var(--font-script)',
               fontSize: '0.95rem',
               color: 'var(--accent-brown)'
             }
