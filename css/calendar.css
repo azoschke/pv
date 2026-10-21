@@ -40,7 +40,7 @@
   border-radius: 4px; margin-bottom: 8px;
   transition: background-color 0.15s ease, transform 0.05s ease;
 }
-.cal-event:hover { background: color-mix(in srgb, var(--bg-darker) 40%, var(--bg-card)); }
+.cal-event:hover { background: var(--well-hover); }
 .cal-event:active { transform: translateY(1px); }
 
 /* Natural aspect ratio kept (fixed height, auto width), flush to the card

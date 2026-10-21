@@ -7,12 +7,12 @@
    parchment forms' own rules alone. */
 .admin-login-wrap .parchment { padding: 32px; border-radius: 4px; box-shadow: none; }
 .admin-login-wrap .form-group label { font-family: 'Stoke', serif; font-size: 0.92rem; color: var(--text-primary); }
-.admin-login-wrap .form-group input {
+.admin-login-wrap .form-group input:where(:not([type="checkbox"], [type="radio"])) {
   border: 0;
   background: var(--form-input-bg);
   color: var(--text-primary);
 }
-.admin-login-wrap .form-group input:focus {
+.admin-login-wrap .form-group input:where(:not([type="checkbox"], [type="radio"])):focus {
   background: var(--form-input-bg);
   box-shadow: 0 0 0 2px var(--ring);
 }

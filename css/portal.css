@@ -692,10 +692,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-secondary);
   white-space: nowrap;
 }
-.activity-cell .talked-to-cell input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-}
 
 /* --------------- Talked-to checkbox cell --------------- */
 .talked-to-cell {
@@ -703,12 +699,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   gap: 0.4rem;
   font-size: 1rem;
-}
-.talked-to-cell input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
 }
 
 /* --------------- My Profile two-column layout --------------- */
@@ -778,17 +768,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   letter-spacing: normal;
   color: var(--text-primary);
 }
-.portal-checkbox-option input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
 .portal-checkbox-option.is-disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.portal-checkbox-option.is-disabled input[type="checkbox"] {
+.portal-checkbox-option.is-disabled input {
   cursor: not-allowed;
 }
 
@@ -840,12 +824,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
   user-select: none;
 }
-.admin-role-checkbox input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
 
 /* --------------- Modal ---------------
    The overlay covers the visible part of the window: while a popup is open
@@ -885,6 +863,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   flex-direction: column;
   max-height: 94vh;
   max-height: min(94dvh, 100%);
+  box-shadow: var(--shadow-float);
 }
 .portal-modal-lg { max-width: 880px; }
 /* Title and a small quiet close button, with a rule under them. */

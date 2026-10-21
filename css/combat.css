@@ -121,7 +121,7 @@
 .rp-boss-card { position: relative; display: flex; align-items: flex-start; gap: 0.7rem; background: var(--bg-card);
   border-radius: 4px; padding: 0.7rem 0.85rem; }
 .rp-boss-card.is-pickable { cursor: pointer; }
-.rp-boss-card.is-pickable:hover { background: color-mix(in srgb, var(--bg-darker) 40%, var(--bg-card)); }
+.rp-boss-card.is-pickable:hover { background: var(--well-hover); }
 .rp-boss-card.is-target { box-shadow: var(--rp-ring); }
 .rp-boss-card.is-down { opacity: 0.5; }
 .rp-boss-target-note { margin-top: 0.3rem; font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
@@ -283,9 +283,12 @@
 .rp-switch:disabled { opacity: 0.5; cursor: default; }
 /* Multi-ally picker: tappable chips for "several chosen allies" targets. */
 .rp-pick-multi { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.rp-pick-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border: 0; border-radius: 4px; background: var(--bg-darker); font-size: 0.85rem; cursor: pointer; }
+.rp-pick-chip { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border: 0; border-radius: 4px; background: var(--bg-darker); font-size: 0.85rem; cursor: pointer; }
 .rp-pick-chip.is-on { background: var(--accent-brown); color: var(--label); }
-.rp-pick-chip input { margin: 0; accent-color: var(--accent-brown); }
+/* The chip's brown fill already shows "on", so the box inside it is
+   visually hidden (still focusable and announced); focus rings the chip. */
+.rp-pick-chip input[type="checkbox"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.rp-pick-chip:has(input:focus-visible) { outline: 2px solid var(--accent-brown); outline-offset: 2px; }
 .rp-pick-cap { align-self: center; font-size: 0.78rem; color: var(--text-secondary); }
 
 /* ── Personal buffs ── */
