@@ -1078,10 +1078,10 @@
     };
 
     return h('div', {
-      className: 'cdb-modal-overlay'
+      className: 'modal-overlay'
     },
       h('div', {
-        className: 'cdb-modal'
+        className: 'modal is-wide is-padded'
       },
         h('h2', { className: 'form-title craft-name' }, 'Manage Class Stats'),
         h('p', { className: 'cdb-modal-desc' }, 'These stats will be displayed for all crafts using each class.'),

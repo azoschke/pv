@@ -665,8 +665,8 @@
         h('h4', { className: 'rp-skill-group-title' }, title),
         sub('Battle Effects', b), sub('Narrative', n), sub('Skills', s));
     }
-    return h('div', { className: 'rp-modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
-      h('div', { className: 'rp-modal rp-modal-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
+    return h('div', { className: 'modal-overlay', onMouseDown: function (e) { if (e.target === e.currentTarget && props.onClose) props.onClose(); } },
+      h('div', { className: 'modal is-padded is-wide', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Active skills' },
         h('div', { className: 'rp-modal-head' },
           h('h3', null, 'Active Skills'),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Close', onClick: props.onClose }, '✕')),

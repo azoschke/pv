@@ -986,8 +986,8 @@ button.nav-sublink {
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .detail-modal,
-  .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *) {
+  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
+  .mf-panel, .mf-person-card, .mf-manage) *) {
   --bg-darker: var(--bg-card);
   --form-input-bg: var(--bg-card);
   --progress-bg: var(--bg-card);
@@ -997,8 +997,8 @@ button.nav-sublink {
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .detail-modal,
-  .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *)
+  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
+  .mf-panel, .mf-person-card, .mf-manage) *)
   .seg-btn:is(.is-active, [aria-pressed="true"]) {
   background-color: var(--page-control-active);
 }
@@ -1812,6 +1812,94 @@ select.field.is-small { padding-right: 1.75rem; }
   color: var(--text-secondary);
 }
 
+/* --- Modal ---
+   One shell for every popup: the admin editors, the tool dialogs (Crafting
+   Database, Mount Farm, the Roll Calculator's skills) and the directory
+   detail popups.
+     .modal-overlay  the scrim, over the visible part of the window
+     .modal          the sheet: card tone, float shadow, 640px wide
+                     (.is-narrow 460px, .is-wide 880px)
+     .modal-head     title (.modal-title) and close button, a rule beneath
+     .modal-body     the padded part that scrolls
+     .is-padded      a sheet without head and body: its content sits
+                     straight in it, padded, and the sheet scrolls
+   While a popup is open the scroll lock (js/pv-session.js) keeps --vv-top
+   and --vv-height on the root, which shrink to the space above an
+   on-screen keyboard and follow mobile Safari when it slides the view;
+   without them the overlay is the full window. The sheet never outgrows
+   the overlay (100%, inside its padding), so its foot is always in reach,
+   and on a large screen it stops at 94dvh. dvh follows mobile browsers'
+   toolbar, where vh is measured as if the toolbar were hidden; browsers
+   without dvh keep the vh lines. The scrim also runs well past the
+   overlay's edges (the shadow), so if Safari moves the view before the
+   overlay catches up, the page around it is still dimmed. */
+.modal-overlay {
+  position: fixed;
+  top: var(--vv-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--vv-height, 100%);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3vh 1rem 1rem;
+  padding: 3dvh 1rem 1rem;
+  overflow-y: auto;
+  background: var(--scrim);
+  box-shadow: 0 0 0 100vmax var(--scrim);
+}
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  max-height: 94vh;
+  max-height: min(94dvh, 100%);
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--shadow-float);
+}
+.modal.is-narrow { max-width: 460px; }
+.modal.is-wide   { max-width: 880px; }
+.modal.is-padded { display: block; padding: 1.25rem 1.5rem; }
+/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
+   work from the moment they appear. That is a focus move, not a focus stop:
+   the sheet draws no ring. Controls inside it still do. */
+.modal:focus,
+.modal:focus-visible { outline: none; }
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.modal-body {
+  padding: 1rem 1.1rem 1.25rem;
+  overflow-y: auto;
+}
+/* Close button pinned top right on a sheet without a head: a small quiet
+   icon button (.btn.is-quiet.is-small.is-icon). */
+.modal-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
 /* --- Sketch wash --- */
 /* Sketch wash — the shared tint for the site's illustrations. Put it on the
    box that holds the artwork (a card's media tile, a thumb, a modal image
@@ -1851,44 +1939,18 @@ select.field.is-small { padding-right: 1.75rem; }
    rosters, codex, calendar events, My Profile): an optional image across
    the top, then badges, the title, a meta line, facts, the description and
    tags. */
-.detail-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--scrim);
-  z-index: 200;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 3rem 1rem;
-  overflow-y: auto;
-}
-
+/* The page holds its overlay in the markup, shown while .is-open. The sheet
+   is the modal shell with its image flush to the edges (the rounded corners
+   clip it), growing with its content while the overlay scrolls. */
+.detail-modal-overlay { display: none; }
 .detail-modal-overlay.is-open { display: flex; }
 
 .detail-modal {
+  display: block;
   position: relative;
-  width: 100%;
-  max-width: 640px;
-  background: var(--bg-card);
-  border-radius: 4px;
+  max-height: none;
   overflow: hidden;
-  box-shadow: var(--shadow-float);
 }
-
-/* Close button: a small quiet icon button (.btn.is-quiet.is-small.is-icon)
-   pinned top right. */
-.modal-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  z-index: 2;
-}
-
-/* Dialogs take focus themselves on open (tabindex="-1") so Escape and Tab
-   work from the moment they appear. That is a focus move, not a focus stop —
-   the box should not draw the global ring. Controls inside it still do. */
-.detail-modal:focus,
-.detail-modal:focus-visible { outline: none; }
 
 .detail-modal-img {
   width: 100%;
@@ -1977,7 +2039,6 @@ select.field.is-small { padding-right: 1.75rem; }
 .detail-modal-tags { margin-top: 1.1rem; }
 
 @media (max-width: 768px) {
-  .detail-modal-overlay { padding: 1rem; }
   .detail-modal-content { padding: 1.25rem 1.25rem 1.5rem; }
 }
 
@@ -4573,29 +4634,7 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 
 
-/* Class stats modal */
-.cdb-modal-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 50;
-  background-color: var(--scrim);
-}
-
-.cdb-modal {
-  border-radius: 4px;
-  padding: 1.5rem;
-  max-width: 900px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  background-color: var(--bg-card);
-  border: 0;
-}
-
+/* Class stats modal (the shared .modal shell) */
 .cdb-modal-desc {
   font-size: 0.875rem;
   margin-bottom: 1rem;

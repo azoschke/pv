@@ -284,11 +284,11 @@
       return function () { document.removeEventListener('keydown', onKey); release(); };
     }, []);
     return h('div', {
-      className: 'cdb-modal-overlay',
+      className: 'modal-overlay',
       onMouseDown: function (e) { if (e.target === e.currentTarget) closeRef.current(); }
     },
       h('div', {
-        className: 'cdb-modal mf-dialog', ref: boxRef, tabIndex: -1,
+        className: 'modal is-padded mf-dialog', ref: boxRef, tabIndex: -1,
         role: props.alert ? 'alertdialog' : 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'mf-dialog-title'
       },
         h('h2', { id: 'mf-dialog-title', className: 'form-title' }, props.title),

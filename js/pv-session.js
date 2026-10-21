@@ -422,7 +422,7 @@
   // and the click that ends a drag is swallowed so it doesn't also act on
   // the row under the mouse. Touch and pen keep their native scrolling.
   var DRAG_SCROLL = '.portal-table-wrap, .perm-grid-wrap, .site-table-scroll, .atma-scroll';
-  var DRAG_SKIP = 'a, button, input, select, textarea, label, summary, [contenteditable], [role="dialog"], .portal-modal-overlay';
+  var DRAG_SKIP = 'a, button, input, select, textarea, label, summary, [contenteditable], [role="dialog"], .modal-overlay';
   var DRAG_THRESHOLD = 5;
   var drag = null;
 

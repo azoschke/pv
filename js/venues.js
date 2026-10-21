@@ -572,7 +572,7 @@
 
     modalOverlay.classList.add("is-open");
     modalOverlay.setAttribute("aria-hidden", "false");
-    PVScrollLock.lock("detail-modal");
+    PVScrollLock.lock("venue-modal");
   }
 
   function closeModal() {
@@ -583,7 +583,7 @@
     }
     modalOverlay.classList.remove("is-open");
     modalOverlay.setAttribute("aria-hidden", "true");
-    PVScrollLock.unlock("detail-modal");
+    PVScrollLock.unlock("venue-modal");
     modalBody.innerHTML = "";
   }
 
