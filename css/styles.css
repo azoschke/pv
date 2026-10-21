@@ -1051,6 +1051,62 @@ input[type="radio"]:checked::after {
 }
 input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: default; }
 
+/* --- Stepper ---
+   A number with − and + beside it (Atma counts; HP, buffs and turns in the
+   Roll Calculator): one well holding quiet square buttons, which step toward
+   the card on hover, with the value or a typed number between them.
+   .is-small for dense rows. */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+}
+.stepper-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font-family: var(--font-text);
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.stepper-btn:hover:not(:disabled) { background-color: var(--well-hover); }
+.stepper-btn:disabled { color: var(--text-secondary); opacity: 0.5; cursor: default; }
+.stepper-btn .material-symbols-outlined { font-size: 1.1rem; font-variation-settings: 'wght' 600; }
+.stepper-val,
+.stepper-input {
+  min-width: 2.75rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.stepper-val.is-compact { min-width: 1.4rem; }
+.stepper-input {
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-text);
+  font-size: 1.02rem;
+  -moz-appearance: textfield;
+}
+.stepper-input.is-compact { width: 2.3rem; min-width: 0; }
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper.is-small .stepper-btn { width: 26px; height: 26px; font-size: 1rem; }
+.stepper.is-small .stepper-btn .material-symbols-outlined { font-size: 1rem; }
+.stepper.is-small .stepper-input { height: 26px; }
+
 /* --- Tick ---
    A 28px button to tick in a grid (the Mount Farm tracker, the permissions
    grid): the checkbox's look at grid size, with a stroked SVG icon inside.
@@ -2300,55 +2356,7 @@ select.field.is-small { padding-right: 1.75rem; }
 }
 
 /* The counter: one well-toned −/value/+ group. */
-.count-control {
-  display: inline-flex;
-  align-items: center;
-  background-color: var(--bg-darker);
-  border-radius: 4px;
-}
-
-.atma-table tr.checked .count-control { opacity: 0.55; }
-
-.count-btn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: none;
-  font-family: var(--font-text);
-  font-size: 1.15rem;
-  line-height: 1;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-.count-btn:hover:not(:disabled) {
-  background-color: var(--well-hover);
-}
-
-.count-btn:disabled {
-  color: var(--text-secondary);
-  opacity: 0.5;
-  cursor: default;
-}
-
-.count-input {
-  width: 44px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: center;
-  font-family: var(--font-text);
-  font-size: 1.02rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-  -moz-appearance: textfield;
-}
-
-.count-input::-webkit-outer-spin-button,
-.count-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.atma-table tr.checked .stepper { opacity: 0.55; }
 
 
 /* =============================================================================

@@ -73,10 +73,10 @@ function renderAtma() {
       '<td class="td-count">' +
         '<span class="atma-count">' +
           (done ? '<span class="atma-complete">Complete</span>' : '') +
-          '<span class="count-control">' +
-            '<button type="button" class="count-btn" data-action="dec" data-id="' + a.id + '" aria-label="Decrement"' + (count <= 0 ? ' disabled' : '') + '>&minus;</button>' +
-            '<input type="number" min="0" max="' + ATMA_MAX + '" step="1" value="' + count + '" data-id="' + a.id + '" class="count-input" aria-label="' + escapeHtml(a.name) + ' count">' +
-            '<button type="button" class="count-btn" data-action="inc" data-id="' + a.id + '" aria-label="Increment"' + (done ? ' disabled' : '') + '>+</button>' +
+          '<span class="stepper">' +
+            '<button type="button" class="stepper-btn" data-action="dec" data-id="' + a.id + '" aria-label="Decrement"' + (count <= 0 ? ' disabled' : '') + '>&minus;</button>' +
+            '<input type="number" min="0" max="' + ATMA_MAX + '" step="1" value="' + count + '" data-id="' + a.id + '" class="stepper-input" aria-label="' + escapeHtml(a.name) + ' count">' +
+            '<button type="button" class="stepper-btn" data-action="inc" data-id="' + a.id + '" aria-label="Increment"' + (done ? ' disabled' : '') + '>+</button>' +
           '</span>' +
         '</span>' +
       '</td>' +
@@ -116,7 +116,7 @@ function updateCount(id, next) {
 function bindAtmaEvents() {
   const container = document.getElementById('atma-container');
 
-  container.querySelectorAll('.count-btn').forEach(btn => {
+  container.querySelectorAll('.stepper-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const id = this.getAttribute('data-id');
       const action = this.getAttribute('data-action');
@@ -127,7 +127,7 @@ function bindAtmaEvents() {
     });
   });
 
-  container.querySelectorAll('.count-input').forEach(input => {
+  container.querySelectorAll('.stepper-input').forEach(input => {
     input.addEventListener('change', function() {
       const id = this.getAttribute('data-id');
       updateCount(id, parseInt(this.value, 10));

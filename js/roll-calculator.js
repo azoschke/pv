@@ -520,10 +520,10 @@
 
   // ── Party (HP + shield, universal) ────────────────────────────────────────
   function Stepper(props) {
-    return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { props.onChange(props.value - 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
-      h('span', { className: 'rp-step-val' + (props.compact ? ' is-compact' : '') }, props.label),
-      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { props.onChange(props.value + 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
+    return h('div', { className: 'stepper is-small' },
+      h('button', { type: 'button', className: 'stepper-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { props.onChange(props.value - 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
+      h('span', { className: 'stepper-val' + (props.compact ? ' is-compact' : '') }, props.label),
+      h('button', { type: 'button', className: 'stepper-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { props.onChange(props.value + 1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   // HP control: free-typed absolute value plus ± nudges. Nudges update the display
   // instantly but the write is debounced, so a burst of clicks lands as one PATCH —
@@ -541,13 +541,13 @@
     function schedule(n) { pendingRef.current = true; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(function () { commitNow(n); }, HP_COMMIT_MS); }
     function nudge(d) { var cur = parseInt(val, 10); if (isNaN(cur)) cur = props.value; var next = clamp(cur + d); setVal(String(next)); schedule(next); }
     function commitTyped() { if (timerRef.current) clearTimeout(timerRef.current); var n = parseInt(val, 10); if (isNaN(n)) { pendingRef.current = false; setVal(String(props.value)); return; } n = clamp(n); setVal(String(n)); commitNow(n); }
-    return h('div', { className: 'rp-stepper' },
-      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { nudge(-1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
-      h('input', { className: 'rp-hp-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
+    return h('div', { className: 'stepper is-small' },
+      h('button', { type: 'button', className: 'stepper-btn', disabled: props.disabled, 'aria-label': 'Decrease', onClick: function () { nudge(-1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'remove')),
+      h('input', { className: 'stepper-input' + (props.compact ? ' is-compact' : ''), type: 'number', inputMode: 'numeric', value: val, disabled: props.disabled,
         onChange: function (e) { pendingRef.current = true; setVal(e.target.value); }, onBlur: commitTyped,
         onKeyDown: function (e) { if (e.key === 'Enter') e.target.blur(); } }),
       props.showMax ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
-      h('button', { type: 'button', className: 'rp-step-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
+      h('button', { type: 'button', className: 'stepper-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
   function Avatar(props) {
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];

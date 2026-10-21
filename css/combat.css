@@ -171,10 +171,10 @@
   font-size: 0.72rem; font-weight: 700; }
 .rp-party { display: flex; flex-direction: column; gap: 0.15rem; }
 .rp-party-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: 4px; }
-.rp-party-row.is-me { background: var(--bg-card-light); }
+.rp-party-row.is-me { background: var(--bg-tray); }
 .rp-party-row.is-target { box-shadow: var(--rp-ring); }
 .rp-party-row.is-pickable { cursor: pointer; }
-.rp-party-row.is-pickable:hover { background: var(--bg-card-light); }
+.rp-party-row.is-pickable:hover { background: var(--bg-row-hover); }
 .rp-party-row.is-elim { opacity: 0.5; }
 /* Summons panel: temporary minions below the party. */
 .rp-summons-card { margin-top: 0.75rem; }
@@ -210,24 +210,12 @@
 .rp-shield-edit .material-icons { font-size: 1rem; color: var(--text-secondary); }
 .rp-shield-edit.is-on .material-icons { color: var(--accent-brown); }
 
-/* Steppers — filled neutral wells; ± glyphs tinted by context. */
-.rp-stepper { display: inline-flex; align-items: center; gap: 0.3rem; }
-/* Translucent lighten so the step buttons keep contrast on any row shade,
-   including the raised (is-me) highlight where a flat fill would vanish. */
-.rp-step-btn { display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--text-secondary) 16%, transparent); border: 0;
-  border-radius: 0.4rem; padding: 0.15rem 0.3rem; cursor: pointer; color: var(--text-secondary); }
-.rp-step-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
-.rp-step-btn .material-symbols-outlined { font-size: 1rem; font-variation-settings: 'wght' 600; }
-.rp-hp-edit .rp-step-btn .material-symbols-outlined { color: var(--accent-red); }
-.rp-step-val { min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; }
-.rp-step-val.is-compact { min-width: 1.4rem; }
+/* Steppers are the shared .stepper (styles.css); HP's ± are red. */
+.rp-hp-edit .stepper-btn .material-symbols-outlined { color: var(--accent-red); }
 .rp-hp-input { width: 3.1rem; padding: 0.2rem 0.3rem; text-align: center; font: inherit; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
 .rp-hp-input.is-compact { width: 2.3rem; }
 .rp-hp-input::-webkit-outer-spin-button, .rp-hp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .rp-hp-max { color: var(--text-secondary); font-size: 0.78rem; white-space: nowrap; }
-/* Party number fields use the same translucent fill as the steppers so they
-   stay legible on the raised (is-me) row too. */
-.rp-party .rp-hp-input { background: color-mix(in srgb, var(--text-secondary) 16%, transparent); }
 /* Narrow screens: portrait + name on top, stats on a full-width line beneath. */
 @media (max-width: 600px) {
   .rp-party-row { flex-wrap: wrap; row-gap: 0.35rem; }
