@@ -226,7 +226,7 @@
 }
 .v2-state-msg.error { color: var(--accent-red); }
 /* Loading / failed text inside the patient list. */
-.chapter-list-item > .patient-list-state { padding: 0.55rem 1rem; }
+.sidebar-list-item > .patient-list-state { padding: 0.55rem 1rem; }
 
 /* ── Patient sidebar: search + A–Z jump bar + letter groups ─────── */
 /* Header + search + jump bar stay pinned so the ✕ and search remain

@@ -47,7 +47,7 @@
   var sidebarEl    = document.getElementById("venues-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("venues-search");
   var sizeListEl   = document.getElementById("filter-size-list");
   var typeListEl   = document.getElementById("filter-type-list");
@@ -150,10 +150,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -167,11 +167,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -334,7 +334,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -345,7 +345,7 @@
         if (kind === "sizes") return v.size === value;
         return (Array.isArray(v.tags) ? v.tags : []).indexOf(value) !== -1;
       });
-      var item = el.closest(".venues-filter-item");
+      var item = el.closest(".filter-item");
       if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
@@ -455,9 +455,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No venues match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or two.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or two.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -597,7 +597,7 @@
 
   // ── Boot ─────────────────────────────────────────────────────────────────
   async function loadVenues() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading venues&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading venues&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/venues", {
         method: "GET",
@@ -609,7 +609,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading venues:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the venue directory. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

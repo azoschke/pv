@@ -47,7 +47,7 @@
   var sidebarEl     = document.getElementById("roster-sidebar");
   var toggleBtn     = document.getElementById("sidebar-toggle-btn");
   var closeBtn      = document.getElementById("sidebar-close-btn");
-  var overlay       = document.getElementById("campaign-overlay");
+  var overlay       = document.getElementById("browse-overlay");
   var searchInput   = document.getElementById("roster-search");
   var factionListEl = document.getElementById("filter-faction-list");
   var factionGroupEl= document.getElementById("filter-faction-group");
@@ -188,10 +188,10 @@
 
     values.forEach(function (value) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -205,11 +205,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = value;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = (listEl === factionListEl) ? "faction" : "skill";
       count.dataset.value = value;
       count.textContent = "0";
@@ -301,7 +301,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var value = el.dataset.value;
       if (!value) return;
       el.textContent = String(countFor(el.dataset.kind, value));
@@ -387,11 +387,11 @@
 
     if (!filtered.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = allMembers.length
         ? '<p>No members match these filters.</p>'
         : '<p>No published profiles yet.</p>' +
-          '<p class="venues-empty-hint">' +
+          '<p class="notice-panel-hint">' +
           'Members can publish a profile from the portal’s My Profile section.</p>';
       gridEl.appendChild(empty);
       return;
@@ -484,7 +484,7 @@
 
   // ── Boot ─────────────────────────────────────────────────────────────────
   async function loadRoster() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading roster&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading roster&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/roster", {
         method: "GET",
@@ -500,7 +500,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading roster:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the roster. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

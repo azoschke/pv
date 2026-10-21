@@ -63,7 +63,7 @@
   var sidebarEl    = document.getElementById("calendar-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("calendar-search");
   var catListEl    = document.getElementById("filter-category-list");
   var resetBtn     = document.getElementById("filter-reset");
@@ -327,10 +327,10 @@
       if (!present[cat.slug]) { delete filters.categories[cat.slug]; return; }
 
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -344,11 +344,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = cat.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.cat = cat.slug;
       count.textContent = "0";
 
@@ -377,7 +377,7 @@
     allEvents.forEach(function (e) {
       if (matchesSearch(e, q)) counts[e.category] = (counts[e.category] || 0) + 1;
     });
-    catListEl.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    catListEl.querySelectorAll(".filter-count").forEach(function (el) {
       el.textContent = String(counts[el.dataset.cat] || 0);
     });
   }

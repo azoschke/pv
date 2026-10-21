@@ -58,7 +58,7 @@
   var sidebarEl    = document.getElementById("quests-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("quests-search");
   var typeListEl   = document.getElementById("filter-type-list");
   var schedListEl  = document.getElementById("filter-schedule-list");
@@ -220,10 +220,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -237,11 +237,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -378,7 +378,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -494,9 +494,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No quests match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or showing past quests.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or showing past quests.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -684,7 +684,7 @@
   async function loadQuests(opts) {
     var keepModal = opts && opts.keepModal;
     if (!keepModal) {
-      gridEl.innerHTML = '<div class="venues-empty"><p>Loading quests&hellip;</p></div>';
+      gridEl.innerHTML = '<div class="notice-panel"><p>Loading quests&hellip;</p></div>';
     }
     try {
       var res = await fetch(API_BASE + "/quests", {
@@ -698,7 +698,7 @@
       if (keepModal && openQuestId != null) openModal(openQuestId);
     } catch (err) {
       console.error("Error loading quests:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the bounty board. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

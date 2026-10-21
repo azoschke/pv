@@ -141,7 +141,7 @@
   function renderChooser() {
     if (!allVenues.length) {
       venueGrid.innerHTML =
-        '<div class="venues-empty"><p>No menus have been published yet.</p>' +
+        '<div class="notice-panel"><p>No menus have been published yet.</p>' +
         '<p>Check back once a tavern or restaurant adds their fare.</p></div>';
       return;
     }
@@ -337,7 +337,7 @@
     } catch (err) {
       console.error("Error loading menu:", err);
       sheetEl.innerHTML =
-        '<p class="menu-empty venues-empty-error">Could not load this menu. ' +
+        '<p class="menu-empty notice-panel-error">Could not load this menu. ' +
         'Please try again shortly.</p>';
     }
   }
@@ -379,7 +379,7 @@
   });
 
   async function boot() {
-    venueGrid.innerHTML = '<div class="venues-empty"><p>Loading menus&hellip;</p></div>';
+    venueGrid.innerHTML = '<div class="notice-panel"><p>Loading menus&hellip;</p></div>';
     try {
       var data = await fetchVenues();
       allVenues = (Array.isArray(data) ? data : []).filter(function (v) {
@@ -388,7 +388,7 @@
       renderChooser();
     } catch (err) {
       console.error("Error loading menus:", err);
-      venueGrid.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      venueGrid.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the menu directory. Please try again shortly.</p></div>';
       return;
     }
