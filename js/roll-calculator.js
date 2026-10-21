@@ -593,7 +593,7 @@
             h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
             h('div', { className: 'rp-party-id' },
               h('strong', { className: 'rp-party-name' }, isTarget ? abbrevLastName(p.member_name) : p.member_name),
-              ko ? h('span', { className: 'status-dot is-red' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
+              ko ? h('span', { className: 'status-dot is-red' }, 'KO') : h('span', { className: 't-micro' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
               pill != null ? h('span', { className: 'status-dot is-brown' }, 'Heal ' + fmt(pill)) : null,
               h('div', { className: 'rp-hp-edit', title: 'HP', onClick: function (e) { e.stopPropagation(); } },
@@ -649,7 +649,7 @@
         h('div', { className: 'rp-eff-holder-name' }, g.name),
         byName(g.items, function (e) { return e.item_name || 'Item'; }).map(function (ig) {
           return h('div', { className: 'rp-eff-item', key: ig.name },
-            h('div', { className: 'rp-eff-item-name' }, ig.name),
+            h('div', { className: 't-micro rp-eff-item-name' }, ig.name),
             h('div', { className: 'rp-eff-list' }, ig.items.map(effRow)));
         }));
     }

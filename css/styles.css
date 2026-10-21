@@ -753,6 +753,32 @@ button.nav-sublink {
   margin: 0;
 }
 
+/* --- Text roles ---
+   The type roles from section 2 as classes, for markup that needs one
+   without a rule of its own: the three tracked-caps steps and the script
+   accent. (Existing labels carry the same values in their own rules.) */
+.t-section,
+.t-label,
+.t-micro {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.t-section { font-size: var(--fs-section); letter-spacing: var(--track-section); color: var(--text-primary); }
+.t-label   { font-size: var(--fs-caps);    letter-spacing: var(--track-caps);    color: var(--text-secondary); }
+.t-micro   { font-size: var(--fs-micro);   letter-spacing: var(--track-micro);   color: var(--text-secondary); }
+/* Empty and loading lines ("Nothing here yet", "Loading…", "No description
+   provided.") are .empty-note: the script accent wherever they appear; the
+   page's own class only places them. */
+.t-script,
+.empty-note {
+  font-family: var(--font-script);
+  font-size: var(--fs-script);
+  font-style: normal;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
 /* --- Torn edge ---
    The textured rip along the bottom of large raised boxes (the header band,
    page cards, sidebars, image tiles), cut out of the element itself so the
@@ -1561,18 +1587,6 @@ select.field.is-small { padding-right: 1.75rem; }
 .flash.error { color: var(--accent-red); }
 .flash.error::before { background-color: var(--accent-red); }
 .flash.success::before { background-color: var(--accent-brown); }
-
-/* --- Empty and loading lines ---
-   "Nothing here yet", "Loading…", "No description provided.": one small
-   muted note in the script accent wherever it appears (section 2, type
-   roles). The page's own class only places it. */
-.empty-note {
-  font-family: var(--font-script);
-  font-size: var(--fs-script);
-  font-style: normal;
-  line-height: 1.3;
-  color: var(--text-secondary);
-}
 
 /* --- Browse pages: sidebar, filters and results ---
    The layout every directory page shares (Venues, Job Board, Bounty Board,

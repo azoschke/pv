@@ -196,7 +196,6 @@
 .rp-me-id .avatar { width: 2rem; height: 2rem; }
 .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .rp-party-name { font-size: 0.7rem; font-family: var(--font-ui); overflow-wrap: anywhere; }
-.rp-party-role { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
 .rp-party-stats { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
 /* KO is a red .status-dot; a pending heal a brown one (nothing to act on). */
 .rp-hp-edit, .rp-shield-edit { display: inline-flex; align-items: center; gap: 0.3rem; }
@@ -308,7 +307,7 @@
   border: 0; border-radius: 4px; padding: 0.55rem 0.65rem; }
 .rp-eff-holder-name { font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.2rem; }
 .rp-eff-item { margin-bottom: 0.4rem; }
-.rp-eff-item-name { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0.2rem 0 0.2rem; }
+.rp-eff-item-name { margin: 0.2rem 0 0.2rem; }
 .rp-eff-list { display: flex; flex-direction: column; gap: 0.25rem; }
 .rp-eff { display: flex; flex-direction: column; gap: 0.05rem; align-items: flex-start; text-align: left; width: 100%; min-height: 2.5rem;
   background: var(--bg-card); border: 0; border-radius: 4px; padding: 0.35rem 0.5rem; cursor: pointer; font: inherit; color: var(--text-primary); }
