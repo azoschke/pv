@@ -106,10 +106,14 @@ a {
    never drift. Use these tokens rather than new colour values.
 
    Three surface tones, each with one job:
-     --bg-primary  page: the grained ground, and recessed trays inside cards
+     --bg-primary  page: the grained ground
      --bg-card     raised: cards, tiles, sidebars, menus (no border, no shadow)
      --bg-darker   well: controls only (inputs, bars, hover/active, quiet
                    buttons), never a container
+   Inside a card every step moves toward the ink (darker in light, lighter in
+   dark) by matching amounts: row hover, then tray / group band, then the
+   well. The table head is its own band: the deepest tone in light, between
+   the band and the well in dark. The page sits below every card.
    Brown leads; red is kept for alerts, danger, HP, attention pills and the
    drop cap. There is no green: completion is brown or muted text. */
 
@@ -117,9 +121,11 @@ a {
   /* Surfaces */
   --bg-primary:    #eee9dd;
   --bg-card:       #faf7f0;
-  --bg-darker:     #dfdace;
+  --bg-darker:     #ece6d8;
   /* = well. Every use is a control, hover or selected state. */
-  --bg-card-light: #dfdace;
+  --bg-card-light: #ece6d8;
+  --bg-tray:       #f3efe6;   /* flat boxes nested in a card */
+  --table-head:    #ded7c8;   /* table and grid head bands */
 
   /* Text */
   --text-primary:   #2b251e;  /* ink: headings, labels, control text */
@@ -128,14 +134,14 @@ a {
   --label:          #fbf8f2;  /* text on brown and red fills */
 
   /* Lines & accents */
-  --border-color:  rgba(60, 52, 38, 0.13);  /* faint rules only: row dividers, header underlines */
+  --border-color:  rgba(60, 52, 38, 0.075);  /* faint rules only: one between rows, one under a head, never two stacked */
   --accent-brown:  #6a573e;
   --accent-brown-hover: #7c684f;
   --accent-red:    #a54d44;
   --gold:          #806836;   /* UI gold on raised surfaces (stars, highlights) */
 
   /* Progress */
-  --progress-bg:   #dfdace;
+  --progress-bg:   #ece6d8;
   --progress-fill: #6a573e;
 
   /* Completion */
@@ -146,15 +152,15 @@ a {
   --star-empty:  #cbc4b5;
 
   /* Form inputs */
-  --form-input-bg:          #dfdace;
+  --form-input-bg:          #ece6d8;
   --form-input-placeholder: #5f574c;
 
   /* Staff panel (Medical Division landing) */
   --bg-staff-panel: #faf7f0;
 
   /* Table rows: the hover tint, and group rows a step past it */
-  --bg-row-hover: #efebe2;
-  --bg-group-row: #eae6dc;
+  --bg-row-hover: #f7f3ea;
+  --bg-group-row: #f3efe6;
 
   /* Focus and selection ring, scrim behind modals and drawers, and the one
      shadow (things that float over content: dropdown menus) */
@@ -194,10 +200,12 @@ a {
   color-scheme: dark;
 
   /* Surfaces */
-  --bg-primary:    #1a1614;
-  --bg-card:       #231f1d;
-  --bg-darker:     #2b2724;
-  --bg-card-light: #2b2724;
+  --bg-primary:    #1a1613;
+  --bg-card:       #231f1c;
+  --bg-darker:     #302c29;
+  --bg-card-light: #302c29;
+  --bg-tray:       #292522;
+  --table-head:    #2c2825;
 
   /* Text */
   --text-primary:   #ece7dc;
@@ -206,36 +214,38 @@ a {
   --label:          #1a1614;
 
   /* Lines & accents */
-  --border-color:  rgba(236, 231, 220, 0.10);
+  --border-color:  rgba(236, 231, 220, 0.06);
   --accent-brown:  #b8a082;
   --accent-brown-hover: #c8b091;
   --accent-red:    #c9655b;
-  --gold:          #d6b676;
+  --gold:          #aa8e53;   /* matched to light's contrast, so a gold dot never outshines red */
 
   /* Progress */
-  --progress-bg:   #2b2724;
+  --progress-bg:   #302c29;
   --progress-fill: #b8a082;
 
   /* Completion */
   --check-color: #b8a082;
 
   /* Stars */
-  --star-filled: #d6b676;
+  --star-filled: #aa8e53;
   --star-empty:  #4b4541;
 
   /* Form inputs */
-  --form-input-bg:          #2b2724;
+  --form-input-bg:          #302c29;
   --form-input-placeholder: #c1b5a6;
 
   /* Staff panel (Medical Division landing) */
-  --bg-staff-panel: #231f1d;
+  --bg-staff-panel: #231f1c;
 
   /* Table rows */
-  --bg-row-hover: #272320;
-  --bg-group-row: #2e2925;
+  --bg-row-hover: #26221f;
+  --bg-group-row: #292522;
 
-  /* Ring, scrim, float shadow */
+  /* Ring, scrim, float shadow. The scrim is deeper than light's, so it dims
+     the page behind a popup instead of lifting it. */
   --ring:         color-mix(in srgb, var(--accent-brown) 50%, transparent);
+  --scrim:        rgba(8, 6, 5, 0.66);
   --shadow-float: 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.40);
 
   /* Image placeholder tone 3, and the sketch wash colour */
@@ -5695,12 +5705,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   transition: transform 0.2s ease;
 }
 .mf-chevron.is-open { transform: rotate(90deg); }
-
-/* Trial: a tone of its own for table heads, between the page and the
-   card. Only Mount Farm uses it for now; if it stays, it moves up to the
-   palette in section 2. */
-:root { --table-head: #f3efe7; }
-[data-theme="dark"] { --table-head: #1c1817; }
 
 /* The tracker, as in the design: one expansion at a time, picked from a
    list. Its mounts run across the top and the people in view down the
