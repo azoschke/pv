@@ -549,11 +549,19 @@
       props.showMax ? h('span', { className: 'rp-hp-max' }, '/ ' + props.max) : null,
       h('button', { type: 'button', className: 'stepper-btn', disabled: props.disabled, 'aria-label': 'Increase', onClick: function () { nudge(1); } }, h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'add')));
   }
+  // The shared avatar: the member's picture, or their initials.
+  function initials(name) {
+    var words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (words.length >= 2) return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+    return (words[0] || '?').slice(0, 2).toUpperCase();
+  }
   function Avatar(props) {
     var imgErrState = useState(false); var imgErr = imgErrState[0], setImgErr = imgErrState[1];
     var url = props.url;
-    if (url && !imgErr) return h('img', { className: 'rp-avatar', src: url, alt: '', onError: function () { setImgErr(true); } });
-    return h('span', { className: 'rp-avatar rp-avatar-fallback' }, (props.name || '?').charAt(0).toUpperCase());
+    return h('span', { className: 'avatar is-small', 'aria-hidden': 'true' },
+      url && !imgErr
+        ? h('img', { src: url, alt: '', onError: function () { setImgErr(true); } })
+        : initials(props.name));
   }
   function PartyPanel(props) {
     var shieldMax = props.shieldMax != null ? props.shieldMax : 3;
