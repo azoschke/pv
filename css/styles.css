@@ -162,6 +162,12 @@ a {
   --bg-row-hover: #f7f3ea;
   --bg-group-row: #f3efe6;
 
+  /* Light mode only: a control sitting directly on the page takes the card
+     colour (section 6, "Controls on the page"). Its hover, and the current
+     segment of a segmented control, step back toward the well. */
+  --page-control-hover:  #f4f0e8;
+  --page-control-active: #ece6d8;
+
   /* Focus and selection ring, scrim behind modals and drawers, and the one
      shadow (things that float over content: dropdown menus) */
   --ring:         color-mix(in srgb, var(--accent-brown) 40%, transparent);
@@ -926,6 +932,35 @@ button.nav-sublink {
 .seg-btn[aria-pressed="true"] {
   background-color: var(--bg-card);
   color: var(--text-primary);
+}
+
+/* --- Controls on the page ---
+   Light mode: a control sitting directly on the page is raised in the card
+   colour, so it doesn't sink into the page; inside a card it keeps the well.
+   The page-level containers re-point the well tokens, so every field,
+   button, track and progress bar in them follows. Anything inside a card
+   is left alone (Mount Farm's "Order fights by" switch sits in .mf-panel,
+   for one). A segmented control on the page swaps its current segment to
+   the well so it still stands out. Dark mode keeps the well everywhere. */
+:root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
+  .top-controls, .filters-row, .venues-toolbar, .menu-index, .landing-row-content,
+  .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
+  .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
+  .menu-sheet, .campaign-sidebar, .chapter-view, .record-card, .craft-card, .venue-modal,
+  .job-modal, .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *) {
+  --bg-darker: var(--bg-card);
+  --form-input-bg: var(--bg-card);
+  --progress-bg: var(--bg-card);
+  --well-hover: var(--page-control-hover);
+}
+:root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
+  .top-controls, .filters-row, .venues-toolbar, .menu-index, .landing-row-content,
+  .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
+  .form-progress):not(:is(.portal-card, .info-card, .atma-card, .rp-card, .rp-deck,
+  .menu-sheet, .campaign-sidebar, .chapter-view, .record-card, .craft-card, .venue-modal,
+  .job-modal, .portal-modal, .mf-panel, .mf-person-card, .mf-manage) *)
+  .seg-btn:is(.is-active, [aria-pressed="true"]) {
+  background-color: var(--page-control-active);
 }
 
 /* --- Pills, status, tags ---
