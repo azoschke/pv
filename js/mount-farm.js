@@ -380,7 +380,7 @@
       onClick: props.onToggle
     },
       h('span', { className: 'book-header-left' },
-        svgIcon('mf-chevron' + (props.open ? ' is-open' : ''), 'M9 6l6 6-6 6', 2),
+        svgIcon('chevron is-side' + (props.open ? ' is-open' : ''), 'M9 6l6 6-6 6', 2),
         h('span', { className: 'book-name' }, props.name)),
       h('span', { className: 'book-header-right' }, props.children));
   }
@@ -664,7 +664,7 @@
               h('span', { className: 'book-progress-text' }, counts[i] + '/' + total),
               h('span', { className: 'book-progress-bar', 'aria-hidden': 'true' },
                 h('span', { className: 'book-progress-bar-fill', style: { width: pct + '%', display: 'block' } })),
-              svgIcon('mf-person-chevron', 'M6 9l6 6 6-6', 2)),
+              svgIcon('chevron', 'M6 9l6 6 6-6', 2)),
             isOpen
               ? h('div', { className: 'mf-person-body' },
                   h(ExpansionPicker, {

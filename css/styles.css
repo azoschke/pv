@@ -1324,6 +1324,21 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .star-filled { color: var(--star-filled); }
 .star-empty  { color: var(--star-empty); }
 
+/* --- Chevron ---
+   The one open / close marker: a stroked SVG chevron in the muted colour,
+   pointing down and turning up when its section is open (.is-open on it,
+   or the section's own open state where the page keeps one). .is-side
+   points right and turns down, for a list that opens beneath its row. */
+.chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+.chevron.is-open { transform: rotate(180deg); }
+.chevron.is-side.is-open { transform: rotate(90deg); }
+
 /* --- Icons --- */
 /* Both icon classes draw from the self-hosted Material Symbols font (section 1).
    The base mirrors what Google's icon stylesheets used to supply, including the
@@ -2219,13 +2234,8 @@ select.field.is-small { padding-right: 1.75rem; }
   transition: width 0.3s ease;
 }
 
-.book-expand-icon {
-  font-size: 1.2rem;
-  transition: transform 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.book.active .book-expand-icon { transform: rotate(180deg); }
+.book-header-right .chevron { width: 18px; height: 18px; }
+.book.active .chevron { transform: rotate(180deg); }
 
 .book-body {
   display: none;
@@ -5635,14 +5645,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   text-align: left;
 }
 .mf-book-toggle .book-header-left { gap: 12px; }
-.mf-chevron {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-}
-.mf-chevron.is-open { transform: rotate(90deg); }
 
 /* The tracker, as in the design: one expansion at a time, picked from a
    list. Its mounts run across the top and the people in view down the
@@ -5828,14 +5830,8 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 .mf-person-toggle .book-progress-text { font-variant-numeric: tabular-nums; }
 .mf-person-toggle .book-progress-bar { flex: none; width: 56px; }
-.mf-person-chevron {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-}
-.mf-person-card.is-open .mf-person-chevron { transform: rotate(180deg); }
+.mf-person-toggle .chevron { width: 18px; height: 18px; }
+.mf-person-card.is-open .chevron { transform: rotate(180deg); }
 .mf-person-body { border-top: 1px solid var(--border-color); }
 .mf-person-body .mf-picker { padding: 10px 12px; }
 .mf-person-row {

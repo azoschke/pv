@@ -143,13 +143,8 @@
   color: var(--text-secondary);
 }
 
-.visit-card-chevron {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-.visit-card.open .visit-card-chevron { transform: rotate(180deg); }
+.visit-card-header .chevron { width: 14px; height: 14px; }
+.visit-card.open .chevron { transform: rotate(180deg); }
 
 .visit-card-body {
   display: none;
