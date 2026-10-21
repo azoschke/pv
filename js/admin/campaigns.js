@@ -114,7 +114,7 @@
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
       h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit campaign' : 'New campaign'),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Name *'),
@@ -235,7 +235,7 @@
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
       h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit chapter' : 'New chapter'),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'cmp-grid' },
         h('div', { className: 'portal-field' },
@@ -359,7 +359,7 @@
 
     return h('form', { onSubmit: submit, className: 'portal-card cmp-form' },
       h('h3', { className: 'portal-form-title' }, isEdit ? 'Edit codex entry' : 'New codex entry'),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Name *'),
@@ -515,8 +515,8 @@
     }).filter(function (g) { return g.items.length; });
 
     return h('div', null,
-      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
         h('p', { className: 'portal-note' },
@@ -766,8 +766,8 @@
 
     return h('div', null,
       tabBar(),
-      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' } },
         h('p', { className: 'portal-note' },

@@ -168,7 +168,7 @@
     var title = isNew ? 'Add to ' + props.listLabel : 'Edit ' + TYPE_LABELS[draft.type].toLowerCase();
     return h(window.PVAdminModal, { title: title, onClose: props.onClose },
       h('form', { onSubmit: save },
-        err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, err) : null,
+        err ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, err) : null,
         isNew && props.types.length > 1
           ? h('div', { className: 'portal-field' },
               h('label', null, 'Type'),
@@ -293,7 +293,7 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading navigation…'));
+        err ? h('div', { className: 'flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading navigation…'));
     }
 
     var pagesById = {};
@@ -433,12 +433,12 @@
 
     var editTypes = editing && !editing.node ? editing.types : null;
     return h('div', null,
-      flash ? h('div', { className: 'portal-flash success', style: { marginBottom: '1rem' } }, flash) : null,
+      flash ? h('div', { className: 'flash success', style: { marginBottom: '1rem' } }, flash) : null,
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Navigation'),
           h('div', { className: 'portal-card-actions' }, addButton('top', 'the top level', ['group', 'link']))),
-        err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, err) : null,
+        err ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, err) : null,
         h('div', { className: 'nav-ed-list' },
           tree.map(function (n, i) {
             if (n.type !== 'group') return row(n, 'top', i, tree.length);

@@ -566,30 +566,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-primary);
 }
 
-/* --------------- Flash ---------------
-   A line of text led by a dot: red for an error, brown once something has
-   gone through, muted otherwise. */
-.portal-flash {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  margin: 0.5rem 0 0.75rem;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  color: var(--text-primary);
-}
-.portal-flash::before {
-  content: "";
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--text-secondary);
-  transform: translateY(-1px);
-}
-.portal-flash.error { color: var(--accent-red); }
-.portal-flash.error::before { background-color: var(--accent-red); }
-.portal-flash.success::before { background-color: var(--accent-brown); }
 
 /* Keep multi-word member column headers (e.g. "IC Interview") on one line. */
 .members-table thead th { white-space: nowrap; }
@@ -1243,7 +1219,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-head-title { margin: 0; flex: 1; }
 .portal-head-desc { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.92rem; }
 .portal-head-desc.is-tight { margin-top: 0.3rem; }
-.portal-flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
+.flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
 
 /* Text */
 .portal-muted { color: var(--text-secondary); }

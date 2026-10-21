@@ -263,7 +263,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Member *'),
@@ -591,11 +591,11 @@
             onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading
@@ -706,7 +706,7 @@
     if (loading) return null;
     if (err) {
       return h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       );
     }
     if (!actionable.length) return null;

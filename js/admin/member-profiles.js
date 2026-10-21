@@ -147,11 +147,11 @@
         h('p', { className: 'portal-head-desc is-tight' },
           publishedCount + ' published · ' + (profiles.length - publishedCount) + ' drafts'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

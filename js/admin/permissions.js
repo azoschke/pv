@@ -226,7 +226,7 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading permissions…'));
+        err ? h('div', { className: 'flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading permissions…'));
     }
 
     var roles = data.roles;
@@ -282,8 +282,8 @@
     });
 
     return h('div', null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
-      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
       h('div', { className: 'portal-card perm-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Permissions')),

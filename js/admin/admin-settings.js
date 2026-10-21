@@ -205,7 +205,7 @@
         expiry ? ('It expires around ' + expiry + ' and ') : 'It ',
         'can only be used once.'
       ),
-      h('div', { className: 'portal-flash error', style: { marginBottom: '1rem' } },
+      h('div', { className: 'flash error', style: { marginBottom: '1rem' } },
         'This link is shown only once — copy it now. It cannot be retrieved again.'
       ),
       h('div', { className: 'portal-field', style: { marginBottom: '1rem' } },
@@ -277,7 +277,7 @@
     },
       h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
         'Select the roles for ', h('strong', null, user.username), '.'),
-      merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
+      merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
         props.roles.map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
@@ -461,7 +461,7 @@
             })
           )
         ),
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         loading
           ? h('p', { className: 'portal-muted' }, 'Loading users…')
           : h('div', { className: 'portal-table-wrap' },

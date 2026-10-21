@@ -1597,7 +1597,7 @@
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
 
     if (loading) return h('div', { className: 'notice-panel is-gate rp-gate' }, h('p', null, 'Loading…'));
-    if (err && !data) return h('div', { className: 'notice-panel is-gate rp-gate' }, h('p', { className: 'rp-flash error' }, err));
+    if (err && !data) return h('div', { className: 'notice-panel is-gate rp-gate' }, h('p', { className: 'flash error' }, err));
     if (!data || !data.active) {
       if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your account isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
       if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session.',
@@ -1651,14 +1651,14 @@
             h('strong', null, c ? c.member_name : 'Dungeon Master')),
           c ? h('span', null, ROLE_LABEL[c.class_role] + ' · ' + ARMOR_LABEL[c.armor_type]) : null,
           c ? h(ActionChip, { myTurn: data.my_turn }) : null)),
-      err ? h('div', { className: 'rp-flash error' }, err) : null,
-      ko ? h('div', { className: 'rp-flash rp-ko' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
+      ko ? h('div', { className: 'flash error' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
       (function () {
         var mv = (c && data.player_vulns) ? (data.player_vulns[c.member_id] || data.player_vulns[String(c.member_id)]) : null;
         var vt = playerVulnText(mv);
-        return vt ? h('div', { className: 'rp-flash' }, 'You’re vulnerable — ' + vt + '.') : null;
+        return vt ? h('div', { className: 'flash' }, 'You’re vulnerable — ' + vt + '.') : null;
       })(),
-      stunned ? h('div', { className: 'rp-flash rp-ko' }, 'You’re stunned — you skip this turn.') : null,
+      stunned ? h('div', { className: 'flash error' }, 'You’re stunned — you skip this turn.') : null,
 
       isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],

@@ -1531,6 +1531,32 @@ select.field.is-small { padding-right: 1.75rem; }
 
 .notice-card.is-error { color: var(--accent-red); }
 
+/* --- Flash ---
+   A message after an action: a line of text led by a dot, red for an error
+   (.error), brown once something has gone through (.success), muted
+   otherwise. Plain text, not a box. */
+.flash {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin: 0.5rem 0 0.75rem;
+  font-family: var(--font-text);
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.flash::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+  transform: translateY(-1px);
+}
+.flash.error { color: var(--accent-red); }
+.flash.error::before { background-color: var(--accent-red); }
+.flash.success::before { background-color: var(--accent-brown); }
+
 /* --- Empty and loading lines ---
    "Nothing here yet", "Loading…", "No description provided.": one small
    muted note in the script accent wherever it appears (section 2, type
@@ -2395,7 +2421,7 @@ select.field.is-small { padding-right: 1.75rem; }
 /* Parchment panel */
 .parchment {
   background: var(--bg-card);
-  border-radius: 6px;
+  border-radius: 4px;
   padding: 30px 50px 50px;
   position: relative;
   box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);

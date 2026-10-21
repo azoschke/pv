@@ -157,7 +157,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),

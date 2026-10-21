@@ -149,7 +149,7 @@
 .rp-boss-skills-toggle { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.75rem;
   text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
 .rp-boss-skills-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.05rem; height: 1.05rem;
-  padding: 0 0.25rem; margin-left: 0.4rem; border-radius: 0.6rem; background: var(--accent-red); color: var(--rp-btn-ink); font-size: 0.68rem; font-weight: 700; }
+  padding: 0 0.25rem; margin-left: 0.4rem; border-radius: 999px; background: var(--accent-red); color: var(--rp-btn-ink); font-size: 0.68rem; font-weight: 700; }
 /* Expanded revealed skills float as a popover so they don't grow the card
    (and, with the stretch grid, its neighbours) — the row keeps the tallest
    closed card's height. */
@@ -167,7 +167,7 @@
 .rp-skills-btn { position: relative; }
 .rp-skills-btn .material-symbols-outlined { font-size: 1.05rem; color: var(--accent-brown); }
 .rp-skills-badge { position: absolute; top: -0.35rem; right: -0.35rem; min-width: 1.15rem; height: 1.15rem; padding: 0 0.25rem; box-sizing: border-box;
-  display: inline-flex; align-items: center; justify-content: center; border-radius: 0.7rem; background: var(--accent-red); color: var(--rp-btn-ink);
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--accent-red); color: var(--rp-btn-ink);
   font-size: 0.72rem; font-weight: 700; }
 .rp-party { display: flex; flex-direction: column; gap: 0.15rem; }
 .rp-party-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: 4px; }
@@ -406,12 +406,9 @@
 .rp-log-delta.rp-log-note { color: var(--text-secondary); white-space: normal; text-align: right; }
 
 /* ── Notices, chips, gate ── */
-.rp-turn-notice { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 0.5rem; text-align: center; font-size: 0.98rem;
+.rp-turn-notice { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 4px; text-align: center; font-size: 0.98rem;
   background: color-mix(in srgb, var(--accent-red) 14%, transparent); color: var(--accent-red); }
 .rp-turn-notice.is-locked { background: color-mix(in srgb, var(--accent-red) 22%, transparent); }
-.rp-flash { padding: 0.5rem 0.75rem; border-radius: 0.4rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
-.rp-flash.error { background: color-mix(in srgb, var(--accent-red) 15%, transparent); color: var(--accent-red); }
-.rp-ko { background: color-mix(in srgb, var(--accent-red) 12%, transparent); color: var(--accent-red); }
 /* The turn's action state is a .status-dot (ready brown, used quiet, KO red);
    this only places it. */
 .rp-action-chip { margin-top: 0.3rem; align-self: flex-end; }

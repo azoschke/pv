@@ -187,7 +187,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-form' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Event *'),
@@ -559,11 +559,11 @@
         h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
           'Click any text to copy it, and use Download to save an image.'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

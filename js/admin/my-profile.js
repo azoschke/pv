@@ -123,10 +123,10 @@
           : '. Your faction information is not set, so your profile will not appear on the public roster. Talk to an officer if you think this is incorrect. You may still fill out and publish your profile; it will appear automatically once your faction is updated.'
       ),
 
-      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
 
       h('form', { onSubmit: handleSubmit },
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
 
         h(PVAdminQuestUtils.ImageField, {
           value: draft.image_url,
@@ -318,7 +318,7 @@
     if (items === null && !err) return h('div', { className: 'portal-card' }, 'Loading your items…');
 
     return h('div', null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       (!items || !items.length)
         ? h('div', { className: 'portal-card' },
             h('p', { className: 'portal-note' }, 'No items are assigned to your character yet.'))
@@ -362,14 +362,14 @@
 
     return h('div', null,
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       member
         ? h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload })
         : h('div', { className: 'portal-card' },
             h('h2', { className: 'portal-card-title' }, 'Character Profile'),
-            h('div', { className: 'portal-flash error' },
+            h('div', { className: 'flash error' },
               'Your account is not linked to the FC roster (display name "' +
               ((PVAdminAPI.getSession() || {}).display_name || '?') +
               '" was not found). Contact an officer to fix your roster entry.'

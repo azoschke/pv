@@ -43,28 +43,7 @@
   color: var(--accent-brown);
   margin: 0;
 }
-/* A message under the form: a line of text led by a dot (red for an error,
-   brown once something has gone through). */
-.flash {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  margin-top: 0.75rem;
-  font-family: var(--font-text);
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-.flash::before {
-  content: "";
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--accent-brown);
-  transform: translateY(-1px);
-}
-.flash.error { color: var(--accent-red); }
-.flash.error::before { background-color: var(--accent-red); }
+/* Messages under the form are the shared .flash (styles.css). */
 .admin-login-wrap .section-heading { text-align: center; }
 .admin-login-wrap .btn[type="submit"] { width: 100%; margin-top: 1.5rem; }
 /* "Create one →" / "Sign in →" links under the form. */

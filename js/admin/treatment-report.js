@@ -256,7 +256,7 @@
     });
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-form-section' },
         h('h3', { className: 'portal-form-section-title' }, 'Visit'),

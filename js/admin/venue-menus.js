@@ -143,7 +143,7 @@
     }
 
     return h('form', { onSubmit: submit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Category name'),
@@ -234,7 +234,7 @@
     }
 
     return h('form', { onSubmit: submit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Item name'),
@@ -610,12 +610,12 @@
           ) : null
         ),
         flash ? h('div', {
-          className: 'portal-flash success is-head'
+          className: 'flash success is-head'
         }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

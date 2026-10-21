@@ -285,7 +285,7 @@
     }
 
     return h('form', { onSubmit: doSave },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field-row' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Name *'),
@@ -814,7 +814,7 @@
         }, 'Clear filters') : null
       ),
 
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading members…')
         : h('div', { className: 'portal-card tear' },

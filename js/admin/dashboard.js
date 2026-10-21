@@ -231,7 +231,7 @@
 
     return h('div', null,
       header(),
-      state.error ? h('p', { className: 'portal-flash error' }, state.error) : null,
+      state.error ? h('p', { className: 'flash error' }, state.error) : null,
 
       // Stat tiles grouped by stage, with FC Members / Open Positions as
       // smaller reference tiles on their own row at the end.

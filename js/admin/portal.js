@@ -353,7 +353,7 @@
         break;
       default:
         body = h('div', { className: 'portal-card' },
-          h('p', { className: 'portal-flash error' }, 'You do not have access to any faction division.'));
+          h('p', { className: 'flash error' }, 'You do not have access to any faction division.'));
     }
 
     return h('div', null,
@@ -432,7 +432,7 @@
   function Missing(file) {
     return function () {
       return h('div', { className: 'portal-card' },
-        h('p', { className: 'portal-flash error' },
+        h('p', { className: 'flash error' },
           'Module not loaded: ' + file + '. Reload the page and try again.'
         )
       );
@@ -657,7 +657,7 @@
           : accessible
           ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect, navParams: navParams })
           : h('div', { className: 'portal-card' },
-              h('p', { className: 'portal-flash error' },
+              h('p', { className: 'flash error' },
                 'You do not have access to this section.'
               )
             )

@@ -69,7 +69,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),
         h('input', {
@@ -239,8 +239,8 @@
             )
           ) : null
         ),
-        flash ? h('div', { className: 'portal-flash success' }, flash) : null,
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        flash ? h('div', { className: 'flash success' }, flash) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         loading
           ? h('p', { className: 'portal-note' }, 'Loading bulletins…')
           : list.length

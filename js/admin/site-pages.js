@@ -151,7 +151,7 @@
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-card-header' },
         h('h2', { className: 'portal-card-title' }, 'Site Defaults')),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field-row' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Site name *'),
@@ -279,11 +279,11 @@
     return h(window.PVAdminModal, { title: 'Edit page — ' + page.title, size: 'lg', onClose: props.onClose },
       h('form', { onSubmit: save },
         page.needs_review
-          ? h('div', { className: 'portal-flash', style: { marginBottom: '0.85rem' } },
+          ? h('div', { className: 'flash', style: { marginBottom: '0.85rem' } },
               'This page is new and only you can open it until roles are granted or its access changes. ' +
               'Saving it marks it reviewed.')
           : null,
-        err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, err) : null,
+        err ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, err) : null,
         h('div', { className: 'portal-field-row' },
           h('div', { className: 'portal-field' },
             h('label', null, 'Title *'),
@@ -411,7 +411,7 @@
 
     return h(window.PVAdminModal, { title: 'Add page', onClose: props.onClose },
       h('form', { onSubmit: save },
-        err ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, err) : null,
+        err ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, err) : null,
         h('div', { className: 'portal-field' },
           h('label', null, 'File *'),
           h('input', { type: 'text', value: file, placeholder: 'new-page.html', disabled: saving, autoFocus: true,
@@ -516,11 +516,11 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading pages…'));
+        err ? h('div', { className: 'flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading pages…'));
     }
     return h('div', null,
-      flash ? h('div', { className: 'portal-flash success', style: { marginBottom: '1rem' } }, flash) : null,
-      err ? h('div', { className: 'portal-flash error', style: { marginBottom: '1rem' } }, err) : null,
+      flash ? h('div', { className: 'flash success', style: { marginBottom: '1rem' } }, flash) : null,
+      err ? h('div', { className: 'flash error', style: { marginBottom: '1rem' } }, err) : null,
       h(SettingsCard, { settings: data.settings, onSaved: saved }),
       h(PagesCard, {
         data: data,

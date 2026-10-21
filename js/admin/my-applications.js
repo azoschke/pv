@@ -127,7 +127,7 @@
         'Edits to an approved quest will be reviewed before they apply.'
       ),
 
-      flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem' } }, flash) : null,
+      flash ? h('div', { className: 'flash success', style: { marginTop: '0.75rem' } }, flash) : null,
 
       quests.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },
@@ -443,7 +443,7 @@
 
     return h('div', null,
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       canSubmit ? h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }) : null,

@@ -228,7 +228,7 @@
       } catch (e) { setErr(e.message || 'Delete failed.'); setBusy(false); }
     }
 
-    if (err && !data) return h('div', { className: 'portal-flash error' }, err);
+    if (err && !data) return h('div', { className: 'flash error' }, err);
     if (!data) return h('p', { className: 'portal-muted' }, 'Loading…');
     var r = data.request;
 
@@ -277,7 +277,7 @@
     ].filter(Boolean);
 
     return h('div', { className: 'appt-detail' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'appt-detail-head' },
         h(StatusTag, { status: r.status }),
@@ -374,7 +374,7 @@
           })
         )
       ),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading appointment requests…')
         : h('div', { className: 'portal-card tear' },

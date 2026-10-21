@@ -286,7 +286,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Name *'),
@@ -673,11 +673,11 @@
             h('span', null, 'New venue')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading
@@ -753,7 +753,7 @@
         ? (MenusTab
             ? h(MenusTab, { session: props && props.session })
             : h('div', { className: 'portal-card' },
-                h('div', { className: 'portal-flash error' },
+                h('div', { className: 'flash error' },
                   'js/admin/venue-menus.js failed to load.')))
         : h(VenueDirectory, null)
     );

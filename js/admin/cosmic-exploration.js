@@ -216,7 +216,7 @@
     var categories = (meta && meta.categories) || [];
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Quest Name *'),
@@ -554,11 +554,11 @@
             h('span', null, 'New quest')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

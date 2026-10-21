@@ -157,7 +157,7 @@
           onChange: function (e) { setNameFilter(e.target.value); }
         })
       ),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading roster…')
         : members.length
