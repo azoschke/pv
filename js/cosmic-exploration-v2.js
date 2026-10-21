@@ -554,7 +554,7 @@
 
     // Per-item copy strip when collapsed
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row cdb-card-tags'
+      className: 'inline-row cdb-card-tags'
     },
       h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(quest.items || []).flatMap((item) => {
@@ -608,14 +608,13 @@
       label, h('span', { className: 'cdb-stat-value' }, val || 0)
     );
 
-    const editBody = isEditing && h('div', { className: 'cdb-form-fields' },
-      h('div', { className: 'cdb-field-group' },
-        h('label', { className: 'cdb-check' },
+    const editBody = isEditing && h('div', { className: 'form-fields' },
+      h('div', { className: 'field-group' },
+        h('label', { className: 'check-label' },
           h('input', {
             type: 'checkbox',
             checked: !!draft.foodRequired,
-            onChange: (e) => setDraft(d => ({ ...d, foodRequired: e.target.checked })),
-            className: 'cdb-checkbox'
+            onChange: (e) => setDraft(d => ({ ...d, foodRequired: e.target.checked }))
           }),
           'Food Required'
         ),
@@ -632,12 +631,12 @@
         )
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Macros'),
+        h('label', { className: 'field-label' }, 'Macros'),
         ...quest.items.map((item) => {
           const cur = draft.items[item.id] || { itemName: item.name, macro: '' };
           const autoFocus = focusItemId === item.id;
           return h('div', { key: item.id, className: 'cdb-item-block' },
-            h('label', { className: 'cdb-label-xs' }, 'Macro for ' + (item.name || 'Item')),
+            h('label', { className: 'field-label is-small' }, 'Macro for ' + (item.name || 'Item')),
             h('textarea', {
               className: 'cdb-input cdb-input-mono',
               rows: 6,
@@ -661,7 +660,7 @@
         })
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Notes'),
+        h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
           className: 'cdb-input',
           rows: 3,
@@ -670,7 +669,7 @@
           placeholder: 'Personal notes for this quest...'
         })
       ),
-      h('div', { className: 'cdb-form-actions' },
+      h('div', { className: 'form-actions' },
         h('button', { type: 'button', onClick: cancelEdit, className: 'btn is-quiet' }, 'Cancel'),
         h('button', { type: 'button', onClick: saveEdit, className: 'btn' }, 'Save')
       )
@@ -697,7 +696,7 @@
         !isEditing && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Data Reward (' + quest.job + ')'),
           h(DataRewardChips, { dataReward: quest.dataReward || {}, levels: dataRewardLevels })
-            || h('span', { className: 'cdb-meta' }, '(none)')
+            || h('span', { className: 'meta-note' }, '(none)')
         ),
         !isEditing && !questHasMacro(rec) && h('div', { className: 'cdb-empty-macros tray' },
           h('span', null, 'No macros saved for this quest yet.'),
@@ -750,7 +749,7 @@
           h('p', { className: 'cdb-notes-text' }, rec.notes)
         )
       ),
-      !isEditing && h('div', { className: 'cdb-card-footer' },
+      !isEditing && h('div', { className: 'card-footer' },
         h('button', {
           type: 'button',
           onClick: (e) => { e.stopPropagation(); startEdit(); },
@@ -1016,12 +1015,12 @@
         )
       ),
 
-      migrationMsg && h('div', { className: 'cdb-notice' }, migrationMsg),
+      migrationMsg && h('div', { className: 'notice-card' }, migrationMsg),
 
-      loadState === 'error' && h('div', { className: 'cdb-notice is-error' },
+      loadState === 'error' && h('div', { className: 'notice-card is-error' },
         'Could not load catalog: ' + (loadError || 'unknown error')),
 
-      loadError && loadState === 'ready' && h('div', { className: 'cdb-notice' }, loadError),
+      loadError && loadState === 'ready' && h('div', { className: 'notice-card' }, loadError),
 
       h('div', { className: 'cdb-search-section' },
         h('div', { className: 'cdb-search-bar' },
@@ -1084,10 +1083,9 @@
             h('option', { value: 'all' }, 'All Jobs'),
             ...jobOptions.map(job => h('option', { key: job, value: job }, job))
           ),
-          h('label', { className: 'cdb-check' },
+          h('label', { className: 'check-label' },
             h('input', {
               type: 'checkbox',
-              className: 'cdb-checkbox',
               checked: onlyWithMacro,
               onChange: (e) => setOnlyWithMacro(e.target.checked)
             }),

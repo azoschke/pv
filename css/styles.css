@@ -1271,6 +1271,114 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 }
 
 
+/* --- Forms ---
+   The pieces the tool pages (Crafting Database, Cosmic Exploration, Mount
+   Farm) build their forms from: a panel with a title, a column of fields
+   with their labels, inline rows, checkbox labels, the action row and a
+   card's footer, plus a muted meta line and a notice card. */
+/* A form on a card of its own (Add / Edit). */
+.form-panel {
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--bg-card);
+  border: 0;
+}
+
+.form-title {
+  font-family: var(--font-ui);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* A boxed group of fields inside a form: a recessed tray. */
+.form-fields.is-boxed {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--bg-tray);
+  border-radius: 4px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.field-label.is-flush { margin-bottom: 0; }
+
+/* A sub-field's label inside a boxed group: the caps label role. */
+.field-label.is-small {
+  margin-bottom: 0.25rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.inline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* A checkbox with its label. */
+.check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-left: 4px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 8px;
+}
+
+.meta-note { color: var(--text-secondary); font-size: 0.9rem; }
+
+/* A note above a list (an import result, a load error): a small raised card. */
+.notice-card {
+  margin: 0.5rem 0;
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.notice-card.is-error { color: var(--accent-red); }
+
 /* --- Browse pages: sidebar, filters and results ---
    The layout every directory page shares (Venues, Job Board, Bounty Board,
    Calendar, Codex, Campaigns, the rosters, the Medical Database): a sidebar
@@ -4278,17 +4386,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .cdb-input-mono { font-family: monospace; font-size: 0.85rem; }
 .cdb-input-sm   { min-height: 30px; padding: 0 0.5rem; font-size: 0.85rem; }
 
-/* A checkbox with its label (filters, Food Required). */
-.cdb-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  margin-left: 4px;
-  font-size: 1rem;
-  color: var(--text-primary);
-  cursor: pointer;
-}
 
 .filters-row {
   display: flex;
@@ -4421,11 +4518,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-size: 0.875rem;
 }
 
-.cdb-inline-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
 .cdb-subheading {
   font-family: var(--font-ui);
@@ -4465,28 +4557,8 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 .cdb-notes-text { font-size: 0.875rem; color: var(--text-primary); }
 
-/* Add/Edit form panel */
-.cdb-form-panel {
-  border-radius: 4px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  background-color: var(--bg-card);
-  border: 0;
-}
 
-.cdb-form-title {
-  font-family: var(--font-ui);
-  font-size: 1.4rem;
-  font-weight: 400;
-  color: var(--text-primary);
-  margin: 0 0 1rem;
-}
 
-.cdb-form-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
 
 .cdb-grid-3 {
   display: grid;
@@ -4494,63 +4566,24 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   gap: 1rem;
 }
 
-.cdb-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-}
-.cdb-label.is-flush { margin-bottom: 0; }
-/* Boxed group of fields inside a form (Cosmic Exploration): a recessed tray. */
-.cdb-form-fields.is-boxed {
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  background-color: var(--bg-tray);
-  border-radius: 4px;
-}
 .cdb-align-end { align-self: end; }
 
 /* Card details: stat labels, tags row, item macros, results count. */
 .cdb-stat-label { color: var(--text-secondary); }
 .cdb-stat-text { color: var(--text-primary); }
 /* Collapsed card: "Crafts:" and a small quiet button per item. */
-.cdb-inline-row.cdb-card-tags { margin-top: 6px; flex-wrap: wrap; gap: 6px; }
+.inline-row.cdb-card-tags { margin-top: 6px; flex-wrap: wrap; gap: 6px; }
 .cdb-card-tags-label { margin-right: 2px; font-size: 0.9rem; color: var(--text-secondary); }
 .cdb-card-tags .btn .material-icons { color: var(--accent-brown); }
-.cdb-meta { color: var(--text-secondary); font-size: 0.9rem; }
 .cdb-item-block { margin-bottom: 0.75rem; }
 .cdb-item-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
 .cdb-results-count { margin: 20px 2px 12px; color: var(--text-secondary); font-style: italic; }
 .cdb-filter-note { margin-right: 0.75rem; }
 
-.cdb-label-xs {
-  display: block;
-  font-size: 0.75rem;
-  margin-bottom: 0.25rem;
-  color: var(--text-primary);
-}
-
-.cdb-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
 
 
-.cdb-form-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
 
-.cdb-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 8px;
-}
+
 
 /* "No macros saved" and the Add macros button, in a recessed tray. */
 .cdb-empty-macros {
@@ -4564,17 +4597,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   color: var(--text-secondary);
 }
 
-/* A note above the list (import result, catalog errors): a small raised card. */
-.cdb-notice {
-  margin: 0.5rem 0;
-  padding: 0.6rem 1rem;
-  background-color: var(--bg-card);
-  border-radius: 4px;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-}
 
-.cdb-notice.is-error { color: var(--accent-red); }
 
 /* Class stats modal */
 .cdb-modal-overlay {

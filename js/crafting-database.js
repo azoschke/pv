@@ -506,12 +506,12 @@
     };
 
     return h('div', {
-      className: 'cdb-form-panel'
+      className: 'form-panel'
     },
-      h('h2', { className: 'cdb-form-title craft-name' }, craft ? 'Edit Craft' : 'Add New Craft'),
-      h('form', { onSubmit: handleSubmit, className: 'cdb-form-fields' },
+      h('h2', { className: 'form-title craft-name' }, craft ? 'Edit Craft' : 'Add New Craft'),
+      h('form', { onSubmit: handleSubmit, className: 'form-fields' },
         h('div', null,
-          h('label', { className: 'cdb-label form-label' }, 'Craft Name *'),
+          h('label', { className: 'field-label form-label' }, 'Craft Name *'),
           h('input', {
             type: 'text',
             value: formData.name,
@@ -522,7 +522,7 @@
         ),
         h('div', { className: 'cdb-grid-3' },
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Class'),
+            h('label', { className: 'field-label form-label' }, 'Class'),
             h('select', {
               value: formData.class,
               onChange: (e) => updateField('class', e.target.value),
@@ -532,7 +532,7 @@
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Level'),
+            h('label', { className: 'field-label form-label' }, 'Level'),
             h('input', {
               type: 'number',
               value: formData.level,
@@ -541,7 +541,7 @@
             })
           ),
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Rating'),
+            h('label', { className: 'field-label form-label' }, 'Rating'),
             h('select', {
               value: formData.rating,
               onChange: (e) => updateField('rating', parseInt(e.target.value)),
@@ -551,7 +551,7 @@
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Durability'),
+            h('label', { className: 'field-label form-label' }, 'Durability'),
             h('input', {
               type: 'number',
               value: formData.durability,
@@ -560,7 +560,7 @@
             })
           ),
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Difficulty'),
+            h('label', { className: 'field-label form-label' }, 'Difficulty'),
             h('input', {
               type: 'number',
               value: formData.difficulty,
@@ -569,7 +569,7 @@
             })
           ),
           h('div', null,
-            h('label', { className: 'cdb-label form-label' }, 'Quality'),
+            h('label', { className: 'field-label form-label' }, 'Quality'),
             h('input', {
               type: 'number',
               value: formData.quality,
@@ -578,17 +578,16 @@
             })
           )
         ),
-        h('div', { className: 'cdb-form-fields' },
-          h('div', { className: 'cdb-field-group' },
-            h('div', { className: 'cdb-inline-row' },
+        h('div', { className: 'form-fields' },
+          h('div', { className: 'field-group' },
+            h('div', { className: 'inline-row' },
               h('input', {
                 type: 'checkbox',
                 id: 'requiresFood',
                 checked: formData.requiresFood,
-                onChange: (e) => updateField('requiresFood', e.target.checked),
-                className: 'cdb-checkbox'
+                onChange: (e) => updateField('requiresFood', e.target.checked)
               }),
-              h('label', { htmlFor: 'requiresFood', className: 'cdb-label form-label' }, 'Requires Food')
+              h('label', { htmlFor: 'requiresFood', className: 'field-label form-label' }, 'Requires Food')
             ),
             formData.requiresFood && h('select', {
               value: formData.food,
@@ -598,16 +597,15 @@
               ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
             )
           ),
-          h('div', { className: 'cdb-field-group' },
-            h('div', { className: 'cdb-inline-row' },
+          h('div', { className: 'field-group' },
+            h('div', { className: 'inline-row' },
               h('input', {
                 type: 'checkbox',
                 id: 'requiresPotion',
                 checked: formData.requiresPotion,
-                onChange: (e) => updateField('requiresPotion', e.target.checked),
-                className: 'cdb-checkbox'
+                onChange: (e) => updateField('requiresPotion', e.target.checked)
               }),
-              h('label', { htmlFor: 'requiresPotion', className: 'cdb-label form-label' }, 'Requires Potion')
+              h('label', { htmlFor: 'requiresPotion', className: 'field-label form-label' }, 'Requires Potion')
             ),
             formData.requiresPotion && h('select', {
               value: formData.potion,
@@ -619,7 +617,7 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label form-label' }, 'Macro (automatically splits into multiple macros after 15 lines)'),
+          h('label', { className: 'field-label form-label' }, 'Macro (automatically splits into multiple macros after 15 lines)'),
           h('textarea', {
             value: formData.macro,
             onChange: (e) => updateField('macro', e.target.value),
@@ -629,7 +627,7 @@
           })
         ),
         h('div', null,
-          h('label', { className: 'cdb-label form-label' }, 'Notes'),
+          h('label', { className: 'field-label form-label' }, 'Notes'),
           h('textarea', {
             value: formData.notes,
             onChange: (e) => updateField('notes', e.target.value),
@@ -638,7 +636,7 @@
             placeholder: 'Additional notes...'
           })
         ),
-        h('div', { className: 'cdb-form-actions' },
+        h('div', { className: 'form-actions' },
           h('button', {
             type: 'button',
             onClick: onCancel,
@@ -764,14 +762,14 @@
         ? h('div', {
             className: 'cdb-stats-edit-row'
           },
-            h('div', { className: 'cdb-inline-row' },
+            h('div', { className: 'inline-row' },
               h('span', { className: 'material-icons cdb-icon-sm' }, CLASS_ICONS[editFormData.class] || 'build'),
               h('span', { className: 'cdb-class-name' }, editFormData.class),
               h('span', { className: 'cdb-hint' }, '(Edit class stats for this craft)')
             ),
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Craftsmanship'),
+                h('label', { className: 'field-label is-small' }, 'Craftsmanship'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.craftsmanship || 0,
@@ -780,7 +778,7 @@
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Control'),
+                h('label', { className: 'field-label is-small' }, 'Control'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.control || 0,
@@ -789,7 +787,7 @@
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'CP'),
+                h('label', { className: 'field-label is-small' }, 'CP'),
                 h('input', {
                   type: 'number',
                   value: editFormData.classStats?.cp || 0,
@@ -802,7 +800,7 @@
         : h('div', {
             className: 'cdb-stats-row'
           },
-            h('div', { className: 'cdb-inline-row' },
+            h('div', { className: 'inline-row' },
               h('span', { className: 'material-icons cdb-icon-sm' }, CLASS_ICONS[craft.class] || 'build'),
               h('span', { className: 'cdb-class-name' }, craft.class)
             ),
@@ -825,10 +823,10 @@
       h('div', { className: 'cdb-card-body' },
         isEditingInline
           ? // Inline editing form
-            h('div', { className: 'cdb-form-fields' },
+            h('div', { className: 'form-fields' },
               // Craft Name
               h('div', null,
-                h('label', { className: 'cdb-label' }, 'Craft Name *'),
+                h('label', { className: 'field-label' }, 'Craft Name *'),
                 h('input', {
                   type: 'text',
                   value: editFormData.name,
@@ -840,7 +838,7 @@
               // Class, Level, Rating, Durability, Difficulty, Quality
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Class'),
+                  h('label', { className: 'field-label' }, 'Class'),
                   h('select', {
                     value: editFormData.class,
                     onChange: (e) => updateEditField('class', e.target.value),
@@ -850,7 +848,7 @@
                   )
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Level'),
+                  h('label', { className: 'field-label' }, 'Level'),
                   h('input', {
                     type: 'number',
                     value: editFormData.level,
@@ -859,7 +857,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Rating'),
+                  h('label', { className: 'field-label' }, 'Rating'),
                   h('select', {
                     value: editFormData.rating,
                     onChange: (e) => updateEditField('rating', parseInt(e.target.value)),
@@ -869,7 +867,7 @@
                   )
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Durability'),
+                  h('label', { className: 'field-label' }, 'Durability'),
                   h('input', {
                     type: 'number',
                     value: editFormData.durability,
@@ -878,7 +876,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Difficulty'),
+                  h('label', { className: 'field-label' }, 'Difficulty'),
                   h('input', {
                     type: 'number',
                     value: editFormData.difficulty,
@@ -887,7 +885,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label' }, 'Quality'),
+                  h('label', { className: 'field-label' }, 'Quality'),
                   h('input', {
                     type: 'number',
                     value: editFormData.quality,
@@ -897,17 +895,16 @@
                 )
               ),
               // Food and Potion
-              h('div', { className: 'cdb-form-fields' },
-                h('div', { className: 'cdb-field-group' },
-                  h('div', { className: 'cdb-inline-row' },
+              h('div', { className: 'form-fields' },
+                h('div', { className: 'field-group' },
+                  h('div', { className: 'inline-row' },
                     h('input', {
                       type: 'checkbox',
                       id: 'editRequiresFood',
                       checked: editFormData.requiresFood,
-                      onChange: (e) => updateEditField('requiresFood', e.target.checked),
-                      className: 'cdb-checkbox'
+                      onChange: (e) => updateEditField('requiresFood', e.target.checked)
                     }),
-                    h('label', { htmlFor: 'editRequiresFood', className: 'cdb-label' }, 'Requires Food')
+                    h('label', { htmlFor: 'editRequiresFood', className: 'field-label' }, 'Requires Food')
                   ),
                   editFormData.requiresFood && h('select', {
                     value: editFormData.food,
@@ -917,16 +914,15 @@
                     ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
                   )
                 ),
-                h('div', { className: 'cdb-field-group' },
-                  h('div', { className: 'cdb-inline-row' },
+                h('div', { className: 'field-group' },
+                  h('div', { className: 'inline-row' },
                     h('input', {
                       type: 'checkbox',
                       id: 'editRequiresPotion',
                       checked: editFormData.requiresPotion,
-                      onChange: (e) => updateEditField('requiresPotion', e.target.checked),
-                      className: 'cdb-checkbox'
+                      onChange: (e) => updateEditField('requiresPotion', e.target.checked)
                     }),
-                    h('label', { htmlFor: 'editRequiresPotion', className: 'cdb-label' }, 'Requires Potion')
+                    h('label', { htmlFor: 'editRequiresPotion', className: 'field-label' }, 'Requires Potion')
                   ),
                   editFormData.requiresPotion && h('select', {
                     value: editFormData.potion,
@@ -939,7 +935,7 @@
               ),
               // Macro
               h('div', null,
-                h('label', { className: 'cdb-label' }, 'Macro'),
+                h('label', { className: 'field-label' }, 'Macro'),
                 h('textarea', {
                   value: editFormData.macro,
                   onChange: (e) => updateEditField('macro', e.target.value),
@@ -950,7 +946,7 @@
               ),
               // Notes
               h('div', null,
-                h('label', { className: 'cdb-label' }, 'Notes'),
+                h('label', { className: 'field-label' }, 'Notes'),
                 h('textarea', {
                   value: editFormData.notes,
                   onChange: (e) => updateEditField('notes', e.target.value),
@@ -960,7 +956,7 @@
                 })
               ),
               // Action buttons
-              h('div', { className: 'cdb-form-actions' },
+              h('div', { className: 'form-actions' },
                 h('button', {
                   onClick: handleInlineCancel,
                   className: 'btn is-quiet'
@@ -972,7 +968,7 @@
               )
             )
           : // Display mode
-            h('div', { className: 'cdb-form-fields' },
+            h('div', { className: 'form-fields' },
         // Craft Stats and Food/Potion Requirements
         h('div', { className: 'cdb-craft-stats' },
           // Craft Stats
@@ -992,11 +988,11 @@
           ),
           // Food and Potion Requirements
           (craft.requiresFood || craft.requiresPotion) && h('div', { className: 'cdb-stat-group' },
-            craft.requiresFood && h('div', { className: 'cdb-inline-row' },
+            craft.requiresFood && h('div', { className: 'inline-row' },
               h('span', { className: 'material-icons cdb-icon-sm cdb-icon-food' }, 'restaurant'),
               h('span', { className: 'cdb-stat-text' }, craft.food)
             ),
-            craft.requiresPotion && h('div', { className: 'cdb-inline-row' },
+            craft.requiresPotion && h('div', { className: 'inline-row' },
               h('span', { className: 'material-icons cdb-icon-sm cdb-icon-potion' }, 'science'),
               h('span', { className: 'cdb-stat-text' }, craft.potion)
             )
@@ -1033,7 +1029,7 @@
         )
             )
       ),
-      !isEditingInline && h('div', { className: 'cdb-card-footer' },
+      !isEditingInline && h('div', { className: 'card-footer' },
         h('button', {
           type: 'button',
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
@@ -1087,9 +1083,9 @@
       h('div', {
         className: 'cdb-modal'
       },
-        h('h2', { className: 'cdb-form-title craft-name' }, 'Manage Class Stats'),
+        h('h2', { className: 'form-title craft-name' }, 'Manage Class Stats'),
         h('p', { className: 'cdb-modal-desc' }, 'These stats will be displayed for all crafts using each class.'),
-        h('div', { className: 'cdb-form-fields cdb-modal-body' },
+        h('div', { className: 'form-fields cdb-modal-body' },
           ...CLASSES.map(className =>
             h('div', {
               key: className,
@@ -1098,7 +1094,7 @@
               h('h3', { className: 'cdb-class-row-title' }, className),
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label form-label' }, 'Craftsmanship'),
+                  h('label', { className: 'field-label form-label' }, 'Craftsmanship'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.craftsmanship || 0,
@@ -1107,7 +1103,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label form-label' }, 'Control'),
+                  h('label', { className: 'field-label form-label' }, 'Control'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.control || 0,
@@ -1116,7 +1112,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label form-label' }, 'CP'),
+                  h('label', { className: 'field-label form-label' }, 'CP'),
                   h('input', {
                     type: 'number',
                     value: stats[className]?.cp || 0,
@@ -1128,7 +1124,7 @@
             )
           )
         ),
-        h('div', { className: 'cdb-form-actions' },
+        h('div', { className: 'form-actions' },
           h('button', {
             onClick: onClose,
             className: 'btn is-quiet'

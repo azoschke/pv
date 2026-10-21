@@ -395,8 +395,8 @@
     if (mode === 'edit') {
       return h('div', { className: 'cdb-data-chip-row' },
         ...DATA_REWARD_LEVELS.map(level =>
-          h('div', { key: level.key, className: 'cdb-field-group', style: { minWidth: '70px' } },
-            h('label', { className: 'cdb-label-xs' }, level.label),
+          h('div', { key: level.key, className: 'field-group', style: { minWidth: '70px' } },
+            h('label', { className: 'field-label is-small' }, level.label),
             h('input', {
               type: 'number',
               placeholder: '0',
@@ -406,8 +406,8 @@
             })
           )
         ),
-        h('div', { className: 'cdb-field-group', style: { minWidth: '90px' } },
-          h('label', { className: 'cdb-label-xs' }, COSMIC_POINTS_META.label),
+        h('div', { className: 'field-group', style: { minWidth: '90px' } },
+          h('label', { className: 'field-label is-small' }, COSMIC_POINTS_META.label),
           h('input', {
             type: 'number',
             placeholder: '0',
@@ -539,11 +539,11 @@
 
     const multipleItems = formData.items.length > 1;
 
-    return h('div', { className: 'cdb-form-panel' },
-      h('h2', { className: 'cdb-form-title craft-name' }, 'Add New Mission'),
-      h('form', { onSubmit: handleSubmit, className: 'cdb-form-fields' },
+    return h('div', { className: 'form-panel' },
+      h('h2', { className: 'form-title craft-name' }, 'Add New Mission'),
+      h('form', { onSubmit: handleSubmit, className: 'form-fields' },
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Quest Name *'),
+          h('label', { className: 'field-label' }, 'Quest Name *'),
           h('input', {
             type: 'text',
             value: formData.questName,
@@ -554,7 +554,7 @@
         ),
         h('div', { className: 'cdb-grid-3' },
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Location'),
+            h('label', { className: 'field-label' }, 'Location'),
             h('select', {
               value: formData.location,
               onChange: (e) => updateField('location', e.target.value),
@@ -564,7 +564,7 @@
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Job'),
+            h('label', { className: 'field-label' }, 'Job'),
             h('select', {
               value: formData.job,
               onChange: (e) => updateField('job', e.target.value),
@@ -574,7 +574,7 @@
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Category'),
+            h('label', { className: 'field-label' }, 'Category'),
             h('select', {
               value: formData.category,
               onChange: (e) => updateField('category', e.target.value),
@@ -584,16 +584,15 @@
             )
           )
         ),
-        h('div', { className: 'cdb-field-group' },
-          h('div', { className: 'cdb-inline-row' },
+        h('div', { className: 'field-group' },
+          h('div', { className: 'inline-row' },
             h('input', {
               type: 'checkbox',
               id: 'newFoodRequired',
               checked: formData.foodRequired,
-              onChange: (e) => updateField('foodRequired', e.target.checked),
-              className: 'cdb-checkbox'
+              onChange: (e) => updateField('foodRequired', e.target.checked)
             }),
-            h('label', { htmlFor: 'newFoodRequired', className: 'cdb-label' }, 'Food Required')
+            h('label', { htmlFor: 'newFoodRequired', className: 'field-label' }, 'Food Required')
           ),
           formData.foodRequired && h('select', {
             value: formData.foodType,
@@ -605,7 +604,7 @@
         ),
         h('div', null,
           h('div', { className: 'cdb-searchmode-bar' },
-            h('label', { className: 'cdb-label is-flush' }, 'Items'),
+            h('label', { className: 'field-label is-flush' }, 'Items'),
             h('button', {
               type: 'button',
               onClick: addItem,
@@ -613,10 +612,10 @@
             }, 'Add Item')
           ),
           ...formData.items.map((item, index) =>
-            h('div', { key: index, className: 'cdb-form-fields is-boxed' },
+            h('div', { key: index, className: 'form-fields is-boxed' },
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                  h('label', { className: 'field-label is-small' }, 'Item Name'),
                   h('input', {
                     type: 'text',
                     className: 'cdb-input cdb-input-sm',
@@ -626,7 +625,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                  h('label', { className: 'field-label is-small' }, 'Difficulty'),
                   h('input', {
                     type: 'number',
                     className: 'cdb-input cdb-input-sm',
@@ -635,7 +634,7 @@
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                  h('label', { className: 'field-label is-small' }, 'Quality'),
                   h('input', {
                     type: 'number',
                     className: 'cdb-input cdb-input-sm',
@@ -646,7 +645,7 @@
               ),
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                  h('label', { className: 'field-label is-small' }, 'Durability'),
                   h('input', {
                     type: 'number',
                     className: 'cdb-input cdb-input-sm',
@@ -663,7 +662,7 @@
                 )
               ),
               multipleItems && h('div', null,
-                h('label', { className: 'cdb-label-xs' },
+                h('label', { className: 'field-label is-small' },
                   'Macro for ' + (item.name || `Item ${index + 1}`)
                 ),
                 h('textarea', {
@@ -677,7 +676,7 @@
             )
           ),
           !multipleItems && h('div', null,
-            h('label', { className: 'cdb-label' }, 'Macro'),
+            h('label', { className: 'field-label' }, 'Macro'),
             h('textarea', {
               className: 'cdb-input cdb-input-mono',
               rows: 6,
@@ -688,7 +687,7 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, `Data Reward (${formData.dataReward.job})`),
+          h('label', { className: 'field-label' }, `Data Reward (${formData.dataReward.job})`),
           h(DataRewardChips, {
             dataReward: formData.dataReward,
             mode: 'edit',
@@ -696,7 +695,7 @@
           })
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Notes'),
+          h('label', { className: 'field-label' }, 'Notes'),
           h('textarea', {
             className: 'cdb-input',
             rows: 3,
@@ -705,7 +704,7 @@
             placeholder: 'Additional notes...'
           })
         ),
-        h('div', { className: 'cdb-form-actions' },
+        h('div', { className: 'form-actions' },
           h('button', {
             type: 'button',
             onClick: onCancel,
@@ -856,7 +855,7 @@
 
     // Collapsed view: header + per-item copy buttons row
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row cdb-card-tags'
+      className: 'inline-row cdb-card-tags'
     },
       h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(entry.items || []).map((item, idx) => {
@@ -899,9 +898,9 @@
 
     const multipleEditItems = isEditingInline && editFormData.items && editFormData.items.length > 1;
 
-    const editBody = isEditingInline && h('div', { className: 'cdb-form-fields' },
+    const editBody = isEditingInline && h('div', { className: 'form-fields' },
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Quest Name *'),
+        h('label', { className: 'field-label' }, 'Quest Name *'),
         h('input', {
           type: 'text',
           value: editFormData.questName || '',
@@ -912,7 +911,7 @@
       ),
       h('div', { className: 'cdb-grid-3' },
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Location'),
+          h('label', { className: 'field-label' }, 'Location'),
           h('select', {
             value: editFormData.location || LOCATIONS[0],
             onChange: (e) => updateEditField('location', e.target.value),
@@ -925,7 +924,7 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Job'),
+          h('label', { className: 'field-label' }, 'Job'),
           h('select', {
             value: editFormData.job || JOBS[0],
             onChange: (e) => updateEditField('job', e.target.value),
@@ -935,7 +934,7 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Category'),
+          h('label', { className: 'field-label' }, 'Category'),
           h('select', {
             value: editFormData.category || 'Class D',
             onChange: (e) => updateEditField('category', e.target.value),
@@ -945,16 +944,15 @@
           )
         )
       ),
-      h('div', { className: 'cdb-field-group' },
-        h('div', { className: 'cdb-inline-row' },
+      h('div', { className: 'field-group' },
+        h('div', { className: 'inline-row' },
           h('input', {
             type: 'checkbox',
             id: `editFoodRequired-${entry.id}`,
             checked: !!editFormData.foodRequired,
-            onChange: (e) => updateEditField('foodRequired', e.target.checked),
-            className: 'cdb-checkbox'
+            onChange: (e) => updateEditField('foodRequired', e.target.checked)
           }),
-          h('label', { htmlFor: `editFoodRequired-${entry.id}`, className: 'cdb-label' }, 'Food Required')
+          h('label', { htmlFor: `editFoodRequired-${entry.id}`, className: 'field-label' }, 'Food Required')
         ),
         editFormData.foodRequired && h('select', {
           value: editFormData.foodType || 'None',
@@ -966,7 +964,7 @@
       ),
       h('div', null,
         h('div', { className: 'cdb-searchmode-bar' },
-          h('label', { className: 'cdb-label is-flush' }, 'Items'),
+          h('label', { className: 'field-label is-flush' }, 'Items'),
           h('button', {
             type: 'button',
             onClick: addEditItem,
@@ -974,10 +972,10 @@
           }, 'Add Item')
         ),
         ...editFormData.items.map((item, idx) =>
-          h('div', { key: idx, className: 'cdb-form-fields is-boxed' },
+          h('div', { key: idx, className: 'form-fields is-boxed' },
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                h('label', { className: 'field-label is-small' }, 'Item Name'),
                 h('input', {
                   type: 'text',
                   className: 'cdb-input cdb-input-sm',
@@ -986,7 +984,7 @@
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                h('label', { className: 'field-label is-small' }, 'Difficulty'),
                 h('input', {
                   type: 'number',
                   className: 'cdb-input cdb-input-sm',
@@ -995,7 +993,7 @@
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                h('label', { className: 'field-label is-small' }, 'Quality'),
                 h('input', {
                   type: 'number',
                   className: 'cdb-input cdb-input-sm',
@@ -1006,7 +1004,7 @@
             ),
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                h('label', { className: 'field-label is-small' }, 'Durability'),
                 h('input', {
                   type: 'number',
                   className: 'cdb-input cdb-input-sm',
@@ -1023,7 +1021,7 @@
               )
             ),
             multipleEditItems && h('div', null,
-              h('label', { className: 'cdb-label-xs' },
+              h('label', { className: 'field-label is-small' },
                 'Macro for ' + (item.name || `Item ${idx + 1}`)
               ),
               h('textarea', {
@@ -1036,7 +1034,7 @@
           )
         ),
         !multipleEditItems && h('div', null,
-          h('label', { className: 'cdb-label' }, 'Macro'),
+          h('label', { className: 'field-label' }, 'Macro'),
           h('textarea', {
             className: 'cdb-input cdb-input-mono',
             rows: 8,
@@ -1046,7 +1044,7 @@
         )
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, `Data Reward (${editFormData.dataReward && editFormData.dataReward.job || editFormData.job})`),
+        h('label', { className: 'field-label' }, `Data Reward (${editFormData.dataReward && editFormData.dataReward.job || editFormData.job})`),
         h(DataRewardChips, {
           dataReward: editFormData.dataReward || {},
           mode: 'edit',
@@ -1054,7 +1052,7 @@
         })
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Notes'),
+        h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
           className: 'cdb-input',
           rows: 3,
@@ -1062,7 +1060,7 @@
           onChange: (e) => updateEditField('notes', e.target.value)
         })
       ),
-      h('div', { className: 'cdb-form-actions' },
+      h('div', { className: 'form-actions' },
         h('button', {
           type: 'button',
           onClick: handleInlineCancel,
@@ -1109,7 +1107,7 @@
           h(DataRewardChips, {
             dataReward: entry.dataReward || {},
             mode: 'display'
-          }) || h('span', { className: 'cdb-meta' }, '(none)')
+          }) || h('span', { className: 'meta-note' }, '(none)')
         ),
         // Macros
         !isEditingInline && entry.macros && entry.macros.length > 0 && h('div', null,
@@ -1154,7 +1152,7 @@
           h('p', { className: 'cdb-notes-text' }, entry.notes)
         )
       ),
-      !isEditingInline && h('div', { className: 'cdb-card-footer' },
+      !isEditingInline && h('div', { className: 'card-footer' },
         h('button', {
           type: 'button',
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
@@ -1163,7 +1161,7 @@
           title: 'Edit'
         }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
         deleteConfirm
-          ? h('div', { className: 'cdb-inline-row', style: { gap: '0.25rem' } },
+          ? h('div', { className: 'inline-row', style: { gap: '0.25rem' } },
               h('button', {
                 type: 'button',
                 onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
