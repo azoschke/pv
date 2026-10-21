@@ -216,7 +216,7 @@
 }
 /* A code block in the modal: a recessed tray. */
 .cal-modal-desc pre {
-  background-color: var(--bg-primary); background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px; padding: 0.6rem 0.75rem;
   overflow-x: auto; margin: 0.5rem 0;
 }

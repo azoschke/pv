@@ -183,7 +183,7 @@
 .rp-summons { display: flex; flex-direction: column; gap: 0.4rem; }
 /* Each summon is a recessed tray inside the party card. */
 .rp-summon { display: flex; flex-direction: column; gap: 0.4rem;
-  background-color: var(--bg-primary); background-image: var(--grain); border-radius: 4px; padding: 0.45rem 0.55rem; }
+  background-color: var(--bg-tray); border-radius: 4px; padding: 0.45rem 0.55rem; }
 .rp-summon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
 .rp-summon-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 .rp-summon-name { font-family: 'Stoke', serif; }
@@ -254,7 +254,7 @@
 .rp-item-abilities { display: grid; grid-template-columns: 1fr; gap: 0.6rem; align-items: stretch; }
 @media (min-width: 620px) { .rp-item-abilities { grid-template-columns: 1fr 1fr; } }
 /* Abilities inside the item detail card are recessed trays. */
-.rp-item-ability { background-color: var(--bg-primary); background-image: var(--grain); border-radius: 4px; padding: 0.7rem 0.75rem; }
+.rp-item-ability { background-color: var(--bg-tray); border-radius: 4px; padding: 0.7rem 0.75rem; }
 .rp-ability-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
 .rp-ability-head strong { font-family: 'Stoke', serif; font-size: 0.98rem; }
 .rp-item-ability-desc { margin: 0.15rem 0 0.4rem; color: var(--text-secondary); white-space: pre-wrap; font-size: 0.88rem; }
@@ -289,7 +289,7 @@
 /* ── Personal buffs ── */
 .rp-buff-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 /* Buff slots are recessed trays; a filled slot reads in ink. */
-.rp-buff-slot { background-color: var(--bg-primary); background-image: var(--grain); border-radius: 4px; padding: 0.5rem 0.6rem; display: flex; flex-direction: column; gap: 0.15rem; color: var(--text-secondary); }
+.rp-buff-slot { background-color: var(--bg-tray); border-radius: 4px; padding: 0.5rem 0.6rem; display: flex; flex-direction: column; gap: 0.15rem; color: var(--text-secondary); }
 .rp-buff-slot.is-filled { color: var(--text-primary); }
 .rp-buff-slot-name { font-size: 0.85rem; }
 .rp-buff-slot.is-filled .rp-buff-slot-name { font-weight: 600; }
@@ -326,7 +326,7 @@
 @media (max-width: 560px) { .rp-eff-cols { column-count: 1; } }
 /* Each person is a recessed tray in the modal; the effects in it are raised
    again. */
-.rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; background-color: var(--bg-primary); background-image: var(--grain);
+.rp-eff-holder { break-inside: avoid; margin-bottom: 0.75rem; background-color: var(--bg-tray);
   border: 0; border-radius: 4px; padding: 0.55rem 0.65rem; }
 .rp-eff-holder-name { font-family: 'Stoke', serif; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.2rem; }
 .rp-eff-item { margin-bottom: 0.4rem; }
@@ -393,7 +393,7 @@
   font-family: 'Stoke', serif; font-size: 0.85rem; color: var(--text-primary); }
 .rp-deck-notice .rp-dm-tab-dot { margin-left: 0; }
 .rp-dm-tab.is-active { color: var(--text-primary); border-bottom-color: var(--accent-brown); }
-.rp-dm-section, .rp-dm-log, .rp-dm-boss { background-color: var(--bg-primary); background-image: var(--grain); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.6rem; }
+.rp-dm-section, .rp-dm-log, .rp-dm-boss { background-color: var(--bg-tray); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.6rem; }
 .rp-dm-sub { margin: 0.75rem 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.95rem; }
 .rp-dm-section > .rp-dm-sub:first-child, .rp-dm-log .rp-dm-sub { margin-top: 0.1rem; }
 .rp-effect { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-top: 1px solid var(--border-color); }
@@ -581,8 +581,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.4rem 0.6rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
 }
@@ -607,8 +606,7 @@
 /* An effect under a skill: a recessed tray. */
 .rp-effect-box {
   padding: 0.3rem 0.5rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
   margin-top: 0.3rem;
@@ -623,7 +621,7 @@
 .btn.rp-fill-btn { flex: 1; }
 
 /* Effect / skill forms: a form nested in a card drops back to a tray. */
-.portal-card.rp-subform { margin-top: 0.4rem; background-color: var(--bg-primary); background-image: var(--grain); }
+.portal-card.rp-subform { margin-top: 0.4rem; background-color: var(--bg-tray); }
 .rp-inline-check { display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 400; }
 .rp-inline-check.is-wide { gap: 0.4rem; }
 .rp-grow-select { flex: 1 1 12rem; }

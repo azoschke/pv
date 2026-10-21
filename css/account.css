@@ -85,8 +85,7 @@
 }
 /* The username rules: a recessed tray inside the panel. */
 .rules-card {
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
   padding: 0.75rem 0.9rem;

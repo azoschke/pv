@@ -105,8 +105,7 @@
    Each visit is a recessed tray inside the record card; its header is
    raised again. */
 .visit-card {
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
   margin-bottom: 8px;

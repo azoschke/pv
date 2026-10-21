@@ -735,12 +735,12 @@ button.nav-sublink {
 }
 
 /* --- Recessed tray ---
-   A container nested inside a raised card drops back to the page tone, with
-   the grain. Anything raised inside a tray is card tone again, so no two
+   A container nested inside a raised card is set into it: one flat step
+   toward the ink (--bg-tray). Grain is for the page only, so nested boxes
+   are flat. Anything raised inside a tray is card tone again, so no two
    card-tone surfaces ever touch. */
 .tray {
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
 }
@@ -3881,8 +3881,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   margin-top: 10px;
   padding: 0.6rem 0.85rem;
   font-size: 0.9rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 
@@ -3905,8 +3904,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 
@@ -4015,8 +4013,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .cdb-form-fields.is-boxed {
   margin-bottom: 0.75rem;
   padding: 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 .cdb-align-end { align-self: end; }
@@ -5472,8 +5469,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.6rem 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 .member-shared-row {
@@ -5506,8 +5502,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
   font-size: 0.92rem;
 }

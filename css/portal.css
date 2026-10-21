@@ -4,8 +4,8 @@
    Card-tone sidebar + a grained main area. All colors reference the tokens in
    css/styles.css so the site's light/dark theme toggle works for the portal
    without extra JS. Surfaces follow the site's three tones: cards are raised
-   (no border or shadow), anything nested in a card drops back to a recessed
-   tray (.tray / page tone), and the well is for controls only.
+   (no border or shadow), anything nested in a card is set into a flat
+   recessed tray (.tray / --bg-tray), and the well is for controls only.
    ============================================================================ */
 
 html, body { height: 100%; }
@@ -733,8 +733,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Each ability is a recessed tray inside the item modal. */
 .pv-item-ability {
   padding: 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 .pv-item-ability strong {
@@ -1114,8 +1113,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: 0;
   border-radius: 4px;
   padding: 1.5rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   text-align: center;
   color: var(--text-secondary);
   font-family: 'Crimson Pro', serif;
@@ -1449,7 +1447,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-btn-row { display: flex; gap: 0.625rem; margin-top: 0.5rem; }   /* Save / Cancel */
 .portal-card.is-tight { margin-bottom: 0.6rem; }
 /* A card inside a card drops back to a recessed tray. */
-.portal-card.is-inset { background-color: var(--bg-primary); background-image: var(--grain); margin-bottom: 0.5rem; }
+.portal-card.is-inset { background-color: var(--bg-tray); margin-bottom: 0.5rem; }
 .btn.is-spaced { margin-left: 0.4rem; }
 .portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
 
@@ -1580,8 +1578,7 @@ textarea.cmp-code,
 /* A group is a recessed tray; the rows in it are raised again. */
 .nav-ed-group {
   padding: 0.4rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 .nav-ed-children {
