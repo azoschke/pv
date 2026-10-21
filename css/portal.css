@@ -1254,21 +1254,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- Permissions (root only) --------------- */
-/* Matrix: roles across the top, Page → Tab → Action down the side. The grid
-   sits in a recessed tray; the header row and the label column stay put while
-   it scrolls, and share the tray tone so scrolling never shows a seam. Pages,
-   tabs and actions step by indent and type, not fills. */
+/* Matrix: roles across the top, Page → Tab → Action down the side, in the
+   same pattern as the other grids (the Mount Farm tracker): flush to the
+   card's edges, roles in the table-head band, a solid card-toned label
+   column, group bands, one rule between rows and the shared row hover. The
+   header row and the label column stay put while it scrolls. Pages, tabs and
+   actions step by indent and type, not fills. */
 .perm-grid-wrap {
   --perm-pending: var(--text-primary);
   max-height: 70vh;
   overflow: auto;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
-  border: 0;
-  border-radius: 4px;
+  margin: 0 -1.25rem;
 }
 [data-theme="dark"] .perm-grid-wrap { --perm-pending: var(--gold); }
 .perm-grid {
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   min-width: 100%;
@@ -1281,7 +1281,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   z-index: 2;
   background-color: var(--table-head);
   box-shadow: inset 0 -1px 0 var(--border-color);
-  padding: 0.75rem 0.4rem;
+  padding: 10px 6px 9px;
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 0.7rem;
@@ -1291,26 +1291,29 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   white-space: nowrap;
 }
 .perm-grid thead th.perm-corner { left: 0; z-index: 3; }
-.perm-grid .perm-role-col { text-align: center; min-width: 4.25rem; }
+.perm-grid .perm-role-col { text-align: center; min-width: 64px; }
+/* The label column is solid card, like the tracker's people column, so the
+   roles scroll under it. */
 .perm-row-label {
   position: sticky;
   left: 0;
   z-index: 1;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-card);
   text-align: left;
   font-weight: 400;
-  padding: 0.42rem 1rem;
+  padding: 7px 12px 7px 1.25rem;
   min-width: 15rem;
   max-width: 22rem;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
+  transition: background-color 0.15s ease;
 }
-.perm-row-label.is-action { padding-left: 2.1rem; }
-.perm-row-label.is-tab { padding-left: 2.1rem; }
-.perm-row-label.is-tab-action { padding-left: 3.25rem; }
+.perm-row-label.is-action { padding-left: 2.5rem; }
+.perm-row-label.is-tab { padding-left: 2.5rem; }
+.perm-row-label.is-tab-action { padding-left: 3.6rem; }
 .perm-row-sub { display: block; font-size: 0.8rem; color: var(--text-secondary); }
-.perm-page-name { font-family: 'Stoke', serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.perm-page-name { font-family: 'Stoke', serif; font-size: 0.88rem; letter-spacing: 0.02em; color: var(--text-primary); }
 .perm-tab-name { font-style: italic; }
 .perm-toggle {
   display: inline-flex;
@@ -1327,7 +1330,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Group rows: a band, as in the other tables, with a rule underneath (the
    row above supplies the one over it). */
 .perm-group-row td {
-  padding: 1.3rem 0 0.45rem;
+  padding: 0.65rem 0;
   background-color: var(--bg-group-row);
   border-bottom: 1px solid var(--border-color);
   font-family: 'Stoke', serif;
@@ -1336,32 +1339,40 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   color: var(--text-primary);
 }
-.perm-group-row td > span { position: sticky; left: 1rem; padding: 0 1rem; }
-.perm-cell-td { text-align: center; padding: 0.3rem; border-bottom: 1px solid var(--border-color); }
+.perm-group-row td > span { position: sticky; left: 0; padding: 0 1.25rem; }
+.perm-cell-td {
+  text-align: center;
+  padding: 4px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+.perm-grid tbody tr:not(.perm-group-row):hover > * { background-color: var(--bg-row-hover); }
 /* The last row hands its rule to the save bar. */
 .perm-grid tbody tr:last-child > * { border-bottom-color: transparent; }
-/* Cells are controls, so they sit in the well: brown for allow, red for deny,
-   the well's own tone for inherit. An unsaved change gets an offset outline
-   (ink in light, gold in dark); a conflicting one an inner gold ring. */
+/* Cells are the Mount Farm tick: a square in the well, brown with a check
+   for allow, red with a cross for deny, and empty with a faint ring for not
+   set (the ring is the only thing that shows the control is there). An
+   unsaved change gets an offset outline (ink in light, gold in dark); a
+   conflicting one an inner gold ring. */
 .perm-cell {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
   padding: 0;
   border: 0;
   border-radius: 4px;
   background-color: var(--bg-darker);
-  font-family: 'Crimson Pro', serif;
-  font-weight: 600;
-  font-size: 0.82rem;
-  line-height: 1;
+  color: var(--label);
   cursor: pointer;
-  color: var(--text-secondary);
 }
-.perm-cell.is-allow { background-color: var(--accent-brown); color: var(--label); }
-.perm-cell.is-deny  { background-color: var(--accent-red); color: var(--label); }
+.perm-cell svg { width: 16px; height: 16px; }
+.perm-cell.is-blank { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 26%, transparent); }
+.perm-cell.is-allow { background-color: var(--accent-brown); }
+.perm-cell.is-deny  { background-color: var(--accent-red); }
 .perm-cell.is-warn  { box-shadow: inset 0 0 0 2px var(--gold); }
 .perm-cell.is-pending { outline: 2px solid var(--perm-pending); outline-offset: 2px; }
 .perm-cell:disabled { cursor: wait; opacity: 0.6; }
@@ -1373,7 +1384,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin: 0.75rem -1.25rem -1.25rem;
+  margin: 0 -1.25rem -1.25rem;
   padding: 0.75rem 1.25rem;
   background: var(--bg-card);
   border-top: 1px solid var(--border-color);

@@ -27,8 +27,17 @@
   var useMemo = React.useMemo;
 
   var NEXT = { '': 'allow', allow: 'deny', deny: '' };
-  var SYMBOL = { '': '·', allow: '✓', deny: '✕' };
+  // A check for allow and a cross for deny, drawn like Mount Farm's ticks;
+  // "not set" is the empty ringed square.
+  var ICON = { allow: 'M5 12.5l4.5 4.5L19 7.5', deny: 'M6 6l12 12M18 6L6 18' };
   var WORD = { '': 'Not set', allow: 'Allow', deny: 'Deny' };
+
+  function svgIcon(d) {
+    return h('svg', {
+      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.6,
+      strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false'
+    }, h('path', { d: d }));
+  }
 
   function cellId(roleId, key) { return roleId + '|' + key; }
 
@@ -63,7 +72,7 @@
         disabled: props.disabled,
         'aria-label': props.roleLabel + ' — ' + props.permLabel + ': ' + WORD[v],
         onClick: props.onClick
-      }, SYMBOL[v]));
+      }, ICON[v] ? svgIcon(ICON[v]) : null));
   }
 
   function RolesCard(props) {
