@@ -428,8 +428,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 
 /* --------------- Tables ---------------
-   The header band drops back to the grained page tone; rows are split by
-   one faint rule and take a touch of the well on hover. */
+   The header is one flat band in the table-head tone with one rule beneath
+   it; rows are split by one faint rule and take the hover tint. Group rows
+   are a band: the row above supplies the rule over it and its own rule sits
+   under it, so no two rules ever stack. */
 .portal-table-wrap { overflow-x: auto; }
 .portal-table {
   width: 100%;
@@ -447,9 +449,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--text-secondary);
-  border-bottom: 0;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--table-head);
 }
 .portal-table tbody td {
   padding: 0.6rem 0.75rem;
@@ -1278,8 +1279,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--table-head);
   box-shadow: inset 0 -1px 0 var(--border-color);
   padding: 0.75rem 0.4rem;
   font-family: 'Stoke', serif;
@@ -1324,9 +1324,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   cursor: pointer;
 }
 .perm-toggle .material-icons { font-size: 1.1rem; }
-/* Group rows: ink small caps with a rule underneath, no fill. */
+/* Group rows: a band, as in the other tables, with a rule underneath (the
+   row above supplies the one over it). */
 .perm-group-row td {
   padding: 1.3rem 0 0.45rem;
+  background-color: var(--bg-group-row);
   border-bottom: 1px solid var(--border-color);
   font-family: 'Stoke', serif;
   font-size: 0.84rem;
@@ -1336,6 +1338,8 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .perm-group-row td > span { position: sticky; left: 1rem; padding: 0 1rem; }
 .perm-cell-td { text-align: center; padding: 0.3rem; border-bottom: 1px solid var(--border-color); }
+/* The last row hands its rule to the save bar. */
+.perm-grid tbody tr:last-child > * { border-bottom-color: transparent; }
 /* Cells are controls, so they sit in the well: brown for allow, red for deny,
    the well's own tone for inherit. An unsaved change gets an offset outline
    (ink in light, gold in dark); a conflicting one an inner gold ring. */
@@ -1564,12 +1568,13 @@ textarea.cmp-code,
 
 /* The pages list scrolls inside its own box so the column headers stay in
    view. Collapsed table borders don't travel with a sticky header, so its
-   bottom line is drawn as an inset shadow. */
+   bottom line is drawn as an inset shadow instead of the border. */
 .site-table-scroll { max-height: 70vh; overflow: auto; }
 .site-table-scroll .portal-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
+  border-bottom: 0;
   box-shadow: inset 0 -1px 0 var(--border-color);
 }
 

@@ -1365,9 +1365,9 @@ button.nav-sublink {
   margin-top: 0.15rem;
 }
 
-/* Atma table: a torn card (#atma-container) whose header band drops back to
-   the grained page tone. It scrolls sideways on narrow screens, inside the
-   card so the scrollbar stays clear of the tear. */
+/* Atma table: a torn card (#atma-container) with a flat table-head band and
+   one rule under it. It scrolls sideways on narrow screens, inside the card
+   so the scrollbar stays clear of the tear. */
 .atma-card {
   background-color: var(--bg-card);
   border-radius: 4px 4px 0 0;
@@ -1386,9 +1386,8 @@ button.nav-sublink {
   letter-spacing: 0;
   text-transform: none;
   color: var(--text-secondary);
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
-  border-bottom: 0;
+  background-color: var(--table-head);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .atma-table td {
@@ -5793,7 +5792,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   grid-template-rows: auto auto;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--table-head);
-  background-image: var(--grain);
 }
 .mf-grid-mount {
   grid-row: 1 / span 2;
@@ -5821,13 +5819,13 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   color: var(--text-secondary);
 }
 
-/* Still need, in the table-head tone, then a row per person. */
+/* Still need, in the table-head band (it reads as part of the head), then
+   a row per person. */
 .mf-grid-need {
   align-items: stretch;
   min-height: 34px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--table-head);
-  background-image: var(--grain);
 }
 .mf-grid-row {
   align-items: stretch;
@@ -5856,7 +5854,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-grid-head .mf-grid-person,
 .mf-grid-need .mf-grid-person {
   background-color: var(--table-head);
-  background-image: var(--grain);
 }
 .mf-grid-need .mf-grid-person {
   padding-top: 0;
@@ -5978,7 +5975,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .mf-person-body .mf-none { padding: 12px 16px; }
 
 /* "Savage" and "Collaboration" over the first of each, in the lists of
-   mounts (phone cards, Fights, Manage mounts). */
+   mounts (phone cards, Fights, Manage mounts): a group band, not a head. */
 .mf-kind-title {
   padding: 8px 16px 4px;
   border-bottom: 1px solid var(--border-color);
@@ -5987,8 +5984,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   line-height: 1.2;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
-  background-color: var(--table-head);
-  background-image: var(--grain);
+  background-color: var(--bg-group-row);
 }
 .mf-panel .mf-kind-title,
 .mf-manage .mf-kind-title { padding-left: 22px; padding-right: 22px; }
