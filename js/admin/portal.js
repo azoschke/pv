@@ -583,11 +583,11 @@
 
     if (!session) {
       PVAdminAPI.redirectToLogin();
-      return h('div', { className: 'portal-boot' }, 'Redirecting…');
+      return h('div', { className: 'empty-note portal-boot' }, 'Redirecting…');
     }
 
     if (!Array.isArray(session.permissions)) {
-      return h('div', { className: 'portal-boot' }, 'Loading…');
+      return h('div', { className: 'empty-note portal-boot' }, 'Loading…');
     }
 
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });

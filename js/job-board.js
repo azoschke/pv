@@ -442,7 +442,7 @@
 
     var descHtml = j.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(j.description)) : "<p>" + escapeHTML(j.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges =
       '<span class="tag">' + escapeHTML(jobBadgeLabel(j)) + '</span>' +

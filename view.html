@@ -43,7 +43,7 @@
       </nav>
 
       <div id="chapter-content" class="chapter-view tear">
-        <div class="chapter-loading">Loading&hellip;</div>
+        <div class="empty-note chapter-loading">Loading&hellip;</div>
       </div>
     </main>
   </div><!-- /.container -->
@@ -146,7 +146,7 @@
         return;
       }
 
-      chapterContent.innerHTML = '<div class="chapter-loading">Loading&hellip;</div>';
+      chapterContent.innerHTML = '<div class="empty-note chapter-loading">Loading&hellip;</div>';
 
       fetch(API_BASE + '/campaigns/' + encodeURIComponent(campaignSlug) +
             '/chapters/' + encodeURIComponent(slug))

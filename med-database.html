@@ -55,7 +55,7 @@
 
         <div id="patient-content">
           <div class="record-card">
-            <p class="v2-state-msg">Select a patient to view their records.</p>
+            <p class="empty-note v2-state-msg">Select a patient to view their records.</p>
             <p class="record-card-note">Please see Fiora if records are not up to date or files are missing.</p>
           </div>
         </div>
@@ -344,7 +344,7 @@
 
     // ── Patient list ───────────────────────────────────────────────────
     async function loadPatientList() {
-      patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state"><span class="v2-state-msg">Loading&hellip;</span></div></li>';
+      patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state"><span class="empty-note v2-state-msg">Loading&hellip;</span></div></li>';
       try {
         var patients = (await Promise.all([apiGet("/patients"), refreshPermissions()]))[0];
         allPatients = (Array.isArray(patients) ? patients : [])
@@ -354,15 +354,15 @@
           });
         renderPatientList();
         if (!allPatients.length && !seesAllRecords()) {
-          patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg">' + escapeHTML(NO_OWN_RECORDS) + '</p></div>';
+          patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg">' + escapeHTML(NO_OWN_RECORDS) + '</p></div>';
         }
       } catch(err) {
         console.error("Error loading patients:", err);
         var refused = refusedMessage(err);
-        patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state v2-state-msg error">' +
+        patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state empty-note v2-state-msg error">' +
           (refused ? "No patients to show." : "Failed to load patients.") + '</div></li>';
         azBar.innerHTML = "";
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+        patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg error">' +
           (refused || "Could not reach the medical database. Please try again shortly.") + '</p></div>';
       }
     }
@@ -400,12 +400,12 @@
       if (!full) azBar.innerHTML = "";
 
       if (!allPatients.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">' + (full ? "No patients on file." : "No records on file.") + '</li>';
+        patientList.innerHTML = '<li class="empty-note patient-empty-msg">' + (full ? "No patients on file." : "No records on file.") + '</li>';
         if (full) buildAzBar({});
         return;
       }
       if (!filtered.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">No patients match your search.</li>';
+        patientList.innerHTML = '<li class="empty-note patient-empty-msg">No patients match your search.</li>';
         if (full) buildAzBar({});
         return;
       }
@@ -473,13 +473,13 @@
       activePatientId = patientId;
       setActivePatientItem(patientId);
 
-      patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg">Loading patient records&hellip;</p></div>';
+      patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg">Loading patient records&hellip;</p></div>';
       try {
         var data = await apiGet("/patients/" + encodeURIComponent(patientId));
         renderPatient(data);
       } catch(err) {
         console.error("Error loading patient:", err);
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+        patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg error">' +
           (refusedMessage(err) || "Could not load this patient's records.") + '</p></div>';
       }
     }
@@ -622,7 +622,7 @@
 
           html += '<div class="visit-card-body">';
           if (!hasContent) {
-            html += '<em class="visit-card-empty">No details available for this visit.</em>';
+            html += '<p class="empty-note">No details available for this visit.</p>';
           } else {
             if (hasIntake) {
               html += intake

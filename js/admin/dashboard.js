@@ -88,7 +88,7 @@
 
     if (state.loading) {
       return h('div', null, header(),
-        h('p', { className: 'dash-loading' }, 'Loading…'));
+        h('p', { className: 'empty-note' }, 'Loading…'));
     }
 
     var members = state.members, apps = state.apps, quests = state.quests;
@@ -257,7 +257,7 @@
           )
         ),
         attention.length === 0
-          ? h('p', { className: 'dash-attention-empty' }, 'Nothing needs attention right now.')
+          ? h('p', { className: 'empty-note dash-attention-empty' }, 'Nothing needs attention right now.')
           : h('div', { className: 'dash-attention-list' },
               attention.map(function (it) {
                 return h('div', { className: 'dash-attention-row', key: it.key },

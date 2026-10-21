@@ -516,7 +516,7 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'perm-loading' }, 'Loading pages…'));
+        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading pages…'));
     }
     return h('div', null,
       flash ? h('div', { className: 'portal-flash success', style: { marginBottom: '1rem' } }, flash) : null,

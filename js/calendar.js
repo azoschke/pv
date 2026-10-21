@@ -267,12 +267,12 @@
   }
 
   function renderLoading() {
-    showPanel('<div class="cal-panel"><p>Loading events&hellip;</p></div>');
+    showPanel('<div class="notice-panel is-gate"><p>Loading events&hellip;</p></div>');
   }
 
   function renderError(message) {
     showPanel(
-      '<div class="cal-panel">' +
+      '<div class="notice-panel is-gate">' +
         '<h2>Couldn’t load the calendar</h2>' +
         '<p>' + escapeHTML(message || "Please try again in a moment.") + '</p>' +
         '<button type="button" class="btn" id="cal-retry">Try again</button>' +
@@ -479,8 +479,8 @@
     agendaEl.innerHTML = events.length
       ? agendaSectionsHTML(events)
       : (allEvents.length
-          ? '<div class="cal-empty">No events match your filters.</div>'
-          : '<div class="cal-empty">No upcoming events are scheduled right now.</div>');
+          ? '<div class="empty-note cal-empty">No events match your filters.</div>'
+          : '<div class="empty-note cal-empty">No upcoming events are scheduled right now.</div>');
   }
 
   // ── Month + week grids ─────────────────────────────────────────────────────
@@ -573,7 +573,7 @@
 
     weekEl.innerHTML = events.length
       ? agendaSectionsHTML(events)
-      : '<div class="cal-empty">No events this week.</div>';
+      : '<div class="empty-note cal-empty">No events this week.</div>';
     updateNav();
   }
 

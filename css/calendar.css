@@ -184,15 +184,9 @@
   .cal-month-label { min-width: 7rem; font-size: 0.95rem; }
 }
 
-/* Status region: loading / gate / error / empty. */
-.cal-panel {
-  max-width: 520px; margin: 3rem auto; text-align: center;
-  background: var(--bg-card); border: 0;
-  border-radius: 4px; padding: 2.25rem 1.75rem;
-}
-.cal-panel h2 { font-family: var(--font-ui); margin: 0 0 0.5rem; }
-.cal-panel p { color: var(--text-secondary); margin: 0 0 1.25rem; }
-.cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
+/* Status region: loading / gate / error is the shared .notice-panel.is-gate;
+   an empty week or list is an .empty-note, centred. */
+.cal-empty { text-align: center; padding: 2.5rem 1rem; }
 
 /* The event popup is the shared .detail-modal (styles.css). The hero image bleeds
    to the modal edges (the modal's own overflow:hidden rounds its corners);

@@ -426,7 +426,7 @@
 
     var descHtml = m.description
       ? '<div class="detail-modal-desc">' + md(m.description) + '</div>'
-      : '<div class="detail-modal-desc"><p class="modal-empty-note"><em>No description provided.</em></p></div>';
+      : '<div class="detail-modal-desc"><p class="empty-note">No description provided.</p></div>';
 
     var hooksHtml = m.rp_hooks
       ? '<p class="detail-modal-meta is-section">RP HOOKS</p>' +

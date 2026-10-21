@@ -16,9 +16,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 .portal-boot {
   padding: 2rem;
-  font-family: var(--font-text);
-  font-size: 1rem;
-  color: var(--text-secondary);
 }
 
 /* --------------- Shell grid --------------- */
@@ -755,10 +752,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   white-space: nowrap;
 }
 
-.dash-loading {
-  color: var(--text-secondary);
-  font-style: italic;
-}
 
 /* Pending / Scheduled groups side by side on wide views, stacking when the
    row can no longer fit two groups. Each group grows in proportion to how many
@@ -881,8 +874,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   line-height: 1.3;
 }
 .dash-attention-empty {
-  color: var(--text-secondary);
-  font-style: italic;
   margin: 0.4rem 0 0;
 }
 .dash-open { white-space: nowrap; }
@@ -1216,7 +1207,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-top: 1px solid var(--border-color);
 }
 .perm-savebar-count { margin-right: auto; font-family: var(--font-text); color: var(--text-primary); }
-.perm-loading { color: var(--text-secondary); margin: 0; }
 
 /* Roles list + add form */
 .perm-roles { display: flex; flex-direction: column; }

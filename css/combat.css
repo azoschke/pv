@@ -421,10 +421,8 @@
 .rp-action-chip.is-used { color: var(--text-secondary); }
 .rp-action-chip.is-ko { color: var(--accent-red); }
 
-.rp-gate { max-width: 480px; margin: 4rem auto; text-align: center; background: var(--bg-card); border-radius: 4px; padding: 2.5rem 2rem; }
-.rp-gate-icon { font-size: 3rem; color: var(--accent-brown); }
-.rp-gate h2 { font-family: var(--font-ui); margin: 0.75rem 0 0.5rem; }
-.rp-gate p { color: var(--text-secondary); margin: 0 0 1.25rem; }
+/* The gate (paused, loading, an error) is the shared .notice-panel.is-gate;
+   .rp-gate only carries the tool's tokens above. */
 
 /* ============================================================================
    Combat Toolkit — roster & catalogue card grids

@@ -237,7 +237,7 @@
 
     var body = cats.length
       ? cats.map(categoryHtml).join("")
-      : '<p class="menu-empty">This menu has not been filled in yet.</p>';
+      : '<p class="empty-note menu-empty">This menu has not been filled in yet.</p>';
 
     // The venue's own photograph doubles as the masthead backdrop, over the
     // placeholder field when there is none. The chooser payload always
@@ -327,7 +327,7 @@
 
   async function selectVenue(venueId, push) {
     showView(push, venueId);
-    sheetEl.innerHTML = '<p class="menu-empty">Loading menu&hellip;</p>';
+    sheetEl.innerHTML = '<p class="empty-note menu-empty">Loading menu&hellip;</p>';
     try {
       var payload = await fetchMenu(venueId);
       renderMenu(payload);
@@ -337,7 +337,7 @@
     } catch (err) {
       console.error("Error loading menu:", err);
       sheetEl.innerHTML =
-        '<p class="menu-empty notice-panel-error">Could not load this menu. ' +
+        '<p class="empty-note menu-empty notice-panel-error">Could not load this menu. ' +
         'Please try again shortly.</p>';
     }
   }

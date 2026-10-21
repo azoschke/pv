@@ -530,7 +530,7 @@
 
     var descHtml = v.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(v.description)) : "<p>" + escapeHTML(v.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var allTags = []
       .concat(Array.isArray(v.tags) ? v.tags.map(function (t) { return "#" + t.replace(/_/g, " "); }) : [])

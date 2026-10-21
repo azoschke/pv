@@ -196,8 +196,8 @@
 
   // ── Gate cards ────────────────────────────────────────────────────────────
   function PausedCard(props) {
-    return h('div', { className: 'rp-gate' },
-      h('span', { className: 'material-icons rp-gate-icon', 'aria-hidden': 'true' }, 'pause_circle'),
+    return h('div', { className: 'notice-panel is-gate rp-gate' },
+      h('span', { className: 'material-icons notice-panel-icon', 'aria-hidden': 'true' }, 'pause_circle'),
       h('h2', null, props.title || 'No active session'),
       h('p', null, props.message || 'There is no live campaign session right now.'),
       props.onResume ? h('button', { type: 'button', className: 'btn', onClick: props.onResume }, 'Resume session') : null);
@@ -1596,8 +1596,8 @@
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
     function onResetAction(memberId) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/turn-actions/' + memberId); }); }
 
-    if (loading) return h('div', { className: 'rp-gate' }, h('p', null, 'Loading…'));
-    if (err && !data) return h('div', { className: 'rp-gate' }, h('p', { className: 'rp-flash error' }, err));
+    if (loading) return h('div', { className: 'notice-panel is-gate rp-gate' }, h('p', null, 'Loading…'));
+    if (err && !data) return h('div', { className: 'notice-panel is-gate rp-gate' }, h('p', { className: 'rp-flash error' }, err));
     if (!data || !data.active) {
       if (data && data.reason === 'not_linked') return h(PausedCard, { title: 'Account not linked', message: 'Your account isn’t linked to a Free Company roster character yet. Ask an officer to add you.' });
       if (data && data.reason === 'paused') return h(PausedCard, { title: 'Session paused', message: 'Your DM paused the session.',

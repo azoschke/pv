@@ -422,7 +422,7 @@
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges = s._positions.map(function (p) {
       return '<span class="tag">' + escapeHTML(p) + '</span>';

@@ -1103,9 +1103,9 @@
 
       h('div', { className: 'cdb-craft-list' },
         loadState === 'loading' && quests.length === 0
-          ? h('div', { className: 'cdb-empty-state' }, 'Loading…')
+          ? h('div', { className: 'empty-note cdb-empty-state' }, 'Loading…')
           : filtered.length === 0
-            ? h('div', { className: 'cdb-empty-state' },
+            ? h('div', { className: 'empty-note cdb-empty-state' },
                 quests.length === 0
                   ? 'No quests in the catalog yet.'
                   : 'No quests match your filters.'

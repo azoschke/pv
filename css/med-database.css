@@ -152,7 +152,6 @@
 }
 .visit-card.open .visit-card-body { display: block; }
 @media (max-width: 600px) { .visit-card-body { padding: 1rem; } }
-.visit-card-empty { color: var(--text-secondary); }
 
 /* Visit subsection headings (Patient Intake / Treatment Report) */
 .visit-subsection-label {
@@ -212,12 +211,7 @@
 
 /* ── Loading / error states ────────────────────────────────────── */
 .v2-state-msg {
-  font-family: var(--font-script);
-  font-size: var(--fs-script);
-  color: var(--text-secondary);
   padding: 2rem 0;
-  font-style: normal;
-  line-height: 1.3;
 }
 .v2-state-msg.error { color: var(--accent-red); }
 /* Loading / failed text inside the patient list. */
@@ -274,6 +268,4 @@
 .patient-group-header.is-first { border-top: none; margin-top: 0; }
 .patient-empty-msg {
   padding: 0.75rem 1rem;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
 }

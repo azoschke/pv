@@ -627,7 +627,7 @@
 
     var descHtml = q.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(q.description)) : "<p>" + escapeHTML(q.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges = "";
     if (q.mission_type) {

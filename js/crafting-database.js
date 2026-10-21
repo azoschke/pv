@@ -457,7 +457,7 @@
       ),
       h('div', { className: 'cdb-craft-list' },
         sortedCrafts.length === 0
-          ? h('div', { className: 'cdb-empty-state' },
+          ? h('div', { className: 'empty-note cdb-empty-state' },
               searchTerm || filterClass || filterStars
                 ? 'No crafts found matching your filters.'
                 : 'No crafts yet. Add your first craft above!'

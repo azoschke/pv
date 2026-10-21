@@ -322,7 +322,7 @@
   }
 
   function Notice(props) {
-    return h('div', { className: 'info-card tear-half mf-notice' },
+    return h('div', { className: 'notice-panel is-gate tear-half' },
       h('h1', { className: 'form-title' }, props.title),
       h('a', { className: 'btn', href: TRACKER_HREF }, 'Back to Mount Farm'));
   }
@@ -368,7 +368,7 @@
                 onClick: function () { props.onAdd(p.id); setQ(''); }
               }, avatar(p, !!p.primary_member_id), h('span', { className: 'mf-person-name' }, p.name));
             }),
-            results.length ? null : h('p', { className: 'mf-none' }, 'No one by that name.'))
+            results.length ? null : h('p', { className: 'empty-note mf-none' }, 'No one by that name.'))
         : null);
   }
 
@@ -639,7 +639,7 @@
                       return h('div', { key: m.id, className: 'mf-grid-cell' + split(j), role: 'cell' }, tickButton(c, m));
                     }));
                 })))
-          : h('p', { className: 'mf-none' }, 'Everyone in view has every ' + active.name + ' mount.'));
+          : h('p', { className: 'empty-note mf-none' }, 'Everyone in view has every ' + active.name + ' mount.'));
     }
 
     function personCards() {
@@ -679,7 +679,7 @@
                         h('div', { className: 'mf-person-mount-fight' }, m.fight)),
                       tickButton(c, m));
                   }),
-                  list.length ? null : h('p', { className: 'mf-none' }, firstName(c.name) + ' has every ' + g.name + ' mount.'))
+                  list.length ? null : h('p', { className: 'empty-note mf-none' }, firstName(c.name) + ' has every ' + g.name + ' mount.'))
               : null);
         }));
     }
@@ -944,7 +944,7 @@
                   }, 'Add')
                 : null);
           }),
-          suggestions.length ? null : h('p', { className: 'mf-none' }, 'Nothing else is needed.'))),
+          suggestions.length ? null : h('p', { className: 'empty-note mf-none' }, 'Nothing else is needed.'))),
       dialog
         ? h(ConfirmDialog, {
             title: (event.live ? 'End ' : 'Delete ') + event.name + '?',
@@ -1151,7 +1151,7 @@
                 onClick: function () { setParty(party.filter(function (x) { return x !== p.id; })); }
               }, svgIcon(null, 'M7 7l10 10M17 7L7 17', 2.2)));
           }),
-          partyPeople.length ? null : h('p', { className: 'mf-none' }, 'No one added yet.')),
+          partyPeople.length ? null : h('p', { className: 'empty-note mf-none' }, 'No one added yet.')),
         h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-fights-title' },
           h('div', { className: 'mf-panel-head' },
             h('h2', { id: 'mf-fights-title', className: 'mf-panel-title' }, 'Fights'),
@@ -1294,7 +1294,7 @@
                     ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog({ type: 'remove', mount: m }); } }, 'Remove')
                     : null));
             }),
-            g.mounts.length ? null : h('p', { className: 'mf-none' }, 'No mounts yet.')));
+            g.mounts.length ? null : h('p', { className: 'empty-note mf-none' }, 'No mounts yet.')));
       }),
       dialog && (dialog.type === 'add' || dialog.type === 'edit')
         ? h(MountDialog, { mount: dialog.mount || null, onClose: close, onSaved: saved })

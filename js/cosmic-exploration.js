@@ -1486,7 +1486,7 @@
       ),
       h('div', { className: 'cdb-craft-list' },
         filteredMacros.length === 0
-          ? h('div', { className: 'cdb-empty-state' },
+          ? h('div', { className: 'empty-note cdb-empty-state' },
               macros.length === 0
                 ? 'No missions yet. Add your first mission above!'
                 : 'No missions match your filters.'

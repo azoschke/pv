@@ -293,7 +293,7 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'perm-loading' }, 'Loading navigation…'));
+        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading navigation…'));
     }
 
     var pagesById = {};
