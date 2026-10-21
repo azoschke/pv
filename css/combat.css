@@ -259,10 +259,12 @@
 .rp-ability-head strong { font-family: 'Stoke', serif; font-size: 0.98rem; }
 .rp-item-ability-desc { margin: 0.15rem 0 0.4rem; color: var(--text-secondary); white-space: pre-wrap; font-size: 0.88rem; }
 
-/* Modifier rows (item detail + DM boss effects). */
-.rp-mod { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; }
-.rp-mod-info { display: flex; flex-direction: column; min-width: 0; }
-.rp-mod-meta { font-size: 0.8rem; color: var(--text-secondary); }
+/* Modifier rows (item detail + DM boss effects): the same list row as the
+   DM deck's effects below. */
+.rp-mod { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.55rem 0; border-top: 1px solid var(--border-color); }
+.rp-mod-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.rp-mod-info > span > strong { font-family: var(--font-ui); font-weight: 400; font-size: 0.92rem; letter-spacing: 0.01em; color: var(--text-primary); }
+.rp-mod-meta { font-family: var(--font-text); font-size: 0.85rem; color: var(--text-secondary); }
 /* Conditional skill whose gate is currently unmet: dimmed, with a red flag. */
 .rp-mod.is-gated { opacity: 0.5; }
 .rp-mod-flag { margin-left: 0.4rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); font-weight: 700; }
@@ -375,7 +377,7 @@
 /* The turn: plain muted text (a red .pill once the turn is locked). */
 .rp-turn-badge { font-family: var(--font-ui); font-size: var(--fs-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--text-secondary); }
 .rp-dm-session { display: flex; gap: 0.4rem; margin: 0.4rem 0 0; flex-wrap: wrap; }
-.rp-dm-scene { display: flex; align-items: center; gap: 0.4rem; margin: 0.55rem 0 0; flex-wrap: wrap; }
+.rp-dm-scene { display: flex; align-items: center; gap: 0.4rem; margin: 0.75rem 0 0; flex-wrap: wrap; }
 .rp-dm-scene-label { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 .rp-scene-select { font: inherit; font-size: 0.85rem; min-height: 32px; padding: 0 0.5rem; border-radius: 4px;
   border: 0; background: var(--bg-darker); color: var(--text-primary); }
@@ -394,13 +396,18 @@
 .rp-deck-notice .rp-dm-tab-dot { margin-left: 0; }
 .rp-dm-tab.is-active { color: var(--text-primary); border-bottom-color: var(--accent-brown); }
 .rp-dm-section, .rp-dm-log, .rp-dm-boss { background-color: var(--bg-tray); border-radius: 4px; padding: 0.6rem 0.8rem; margin-top: 0.6rem; }
-.rp-dm-sub { margin: 0.75rem 0 0.4rem; font-family: 'Stoke', serif; font-size: 0.95rem; }
+/* List rows in tools (DM deck effects and buffs, item modifiers, boss
+   effects): every row the same. The name is Stoke ink at the UI size, the
+   meta line Crimson muted, one rhythm and one rule between rows (none
+   directly under the section heading, which sits a step above the names). */
+.rp-dm-sub { margin: 0.2rem 0 0.35rem; font-family: var(--font-ui); font-size: 1rem; color: var(--text-primary); }
 .rp-dm-section > .rp-dm-sub:first-child, .rp-dm-log .rp-dm-sub { margin-top: 0.1rem; }
-.rp-effect { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-top: 1px solid var(--border-color); }
-.rp-effect:first-of-type { border-top: 0; }
+.rp-effect { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.55rem 0; border-top: 1px solid var(--border-color); }
+.rp-dm-sub + .rp-effect, .rp-dm-sub + .rp-mod { border-top: 0; }
 .rp-effect.is-off { opacity: 0.5; }
-.rp-effect-info { display: flex; flex-direction: column; min-width: 0; }
-.rp-effect-meta { font-size: 0.78rem; color: var(--text-secondary); }
+.rp-effect-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.rp-effect-info > strong { font-family: var(--font-ui); font-weight: 400; font-size: 0.92rem; letter-spacing: 0.01em; color: var(--text-primary); }
+.rp-effect-meta { font-family: var(--font-text); font-size: 0.85rem; color: var(--text-secondary); }
 .rp-effect-ctl { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
 .rp-boss-add .rp-select { flex: 1 1 14rem; }
