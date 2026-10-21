@@ -78,7 +78,7 @@
   font-size: 2.6rem; line-height: 1; text-align: center; -moz-appearance: textfield; }
 .rp-roll-input::-webkit-outer-spin-button, .rp-roll-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .rp-roll-input:focus { outline: none; }
-.rp-roll-caption { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); }
+.rp-roll-caption { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 
 .rp-chip-expr { display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; }
 .rp-chip { background: var(--bg-card-light); color: var(--text-secondary); border-radius: 3px; padding: 0.25rem 0.6rem; font-size: 0.9rem; }
@@ -98,7 +98,7 @@
 .rp-provoke, .rp-share { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.6rem; }
 .rp-provoke .rp-note, .rp-share .rp-note { margin: 0; }
 .rp-provoke .material-symbols-outlined, .rp-share .material-symbols-outlined { font-size: 1.1em; }
-.rp-target-label { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
+.rp-target-label { margin: 0; font-size: var(--fs-caps); text-transform: uppercase; letter-spacing: var(--track-caps); color: var(--text-secondary); font-family: var(--font-ui); }
 .rp-target-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .rp-target-name { font-weight: 600; }
 .rp-target-newhp { background: var(--bg-card-light); border-radius: 3px; padding: 0.3rem 0.75rem; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
@@ -124,7 +124,7 @@
 .rp-boss-card.is-pickable:hover { background: color-mix(in srgb, var(--bg-darker) 40%, var(--bg-card)); }
 .rp-boss-card.is-target { box-shadow: var(--rp-ring); }
 .rp-boss-card.is-down { opacity: 0.5; }
-.rp-boss-target-note { margin-top: 0.3rem; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-brown); }
+.rp-boss-target-note { margin-top: 0.3rem; font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 .rp-boss-img { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
 .rp-boss-info { flex: 1 1 auto; min-width: 0; }
 .rp-boss-name { font-family: 'Stoke', serif; display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
@@ -316,7 +316,7 @@
 .rp-skill-top { margin-top: 1rem; }
 .rp-skill-top:first-child { margin-top: 0.2rem; }
 .rp-skill-sub { margin-top: 0.5rem; }
-.rp-skill-sub-title { margin: 0 0 0.3rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-secondary); }
+.rp-skill-sub-title { margin: 0 0 0.3rem; font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 .rp-skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; align-items: start; }
 .rp-skill-grid .rp-skill { margin-bottom: 0; }
 /* Effects grouped by holder, equal-height rows, details in a popover. */
@@ -373,10 +373,10 @@
 .rp-deck-toggle .material-icons { font-size: 1.1rem; }
 .rp-deck-body { padding: 0 0.9rem 0.9rem; }
 /* The turn: plain muted text (a red .pill once the turn is locked). */
-.rp-turn-badge { font-family: 'Stoke', serif; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.rp-turn-badge { font-family: var(--font-ui); font-size: var(--fs-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--text-secondary); }
 .rp-dm-session { display: flex; gap: 0.4rem; margin: 0.4rem 0 0; flex-wrap: wrap; }
 .rp-dm-scene { display: flex; align-items: center; gap: 0.4rem; margin: 0.55rem 0 0; flex-wrap: wrap; }
-.rp-dm-scene-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
+.rp-dm-scene-label { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 .rp-scene-select { font: inherit; font-size: 0.85rem; min-height: 32px; padding: 0 0.5rem; border-radius: 4px;
   border: 0; background: var(--bg-darker); color: var(--text-primary); }
 .rp-scene-chip { display: inline-flex; align-items: center; gap: 0.28rem; margin: 0.25rem 0 0;
@@ -413,7 +413,7 @@
 .rp-dm-boss-count { font-size: 0.72rem; color: var(--text-secondary); }
 .rp-dm-boss-body { margin-top: 0.5rem; }
 .rp-vuln { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.4rem 0; border-top: 1px solid var(--border-color); margin-top: 0.3rem; }
-.rp-vuln-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+.rp-vuln-label { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: var(--track-micro); color: var(--text-secondary); font-family: var(--font-ui); }
 /* A boss skill: raised again inside the boss tray. */
 .rp-boss-skill { background: var(--bg-card); border-radius: 4px; padding: 0.5rem 0.6rem; margin-top: 0.45rem; }
 .rp-boss-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }

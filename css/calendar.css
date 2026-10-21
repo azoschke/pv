@@ -123,8 +123,9 @@
 /* Month grid */
 .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
 .cal-dow {
-  text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  text-align: center; font-size: var(--fs-caps); text-transform: uppercase; letter-spacing: var(--track-caps);
   color: var(--text-secondary); padding: 0.2rem 0;
+  font-family: var(--font-ui);
 }
 .cal-cell {
   position: relative; aspect-ratio: 1 / 1; overflow: hidden;

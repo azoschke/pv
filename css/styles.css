@@ -188,6 +188,26 @@ a {
   /* Sketch wash: the colour blended into illustrations (.sketch-wash) */
   --sketch-wash-color: #636158;
 
+  /* Type roles. Stoke for headings and UI (labels, names, buttons, nav),
+     Crimson Pro for reading and data, La Belle Aurore for the script
+     subtitle over a page or portal title and the script accent (one small
+     muted note: a byline, a source, a loading or empty line). Three
+     tracked-caps steps, everything else in sentence case:
+       section  ink    group bands, section labels
+       caps     muted  column heads, field labels
+       micro    muted  dense tool labels
+     Brown (--text-link) is only for what you can act on or what is current,
+     plus decorative icons and the script subtitle; never a static label. */
+  --font-ui:      'Stoke', Georgia, serif;
+  --font-text:    'Crimson Pro', Georgia, serif;
+  --font-script:  'La Belle Aurore', cursive;
+  --fs-section:   0.84rem;  --track-section: 0.1em;
+  --fs-caps:      0.75rem;  --track-caps:    0.08em;
+  --fs-micro:     0.68rem;  --track-micro:   0.06em;
+  --fs-script:    1.05rem;  /* reads at about Crimson 0.9rem: small x-height */
+  --fs-data:      1.05rem;
+  --text-link:    var(--accent-brown);
+
   /* Paper grain and the torn edge */
   --grain:  url("../assets/grain-light.svg");
   --tear-h: 26px;
@@ -553,9 +573,9 @@ pre {
 /* Group labels: ink small caps, set apart by space and one faint rule. */
 .nav-submenu-label {
   padding: 10px 10px 6px;
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
   pointer-events: none;
@@ -1310,7 +1330,7 @@ button.nav-sublink {
   font-family: 'Stoke', serif;
   font-weight: 400;
   font-size: 0.95rem;
-  color: var(--accent-brown);
+  color: var(--text-primary);
   margin: 0 0 0.5rem;
   padding-bottom: 0.3rem;
   border-bottom: 1px solid var(--border-color);
@@ -1326,12 +1346,13 @@ button.nav-sublink {
 .task-table th {
   text-align: left;
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: var(--fs-caps);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-caps);
   color: var(--text-secondary);
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-ui);
 }
 
 .task-table td {
@@ -1381,10 +1402,10 @@ button.nav-sublink {
 
 .atma-table th {
   padding: 0.75rem 1rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.88rem;
-  letter-spacing: 0;
-  text-transform: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
   color: var(--text-secondary);
   background-color: var(--table-head);
   border-bottom: 1px solid var(--border-color);
@@ -1771,11 +1792,12 @@ button.nav-sublink {
   color: var(--text-primary);
 }
 #appointmentForm .subsection-heading {
-  font-size: 0.84rem;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-ui);
 }
 #appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
 
@@ -2081,12 +2103,13 @@ button.nav-sublink {
 }
 
 .landing-card-subtitle {
-    font-family: 'La Belle Aurore', cursive;
-    font-size: 1.25rem;
-    line-height: 1.25rem;
-    color: var(--accent-brown);
+    font-family: var(--font-script);
+    font-size: var(--fs-script);
+    line-height: 1.3;
+    color: var(--text-secondary);
     margin: unset;
     margin-bottom: 0.5rem;
+    font-style: normal;
 }
 
 .landing-card-desc {
@@ -2136,9 +2159,9 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 /* Small-caps label over a title or a block. */
 .eyebrow {
-  font-family: 'Stoke', serif;
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
   margin: 0 0 8px;
@@ -2146,9 +2169,9 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
 /* A group's name over its list: ink small caps on a hairline rule. */
 .group-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
   margin: 0;
@@ -4221,7 +4244,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .cdb-data-chip-label {
   font-family: 'Stoke', serif;
   font-size: 0.9rem;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
 }
 
 .cdb-data-chip-count { color: var(--text-primary); }
@@ -4734,10 +4757,10 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .venue-modal-location.is-section {
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
   font-style: normal;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
@@ -4772,10 +4795,10 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* Group header: ink small caps. */
 .codex-type-heading {
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
   margin: 2rem 0 0.6rem;
@@ -4849,7 +4872,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-family: 'Stoke', serif;
   font-size: 0.8rem;
   letter-spacing: 0.03em;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
   margin: 0.15rem 0 1.1rem;
 }
 
@@ -5028,10 +5051,14 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 }
 
 .job-modal-contact-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.92rem;
-  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  color: var(--text-secondary);
   margin-right: 0.5rem;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 6.5rem;
 }
 
 .job-modal-desc {
@@ -5066,7 +5093,11 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   font-size: 0.85rem;
 }
 
+/* Popup facts (Contact, When, ...): the label sits on the value's line at a
+   fixed width, so the values line up; the participants list's label is a
+   heading of its own. */
 .quest-participants { margin-top: 1.1rem; }
+.quest-participants .job-modal-contact-label { display: block; }
 
 .quest-modal-actions {
   margin-top: 1.25rem;
@@ -5230,17 +5261,17 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
   filter: blur(3px) brightness(0.85);
 }
 
-/* Thinnest at the top edge, where nothing sits over it, and steady from the
-   title down. */
+/* Nearly flat, holding its strength from the top down: the title and the
+   location sit near the top, where a thinner veil let bright patches of the
+   photo show through them. */
 .menu-sheet-header.has-hero::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--scrim) 50%, transparent) 0%,
-    color-mix(in srgb, var(--scrim) 83%, transparent) 42%,
-    color-mix(in srgb, var(--scrim) 83%, transparent) 100%);
+    color-mix(in srgb, var(--scrim) 78%, transparent) 0%,
+    color-mix(in srgb, var(--scrim) 86%, transparent) 100%);
 }
 
 .menu-sheet-title {
@@ -5256,7 +5287,7 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .menu-sheet-location {
   font-family: 'La Belle Aurore', cursive;
   font-size: 1.3rem;
-  color: var(--media-ink-dim);
+  color: var(--media-ink);
   margin: 8px 0 0;
 }
 
@@ -5515,9 +5546,10 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 .member-shared-label {
   flex: 0 0 5.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.72rem;
+  letter-spacing: var(--track-caps);
+  font-size: var(--fs-caps);
   color: var(--text-secondary);
+  font-family: var(--font-ui);
 }
 .member-shared-value { color: var(--text-primary); }
 .member-shared-tag {
