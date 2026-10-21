@@ -121,19 +121,19 @@
   // ── Venue chooser ────────────────────────────────────────────────────────
   function venueCardHtml(v) {
     var media = v.image_url
-      ? '<img class="menu-venue-card-img" src="' + escapeHTML(v.image_url) +
+      ? '<img class="media-card-img" src="' + escapeHTML(v.image_url) +
         '" alt="" loading="lazy" decoding="async" />'
       : '';
 
     return '' +
-      '<button type="button" class="menu-venue-card" data-venue-id="' + escapeHTML(v.id) + '">' +
+      '<button type="button" class="media-card" data-venue-id="' + escapeHTML(v.id) + '">' +
         // Placeholder field and torn edge, same as the venue directory cards.
-        '<span class="menu-venue-card-media tear-half ' + mediaClass(v) + '">' +
+        '<span class="media-card-media tear-half ' + mediaClass(v) + '">' +
           media +
         '</span>' +
-        '<span class="menu-venue-card-body">' +
-          '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
-          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v)) + '</span>' +
+        '<span class="media-card-body">' +
+          '<span class="media-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
+          '<span class="media-card-meta">' + escapeHTML(locationLine(v)) + '</span>' +
         '</span>' +
       '</button>';
   }
@@ -147,7 +147,7 @@
     }
     venueGrid.innerHTML = allVenues.map(venueCardHtml).join("");
     Array.prototype.forEach.call(
-      venueGrid.querySelectorAll(".menu-venue-card"),
+      venueGrid.querySelectorAll(".media-card"),
       function (btn) {
         btn.addEventListener("click", function () {
           selectVenue(btn.dataset.venueId, true);

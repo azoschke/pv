@@ -1488,7 +1488,6 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
-  margin-top: 14px;
 }
 
 .notice-panel {
@@ -1557,6 +1556,130 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   .browse-toolbar .filter-select { width: 100%; }
 }
 
+
+/* --- Media card ---
+   The card in every directory grid (venues, jobs, quests, rosters, menus,
+   My Items): an image or placeholder (.media-ph) with a torn bottom edge
+   (.tear-half) and badges over it, then the title, a meta line, a short
+   description and tags. It is a button or a link; the detail popup or the
+   page it opens does the rest. */
+.media-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: none;
+  border-radius: 4px;
+  overflow: hidden;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  color: inherit;
+}
+
+.media-card:hover {
+  transform: translateY(-2px);
+}
+
+/* A listing that has lapsed (an inactive job) fades back. */
+.media-card.is-inactive { opacity: 0.62; }
+.media-card.is-inactive:hover { opacity: 0.85; }
+
+/* The media box carries .media-ph (the placeholder field under any image)
+   and .tear-half (its torn bottom edge into the card body). */
+.media-card-media {
+  --tear-h: 22px;
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  overflow: hidden;
+}
+
+.media-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Labels over a card's image (size, featured, position, category, status):
+   small square tags in the media inks, the same on every card, with no
+   per-category colours. In a popup's text the same labels are plain .tag. */
+.media-badge {
+  position: absolute;
+  top: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--media-5) 85%, transparent);
+  color: var(--media-ink);
+}
+
+.media-badge-left  { left: 0.6rem; }
+.media-badge-right { right: 0.6rem; }
+
+.media-card-body {
+  padding: 12px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.media-card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.media-card-title {
+  font-family: var(--font-ui);
+  font-size: 1.18rem;
+  font-weight: 400;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* The line under the name (IC rank, location, position): muted italic. */
+.media-card-meta {
+  font-family: var(--font-text);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.media-card-desc {
+  font-family: var(--font-text);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  margin: 4px 0 0;
+  flex: 1;
+}
+
+.media-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.media-card-tag {
+  font-family: var(--font-text);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary);
+}
 
 /* --- Sketch wash --- */
 /* Sketch wash — the shared tint for the site's illustrations. Put it on the
@@ -4630,124 +4753,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    15. VENUES — directory page (public)
    ============================================================================= */
 
-/* ── Venue card ──────────────────────────────────────────────────────────── */
-.venue-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: none;
-  border-radius: 4px;
-  overflow: hidden;
-  text-align: left;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  font-family: inherit;
-  color: inherit;
-}
-
-.venue-card:hover {
-  transform: translateY(-2px);
-}
-
-/* The media box carries .media-ph (the placeholder field under any image)
-   and .tear-half (its torn bottom edge into the card body). */
-.venue-card-media {
-  --tear-h: 22px;
-  position: relative;
-  aspect-ratio: 16 / 10;
-  width: 100%;
-  overflow: hidden;
-}
-
-.venue-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Labels over a card's image (size, featured, position, category, status):
-   small square tags in the media inks, the same on every card, with no
-   per-category colours. In a popup's text the same labels are plain .tag. */
-.venue-badge,
-.job-badge {
-  position: absolute;
-  top: 0.6rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-  padding: 0.15rem 0.55rem;
-  border-radius: 3px;
-  background-color: color-mix(in srgb, var(--media-5) 85%, transparent);
-  color: var(--media-ink);
-}
-
-.venue-badge-featured,
-.job-badge-category { left: 0.6rem; }
-
-.venue-badge-size,
-.job-badge-status { right: 0.6rem; }
-
-.venue-card-body {
-  padding: 12px 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.venue-card-title-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.venue-card-title {
-  font-family: var(--font-ui);
-  font-size: 1.18rem;
-  font-weight: 400;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-/* The line under the name (IC rank, location, position): muted italic. */
-.venue-card-location {
-  font-family: var(--font-text);
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.venue-card-desc {
-  font-family: var(--font-text);
-  font-size: 0.98rem;
-  line-height: 1.5;
-  color: var(--text-body);
-  margin: 4px 0 0;
-  flex: 1;
-}
-
-.venue-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.6rem;
-  margin-top: 0.25rem;
-}
-
-.venue-card-tag {
-  font-family: var(--font-text);
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-
 .venue-gallery {
   position: relative;
   width: 100%;
@@ -4939,90 +4944,13 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
    only the cards, badges, and modal are job-specific.
    ============================================================================= */
 
-/* ── Job card ────────────────────────────────────────────────────────────── */
-.job-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: none;
-  border-radius: 4px;
-  overflow: hidden;
-  text-align: left;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  font-family: inherit;
-  color: inherit;
-}
-
-.job-card:hover {
-  transform: translateY(-2px);
-}
-
-.job-card.is-inactive {
-  opacity: 0.62;
-}
-
-.job-card.is-inactive:hover {
-  opacity: 0.85;
-}
-
-/* Placeholder field and torn edge as on .venue-card-media. */
-.job-card-media {
-  --tear-h: 22px;
-  position: relative;
-  aspect-ratio: 16 / 10;
-  width: 100%;
-  overflow: hidden;
-}
-
-.job-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.job-card-body {
-  padding: 12px 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.job-card-title {
-  font-family: var(--font-ui);
-  font-size: 1.18rem;
-  font-weight: 400;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.job-card-meta {
-  font-family: var(--font-text);
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.job-card-desc {
-  font-family: var(--font-text);
-  font-size: 0.98rem;
-  line-height: 1.5;
-  color: var(--text-body);
-  margin: 4px 0 0;
-  flex: 1;
-}
-
 
 
 /* =============================================================================
    18. BOUNTY BOARD + FACTION ROSTERS — public pages
-   Reuses the job-card / detail-modal and venue-card / detail-modal patterns; the
-   classes below cover the member action row (sign up / apply, shared
-   buttons) shown inside detail modals.
+   Uses the shared media cards and detail popup (section 6); the classes
+   below cover the member action row (sign up / apply, shared buttons) shown
+   inside the popups.
    ========================================================================== */
 
 .quest-card-stats { letter-spacing: 0.05em; }
@@ -5079,67 +5007,6 @@ textarea.cdb-input { padding: 0.6rem 0.8rem; }
 
 /* ── Venue chooser ───────────────────────────────────────────────────────── */
 .menus-chooser { margin-top: 1.5rem; }
-
-.menu-venue-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
-}
-
-/* Lighter than .venue-card: no badges, and it navigates rather than opening a
-   modal. */
-.menu-venue-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: none;
-  border-radius: 4px;
-  overflow: hidden;
-  text-align: left;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-  font-family: inherit;
-  color: inherit;
-}
-
-.menu-venue-card:hover { transform: translateY(-2px); }
-
-/* Placeholder field and torn edge as on .venue-card-media. */
-.menu-venue-card-media {
-  --tear-h: 22px;
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 10;
-  width: 100%;
-  overflow: hidden;
-}
-
-.menu-venue-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.menu-venue-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 18px 20px;
-}
-
-.menu-venue-card-title {
-  font-family: var(--font-ui);
-  font-size: 1.18rem;
-  color: var(--text-primary);
-}
-
-.menu-venue-card-location {
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--text-secondary);
-}
 
 /* ── Menu view ───────────────────────────────────────────────────────────── */
 .menus-view { margin-top: 1.25rem; }

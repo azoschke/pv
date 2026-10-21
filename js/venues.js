@@ -385,53 +385,53 @@
   function buildCardEl(v) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card" + (v.featured ? " is-featured" : "");
+    card.className = "media-card" + (v.featured ? " is-featured" : "");
     card.setAttribute("aria-label", v.name);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(v);
+    media.className = "media-card-media tear-half " + mediaClass(v);
 
     if (v.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(v.image_url, v.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "venue-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (v.featured) {
       var fb = document.createElement("span");
-      fb.className = "venue-badge venue-badge-featured";
+      fb.className = "media-badge media-badge-left";
       fb.innerHTML = '<span aria-hidden="true">&#9733;</span> Featured';
       media.appendChild(fb);
     }
     var sb = document.createElement("span");
-    sb.className = "venue-badge venue-badge-size";
+    sb.className = "media-badge media-badge-right";
     sb.textContent = SIZE_LABEL[v.size] || "";
     media.appendChild(sb);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = v.name || "Untitled venue";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
     var loc = document.createElement("p");
-    loc.className = "venue-card-location";
+    loc.className = "media-card-meta";
     loc.textContent = locationLine(v);
     body.appendChild(loc);
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(v.description, 140);
     body.appendChild(desc);
 
@@ -536,9 +536,9 @@
       .concat(Array.isArray(v.tags) ? v.tags.map(function (t) { return "#" + t.replace(/_/g, " "); }) : [])
       .concat(Array.isArray(v.extra_tags) ? v.extra_tags.map(function (t) { return "#" + t; }) : []);
     var tagsHtml = allTags.length
-      ? '<div class="venue-card-tags detail-modal-tags">' +
+      ? '<div class="media-card-tags detail-modal-tags">' +
         allTags.map(function (t) {
-          return '<span class="venue-card-tag">' + escapeHTML(t) + '</span>';
+          return '<span class="media-card-tag">' + escapeHTML(t) + '</span>';
         }).join("") +
         '</div>'
       : "";

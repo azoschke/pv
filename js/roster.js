@@ -319,19 +319,19 @@
   function buildCardEl(m) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card";
+    card.className = "media-card";
     card.setAttribute("aria-label", m.name);
 
     // The placeholder field shows wherever the portrait is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(m);
+    media.className = "media-card-media tear-half " + mediaClass(m);
 
     if (m.image_url) {
       var img = document.createElement("img");
       img.src = m.image_url;
       img.alt = "";
       img.loading = "lazy";
-      img.className = "venue-card-img";
+      img.className = "media-card-img";
       img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
     }
@@ -339,12 +339,12 @@
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = m.name || "Unnamed";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
@@ -353,13 +353,13 @@
     // Blank when the member has no IC rank assigned.
     if (m.ic_rank) {
       var rank = document.createElement("p");
-      rank.className = "venue-card-location";
+      rank.className = "media-card-meta";
       rank.textContent = String(m.ic_rank);
       body.appendChild(rank);
     }
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(m.description, 160) ||
       "Open the full profile for details and RP hooks.";
     body.appendChild(desc);

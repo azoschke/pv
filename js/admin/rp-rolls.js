@@ -1190,7 +1190,7 @@
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
           : null,
-        b.public ? h('span', { className: 'venue-badge venue-badge-featured' }, 'Public') : null),
+        b.public ? h('span', { className: 'media-badge media-badge-left' }, 'Public') : null),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
       h('div', { className: 'rp-catalogue-owner' },
         h('span', { className: 'rp-owner-key' }, 'Creator: '),

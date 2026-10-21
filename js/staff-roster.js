@@ -341,19 +341,19 @@
 
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card";
+    card.className = "media-card";
     card.setAttribute("aria-label", s.name);
 
     // The placeholder field shows wherever the photo is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(primary);
+    media.className = "media-card-media tear-half " + mediaClass(primary);
 
     if (s.image_url) {
       var img = document.createElement("img");
       img.src = s.image_url;
       img.alt = "";
       img.loading = "lazy";
-      img.className = "venue-card-img";
+      img.className = "media-card-img";
       img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
     }
@@ -361,25 +361,25 @@
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = s.name || "Unnamed";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
     if (s._positions.length) {
       var loc = document.createElement("p");
-      loc.className = "venue-card-location";
+      loc.className = "media-card-meta";
       loc.textContent = s._positions.join(" · ");
       body.appendChild(loc);
     }
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(s.description, 160) ||
       "Refer to the full profile for specialties and notes.";
     body.appendChild(desc);
@@ -429,9 +429,9 @@
     }).join("");
 
     var tagsHtml = s._tags.length
-      ? '<div class="venue-card-tags detail-modal-tags">' +
+      ? '<div class="media-card-tags detail-modal-tags">' +
         s._tags.map(function (t) {
-          return '<span class="venue-card-tag">' + escapeHTML("#" + t) + '</span>';
+          return '<span class="media-card-tag">' + escapeHTML("#" + t) + '</span>';
         }).join("") +
         '</div>'
       : "";

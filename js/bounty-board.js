@@ -407,48 +407,48 @@
   function buildCardEl(q) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "job-card quest-card" + (isPast(q) ? " is-inactive" : "");
+    card.className = "media-card quest-card" + (isPast(q) ? " is-inactive" : "");
     card.setAttribute("aria-label", q.title);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media tear-half " + mediaClass(q);
+    media.className = "media-card-media tear-half " + mediaClass(q);
 
     if (q.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(q.image_url, q.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "job-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (q.mission_type) {
       var typeBadge = document.createElement("span");
-      typeBadge.className = "job-badge job-badge-category";
+      typeBadge.className = "media-badge media-badge-left";
       typeBadge.textContent = q.mission_type;
       media.appendChild(typeBadge);
     }
 
     var schedBadge = document.createElement("span");
-    schedBadge.className = "job-badge job-badge-status";
+    schedBadge.className = "media-badge media-badge-right";
     schedBadge.textContent = scheduleBadgeText(q);
     media.appendChild(schedBadge);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "job-card-body";
+    body.className = "media-card-body";
 
     var title = document.createElement("h3");
-    title.className = "job-card-title";
+    title.className = "media-card-title";
     title.textContent = q.title || "Untitled quest";
     body.appendChild(title);
 
     var stars = difficultyStars(q.difficulty);
     if (stars || q.group_size) {
       var statsMeta = document.createElement("p");
-      statsMeta.className = "job-card-meta quest-card-stats";
+      statsMeta.className = "media-card-meta quest-card-stats";
       var bits = [];
       if (stars) bits.push(stars);
       if (q.group_size) bits.push("Group: " + q.group_size);
@@ -458,19 +458,19 @@
 
     if (q.reward) {
       var meta = document.createElement("p");
-      meta.className = "job-card-meta";
+      meta.className = "media-card-meta";
       meta.textContent = "Reward: " + q.reward;
       body.appendChild(meta);
     }
 
     var desc = document.createElement("p");
-    desc.className = "job-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(q.description, 140);
     body.appendChild(desc);
 
     var signups = q.signups || [];
     var signupMeta = document.createElement("p");
-    signupMeta.className = "job-card-meta quest-card-signups";
+    signupMeta.className = "media-card-meta quest-card-signups";
     signupMeta.textContent = signups.length === 1
       ? "1 member signed up"
       : signups.length + " members signed up";
@@ -559,8 +559,8 @@
     if (!signups.length) {
       html += '<p style="color:var(--text-secondary); margin:0;"><em>No one yet — be the first.</em></p>';
     } else {
-      html += '<div class="venue-card-tags">' + signups.map(function (s) {
-        return '<span class="venue-card-tag">' + escapeHTML(s.member_name) + '</span>';
+      html += '<div class="media-card-tags">' + signups.map(function (s) {
+        return '<span class="media-card-tag">' + escapeHTML(s.member_name) + '</span>';
       }).join("") + '</div>';
     }
     html += '</div>';

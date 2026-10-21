@@ -3,10 +3,10 @@
    ========================================================================== */
 
 /* Calendar agenda — grouped-by-day list of Discord scheduled events.
-   Reuses the campaign/venues sidebar+main layout from styles.css; only the
-   agenda-specific chrome lives here. */
+   Uses the shared browse layout from styles.css; only the agenda-specific
+   chrome lives here. */
 
-/* The campaign layout sets its own display, which beats the [hidden]
+/* The browse layout sets its own display, which beats the [hidden]
    attribute's UA display:none — force it so the whole board hides when
    signed out (the gate panel stands in). */
 #calendar-layout[hidden] { display: none !important; }

@@ -353,51 +353,51 @@
   function buildCardEl(j) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "job-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
+    card.className = "media-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
     card.setAttribute("aria-label", j.title);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media tear-half " + mediaClass(j);
+    media.className = "media-card-media tear-half " + mediaClass(j);
 
     if (j.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(j.image_url, j.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "job-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     var catBadge = document.createElement("span");
-    catBadge.className = "job-badge job-badge-category";
+    catBadge.className = "media-badge media-badge-left";
     catBadge.textContent = jobBadgeLabel(j);
     media.appendChild(catBadge);
 
     var statusBadge = document.createElement("span");
-    statusBadge.className = "job-badge job-badge-status";
+    statusBadge.className = "media-badge media-badge-right";
     statusBadge.textContent = STATUS_LABEL[j.status] || "";
     media.appendChild(statusBadge);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "job-card-body";
+    body.className = "media-card-body";
 
     var title = document.createElement("h3");
-    title.className = "job-card-title";
+    title.className = "media-card-title";
     title.textContent = j.title || "Untitled posting";
     body.appendChild(title);
 
     if (j.contact) {
       var meta = document.createElement("p");
-      meta.className = "job-card-meta";
+      meta.className = "media-card-meta";
       meta.textContent = "Contact: " + j.contact;
       body.appendChild(meta);
     }
 
     var desc = document.createElement("p");
-    desc.className = "job-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(j.description, 140);
     body.appendChild(desc);
 

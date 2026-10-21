@@ -284,21 +284,21 @@
     var it = props.item;
     var n = (it.abilities || []).length;
     return h('button', {
-      type: 'button', className: 'venue-card pv-item-card', 'aria-label': it.name, onClick: props.onOpen
+      type: 'button', className: 'media-card pv-item-card', 'aria-label': it.name, onClick: props.onOpen
     },
-      h('div', { className: 'venue-card-media sketch-wash media-ph tear-half' },
+      h('div', { className: 'media-card-media sketch-wash media-ph tear-half' },
         it.image_url
           ? h('img', {
-              className: 'venue-card-img', src: it.image_url, alt: '', loading: 'lazy',
+              className: 'media-card-img', src: it.image_url, alt: '', loading: 'lazy',
               onError: function (e) { e.target.style.display = 'none'; }
             })
           : null
       ),
-      h('div', { className: 'venue-card-body' },
-        h('div', { className: 'venue-card-title-row' },
-          h('h3', { className: 'venue-card-title' }, it.name)
+      h('div', { className: 'media-card-body' },
+        h('div', { className: 'media-card-title-row' },
+          h('h3', { className: 'media-card-title' }, it.name)
         ),
-        n ? h('p', { className: 'venue-card-location' }, n + (n === 1 ? ' ABILITY' : ' ABILITIES')) : null
+        n ? h('p', { className: 'media-card-meta' }, n + (n === 1 ? ' ABILITY' : ' ABILITIES')) : null
       )
     );
   }
@@ -322,7 +322,7 @@
       (!items || !items.length)
         ? h('div', { className: 'portal-card' },
             h('p', { className: 'portal-note' }, 'No items are assigned to your character yet.'))
-        : h('div', { className: 'my-items-grid' },
+        : h('div', { className: 'card-grid' },
             items.map(function (it) {
               return h(ItemCard, { key: it.item_id, item: it, onOpen: function () { setOpenItem(it); } });
             })
