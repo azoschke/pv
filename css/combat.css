@@ -126,9 +126,9 @@
 .rp-boss-img { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
 .rp-boss-info { flex: 1 1 auto; min-width: 0; }
 .rp-boss-name { font-family: var(--font-ui); display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
-.rp-boss-down-tag, .rp-boss-vuln-tag { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
-  background: var(--bg-darker); border-radius: 3px; padding: 0.05rem 0.35rem; }
-.rp-boss-vuln-tag .rp-chip-x { font-size: 0.75rem; padding: 0 0 0 0.25rem; }
+/* Boss states (Defeated, Stunned, Provoked, a vulnerability) are .tag; the
+   provoke tag carries a small ✕ to clear it. */
+.tag .rp-chip-x { font-size: 0.75rem; padding: 0 0 0 0.25rem; }
 .rp-tag-spaced { margin-left: 0.4rem; }
 /* HP row: bar + number, with the DM eye (hides the HP number) inline so it
    clearly toggles HP rather than the whole boss. */
@@ -197,10 +197,8 @@
 .rp-party-id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .rp-party-name { font-size: 0.7rem; font-family: var(--font-ui); overflow-wrap: anywhere; }
 .rp-party-role { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
-.rp-elim-tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); }
 .rp-party-stats { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
-/* A pending heal on a party row: brown text, no pill (nothing to act on). */
-.rp-heal-pill { color: var(--accent-brown); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+/* KO is a red .status-dot; a pending heal a brown one (nothing to act on). */
 .rp-hp-edit, .rp-shield-edit { display: inline-flex; align-items: center; gap: 0.3rem; }
 .rp-hp-edit .material-icons { font-size: 1rem; color: var(--accent-red); }
 .rp-shield-edit { color: var(--text-secondary); }
@@ -250,7 +248,6 @@
 .rp-mod-meta { font-family: var(--font-text); font-size: 0.85rem; color: var(--text-secondary); }
 /* Conditional skill whose gate is currently unmet: dimmed, with a red flag. */
 .rp-mod.is-gated { opacity: 0.5; }
-.rp-mod-flag { margin-left: 0.4rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-red); font-weight: 700; }
 .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 /* Sliding on/off switch for toggle skills: a well track with both states
    shown; the knob slides and turns brown when on. */
@@ -415,11 +412,9 @@
 .rp-flash { padding: 0.5rem 0.75rem; border-radius: 0.4rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
 .rp-flash.error { background: color-mix(in srgb, var(--accent-red) 15%, transparent); color: var(--accent-red); }
 .rp-ko { background: color-mix(in srgb, var(--accent-red) 12%, transparent); color: var(--accent-red); }
-.rp-action-chip { display: inline-block; margin-top: 0.3rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
-  border-radius: 3px; padding: 0.15rem 0.65rem; background: var(--bg-card-light); align-self: flex-end; }
-.rp-action-chip.is-ready { color: var(--accent-brown); }
-.rp-action-chip.is-used { color: var(--text-secondary); }
-.rp-action-chip.is-ko { color: var(--accent-red); }
+/* The turn's action state is a .status-dot (ready brown, used quiet, KO red);
+   this only places it. */
+.rp-action-chip { margin-top: 0.3rem; align-self: flex-end; }
 
 /* The gate (paused, loading, an error) is the shared .notice-panel.is-gate;
    .rp-gate only carries the tool's tokens above. */

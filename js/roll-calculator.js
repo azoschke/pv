@@ -130,9 +130,9 @@
   function ActionChip(props) {
     var t = props.myTurn;
     if (!t) return null;
-    if (t.ko) return h('span', { className: 'rp-action-chip is-ko' }, 'Knocked Out');
-    if (t.limit > 0 && t.used >= t.limit) return h('span', { className: 'rp-action-chip is-used' }, 'Action used: ' + (t.actions || []).join(', '));
-    return h('span', { className: 'rp-action-chip is-ready' }, 'Action ready');
+    if (t.ko) return h('span', { className: 'status-dot is-red rp-action-chip' }, 'Knocked out');
+    if (t.limit > 0 && t.used >= t.limit) return h('span', { className: 'status-dot is-quiet rp-action-chip' }, 'Action used: ' + (t.actions || []).join(', '));
+    return h('span', { className: 'status-dot is-brown rp-action-chip' }, 'Action ready');
   }
 
   // ── Roll math ─────────────────────────────────────────────────────────────
@@ -260,10 +260,10 @@
       b.image_url ? h('img', { className: 'rp-boss-img', src: b.image_url, alt: '', onError: function (e) { e.target.style.display = 'none'; } }) : null,
       h('div', { className: 'rp-boss-info' },
         h('div', { className: 'rp-boss-name' }, b.name,
-          b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-          b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
-          b.provoked ? h('span', { className: 'rp-boss-vuln-tag' }, provokeText(b.provoked)) : null,
-          vuln ? h('span', { className: 'rp-boss-vuln-tag' }, vuln) : null),
+          b.defeated ? h('span', { className: 'tag' }, 'Defeated') : null,
+          b.stunned ? h('span', { className: 'tag' }, 'Stunned') : null,
+          b.provoked ? h('span', { className: 'tag' }, provokeText(b.provoked)) : null,
+          vuln ? h('span', { className: 'tag' }, vuln) : null),
         h('div', { className: 'rp-boss-hp-line' },
           h(BossHpBar, { boss: b }),
           props.isDM ? h('button', { type: 'button', className: 'rp-boss-eye',
@@ -372,7 +372,7 @@
     return h('div', { className: 'rp-mod' + (gateClosed ? ' is-gated' : '') },
       h('div', { className: 'rp-mod-info' },
         h('span', null, h('strong', null, m.label || (m.type === 'none' ? 'Effect' : typePhrase(m.type, m.value))),
-          gateClosed ? h('span', { className: 'rp-mod-flag' }, 'Condition not met') : null),
+          gateClosed ? h('span', { className: 'status-dot is-red rp-tag-spaced' }, 'Condition not met') : null),
         h('span', { className: 'rp-mod-meta' }, plain + (extras.length ? ' · ' + extras.join(' · ') : ''))),
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
@@ -593,9 +593,9 @@
             h(Avatar, { url: (props.avatars || {})[p.member_id], name: p.member_name }),
             h('div', { className: 'rp-party-id' },
               h('strong', { className: 'rp-party-name' }, isTarget ? abbrevLastName(p.member_name) : p.member_name),
-              ko ? h('span', { className: 'rp-elim-tag' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
+              ko ? h('span', { className: 'status-dot is-red' }, 'KO') : h('span', { className: 'rp-party-role' }, ROLE_LABEL[p.class_role] || p.class_role)),
             h('div', { className: 'rp-party-stats' },
-              pill != null ? h('span', { className: 'rp-heal-pill' }, 'Heal ' + fmt(pill)) : null,
+              pill != null ? h('span', { className: 'status-dot is-brown' }, 'Heal ' + fmt(pill)) : null,
               h('div', { className: 'rp-hp-edit', title: 'HP', onClick: function (e) { e.stopPropagation(); } },
                 h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'favorite'),
                 h(HpStepper, { value: p.current_hp, max: p.max_hp, showMax: true, disabled: props.locked, onChange: function (v) { props.onHp(p, v); } })),
@@ -1133,7 +1133,7 @@
     }
     return h('div', { className: 'rp-vuln' },
       h('span', { className: 'rp-vuln-label' }, 'Vulnerability'),
-      active ? h('span', { className: 'rp-boss-vuln-tag' }, vulnText(b)) : null,
+      active ? h('span', { className: 'tag' }, vulnText(b)) : null,
       h('label', { className: 'rp-hits', title: 'Flat added damage' },
         h('span', null, '+'),
         h('input', { className: 'rp-hits-input', type: 'number', min: 0, inputMode: 'numeric', value: flat, onChange: function (e) { setFlat(e.target.value); } })),
@@ -1180,9 +1180,9 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
           h('strong', null, b.name),
           h('span', { className: 'rp-dm-boss-count' }, skillCount + ' skill' + (skillCount === 1 ? '' : 's'))),
-        b.defeated ? h('span', { className: 'rp-boss-down-tag' }, 'Defeated') : null,
-        b.stunned ? h('span', { className: 'rp-boss-vuln-tag' }, 'Stunned') : null,
-        b.provoked ? h('span', { className: 'rp-boss-vuln-tag' }, provokeText(b.provoked),
+        b.defeated ? h('span', { className: 'tag' }, 'Defeated') : null,
+        b.stunned ? h('span', { className: 'tag' }, 'Stunned') : null,
+        b.provoked ? h('span', { className: 'tag' }, provokeText(b.provoked),
           h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear provoke', 'aria-label': 'Clear provoke', onClick: function () { props.onClearProvoke(b); } }, '✕')) : null,
         h('div', { className: 'rp-effect-ctl' },
           h(HpStepper, { value: b.current_hp, max: b.max_hp, showMax: true, disabled: false, onChange: function (v) { props.onBossHp(b, v); } }),
@@ -1254,9 +1254,9 @@
         return h('div', { className: 'rp-effect', key: p.member_id },
           h('div', { className: 'rp-effect-info' },
             h('strong', null, p.member_name + (p.eliminated ? ' (KO)' : ''),
-              stunned ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Stunned') : null,
-              vtag ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, vtag) : null,
-              isImmune ? h('span', { className: 'rp-boss-vuln-tag rp-tag-spaced' }, 'Immune to stun') : null),
+              stunned ? h('span', { className: 'tag rp-tag-spaced' }, 'Stunned') : null,
+              vtag ? h('span', { className: 'tag rp-tag-spaced' }, vtag) : null,
+              isImmune ? h('span', { className: 'tag rp-tag-spaced' }, 'Immune to stun') : null),
             h('span', { className: 'rp-effect-meta' }, status)),
           h('div', { className: 'rp-effect-ctl' },
             h('button', { type: 'button', className: 'btn is-small is-quiet', title: stunned ? 'Stunned — click to clear' : (isImmune ? 'Immune to stun (you can still force it)' : 'Stun this player'),
