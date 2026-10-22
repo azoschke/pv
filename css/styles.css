@@ -1023,14 +1023,16 @@ button.nav-sublink {
    The page-level containers re-point the well tokens, so every field,
    button, track and progress bar in them follows. Anything inside a card
    is left alone (Mount Farm's "Order fights by" switch sits in .mf-panel,
-   for one). A segmented control on the page swaps its current segment to
+   for one; the card list matches the card surface, "Card" below). A
+   segmented control on the page swaps its current segment to
    the well so it still stands out. Dark mode keeps the well everywhere. */
 :root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
-  .form-progress):not(:is(.portal-card, .card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
-  .mf-panel, .mf-person-card, .mf-manage) *) {
+  .form-progress):not(:is(.card, .portal-card, .record-card, .form-panel, .notice-panel,
+  .craft-card, .cdb-search-section, .chapter-view, .atma-card, .mf-panel, .mf-person-card,
+  .mf-manage, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
+  .rp-item-detail, .menu-sheet, .browse-sidebar, .media-card, .modal) *) {
   --bg-darker: var(--bg-card);
   --form-input-bg: var(--bg-card);
   --progress-bg: var(--bg-card);
@@ -1039,9 +1041,10 @@ button.nav-sublink {
 :root:not([data-theme="dark"]) :is(.portal-filter-row, .members-header-actions, .portal-head-row,
   .top-controls, .filters-row, .browse-toolbar, .menu-index, .landing-row-content,
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
-  .form-progress):not(:is(.portal-card, .card, .atma-card, .rp-card, .rp-deck,
-  .menu-sheet, .browse-sidebar, .chapter-view, .record-card, .craft-card, .modal,
-  .mf-panel, .mf-person-card, .mf-manage) *)
+  .form-progress):not(:is(.card, .portal-card, .record-card, .form-panel, .notice-panel,
+  .craft-card, .cdb-search-section, .chapter-view, .atma-card, .mf-panel, .mf-person-card,
+  .mf-manage, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
+  .rp-item-detail, .menu-sheet, .browse-sidebar, .media-card, .modal) *)
   .seg-btn:is(.is-active, [aria-pressed="true"]) {
   background-color: var(--page-control-active);
 }
@@ -1233,7 +1236,7 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
   background-color: var(--bg-darker);
   padding: 0.15rem 0.55rem;
   border-radius: 3px;
-  white-space: nowrap;
+  max-width: 100%;   /* a tag longer than its space wraps inside its card */
 }
 
 /* --- Avatar ---

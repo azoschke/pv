@@ -367,9 +367,16 @@
 .rp-dm-sub + .rp-effect, .rp-dm-sub + .rp-mod { border-top: 0; }
 .rp-effect.is-off { opacity: 0.5; }
 .rp-effect-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.rp-effect-info > strong { font-family: var(--font-ui); font-weight: 400; font-size: 0.92rem; letter-spacing: 0.01em; color: var(--text-primary); }
+.rp-effect-info > strong { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.4rem; font-family: var(--font-ui); font-weight: 400; font-size: 0.92rem; letter-spacing: 0.01em; color: var(--text-primary); }
+.rp-effect-info > strong > .rp-tag-spaced { margin-left: 0; }
 .rp-effect-meta { font-family: var(--font-text); font-size: 0.85rem; color: var(--text-secondary); }
 .rp-effect-ctl { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+/* Phones: the controls take their own row under the name, so they sit in
+   the same place on every row whatever the name's length. */
+@media (max-width: 640px) {
+  .rp-effect { flex-wrap: wrap; }
+  .rp-effect-ctl { flex: 1 1 100%; }
+}
 .rp-boss-add { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
 .rp-boss-add .field { flex: 1 1 14rem; }
 .rp-dm-boss.is-down { opacity: 0.55; }
