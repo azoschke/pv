@@ -455,11 +455,11 @@
             h('div', { className: 'tray mf-list' },
               h('label', { className: 'mf-row' },
                 h('input', { type: 'checkbox', checked: true, disabled: true }),
-                avatar(base.me), h('span', { className: 'mf-row-main mf-name' }, base.me.name)),
+                avatar(base.me), h('span', { className: 'mf-row-main row-name' }, base.me.name)),
               base.alts.map(function (a) {
                 return h('label', { key: a.id, className: 'mf-row is-button' },
                   h('input', { type: 'checkbox', checked: prefs.hiddenAlts.indexOf(a.id) === -1, onChange: function () { toggleAlt(a.id); } }),
-                  avatar(a), h('span', { className: 'mf-row-main mf-name' }, a.name));
+                  avatar(a), h('span', { className: 'mf-row-main row-name' }, a.name));
               })))
         : null,
       h('div', null,
@@ -474,7 +474,7 @@
         h('div', { className: 'mf-list' },
           added.map(function (p) {
             return h('div', { key: p.id, className: 'mf-row' },
-              avatar(p), h('span', { className: 'mf-row-main mf-name' }, p.name),
+              avatar(p), h('span', { className: 'mf-row-main row-name' }, p.name),
               h('button', {
                 type: 'button', className: 'btn is-quiet is-small is-icon', 'aria-label': 'Remove ' + p.name + ' from your view',
                 onClick: function () { props.updatePrefs({ added: prefs.added.filter(function (x) { return x !== p.id; }) }); }

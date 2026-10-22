@@ -1461,7 +1461,8 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
    Dropdowns draw their chevron in the ink colour from two gradients, so it
    follows the theme (a data-URI SVG can't read CSS variables) and Safari
    takes the padding and height. The bare fields inside a .portal-field (the
-   admin forms) take the same look without the class.
+   admin forms) take the same look without the class, and the dropdowns in a
+   .form-group (sign-in, Appointment Request) take its chevron.
      .is-block   full width          .is-small  30px, for dense rows
      .is-search  a wider search box  .is-filter a filter dropdown's width
      .is-mono    code (macros, ids) */
@@ -1485,7 +1486,8 @@ textarea.field,
   resize: vertical;
 }
 select.field,
-.portal-field select {
+.portal-field select,
+.form-group select {
   -webkit-appearance: none;
           appearance: none;
   padding-right: 2rem;
@@ -2487,7 +2489,6 @@ select.field.is-small { padding-right: 1.75rem; }
   border-radius: 4px;
   padding: 30px 50px 50px;
   position: relative;
-  box-shadow: 0 1px 3px rgba(62, 56, 50, 0.12);
 }
 
 /* Section headings */
@@ -2505,21 +2506,25 @@ select.field.is-small { padding-right: 1.75rem; }
 
 .subsection-heading {
   font-family: var(--font-ui);
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
+  text-transform: uppercase;
+  color: var(--text-primary);
   margin: 25px 0 15px;
-  letter-spacing: 1px;
   padding-bottom: 4px;
-  border-bottom: 2px dashed var(--bg-darker);
+  border-bottom: 1px solid var(--border-color);
 }
 
+/* A field and its label (the sign-in and Appointment Request forms). The
+   label is Stoke; fields sit on the well with no border and take the focus
+   ring; dropdowns draw the shared chevron (section 6). */
 .form-group { margin-bottom: 20px; }
 
-.form-group label {
-  font-family: var(--font-text);
-  font-size: 1.2rem;
+.form-group > label {
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
   margin-bottom: 8px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2532,30 +2537,24 @@ select.field.is-small { padding-right: 1.75rem; }
   padding: 12px 15px;
   font-family: var(--font-text);
   font-size: 1.1rem;
-  border: 1px solid var(--border-color);
+  border: 0;
   border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
+  background-color: var(--form-input-bg);
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
+
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--form-input-placeholder); }
 
 .form-group input:where(:not([type="checkbox"], [type="radio"])):focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 10px rgba(107, 68, 35, 0.25);
-  background: var(--bg-darker);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
-.form-group select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%236b4423' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 40px;
-}
+.form-group select { padding-right: 40px; }
 
 .form-group textarea {
   min-height: 120px;
@@ -2569,10 +2568,9 @@ select.field.is-small { padding-right: 1.75rem; }
 .markup-toolbar {
   display: flex;
   gap: 2px;
-  border: 1px solid var(--border-color);
-  border-bottom: none;
+  border-bottom: 1px solid var(--border-color);
   border-radius: 4px 4px 0 0;
-  background: var(--bg-darker);
+  background-color: var(--form-input-bg);
   padding: 4px;
 }
 
@@ -2601,13 +2599,10 @@ select.field.is-small { padding-right: 1.75rem; }
 .eorzean-date-display {
   display: none;
   margin-top: 6px;
-  padding: 6px 10px;
   font-family: var(--font-text);
   font-size: 0.85rem;
-  color: var(--accent-red);
-  background: rgba(165, 77, 68, 0.08);
-  border-left: 3px solid var(--accent-red);
-  border-radius: 2px;
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 /* Authorization block */
@@ -2615,21 +2610,25 @@ select.field.is-small { padding-right: 1.75rem; }
   font-family: var(--font-text);
   font-size: 1rem;
   line-height: 1.2;
-  color: var(--text-secondary);
+  color: var(--text-body);
   margin-bottom: 20px;
-  padding: 15px;
-  background: var(--bg-darker);
-  border-radius: 4px;
-  border-left: 3px solid var(--accent-gold);
 }
 
 .signature-input { font-family: var(--font-script) !important; font-size: 1.4rem !important; }
 
-/* Checkbox & radio groups */
+/* Checkbox and radio choices: plain, compact lists, as many columns of
+   checkboxes as fit. */
 .checkbox-group {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 4px 16px;
+  margin-bottom: 15px;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 15px;
 }
 
@@ -2638,31 +2637,11 @@ select.field.is-small { padding-right: 1.75rem; }
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  cursor: pointer;
-  padding: 8px 12px;
-  background: var(--bg-darker);
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-}
-
-.checkbox-label:hover,
-.radio-label:hover {
-  background: var(--bg-card);
-  border-color: var(--accent-gold);
-}
-
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.radio-label {
+  padding: 2px 0;
   font-family: var(--font-text);
-  font-size: 0.95rem;
-  color: var(--text-primary);
+  font-size: 1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
 }
 
 /* The box lines up with the first line of its text. */
@@ -2719,83 +2698,15 @@ select.field.is-small { padding-right: 1.75rem; }
 }
 
 /* ── Appointment Request: the stepped form ────────────────────────────────── */
-/* Field labels in Stoke (the choices in a checkbox or radio list keep the
-   body font), plain rules under the sub-headings. */
+/* Field labels a touch larger than the shared label, and spaced. */
 #appointmentForm .form-group > label {
-  font-family: var(--font-ui);
   font-size: 0.95rem;
   letter-spacing: 0.02em;
-  color: var(--text-primary);
-}
-#appointmentForm .subsection-heading {
-  font-size: var(--fs-section);
-  letter-spacing: var(--track-section);
-  text-transform: uppercase;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
-  font-family: var(--font-ui);
 }
 #appointmentForm input[readonly] { color: var(--text-secondary); cursor: default; }
 
-/* The page in Torchlight terms (the shared intake styles above predate it):
-   panels are raised with no shadow and tear at the bottom; fields sit on the
-   well with no border and take the focus ring; ticks are the site's check
-   colour; notes, the authorization and errors are plain text, not boxes. */
-.appt-page .parchment { box-shadow: none; border-radius: 4px; }
+/* Panels tear at the bottom. */
 .appt-page .parchment.tear-half { padding-bottom: calc(50px + var(--tear-h)); }
-.appt-page .form-group input:where(:not([type="checkbox"], [type="radio"])),
-.appt-page .form-group select,
-.appt-page .form-group textarea {
-  background-color: var(--form-input-bg);
-  border: 0;
-  border-radius: 4px;
-  color: var(--text-primary);
-}
-.appt-page .form-group input::placeholder,
-.appt-page .form-group textarea::placeholder { color: var(--form-input-placeholder); }
-.appt-page .form-group input:where(:not([type="checkbox"], [type="radio"])):focus,
-.appt-page .form-group select:focus,
-.appt-page .form-group textarea:focus {
-  border: 0;
-  background-color: var(--form-input-bg);
-  box-shadow: 0 0 0 2px var(--ring);
-}
-.appt-page .markup-toolbar {
-  border: 0;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--form-input-bg);
-}
-.appt-page .authorization-text {
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
-  color: var(--text-body);
-}
-.appt-page .eorzean-date-display {
-  padding: 0;
-  background: none;
-  border: 0;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-/* Checkbox and radio choices as plain, compact lists rather than a tile per
-   option (and without the field label's size and bottom margin). */
-#appointmentForm .checkbox-group {
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 4px 16px;
-}
-#appointmentForm .radio-group { gap: 4px; }
-#appointmentForm .checkbox-label,
-#appointmentForm .radio-label,
-#appointmentForm .checkbox-label:hover,
-#appointmentForm .radio-label:hover {
-  margin: 0;
-  padding: 2px 0;
-  background: none;
-  border: 0;
-  font-size: 1rem;
-}
 
 /* A short note under a step's fields, and the restored-draft line. */
 .appt-note {
@@ -4525,8 +4436,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 
   .form-row,
   .form-row-3  { grid-template-columns: 1fr; }
-
-  .checkbox-group { grid-template-columns: 1fr; }
 }
 
 /* --- Print --- */
@@ -5714,7 +5623,6 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 .mf-row.is-button:hover:not(:disabled) { background-color: var(--bg-darker); }
 .mf-row.is-button:disabled { cursor: default; }
 .mf-row-main { flex: 1; min-width: 0; }
-.mf-name { color: var(--text-primary); }
 
 /* A book header that is a button: the groups open and close. Its chevron
    points right and turns down when the group is open. */
