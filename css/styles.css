@@ -2579,22 +2579,22 @@ select.field.is-small { padding-right: 1.75rem; }
   border-top-right-radius: 0;
 }
 
+/* Its buttons: bare icons that take the well's hover tone, as the stepper's. */
 .markup-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.markup-btn:hover  { background: rgba(44, 24, 16, 0.15); }
-.markup-btn:active { background: rgba(44, 24, 16, 0.25); }
+.markup-btn:hover { background-color: var(--well-hover); color: var(--text-primary); }
 
 .eorzean-date-display {
   display: none;
