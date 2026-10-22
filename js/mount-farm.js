@@ -476,9 +476,9 @@
             return h('div', { key: p.id, className: 'mf-row' },
               avatar(p), h('span', { className: 'mf-row-main row-name' }, p.name),
               h('button', {
-                type: 'button', className: 'btn is-quiet is-small is-icon', 'aria-label': 'Remove ' + p.name + ' from your view',
+                type: 'button', className: 'mf-remove', 'aria-label': 'Remove ' + p.name + ' from your view',
                 onClick: function () { props.updatePrefs({ added: prefs.added.filter(function (x) { return x !== p.id; }) }); }
-              }, icon('close')));
+              }, svgIcon(null, 'M7 7l10 10M17 7L7 17', 2.2)));
           }),
           added.length ? null : h('p', { className: 'mf-row meta-note' }, 'No one added.'))));
   }
