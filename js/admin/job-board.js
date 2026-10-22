@@ -249,7 +249,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('span', { className: 'portal-row-title' }, j.title)
+        h('span', { className: 'row-name' }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))

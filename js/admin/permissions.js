@@ -245,16 +245,22 @@
     }
     function emptyCells() { return roles.map(function (r) { return h('td', { key: r.id, className: 'perm-cell-td' }); }); }
 
+    // A page is named once per group, but the same name can sit in two groups
+    // (a public page and its portal section), so rows and the open / closed
+    // state are keyed by group and page together. Keyed by name alone, two
+    // rows shared a key: closing one page closed its namesake too, and React
+    // left copies of the rows that followed until a reload.
     var rows = [];
     tree.forEach(function (g) {
       rows.push(h('tr', { key: 'g:' + g.name, className: 'perm-group-row' }, h('td', { colSpan: cols }, h('span', null, g.name))));
       g.pages.forEach(function (pg) {
-        var open = !collapsed[pg.name];
-        rows.push(h('tr', { key: 'p:' + pg.name, className: 'perm-page-row' },
+        var pid = g.name + '|' + pg.name;
+        var open = !collapsed[pid];
+        rows.push(h('tr', { key: 'p:' + pid, className: 'perm-page-row' },
           h('th', { scope: 'row', className: 'perm-row-label' },
             h('button', {
               type: 'button', className: 'perm-toggle', 'aria-expanded': open ? 'true' : 'false',
-              onClick: function () { setCollapsed(function (c) { var n = Object.assign({}, c); if (open) n[pg.name] = true; else delete n[pg.name]; return n; }); }
+              onClick: function () { setCollapsed(function (c) { var n = Object.assign({}, c); if (open) n[pid] = true; else delete n[pid]; return n; }); }
             },
               h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
               h('span', { className: 'perm-page-name' }, pg.name)),
@@ -262,18 +268,18 @@
           pg.view ? cells(pg.view, null) : emptyCells()));
         if (!open) return;
         pg.actions.forEach(function (p) {
-          rows.push(h('tr', { key: p.key, className: 'perm-action-row' },
+          rows.push(h('tr', { key: 'a:' + pid + ':' + p.key, className: 'perm-action-row' },
             h('th', { scope: 'row', className: 'perm-row-label is-action' }, p.label),
             cells(p, pg.view)));
         });
         pg.tabs.forEach(function (tb) {
-          rows.push(h('tr', { key: 't:' + pg.name + ':' + tb.name, className: 'perm-tab-row' },
+          rows.push(h('tr', { key: 't:' + pid + ':' + tb.name, className: 'perm-tab-row' },
             h('th', { scope: 'row', className: 'perm-row-label is-tab' },
               h('span', { className: 'perm-tab-name' }, tb.name),
               tb.view ? h('span', { className: 'perm-row-sub' }, tb.view.label) : null),
             tb.view ? cells(tb.view, pg.view) : emptyCells()));
           tb.actions.forEach(function (p) {
-            rows.push(h('tr', { key: p.key, className: 'perm-action-row' },
+            rows.push(h('tr', { key: 'a:' + pid + ':' + tb.name + ':' + p.key, className: 'perm-action-row' },
               h('th', { scope: 'row', className: 'perm-row-label is-tab-action' }, p.label),
               cells(p, tb.view || pg.view)));
           });

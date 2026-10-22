@@ -881,11 +881,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-top: 1px solid var(--border-color);
 }
 .ic-interview-row:first-child { border-top: none; }
-.ic-interview-name {
-  font-family: var(--font-text);
-  font-weight: 600;
-  color: var(--text-primary);
-}
 
 /* Bulletins (shared board): recessed trays (.tray) inside the board's card. */
 .bulletin-list { display: flex; flex-direction: column; gap: 12px; }
@@ -1229,7 +1224,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 /* First cell: the row's name, with any badges beside it. */
 .portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
-.portal-row-title { font-family: var(--font-ui); font-size: 0.9rem; }
 
 /* Forms */
 .portal-field.is-full { grid-column: 1 / -1; }

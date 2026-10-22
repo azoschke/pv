@@ -178,7 +178,7 @@
                     filtered.map(function (p) {
                       var factionTags = orderedFactionsOf(p);
                       return h('tr', { key: p.member_id },
-                        h('td', { className: 'portal-row-title' }, p.name),
+                        h('td', { className: 'row-name' }, p.name),
                         h('td', null,
                           factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },

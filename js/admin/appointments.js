@@ -395,7 +395,7 @@
                     ? list.map(function (r) {
                         return h('tr', { key: r.id },
                           h('td', null, fmtDate(r.created_at)),
-                          h('td', null, r.character_name,
+                          h('td', null, h('span', { className: 'row-name' }, r.character_name),
                             r.on_behalf ? h('span', { className: 'portal-muted' }, ' · via ' + r.submitted_by_name) : null),
                           h('td', null, r.assigned_medic_name || r.requested_medic_name),
                           h('td', null, h(StatusTag, { status: r.status })),

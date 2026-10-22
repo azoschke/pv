@@ -318,7 +318,7 @@
       return h('tr', null,
         h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
-            h('span', { className: 'portal-row-title' }, q.title),
+            h('span', { className: 'row-name' }, q.title),
             past ? h('span', { className: 'pill' }, 'Past date') : null
           ),
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },

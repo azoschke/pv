@@ -534,7 +534,7 @@
 
     var factions = parseFactions(m.faction);
     return h('tr', null,
-      h('td', null, m.name),
+      h('td', { className: 'row-name' }, m.name),
       h('td', null, m.ic_rank || h('span', { className: 'portal-muted' }, '—')),
       (function () {
         // "NA - No RP" reads as a null field in the grid (the form keeps it).

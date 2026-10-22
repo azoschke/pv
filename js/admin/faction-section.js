@@ -118,7 +118,7 @@
         pending.map(function (m) {
           return h('div', { className: 'ic-interview-row', key: m.id },
             h('span', { className: interviewPillClass(m.interview) }, m.interview),
-            h('span', { className: 'ic-interview-name' }, m.name)
+            h('span', { className: 'row-name' }, m.name)
           );
         })
       )
@@ -175,7 +175,7 @@
                     ? filtered.map(function (m) {
                         var factions = orderedFactions(parseFactions(m.faction));
                         return h('tr', { key: m.id },
-                          h('td', null, m.name),
+                          h('td', { className: 'row-name' }, m.name),
                           h('td', null,
                             m.ic_rank
                               ? m.ic_rank

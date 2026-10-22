@@ -733,7 +733,7 @@
           h('tbody', null,
             actionable.map(function (a) {
               return h('tr', { key: a.id },
-                h('td', null, a.member_name),
+                h('td', { className: 'row-name' }, a.member_name),
                 h('td', null, a.job_title),
                 h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
                 h('td', null, h(StageBadge, { stage: a.stage }))

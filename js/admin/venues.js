@@ -550,7 +550,7 @@
       h('td', null,
         h('div', { className: 'portal-name-row' },
           v.featured ? h('span', { className: 'tag', title: 'Featured' }, '★') : null,
-          h('span', { className: 'portal-row-title' }, v.name)
+          h('span', { className: 'row-name' }, v.name)
         )
       ),
       h('td', null, labelFor(SIZES, v.size)),

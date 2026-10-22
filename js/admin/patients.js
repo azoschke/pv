@@ -326,7 +326,7 @@
               ? filtered.map(function (p) {
                   return h('tr', { key: p.patient_id },
                     h('td', { style: { verticalAlign: 'middle' } },
-                      h('span', { className: 'portal-row-title' }, p.patient_name),
+                      h('span', { className: 'row-name' }, p.patient_name),
                       p.member_id
                         ? h('span', {
                             style: {
