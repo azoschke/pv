@@ -116,11 +116,13 @@
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   cursor: pointer;
-  background: var(--bg-card);
+  background: none;
   border-bottom: 1px solid transparent;
   transition: background 0.15s ease;
   user-select: none;
 }
+/* The header is the tray itself, so a closed visit reads as a box set into
+   the record; hovering steps it on into the well. */
 .visit-card-header:hover { background: var(--bg-darker); }
 .visit-card.open .visit-card-header {
   border-bottom-color: var(--border-color);
