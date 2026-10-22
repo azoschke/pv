@@ -32,9 +32,9 @@
   var ICON = { allow: 'M5 12.5l4.5 4.5L19 7.5', deny: 'M6 6l12 12M18 6L6 18' };
   var WORD = { '': 'Not set', allow: 'Allow', deny: 'Deny' };
 
-  function svgIcon(d) {
+  function svgIcon(d, className, strokeWidth) {
     return h('svg', {
-      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.6,
+      className: className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: strokeWidth || 2.6,
       strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false'
     }, h('path', { d: d }));
   }
@@ -148,7 +148,8 @@
   function PermissionsSection() {
     var dataState = useState(null); var data = dataState[0], setData = dataState[1];
     var draftState = useState({}); var draft = draftState[0], setDraft = draftState[1];
-    var collapsedState = useState({}); var collapsed = collapsedState[0], setCollapsed = collapsedState[1];
+    // Pages start closed; this holds the ones opened.
+    var openedState = useState({}); var opened = openedState[0], setOpened = openedState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var flashState = useState(''); var flash = flashState[0], setFlash = flashState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
@@ -255,15 +256,22 @@
       rows.push(h('tr', { key: 'g:' + g.name, className: 'perm-group-row' }, h('td', { colSpan: cols }, h('span', null, g.name))));
       g.pages.forEach(function (pg) {
         var pid = g.name + '|' + pg.name;
-        var open = !collapsed[pid];
+        var open = !!opened[pid];
+        // Only a page with actions or tabs under it opens; the rest show their
+        // name, lined up with the others.
+        var opens = pg.actions.length > 0 || pg.tabs.length > 0;
         rows.push(h('tr', { key: 'p:' + pid, className: 'perm-page-row' },
           h('th', { scope: 'row', className: 'perm-row-label' },
-            h('button', {
-              type: 'button', className: 'perm-toggle', 'aria-expanded': open ? 'true' : 'false',
-              onClick: function () { setCollapsed(function (c) { var n = Object.assign({}, c); if (open) n[pid] = true; else delete n[pid]; return n; }); }
-            },
-              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
-              h('span', { className: 'perm-page-name' }, pg.name)),
+            opens
+              ? h('button', {
+                  type: 'button', className: 'perm-toggle', 'aria-expanded': open ? 'true' : 'false',
+                  onClick: function () { setOpened(function (o) { var n = Object.assign({}, o); if (open) delete n[pid]; else n[pid] = true; return n; }); }
+                },
+                  svgIcon('M9 6l6 6-6 6', 'chevron is-side' + (open ? ' is-open' : ''), 2),
+                  h('span', { className: 'perm-page-name' }, pg.name))
+              : h('span', { className: 'perm-toggle is-static' },
+                  h('span', { className: 'perm-toggle-space', 'aria-hidden': 'true' }),
+                  h('span', { className: 'perm-page-name' }, pg.name)),
             pg.view ? h('span', { className: 'perm-row-sub' }, pg.view.label) : null),
           pg.view ? cells(pg.view, null) : emptyCells()));
         if (!open) return;

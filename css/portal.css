@@ -1119,7 +1119,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: inherit;
   cursor: pointer;
 }
-.perm-toggle .material-icons { font-size: 1.1rem; }
+.perm-toggle.is-static { cursor: default; }
+/* Stands in for the chevron on a page with nothing under it. */
+.perm-toggle-space { flex: none; width: 16px; height: 16px; }
 /* Group rows: a band, as in the other tables, with a rule underneath (the
    row above supplies the one over it). */
 .perm-group-row td {
