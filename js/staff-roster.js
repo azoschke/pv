@@ -90,7 +90,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Coerces a string-or-array field into a clean array of strings.
   function asList(value) {

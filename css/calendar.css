@@ -84,7 +84,7 @@
 }
 /* Fallback for browsers without container queries: use the viewport. */
 @supports not (container-type: inline-size) {
-  @media (max-width: 650px) {
+  @media (max-width: 640px) {
     .cal-event { flex-direction: column; align-items: stretch; }
     .cal-event-thumb { width: 100%; height: auto; }
   }
@@ -101,7 +101,7 @@
    Filters left, period nav / result count centred, view toggle right. The
    1fr side columns stay equal, so the middle column is always dead-centre.
    Count and period nav share the centre column (only one shows at a time).
-   Below 760px it falls back to the base wrapping flex row. */
+   At the tablet step (900px) it falls back to the base wrapping flex row. */
 #calendar-main .browse-toolbar {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
 }
@@ -109,7 +109,7 @@
 #calendar-main .result-count,
 #calendar-main .cal-monthnav { grid-column: 2; justify-self: center; }
 #calendar-main .cal-viewtoggle { grid-column: 3; justify-self: end; }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   #calendar-main .browse-toolbar { display: flex; }
 }
 
@@ -176,7 +176,7 @@
 .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-cell[data-single-id] { cursor: pointer; }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   .cal-month-grid { gap: 0.2rem; }
   .cal-cell-num { font-size: 0.72rem; padding: 0.15rem 0.25rem; }
   .cal-cell-event { font-size: 0.58rem; padding: 0.1rem 0.25rem; }

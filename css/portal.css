@@ -852,13 +852,17 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .dash-open .material-icons { font-size: 16px; }
 
 /* --------------- Division layout --------------- */
+/* Two columns at 1 : 1.35 that stack when the content area can't hold both
+   (about 48rem); the bases share that ratio, so the columns keep it as they
+   grow. */
 .division-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.25rem;
-  align-items: start;
+  align-items: flex-start;
 }
-.division-col { min-width: 0; }
+.division-col { min-width: 0; flex: 1 1 20rem; }
+.division-col + .division-col { flex: 1.35 1 27rem; }
 
 .portal-card-subtitle {
   margin: -0.25rem 0 0.9rem;
@@ -1295,9 +1299,6 @@ textarea.cmp-code,
 .portal-card.cmp-list-card { margin-bottom: 0.75rem; }
 
 /* --------------- Responsive --------------- */
-@media (max-width: 1100px) {
-  .division-grid { grid-template-columns: 1fr; }
-}
 @media (max-width: 900px) {
   /* Needs Attention rows stack: the state tag, the text, then Open below. */
   .dash-attention-row { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }

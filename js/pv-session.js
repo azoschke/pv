@@ -6,8 +6,9 @@
 //  avatar_url, roles, permissions, is_root, expires_at }). This file reads
 //  and writes it, answers permission checks, signs out, and sends requests to
 //  the workers. It also holds the page scroll lock (PVScrollLock) that every
-//  popup and drawer shares, lets the mouse drag scrolling tables, and draws
-//  images that have a dark-mode version (PVThemeImage).
+//  popup and drawer shares, lets the mouse drag scrolling tables, draws
+//  images that have a dark-mode version (PVThemeImage), and answers which
+//  layout step the window is on (PVLayout).
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in or opens a popup:
@@ -378,6 +379,16 @@
   }
 
   global.PVScrollLock = { lock: lockScroll, unlock: unlockScroll };
+
+  // ── Layout steps ───────────────────────────────────────────────────────────
+  // The breakpoints in styles.css: phone up to 640px; tablet up to 900px,
+  // where the nav, the portal sidebar and the filter sidebar all become
+  // drawers; wide up to 1100px. Scripts ask here instead of repeating the
+  // number, so they switch with the stylesheet.
+  global.PVLayout = {
+    narrow: '(max-width: 900px)',
+    isNarrow: function () { return global.matchMedia(this.narrow).matches; }
+  };
 
   // ── Images with a dark-mode version ──────────────────────────────────────
   // A light image, shown in both themes, and an optional dark one. With both,

@@ -119,7 +119,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // scheduled_at is stored as UTC "YYYY-MM-DD HH:MM:SS".
   function parseQuestDate(q) {

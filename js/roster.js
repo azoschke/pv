@@ -77,7 +77,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Split the raw comma-separated faction field into a clean list.
   function parseFactions(value) {

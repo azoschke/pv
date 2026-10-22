@@ -142,7 +142,7 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-    function isMobile() { return window.innerWidth <= 768; }
+    function isMobile() { return PVLayout.isNarrow(); }
 
     // Subtitle (rows + modal): "Written by [Name] · [Region] · [Campaign]".
     function subtitleText(e) {

@@ -106,7 +106,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Worker sends UTC "YYYY-MM-DD HH:MM:SS"; parse to epoch ms (local render).
   function parseUtc(s) {
@@ -680,13 +680,14 @@
   overlay.addEventListener("click", closeSidebar);
   restoreSidebarState();
 
-  // Rotating a phone to landscape (e.g. ~390px → ~844px) crosses the 768px
-  // breakpoint where the sidebar stops being an off-screen drawer and becomes
-  // the desktop inline column — which is shown by default, so the filter panel
-  // appeared to "open" on its own. Track the mode and, on a mobile→desktop
-  // crossing, collapse the sidebar unless the drawer was deliberately open, so
-  // filters stay put across a rotation. (styles.css owns the 768px breakpoint
-  // and is shared by other pages, so this is handled here rather than there.)
+  // Rotating a tablet or large phone to landscape (e.g. ~430px → ~932px)
+  // crosses the 900px step (PVLayout) where the sidebar stops being an
+  // off-screen drawer and becomes the desktop inline column — which is shown
+  // by default, so the filter panel appeared to "open" on its own. Track the
+  // mode and, on a mobile→desktop crossing, collapse the sidebar unless the
+  // drawer was deliberately open, so filters stay put across a rotation.
+  // (styles.css owns the step and is shared by other pages, so this is
+  // handled here rather than there.)
   var wasMobile = isMobile();
   window.addEventListener("resize", function () {
     var nowMobile = isMobile();

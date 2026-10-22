@@ -540,7 +540,7 @@
       if (!drawerOpen) return;
       function onKey(e) { if (e.key === 'Escape') setDrawerOpen(false); }
       document.addEventListener('keydown', onKey);
-      var mobile = window.matchMedia('(max-width: 900px)');
+      var mobile = window.matchMedia(PVLayout.narrow);
       function onLayout() { if (!mobile.matches) setDrawerOpen(false); }
       mobile.addEventListener('change', onLayout);
       var unlock = PVScrollLock.lock();

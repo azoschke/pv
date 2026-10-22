@@ -82,7 +82,7 @@
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   function loadFilters() {
     try {

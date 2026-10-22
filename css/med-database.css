@@ -10,7 +10,7 @@
   margin-bottom: 1rem;
 }
 .record-card:last-child { margin-bottom: 0; }
-@media (max-width: 600px) { .record-card { padding: 1.25rem; } }
+@media (max-width: 640px) { .record-card { padding: 1.25rem; } }
 
 .record-card-header {
   display: flex;
@@ -150,7 +150,7 @@
   padding: 1.25rem 1.5rem;
 }
 .visit-card.open .visit-card-body { display: block; }
-@media (max-width: 600px) { .visit-card-body { padding: 1rem; } }
+@media (max-width: 640px) { .visit-card-body { padding: 1rem; } }
 
 /* Visit subsection headings (Patient Intake / Treatment Report) */
 .visit-subsection-label {

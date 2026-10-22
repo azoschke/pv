@@ -109,7 +109,7 @@
     if (window.marked && marked.use) marked.use({ breaks: true });
 
     // ── Sidebar (matches campaign pattern exactly) ─────────────────────
-    function isMobile() { return window.innerWidth <= 768; }
+    function isMobile() { return PVLayout.isNarrow(); }
 
     function openSidebar() {
       if (isMobile()) {
