@@ -1266,7 +1266,7 @@
             return h('div', { key: a.id, className: 'rp-skill-row' },
               h('div', { className: 'rp-row-head' },
                 h('div', null,
-                  h('strong', null, a.name),
+                  h('span', { className: 'row-name' }, a.name),
                   a.description ? h('div', { className: 'rp-skill-desc' }, a.description) : null),
                 ro ? null : h('div', { className: 'rp-actions' },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
@@ -1375,7 +1375,7 @@
         CLASS_ROLES.map(function (o) {
           var hk = healOf(doc, o.value);
           return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' } },
-            h('strong', null, o.label),
+            h('span', { className: 'row-name' }, o.label),
             h('div', { style: { display: 'flex', gap: '0.5rem 1rem', flexWrap: 'wrap', alignItems: 'center' } },
               h('label', { className: 'rp-rule-check' },
                 h('input', { type: 'checkbox', checked: !!hk.single, onChange: function (e) { setHeal(o.value, { single: e.target.checked }); } }), 'Single heal'),
@@ -1392,7 +1392,7 @@
         h('h3', { className: 'portal-form-title' }, 'Armor modifiers'),
         ARMOR_TYPES.map(function (o) {
           return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr 1fr', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
-            h('strong', { style: { paddingBottom: '0.55rem' } }, o.label),
+            h('span', { className: 'row-name', style: { paddingBottom: '0.55rem' } }, o.label),
             h('div', { className: 'portal-field' }, h('label', null, 'Attack'),
               h('input', { type: 'number', value: String(doc.armor[o.value].attack), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.armor[o.value].attack = v; }); } })),
             h('div', { className: 'portal-field' }, h('label', null, 'Defense'),
@@ -1582,7 +1582,7 @@
             return h('div', { key: ab.id, className: 'rp-skill-row' },
               h('div', { className: 'rp-row-head' },
                 h('div', null,
-                  h('strong', null, ab.name),
+                  h('span', { className: 'row-name' }, ab.name),
                   ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, 'Activate all') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },

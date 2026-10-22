@@ -271,7 +271,7 @@
             ? h('div', { className: 'pv-item-abilities' },
                 abilities.map(function (ab, i) {
                   return h('div', { key: i, className: 'pv-item-ability' },
-                    h('strong', null, ab.name),
+                    h('span', { className: 'row-name' }, ab.name),
                     ab.description ? h('p', null, ab.description) : null);
                 }))
             : null

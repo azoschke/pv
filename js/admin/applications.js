@@ -344,7 +344,7 @@
 
     return h('tr', archived ? { style: { opacity: 0.55 } } : null,
       h('td', null,
-        h('span', { className: 'portal-strong' }, a.member_name),
+        h('span', { className: 'row-name' }, a.member_name),
         archived ? h('span', {
           className: 'status-dot is-quiet',
           style: { marginLeft: '0.5rem' }

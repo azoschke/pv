@@ -529,18 +529,17 @@
         ? h('div', { className: 'portal-card' }, 'No codex entries yet. Create one to get started.')
         : groups.map(function (g) {
             return h('div', { key: g.type, className: 'portal-card cmp-list-card' },
-              h('p', { style: { margin: '0 0 0.5rem', fontSize: '0.78rem', letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: 'var(--text-secondary)' } }, g.label + ' · ' + g.items.length),
+              h('p', { className: 'portal-block-label' }, g.label + ' · ' + g.items.length),
               g.items.map(function (e, idx) {
                 return h('div', { key: e.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   gap: '0.75rem', padding: '0.45rem 0', borderTop: idx === 0 ? 'none' : '1px solid var(--border-color)' } },
                   h('div', { style: { minWidth: 0 } },
-                    h('div', { className: 'portal-strong' }, e.name,
+                    h('div', { className: 'row-name' }, e.name,
                       (function () {
                         var meta = [e.region_name, e.campaign_name].filter(Boolean).join(' · ');
-                        return meta ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.75rem', color: 'var(--text-secondary)' } }, '· ' + meta) : null;
+                        return meta ? h('span', { className: 'row-meta' }, ' · ' + meta) : null;
                       })()),
-                    h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '38rem' } },
+                    h('div', { className: 'row-meta is-clipped' },
                       (e.author_name ? 'by ' + e.author_name + ' — ' : '') +
                       (e.description_md ? String(e.description_md).replace(/[#>*_`~\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) : '—'))
                   ),
@@ -784,12 +783,10 @@
               h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', flexWrap: 'wrap' } },
                 h('div', { style: { flex: '1 1 16rem' } },
                   h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
-                    h('span', { style: { fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em',
-                      color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0.1rem 0.4rem' } },
-                      tagLabel(c.tag)),
-                    h('strong', { style: { fontSize: '1.05rem' } }, c.name)
+                    h('span', { className: 'tag' }, tagLabel(c.tag)),
+                    h('h3', { className: 'item-title' }, c.name)
                   ),
-                  h('p', { style: { margin: '0.35rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+                  h('p', { className: 'row-meta', style: { marginTop: '0.35rem' } },
                     (c.chapter_count != null ? c.chapter_count : (c.chapters ? c.chapters.length : 0)) + ' chapters · /view.html?c=' + c.slug)
                 ),
                 h(RowControls, {
@@ -809,7 +806,7 @@
 
               isSelected ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' } },
-                  h('span', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, 'Chapters'),
+                  h('span', { className: 't-label' }, 'Chapters'),
                   h('button', { type: 'button', className: 'btn is-small',
                     onClick: function () { setFullChapter(null); setChapterForm({ campaign: c, chapter: null }); } }, '+ New chapter')
                 ),
@@ -821,9 +818,9 @@
                           return h('div', { key: ch.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             gap: '0.75rem', padding: '0.45rem 0', borderBottom: '1px solid var(--border-color)' } },
                             h('div', null,
-                              h('div', { className: 'portal-strong' }, ch.title,
-                                ch.has_tldr ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.7rem', color: 'var(--text-secondary)' } }, '· TL;DR') : null),
-                              h('div', { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } }, ch.chapter_date || '—')
+                              h('div', { className: 'row-name' }, ch.title,
+                                ch.has_tldr ? h('span', { className: 'tag', style: { marginLeft: '0.5rem' } }, 'TL;DR') : null),
+                              h('div', { className: 'row-meta' }, ch.chapter_date || '—')
                             ),
                             h(RowControls, {
                               canDelete: canDeleteStory,

@@ -463,7 +463,7 @@
       return h('tr', { key: p.id },
         h('td', null,
           h('div', { className: 'portal-name-row' },
-            h('span', { className: 'portal-strong' }, p.title),
+            h('span', { className: 'row-name' }, p.title),
             p.needs_review ? h('span', { className: 'pill' }, 'Needs review') : null),
           h('div', { className: 'portal-muted' }, fileOf(p.path))),
         h('td', null, accessBadge(p) || h('span', { className: 'portal-muted' }, 'Public')),

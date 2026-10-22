@@ -287,7 +287,7 @@
       h('td', null,
         h('div', { className: 'portal-name-row' },
           !hasProfile ? h('span', { className: 'pill' }, 'Needs profile') : null,
-          h('span', { className: 'portal-strong' }, row.member.name)
+          h('span', { className: 'row-name' }, row.member.name)
         )
       ),
       h('td', null,

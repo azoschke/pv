@@ -90,7 +90,7 @@
     return h('tr', null,
       h('td', null,
         h('div', { className: 'portal-name-row' },
-          h('span', { className: 'portal-strong' }, u.username),
+          h('span', { className: 'row-name' }, u.username),
           isRoot ? h('span', { className: 'tag', title: 'Root admin (protected)' }, 'Root') : null,
           needsRole ? h('span', { className: 'pill', title: 'No role assigned yet' }, 'Needs role') : null
         ),

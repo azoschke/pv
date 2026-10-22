@@ -359,7 +359,7 @@
         h('span', { className: 'material-icons', 'aria-hidden': 'true' }, icon));
     }
     function describe(n) {
-      if (n.type === 'group') return [h('span', { key: 'l', className: 'portal-strong' }, n.label)];
+      if (n.type === 'group') return [h('span', { key: 'l', className: 'row-name' }, n.label)];
       if (n.type === 'heading') return [h('span', { key: 'l', className: 'nav-ed-heading' }, n.label)];
       if (n.type === 'divider') return [h('span', { key: 'l', className: 'portal-muted' }, 'Divider')];
       if (n.type === 'campaigns') {

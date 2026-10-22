@@ -617,12 +617,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background-color: var(--bg-tray);
   border-radius: 4px;
 }
-.pv-item-ability strong {
-  font-family: var(--font-ui);
-  font-size: 0.98rem;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-}
 .pv-item-ability p {
   margin: 0.15rem 0 0;
   font-family: var(--font-text);
@@ -903,14 +897,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.5rem 0.65rem;
   margin-bottom: 0.15rem;
 }
-.bulletin-title {
-  flex: 1 1 auto;
-  margin: 0;
-  font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: 1.05rem;
-  color: var(--text-primary);
-}
+.bulletin-title { flex: 1 1 auto; }   /* the shared .item-title */
 .bulletin-by {
   margin: 0.1rem 0 0.5rem;
   font-family: var(--font-script);
@@ -1224,7 +1211,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Text */
 .portal-muted { color: var(--text-secondary); }
 .portal-note { margin: 0; color: var(--text-secondary); }   /* empty / loading notes */
-.portal-strong { font-weight: 600; }
 .portal-pre { white-space: pre-wrap; }
 .portal-gap-top { margin-top: 0.85rem; }
 .portal-card > .portal-table-wrap.portal-gap-top { margin-top: 0.85rem; }

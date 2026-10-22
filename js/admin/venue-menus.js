@@ -512,7 +512,7 @@
             }, h(Icon, { name: cat.icon, size: 20 })),
 
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { className: 'portal-strong' }, item.name),
+          h('div', { className: 'row-name' }, item.name),
           item.description
             ? h('div', {
                 style: {

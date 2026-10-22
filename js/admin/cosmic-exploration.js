@@ -337,7 +337,7 @@
         },
           DATA_REWARD_LEVELS.map(function (lv) {
             return h('div', { key: lv.key, className: 'portal-field' },
-              h('label', { style: { fontSize: '0.8rem' } }, lv.label),
+              h('label', { className: 'field-label is-small' }, lv.label),
               h('input', {
                 type: 'number', min: 0,
                 value: draft.dataReward[lv.key],
@@ -347,7 +347,7 @@
           })
         ),
         h('div', { className: 'portal-field', style: { marginTop: '0.5rem', maxWidth: '12rem' } },
-          h('label', { style: { fontSize: '0.8rem' } }, 'Cosmic Points'),
+          h('label', { className: 'field-label is-small' }, 'Cosmic Points'),
           h('input', {
             type: 'number', min: 0,
             value: draft.dataReward.cosmicPoints,
@@ -384,8 +384,8 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { className: 'portal-strong' }, q.questName || '(unnamed)'),
-        itemNames ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, itemNames) : null
+        h('div', { className: 'row-name' }, q.questName || '(unnamed)'),
+        itemNames ? h('div', { className: 'row-meta' }, itemNames) : null
       ),
       h('td', null, q.job || '—'),
       h('td', null, q.location || '—'),
