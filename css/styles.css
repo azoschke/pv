@@ -3343,9 +3343,11 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
 }
 
 /* Grouped link lists (Tools: Crafting / Zodiac Weapon; Medical). */
+/* Groups of tool links, two to a row at most (one when a half is under
+   220px), so long names keep their line. */
 .home-tool-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(220px, calc((100% - 1.5rem) / 2))), 1fr));
   gap: 1.25rem 1.5rem;
   margin-top: 1.25rem;
 }
