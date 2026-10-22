@@ -419,7 +419,7 @@
     var ev = props.event;
     return h('div', { className: 'mf-row' },
       h('div', { className: 'mf-row-main' },
-        h('div', null, h('span', { className: 'mf-name' }, ev.name), ' ', h(StatusDot, { live: ev.live })),
+        h('div', null, h('span', { className: 'row-name' }, ev.name), ' ', h(StatusDot, { live: ev.live })),
         h('div', { className: 'meta-note' }, whenText(ev.starts_at) + ' · ' + ev.going + ' going')),
       h('div', { className: 'form-actions' },
         h('a', { className: 'btn is-quiet is-small', href: eventHref(ev.slug) }, 'Open'),
