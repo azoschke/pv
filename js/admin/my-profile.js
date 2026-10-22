@@ -259,7 +259,7 @@
       className: 'modal-overlay detail-modal-overlay is-open',
       onMouseDown: function (e) { if (e.target === e.currentTarget && onClose) onClose(); }
     },
-      h('div', { className: 'modal detail-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
+      h('div', { className: 'modal is-narrow detail-modal pv-item-modal', role: 'dialog', 'aria-modal': 'true' },
         h('button', { type: 'button', className: 'btn is-quiet is-small is-icon modal-close', 'aria-label': 'Close', onClick: onClose }, '✕'),
         media,
         h('div', { className: 'detail-modal-content' },

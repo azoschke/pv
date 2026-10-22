@@ -604,7 +604,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    modal image are overridden to a 1:1 ratio here. */
 .pv-item-card .media-card-media { aspect-ratio: 1 / 1; }
 
-.detail-modal.pv-item-modal { max-width: 460px; }
 .pv-item-modal .detail-modal-img { aspect-ratio: 1 / 1; }
 .pv-item-abilities {
   margin-top: 1.1rem;
