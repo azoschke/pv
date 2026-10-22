@@ -135,7 +135,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Member Profiles'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search name, faction, skill…'
@@ -147,11 +147,11 @@
         h('p', { className: 'portal-head-desc is-tight' },
           publishedCount + ' published · ' + (profiles.length - publishedCount) + ' drafts'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading
@@ -178,7 +178,7 @@
                     filtered.map(function (p) {
                       var factionTags = orderedFactionsOf(p);
                       return h('tr', { key: p.member_id },
-                        h('td', { className: 'portal-row-title' }, p.name),
+                        h('td', { className: 'row-name' }, p.name),
                         h('td', null,
                           factionTags.length
                             ? h('div', { className: 'portal-faction-tags' },

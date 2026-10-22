@@ -6,14 +6,11 @@
 
 /* ── Patient record cards ──────────────────────────────────────── */
 .record-card {
-  background-color: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
   padding: 1.75rem 2rem;
   margin-bottom: 1rem;
 }
 .record-card:last-child { margin-bottom: 0; }
-@media (max-width: 600px) { .record-card { padding: 1.25rem; } }
+@media (max-width: 640px) { .record-card { padding: 1.25rem; } }
 
 .record-card-header {
   display: flex;
@@ -26,9 +23,9 @@
   flex-wrap: wrap;
 }
 .record-card-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
   margin: 0 0 0.3rem;
@@ -38,7 +35,7 @@
 /* "Please see Fiora…" under the select-a-patient message. */
 .record-card-note { font-size: 1.1rem; color: var(--text-secondary); }
 .record-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.35rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -47,10 +44,9 @@
 
 /* Patient name header — large decorative */
 .patient-name-header {
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 2.2rem;
-  line-height: 1;
-  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 1.75rem;
+  line-height: 1.15;
   color: var(--text-primary);
   margin: 0;
 }
@@ -61,9 +57,9 @@
 }
 .record-field:last-child { margin-bottom: 0; }
 .record-field-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
   margin-bottom: 0.3rem;
@@ -77,7 +73,7 @@
     color: var(--text-secondary);
 }
 .record-field-value p, .record-field-value ul li, .record-field-value ol li {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.15rem;
   line-height: 1.5;
   color: var(--text-primary);
@@ -105,8 +101,7 @@
    Each visit is a recessed tray inside the record card; its header is
    raised again. */
 .visit-card {
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border: 0;
   border-radius: 4px;
   margin-bottom: 8px;
@@ -121,18 +116,20 @@
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   cursor: pointer;
-  background: var(--bg-card);
+  background: none;
   border-bottom: 1px solid transparent;
   transition: background 0.15s ease;
   user-select: none;
 }
+/* The header is the tray itself, so a closed visit reads as a box set into
+   the record; hovering steps it on into the well. */
 .visit-card-header:hover { background: var(--bg-darker); }
 .visit-card.open .visit-card-header {
   border-bottom-color: var(--border-color);
 }
 
 .visit-card-date {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.88rem;
   font-weight: 400;
   color: var(--text-primary);
@@ -140,34 +137,28 @@
 .visit-card.open .visit-card-date { color: var(--accent-brown); }
 
 .visit-card-meta {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.1rem;
   color: var(--text-secondary);
 }
 
-.visit-card-chevron {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-.visit-card.open .visit-card-chevron { transform: rotate(180deg); }
+.visit-card-header .chevron { width: 14px; height: 14px; }
+.visit-card.open .chevron { transform: rotate(180deg); }
 
 .visit-card-body {
   display: none;
   padding: 1.25rem 1.5rem;
 }
 .visit-card.open .visit-card-body { display: block; }
-@media (max-width: 600px) { .visit-card-body { padding: 1rem; } }
-.visit-card-empty { color: var(--text-secondary); }
+@media (max-width: 640px) { .visit-card-body { padding: 1rem; } }
 
 /* Visit subsection headings (Patient Intake / Treatment Report) */
 .visit-subsection-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 .visit-subsection-divider {
@@ -201,9 +192,9 @@
   gap: 0.4rem;
   list-style: none;
   cursor: pointer;
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -219,14 +210,11 @@
 
 /* ── Loading / error states ────────────────────────────────────── */
 .v2-state-msg {
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 1.15rem;
-  color: var(--text-secondary);
   padding: 2rem 0;
 }
 .v2-state-msg.error { color: var(--accent-red); }
 /* Loading / failed text inside the patient list. */
-.chapter-list-item > .patient-list-state { padding: 0.55rem 1rem; }
+.sidebar-list-item > .patient-list-state { padding: 0.55rem 1rem; }
 
 /* ── Patient sidebar: search + A–Z jump bar + letter groups ─────── */
 /* Header + search + jump bar stay pinned so the ✕ and search remain
@@ -241,19 +229,6 @@
   padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
 }
-.patient-search {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 38px;
-  padding: 0 0.7rem;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  color: var(--text-primary);
-  background: var(--bg-darker);
-  border: 0;
-  border-radius: 4px;
-}
-.patient-search::placeholder { color: var(--text-secondary); }
 /* Fixed 9-column grid: 26 letters + "#" = exactly 3 even rows, so the
    last row lines up instead of stretching a few letters across. */
 .patient-az-bar {
@@ -265,7 +240,7 @@
 .patient-az-letter {
   padding: 0.12rem 0;
   text-align: center;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.7rem;
   line-height: 1;
   color: var(--text-secondary);
@@ -281,17 +256,15 @@
 .patient-az-letter:disabled { opacity: 0.25; cursor: default; }
 .patient-group-header {
   padding: 0.45rem 1rem 0.2rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  color: var(--accent-brown);
+  color: var(--text-secondary);
   border-top: 1px solid var(--border-color);
   margin-top: 0.25rem;
 }
 .patient-group-header.is-first { border-top: none; margin-top: 0; }
 .patient-empty-msg {
   padding: 0.75rem 1rem;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
 }

@@ -207,7 +207,7 @@
       // Attached items (inline)
       h('div', { style: { marginTop: '0.6rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' } },
         h('label', { style: { display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: '0.35rem' } }, 'Items'),
-        itemErr ? h('div', { className: 'portal-flash error' }, itemErr) : null,
+        itemErr ? h('div', { className: 'flash error' }, itemErr) : null,
         items === null ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 } }, 'Loading…') :
           (!items.length ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 0.4rem' } }, 'No items attached.') :
             items.map(function (it) {
@@ -247,7 +247,7 @@
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.5rem' } },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Ability name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
@@ -616,7 +616,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-card rp-subform' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       // ── What it does ──────────────────────────────────────────────────────
       secHead('What it does'),
@@ -990,7 +990,7 @@
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.4rem' } },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Skill name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
@@ -1053,7 +1053,7 @@
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card rp-subform' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       secHead('What it does'),
       fieldGrid([
@@ -1137,7 +1137,7 @@
     }
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
       props.inModal ? null : h('h3', { className: 'portal-form-title' }, props.initial ? 'Edit boss' : 'New boss'),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, disabled: ro, onChange: function (e) { setName(e.target.value); } })),
       // Tier + stun immunity share one row.
@@ -1190,7 +1190,7 @@
         (b.image_url && !imgErr)
           ? h('img', { src: b.image_url, alt: '', onError: function () { setImgErr(true); } })
           : null,
-        b.public ? h('span', { className: 'venue-badge venue-badge-featured' }, 'Public') : null),
+        b.public ? h('span', { className: 'media-badge media-badge-left' }, 'Public') : null),
       h('h3', { className: 'rp-catalogue-name' }, b.name),
       h('div', { className: 'rp-catalogue-owner' },
         h('span', { className: 'rp-owner-key' }, 'Creator: '),
@@ -1216,7 +1216,7 @@
       if (props.onChanged) await props.onChanged();
     }
     return h(window.PVAdminModal, { title: b.name, size: 'lg', onClose: props.onClose },
-      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      saved ? h('div', { className: 'flash success' }, saved) : null,
       h(BossForm, { initial: b, inModal: true, readOnly: props.readOnly, onSubmit: saveBoss, onCancel: props.onClose }));
   }
 
@@ -1258,7 +1258,7 @@
 
     return h(window.PVAdminModal, { title: 'Skills — ' + b.name, size: 'lg', onClose: props.onClose },
       h('div', null,
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         abForm ? h(BossAbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : ro ? null : h('button', { type: 'button', className: 'btn is-small rp-add-skill', onClick: function () { setAbForm({}); } }, '+ Add skill'),
         !(b.abilities || []).length ? null :
@@ -1266,7 +1266,7 @@
             return h('div', { key: a.id, className: 'rp-skill-row' },
               h('div', { className: 'rp-row-head' },
                 h('div', null,
-                  h('strong', null, a.name),
+                  h('span', { className: 'row-name' }, a.name),
                   a.description ? h('div', { className: 'rp-skill-desc' }, a.description) : null),
                 ro ? null : h('div', { className: 'rp-actions' },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
@@ -1327,12 +1327,12 @@
       finally { setSaving(false); }
     }
 
-    if (!doc) return h('div', { className: 'portal-card' }, err ? h('div', { className: 'portal-flash error' }, err) : 'Loading rules…');
+    if (!doc) return h('div', { className: 'portal-card' }, err ? h('div', { className: 'flash error' }, err) : 'Loading rules…');
 
     return h('div', null,
-      props.anyLive ? h('div', { className: 'portal-flash error' }, 'A session is live right now, saved changes apply to it immediately.') : null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
-      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
+      props.anyLive ? h('div', { className: 'flash error' }, 'A session is live right now, saved changes apply to it immediately.') : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
+      saved ? h('div', { className: 'flash success' }, saved) : null,
       meta && meta.updated_at ? h('p', { style: { color: 'var(--text-secondary)', fontSize: '0.82rem', margin: '0 0 0.75rem' } },
         'Last saved by ' + (meta.updated_by || 'unknown') + ' · ' + new Date(meta.updated_at * 1000).toLocaleString()) : null,
 
@@ -1375,11 +1375,11 @@
         CLASS_ROLES.map(function (o) {
           var hk = healOf(doc, o.value);
           return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' } },
-            h('strong', null, o.label),
+            h('span', { className: 'row-name' }, o.label),
             h('div', { style: { display: 'flex', gap: '0.5rem 1rem', flexWrap: 'wrap', alignItems: 'center' } },
               h('label', { className: 'rp-rule-check' },
                 h('input', { type: 'checkbox', checked: !!hk.single, onChange: function (e) { setHeal(o.value, { single: e.target.checked }); } }), 'Single heal'),
-              h('select', { className: 'portal-select', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
+              h('select', { className: 'field', style: { width: 'auto' }, value: hk.single_scope === 'party' ? 'party' : 'self', disabled: !hk.single,
                 'aria-label': o.label + ' single heal target', onChange: function (e) { setHeal(o.value, { single_scope: e.target.value }); } },
                 h('option', { value: 'self' }, 'Self only'),
                 h('option', { value: 'party' }, 'Anyone in the party')),
@@ -1392,7 +1392,7 @@
         h('h3', { className: 'portal-form-title' }, 'Armor modifiers'),
         ARMOR_TYPES.map(function (o) {
           return h('div', { key: o.value, style: { display: 'grid', gridTemplateColumns: '6rem 1fr 1fr', gap: '0.5rem', alignItems: 'end', marginBottom: '0.35rem' } },
-            h('strong', { style: { paddingBottom: '0.55rem' } }, o.label),
+            h('span', { className: 'row-name', style: { paddingBottom: '0.55rem' } }, o.label),
             h('div', { className: 'portal-field' }, h('label', null, 'Attack'),
               h('input', { type: 'number', value: String(doc.armor[o.value].attack), onChange: function (e) { var v = num(e.target.value); upd(function (d) { d.armor[o.value].attack = v; }); } })),
             h('div', { className: 'portal-field' }, h('label', null, 'Defense'),
@@ -1513,8 +1513,8 @@
     }
 
     return h(window.PVAdminModal, { title: it.name, size: 'lg', onClose: props.onClose },
-      saved ? h('div', { className: 'portal-flash success' }, saved) : null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      saved ? h('div', { className: 'flash success' }, saved) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       // Item details — Cancel closes the modal.
       h(ItemForm, { initial: it, inModal: true, onSubmit: saveItem, onCancel: props.onClose }),
 
@@ -1573,7 +1573,7 @@
 
     return h(window.PVAdminModal, { title: 'Abilities — ' + it.name, size: 'lg', onClose: props.onClose },
       h('div', null,
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         abForm ? h(AbilityForm, { initial: abForm.ability, onSubmit: submitAbility, onCancel: function () { setAbForm(null); } })
           : h('button', { type: 'button', className: 'btn is-small rp-add-skill', onClick: function () { setAbForm({}); } }, '+ Add ability'),
         abilities === null ? h('p', null, 'Loading…') :
@@ -1582,8 +1582,8 @@
             return h('div', { key: ab.id, className: 'rp-skill-row' },
               h('div', { className: 'rp-row-head' },
                 h('div', null,
-                  h('strong', null, ab.name),
-                  ab.activate_all ? h('span', { style: { marginLeft: '0.4rem', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '0.3rem', padding: '0 0.3rem' } }, 'activate all') : null,
+                  h('span', { className: 'row-name' }, ab.name),
+                  ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, 'Activate all') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
@@ -1620,7 +1620,7 @@
 
     return h('form', { onSubmit: submit, className: props.inModal ? '' : 'portal-card', style: props.inModal ? {} : { marginBottom: '1rem' } },
       props.inModal ? null : h('h3', { className: 'portal-form-title' }, props.initial ? 'Edit item' : 'New item'),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' }, h('label', null, 'Name *'),
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Flavor / description'),
@@ -1984,15 +1984,15 @@
         active: tab,
         onChange: setTab
       }),
-      flash[0] ? h('div', { className: 'portal-flash success' }, flash[0]) : null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      flash[0] ? h('div', { className: 'flash success' }, flash[0]) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       tab === 'campaigns' ? h('div', null,
         showNew
           ? h('form', { className: 'portal-card', style: { marginBottom: '1rem' },
               onSubmit: function (e) { e.preventDefault(); createCampaign(); } },
               h('h3', { className: 'portal-form-title' }, 'New campaign'),
-              newErr ? h('div', { className: 'portal-flash error' }, newErr) : null,
+              newErr ? h('div', { className: 'flash error' }, newErr) : null,
               h('div', { className: 'portal-field' },
                 h('label', null, 'Campaign name *'),
                 h('input', { type: 'text', autoFocus: true, value: newName,
@@ -2120,7 +2120,7 @@
                             h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { removeCampBoss(b); } }, 'Remove')));
                       })),
                   h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' } },
-                    h('select', { className: 'portal-select rp-grow-select', value: campBossPick, onChange: function (e) { setCampBossPick(e.target.value); } },
+                    h('select', { className: 'field rp-grow-select', value: campBossPick, onChange: function (e) { setCampBossPick(e.target.value); } },
                       h('option', { value: '' }, bossLib.length ? '— add a boss from the library —' : 'No bosses in the library yet'),
                       bossLib.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name + ' (' + b.max_hp + ' HP)'); })),
                     h('button', { type: 'button', className: 'btn is-small', disabled: !campBossPick, onClick: addCampBoss }, 'Add')),
@@ -2142,7 +2142,7 @@
       tab === 'items' && canItems ? h('div', null,
         itemForm ? h(ItemForm, { initial: itemForm.item, onSubmit: submitItem, onCancel: function () { setItemForm(null); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
-          h('input', { type: 'search', className: 'portal-search', value: itemQuery,
+          h('input', { type: 'search', className: 'field is-search', value: itemQuery,
             placeholder: 'Search items by name…',
             onChange: function (e) { setItemQuery(e.target.value); } }),
           itemForm ? null : h('button', { type: 'button', className: 'btn',
@@ -2168,7 +2168,7 @@
       tab === 'bosses' && showBosses ? h('div', null,
         bossForm ? h(BossForm, { onSubmit: createBoss, onCancel: function () { setBossForm(false); } }) : null,
         h('div', { className: 'rp-catalogue-toolbar' },
-          h('input', { type: 'search', className: 'portal-search', value: bossQuery,
+          h('input', { type: 'search', className: 'field is-search', value: bossQuery,
             placeholder: 'Search bosses by name…',
             onChange: function (e) { setBossQuery(e.target.value); } }),
           canEditAllBosses ? (function () {
@@ -2178,7 +2178,7 @@
               var row = members ? members.filter(function (m) { return String(m.id) === id; })[0] : null;
               return { id: id, label: row ? row.name : (members == null ? 'Member #' + id : 'Former member') };
             }).sort(function (a, b) { return a.label.localeCompare(b.label); });
-            return h('select', { className: 'portal-filter-select', value: bossCreator,
+            return h('select', { className: 'field is-filter', value: bossCreator,
               onChange: function (e) { setBossCreator(e.target.value); } },
               h('option', { value: '' }, 'Added By: Anyone'),
               opts.map(function (o) { return h('option', { key: o.id, value: o.id }, o.label); }));

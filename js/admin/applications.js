@@ -263,7 +263,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Member *'),
@@ -344,7 +344,7 @@
 
     return h('tr', archived ? { style: { opacity: 0.55 } } : null,
       h('td', null,
-        h('span', { className: 'portal-strong' }, a.member_name),
+        h('span', { className: 'row-name' }, a.member_name),
         archived ? h('span', {
           className: 'status-dot is-quiet',
           style: { marginLeft: '0.5rem' }
@@ -356,7 +356,7 @@
       h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
       h('td', null,
         canEdit ? h('select', {
-          className: 'portal-filter-select',
+          className: 'field is-filter',
           value: a.stage,
           onChange: function (e) { onStage(a, e.target.value); }
         }, STAGES.map(function (s) {
@@ -541,7 +541,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Applications'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search applications…'
@@ -557,7 +557,7 @@
         ),
         h('div', { className: 'portal-filter-row', style: { marginTop: '0.6rem' } },
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: divisionFilter,
             onChange: function (e) { setDivisionFilter(e.target.value); }
           },
@@ -565,7 +565,7 @@
             DIVISIONS.map(function (d) { return h('option', { key: d.value, value: d.value }, d.label); })
           ),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: stageFilter,
             onChange: function (e) { setStageFilter(e.target.value); }
           },
@@ -591,11 +591,11 @@
             onClick: function () { setQuery(''); setDivisionFilter(''); setStageFilter(''); setShowArchived(false); }
           }, 'Clear filters') : null
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading
@@ -706,7 +706,7 @@
     if (loading) return null;
     if (err) {
       return h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       );
     }
     if (!actionable.length) return null;
@@ -733,7 +733,7 @@
           h('tbody', null,
             actionable.map(function (a) {
               return h('tr', { key: a.id },
-                h('td', null, a.member_name),
+                h('td', { className: 'row-name' }, a.member_name),
                 h('td', null, a.job_title),
                 h('td', { className: 'portal-nowrap' }, formatDate(a.created_at)),
                 h('td', null, h(StageBadge, { stage: a.stage }))

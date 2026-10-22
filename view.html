@@ -35,7 +35,7 @@
         <button class="btn is-quiet" id="chapter-prev" type="button">&larr; Previous</button>
         <div class="chapter-bar-pick">
           <label class="chapter-bar-count" for="chapter-select" id="chapter-count">Chapter</label>
-          <select class="chapter-select" id="chapter-select">
+          <select class="field chapter-select" id="chapter-select">
             <!-- populated by JS from the campaigns worker -->
           </select>
         </div>
@@ -43,7 +43,7 @@
       </nav>
 
       <div id="chapter-content" class="chapter-view tear">
-        <div class="chapter-loading">Loading&hellip;</div>
+        <div class="empty-note chapter-loading">Loading&hellip;</div>
       </div>
     </main>
   </div><!-- /.container -->
@@ -146,7 +146,7 @@
         return;
       }
 
-      chapterContent.innerHTML = '<div class="chapter-loading">Loading&hellip;</div>';
+      chapterContent.innerHTML = '<div class="empty-note chapter-loading">Loading&hellip;</div>';
 
       fetch(API_BASE + '/campaigns/' + encodeURIComponent(campaignSlug) +
             '/chapters/' + encodeURIComponent(slug))

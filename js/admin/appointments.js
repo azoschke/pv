@@ -228,7 +228,7 @@
       } catch (e) { setErr(e.message || 'Delete failed.'); setBusy(false); }
     }
 
-    if (err && !data) return h('div', { className: 'portal-flash error' }, err);
+    if (err && !data) return h('div', { className: 'flash error' }, err);
     if (!data) return h('p', { className: 'portal-muted' }, 'Loading…');
     var r = data.request;
 
@@ -277,7 +277,7 @@
     ].filter(Boolean);
 
     return h('div', { className: 'appt-detail' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'appt-detail-head' },
         h(StatusTag, { status: r.status }),
@@ -304,7 +304,7 @@
           h('div', { className: 'portal-field' },
             h('label', null, 'Assigned medic'),
             h('select', {
-              className: 'portal-filter-select', value: sched.assigned,
+              className: 'field is-filter', value: sched.assigned,
               onChange: function (e) { setSched(Object.assign({}, sched, { assigned: e.target.value })); }
             },
               sched.assigned ? null : h('option', { value: '' }, 'Select a medic…'),
@@ -374,7 +374,7 @@
           })
         )
       ),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading appointment requests…')
         : h('div', { className: 'portal-card tear' },
@@ -395,7 +395,7 @@
                     ? list.map(function (r) {
                         return h('tr', { key: r.id },
                           h('td', null, fmtDate(r.created_at)),
-                          h('td', null, r.character_name,
+                          h('td', null, h('span', { className: 'row-name' }, r.character_name),
                             r.on_behalf ? h('span', { className: 'portal-muted' }, ' · via ' + r.submitted_by_name) : null),
                           h('td', null, r.assigned_medic_name || r.requested_medic_name),
                           h('td', null, h(StatusTag, { status: r.status })),

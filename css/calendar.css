@@ -3,10 +3,10 @@
    ========================================================================== */
 
 /* Calendar agenda — grouped-by-day list of Discord scheduled events.
-   Reuses the campaign/venues sidebar+main layout from styles.css; only the
-   agenda-specific chrome lives here. */
+   Uses the shared browse layout from styles.css; only the agenda-specific
+   chrome lives here. */
 
-/* The campaign layout sets its own display, which beats the [hidden]
+/* The browse layout sets its own display, which beats the [hidden]
    attribute's UA display:none — force it so the whole board hides when
    signed out (the gate panel stands in). */
 #calendar-layout[hidden] { display: none !important; }
@@ -25,7 +25,7 @@
   padding: 0 0.1rem 0.5rem; margin-bottom: 0.85rem;
   border-bottom: 1px solid var(--border-color);
 }
-.cal-day-weekday { font-family: 'Stoke', serif; font-size: 1.15rem; letter-spacing: 0.03em; }
+.cal-day-weekday { font-family: var(--font-ui); font-size: 1.15rem; letter-spacing: 0.03em; }
 .cal-day-date { font-size: 0.9rem; color: var(--text-secondary); }
 .cal-day-header.is-today { border-bottom-color: var(--accent-brown); }
 .cal-day-header.is-today .cal-day-weekday,
@@ -40,7 +40,7 @@
   border-radius: 4px; margin-bottom: 8px;
   transition: background-color 0.15s ease, transform 0.05s ease;
 }
-.cal-event:hover { background: color-mix(in srgb, var(--bg-darker) 40%, var(--bg-card)); }
+.cal-event:hover { background: var(--well-hover); }
 .cal-event:active { transform: translateY(1px); }
 
 /* Natural aspect ratio kept (fixed height, auto width), flush to the card
@@ -69,7 +69,7 @@
 /* Badge sits on its own line above the title (the title wraps on longer
    events anyway, so keeping them inline just looked ragged). */
 .cal-event-title-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
-.cal-event-title { font-family: 'Stoke', serif; font-size: 1.1rem; overflow-wrap: anywhere; }
+.cal-event-title { font-family: var(--font-ui); font-size: 1.1rem; overflow-wrap: anywhere; }
 .cal-event-meta { display: flex; align-items: center; gap: 0.5rem 0.9rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-secondary); }
 .cal-event-loc { display: inline-flex; align-items: center; gap: 0.3rem; overflow-wrap: anywhere; }
 .cal-loc-icon { width: 1em; height: 1em; flex: 0 0 auto; }
@@ -84,7 +84,7 @@
 }
 /* Fallback for browsers without container queries: use the viewport. */
 @supports not (container-type: inline-size) {
-  @media (max-width: 650px) {
+  @media (max-width: 640px) {
     .cal-event { flex-direction: column; align-items: stretch; }
     .cal-event-thumb { width: 100%; height: auto; }
   }
@@ -101,16 +101,16 @@
    Filters left, period nav / result count centred, view toggle right. The
    1fr side columns stay equal, so the middle column is always dead-centre.
    Count and period nav share the centre column (only one shows at a time).
-   Below 760px it falls back to the base wrapping flex row. */
-#calendar-main .venues-toolbar {
+   At the tablet step (900px) it falls back to the base wrapping flex row. */
+#calendar-main .browse-toolbar {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
 }
 #calendar-main #sidebar-toggle-btn { grid-column: 1; justify-self: start; }
-#calendar-main .venues-result-count,
+#calendar-main .result-count,
 #calendar-main .cal-monthnav { grid-column: 2; justify-self: center; }
 #calendar-main .cal-viewtoggle { grid-column: 3; justify-self: end; }
-@media (max-width: 760px) {
-  #calendar-main .venues-toolbar { display: flex; }
+@media (max-width: 900px) {
+  #calendar-main .browse-toolbar { display: flex; }
 }
 
 /* The view toggle is the shared segmented control (.seg in styles.css); the
@@ -118,13 +118,14 @@
 /* Month navigation */
 .cal-monthnav { display: inline-flex; align-items: center; gap: 0.4rem; }
 .cal-monthnav[hidden] { display: none !important; }
-.cal-month-label { font-family: 'Stoke', serif; font-size: 1.05rem; min-width: 9.5rem; text-align: center; }
+.cal-month-label { font-family: var(--font-ui); font-size: 1.05rem; min-width: 9.5rem; text-align: center; }
 
 /* Month grid */
 .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.4rem; }
 .cal-dow {
-  text-align: center; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+  text-align: center; font-size: var(--fs-caps); text-transform: uppercase; letter-spacing: var(--track-caps);
   color: var(--text-secondary); padding: 0.2rem 0;
+  font-family: var(--font-ui);
 }
 .cal-cell {
   position: relative; aspect-ratio: 1 / 1; overflow: hidden;
@@ -175,7 +176,7 @@
 .cal-cell-ev-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-cell[data-single-id] { cursor: pointer; }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
   .cal-month-grid { gap: 0.2rem; }
   .cal-cell-num { font-size: 0.72rem; padding: 0.15rem 0.25rem; }
   .cal-cell-event { font-size: 0.58rem; padding: 0.1rem 0.25rem; }
@@ -183,22 +184,16 @@
   .cal-month-label { min-width: 7rem; font-size: 0.95rem; }
 }
 
-/* Status region: loading / gate / error / empty. */
-.cal-panel {
-  max-width: 520px; margin: 3rem auto; text-align: center;
-  background: var(--bg-card); border: 0;
-  border-radius: 4px; padding: 2.25rem 1.75rem;
-}
-.cal-panel h2 { font-family: 'Stoke', serif; margin: 0 0 0.5rem; }
-.cal-panel p { color: var(--text-secondary); margin: 0 0 1.25rem; }
-.cal-empty { color: var(--text-secondary); text-align: center; padding: 2.5rem 1rem; }
+/* Status region: loading / gate / error is the shared .notice-panel.is-gate;
+   an empty week or list is an .empty-note, centred. */
+.cal-empty { text-align: center; padding: 2.5rem 1rem; }
 
-/* Detail modal reuses .job-modal-* from styles.css. The hero image bleeds
+/* The event popup is the shared .detail-modal (styles.css). The hero image bleeds
    to the modal edges (the modal's own overflow:hidden rounds its corners);
    only the text content is padded. */
 .cal-modal-media { display: block; width: 100%; height: auto; border: 0; margin: 0; }
 .cal-modal-content { padding: 1.5rem; }
-.cal-modal-title { font-family: 'Stoke', serif; font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
+.cal-modal-title { font-family: var(--font-ui); font-size: 1.4rem; margin: 0.4rem 0 0.6rem; }
 /* Meta rows lead with an icon (When = clock, Where = pin, Repeats = loop)
    instead of a fixed label column — the old `flex: 0 0 5rem` label left an
    oversized tab-like gap before short values. */
@@ -216,7 +211,7 @@
 }
 /* A code block in the modal: a recessed tray. */
 .cal-modal-desc pre {
-  background-color: var(--bg-primary); background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px; padding: 0.6rem 0.75rem;
   overflow-x: auto; margin: 0.5rem 0;
 }

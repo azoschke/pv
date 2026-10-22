@@ -69,7 +69,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),
         h('input', {
@@ -132,7 +132,7 @@
     // red Pinned pill.
     return h('article', { className: 'bulletin-item tray' },
       h('header', { className: 'bulletin-head' },
-        h('h2', { className: 'bulletin-title' }, a.title),
+        h('h2', { className: 'item-title bulletin-title' }, a.title),
         a.pinned ? h('span', { className: 'pill' }, 'Pinned') : null,
         a.discord_posted ? h('span', { className: 'status-dot is-quiet' }, 'Discord') : null,
         allowDelete ? h('button', {
@@ -239,8 +239,8 @@
             )
           ) : null
         ),
-        flash ? h('div', { className: 'portal-flash success' }, flash) : null,
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        flash ? h('div', { className: 'flash success' }, flash) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         loading
           ? h('p', { className: 'portal-note' }, 'Loading bulletins…')
           : list.length

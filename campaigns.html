@@ -25,24 +25,24 @@
       Filter by type, then select a campaign to browse its chapters.
     </p>
 
-    <div class="campaign-layout" id="campaigns-layout">
+    <div class="browse-layout" id="campaigns-layout">
 
       <!-- Filter sidebar (mirrors the Venues directory pattern) -->
-      <aside class="campaign-sidebar venues-sidebar tear-half" id="campaigns-sidebar" aria-label="Campaign filters">
-        <div class="campaign-sidebar-header">
-          <span class="campaign-sidebar-title">Filters</span>
+      <aside class="browse-sidebar filter-sidebar tear-half" id="campaigns-sidebar" aria-label="Campaign filters">
+        <div class="browse-sidebar-header">
+          <span class="browse-sidebar-title">Filters</span>
           <button class="btn is-quiet is-small is-icon" id="sidebar-close-btn" type="button" aria-label="Close filters">&#10005;</button>
         </div>
 
-        <div class="venues-filter-body">
-          <div class="venues-filter-group">
-            <label class="venues-filter-label" for="campaigns-search">Search</label>
-            <input id="campaigns-search" class="venues-filter-input" type="search" placeholder="Name or keyword..." autocomplete="off" />
+        <div class="filter-body">
+          <div class="filter-group">
+            <label class="field-label is-flush" for="campaigns-search">Search</label>
+            <input id="campaigns-search" class="field is-block" type="search" placeholder="Name or keyword..." autocomplete="off" />
           </div>
 
-          <div class="venues-filter-group" id="filter-category-group">
-            <span class="venues-filter-label">Type</span>
-            <ul class="venues-filter-list" id="filter-category-list" role="list"></ul>
+          <div class="filter-group" id="filter-category-group">
+            <span class="field-label is-flush">Type</span>
+            <ul class="filter-list" id="filter-category-list" role="list"></ul>
           </div>
 
           <button type="button" class="btn is-plain" id="filter-reset">Reset filters</button>
@@ -50,23 +50,23 @@
       </aside>
 
       <!-- Main content -->
-      <main class="campaign-main" id="campaigns-main">
-        <div class="campaign-toolbar venues-toolbar">
+      <main class="browse-main" id="campaigns-main">
+        <div class="browse-toolbar">
           <button class="btn is-quiet" id="sidebar-toggle-btn" type="button" aria-label="Toggle filters">
             &#9776; Filters
           </button>
-          <span class="venues-result-count" id="campaigns-count" aria-live="polite"></span>
+          <span class="result-count" id="campaigns-count" aria-live="polite"></span>
         </div>
 
         <div class="landing-grid" id="campaign-landing-grid">
-          <div class="chapter-loading">Loading campaigns&hellip;</div>
+          <div class="empty-note chapter-loading">Loading campaigns&hellip;</div>
         </div>
       </main>
 
     </div>
 
     <!-- Mobile overlay -->
-    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+    <div class="browse-overlay" id="browse-overlay" aria-hidden="true"></div>
   </div>
 
   <footer class="site-footer" id="site-footer">
@@ -74,6 +74,7 @@
     FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.</p>
   </footer>
 
+  <script src="js/pv-session.js"></script>
   <script>
   (function () {
     var API_BASE = 'https://pv-campaigns-worker.chlorinatorgreen.workers.dev';
@@ -88,7 +89,7 @@
     var sidebarEl  = document.getElementById('campaigns-sidebar');
     var toggleBtn  = document.getElementById('sidebar-toggle-btn');
     var closeBtn   = document.getElementById('sidebar-close-btn');
-    var overlay    = document.getElementById('campaign-overlay');
+    var overlay    = document.getElementById('browse-overlay');
     var searchInput = document.getElementById('campaigns-search');
     var catListEl  = document.getElementById('filter-category-list');
     var resetBtn   = document.getElementById('filter-reset');
@@ -104,7 +105,7 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function isMobile() { return window.innerWidth <= 768; }
+    function isMobile() { return PVLayout.isNarrow(); }
 
     // ── Filter persistence + URL deep-link (?tag=main|side|oneshot) ───────────
     function loadFilters() {
@@ -169,10 +170,10 @@
       catListEl.innerHTML = '';
       CATEGORY_ORDER.forEach(function (cat) {
         var li = document.createElement('li');
-        li.className = 'venues-filter-item';
+        li.className = 'filter-item';
 
         var label = document.createElement('label');
-        label.className = 'venues-filter-check';
+        label.className = 'filter-check';
 
         var input = document.createElement('input');
         input.type = 'checkbox';
@@ -186,11 +187,11 @@
         });
 
         var text = document.createElement('span');
-        text.className = 'venues-filter-check-text';
+        text.className = 'filter-check-text';
         text.textContent = CATEGORY_LABEL[cat];
 
         var count = document.createElement('span');
-        count.className = 'venues-filter-count';
+        count.className = 'filter-count';
         count.dataset.value = cat;
         count.textContent = '0';
 
@@ -223,7 +224,7 @@
         var n = allCampaigns.reduce(function (acc, c) {
           return acc + ((matchesSearch(c) && c.tag === cat) ? 1 : 0);
         }, 0);
-        var el = catListEl.querySelector('.venues-filter-count[data-value="' + cat + '"]');
+        var el = catListEl.querySelector('.filter-count[data-value="' + cat + '"]');
         if (el) el.textContent = String(n);
       });
     }
@@ -250,9 +251,9 @@
       grid.innerHTML = '';
       if (!filtered.length) {
         var empty = document.createElement('div');
-        empty.className = 'venues-empty';
+        empty.className = 'notice-panel';
         empty.innerHTML = '<p>No campaigns match these filters.</p>' +
-          '<p class="venues-empty-hint">Try clearing a filter.</p>';
+          '<p class="notice-panel-hint">Try clearing a filter.</p>';
         grid.appendChild(empty);
         return;
       }
@@ -296,7 +297,6 @@
   })();
   </script>
 
-  <script src="js/pv-session.js"></script>
   <script src="js/nav.js"></script>
 </body>
 </html>

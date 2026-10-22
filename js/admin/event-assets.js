@@ -187,7 +187,7 @@
     }
 
     return h('form', { onSubmit: submit, className: 'portal-form' },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Event *'),
@@ -382,7 +382,7 @@
       ),
       // Event (click anywhere in the cell to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle' } },
-        h(ClickToCopy, { value: a.event_topic || 'Untitled', textStyle: { fontFamily: 'Stoke, serif', fontSize: '0.9rem' } })
+        h(ClickToCopy, { value: a.event_topic || 'Untitled', textStyle: { fontFamily: 'var(--font-ui)', fontSize: '0.9rem' } })
       ),
       // Location (click to copy)
       h('td', { style: { padding: 0, verticalAlign: 'middle' } },
@@ -521,7 +521,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Event Assets'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search assets…'
@@ -538,7 +538,7 @@
         // Filters on their own line: type + tag dropdowns.
         h('div', { className: 'portal-filter-row', style: { marginBottom: 0 } },
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: typeFilter,
             onChange: function (e) { setTypeFilter(e.target.value); },
             'aria-label': 'Filter by type'
@@ -547,7 +547,7 @@
             TYPES.map(function (t) { return h('option', { key: t, value: t }, t); })
           ),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: tagFilter,
             onChange: function (e) { setTagFilter(e.target.value); },
             'aria-label': 'Filter by tag'
@@ -559,11 +559,11 @@
         h('p', { className: 'portal-field-help', style: { margin: '0.6rem 0 0' } },
           'Click any text to copy it, and use Download to save an image.'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

@@ -62,7 +62,7 @@
   var sidebarEl     = document.getElementById("staff-sidebar");
   var toggleBtn     = document.getElementById("sidebar-toggle-btn");
   var closeBtn      = document.getElementById("sidebar-close-btn");
-  var overlay       = document.getElementById("campaign-overlay");
+  var overlay       = document.getElementById("browse-overlay");
   var searchInput   = document.getElementById("staff-search");
   var positionListEl = document.getElementById("filter-position-list");
   var tagListEl     = document.getElementById("filter-tag-list");
@@ -90,7 +90,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Coerces a string-or-array field into a clean array of strings.
   function asList(value) {
@@ -183,10 +183,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -200,11 +200,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -314,7 +314,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -323,7 +323,7 @@
       // can still be cleared).
       var field = kind === "positions" ? "_positions" : "_tags";
       var anyone = allStaff.some(function (s) { return s[field].indexOf(value) !== -1; });
-      var item = el.closest(".venues-filter-item");
+      var item = el.closest(".filter-item");
       if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
@@ -341,19 +341,19 @@
 
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card";
+    card.className = "media-card";
     card.setAttribute("aria-label", s.name);
 
     // The placeholder field shows wherever the photo is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(primary);
+    media.className = "media-card-media tear-half " + mediaClass(primary);
 
     if (s.image_url) {
       var img = document.createElement("img");
       img.src = s.image_url;
       img.alt = "";
       img.loading = "lazy";
-      img.className = "venue-card-img";
+      img.className = "media-card-img";
       img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
     }
@@ -361,25 +361,25 @@
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = s.name || "Unnamed";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
     if (s._positions.length) {
       var loc = document.createElement("p");
-      loc.className = "venue-card-location";
+      loc.className = "media-card-meta";
       loc.textContent = s._positions.join(" · ");
       body.appendChild(loc);
     }
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(s.description, 160) ||
       "Refer to the full profile for specialties and notes.";
     body.appendChild(desc);
@@ -402,9 +402,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No medics match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or two.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or two.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -417,31 +417,31 @@
     var primary = primaryPosition(s._positions);
 
     var imgHtml = s.image_url
-      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="venue-modal-img tear">'
-      : '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(primary) + '"></div>';
+      ? '<img src="' + escapeHTML(s.image_url) + '" alt="" class="detail-modal-img tear">'
+      : '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(primary) + '"></div>';
 
     var descHtml = s.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(s.description)) : "<p>" + escapeHTML(s.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges = s._positions.map(function (p) {
       return '<span class="tag">' + escapeHTML(p) + '</span>';
     }).join("");
 
     var tagsHtml = s._tags.length
-      ? '<div class="venue-card-tags venue-modal-tags">' +
+      ? '<div class="media-card-tags detail-modal-tags">' +
         s._tags.map(function (t) {
-          return '<span class="venue-card-tag">' + escapeHTML("#" + t) + '</span>';
+          return '<span class="media-card-tag">' + escapeHTML("#" + t) + '</span>';
         }).join("") +
         '</div>'
       : "";
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="venue-modal-content">' +
-        '<div class="venue-modal-badges">' + badges + '</div>' +
-        '<h2 class="venue-modal-title" id="staff-modal-title">' + escapeHTML(s.name || "Unnamed") + '</h2>' +
-        '<div class="venue-modal-desc">' + descHtml + '</div>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="staff-modal-title">' + escapeHTML(s.name || "Unnamed") + '</h2>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
 
@@ -483,7 +483,7 @@
   }
 
   async function loadStaff() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading roster&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading roster&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/medical-staff", {
         method: "GET",
@@ -495,7 +495,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading medical staff:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the staff roster. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

@@ -173,11 +173,11 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Member'),
-        h('p', { style: { margin: 0, fontFamily: '"La Belle Aurore", cursive', fontSize: '1.4rem', color: 'var(--accent-brown)' } },
+        h('p', { style: { margin: 0, fontFamily: 'var(--font-script)', fontSize: '1.4rem', color: 'var(--accent-brown)' } },
           row.member.name
         )
       ),
@@ -287,7 +287,7 @@
       h('td', null,
         h('div', { className: 'portal-name-row' },
           !hasProfile ? h('span', { className: 'pill' }, 'Needs profile') : null,
-          h('span', { className: 'portal-strong' }, row.member.name)
+          h('span', { className: 'row-name' }, row.member.name)
         )
       ),
       h('td', null,
@@ -386,7 +386,7 @@
       ),
       h('p', { className: 'portal-field-help' },
         'Universal Medical role ping and Thread ID for the Phoenix Vanguard Discord.'),
-      msg ? h('div', { className: 'portal-flash ' + (msg.ok ? 'success' : 'error') }, msg.text) : null,
+      msg ? h('div', { className: 'flash ' + (msg.ok ? 'success' : 'error') }, msg.text) : null,
       h('form', { onSubmit: save },
         h('div', { className: 'portal-field-row' },
           idField('medical_role_id', 'medical-role-id', 'Medical role ID'),
@@ -510,7 +510,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Medical Division Roster'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search name, position, tag…'
@@ -522,11 +522,11 @@
         h('p', { className: 'portal-head-desc is-tight' },
           publishedCount + ' published · ' + needsProfileCount + ' awaiting profile'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

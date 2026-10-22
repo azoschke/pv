@@ -127,7 +127,7 @@
         'Edits to an approved quest will be reviewed before they apply.'
       ),
 
-      flash ? h('div', { className: 'portal-flash success', style: { marginTop: '0.75rem' } }, flash) : null,
+      flash ? h('div', { className: 'flash success', style: { marginTop: '0.75rem' } }, flash) : null,
 
       quests.length ? h('div', { className: 'portal-table-wrap portal-gap-top' },
         h('table', { className: 'portal-table' },
@@ -144,7 +144,7 @@
             quests.map(function (q) {
               var pill = QUEST_STATUS_PILL[q.status] || QUEST_STATUS_PILL.hidden;
               return h('tr', { key: q.id },
-                h('td', { className: 'portal-strong' }, q.title),
+                h('td', { className: 'row-name' }, q.title),
                 h('td', null, q.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(q)),
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
@@ -235,7 +235,7 @@
           h('tbody', null,
             signups.map(function (s) {
               return h('tr', { key: s.id },
-                h('td', { className: 'portal-strong' }, s.title),
+                h('td', { className: 'row-name' }, s.title),
                 h('td', null, s.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(s)),
                 h('td', { className: 'portal-col-actions' },
@@ -296,7 +296,7 @@
             requests.map(function (r) {
               var scheduled = r.status === 'scheduled';
               return h('tr', { key: r.id },
-                h('td', { className: 'portal-strong' }, r.character_name),
+                h('td', { className: 'row-name' }, r.character_name),
                 h('td', null, (scheduled && r.assigned_medic_name) || r.requested_medic_name),
                 h('td', null, fmtDate(r.created_at)),
                 h('td', null,
@@ -360,7 +360,7 @@
               var job = jobsById[a.job_id];
               var jobType = job && job.job_type ? job.job_type : null;
               return h('tr', { key: a.id },
-                h('td', { className: 'portal-strong' }, a.job_title),
+                h('td', { className: 'row-name' }, a.job_title),
                 h('td', null, divisionLabel(a.division)),
                 h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
                 h('td', null, fmtDate(a.created_at)),
@@ -443,7 +443,7 @@
 
     return h('div', null,
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       canSubmit ? h(MyQuestsCard, { data: myQuests, onChanged: reload, onError: setErr }) : null,

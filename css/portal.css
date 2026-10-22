@@ -4,18 +4,18 @@
    Card-tone sidebar + a grained main area. All colors reference the tokens in
    css/styles.css so the site's light/dark theme toggle works for the portal
    without extra JS. Surfaces follow the site's three tones: cards are raised
-   (no border or shadow), anything nested in a card drops back to a recessed
-   tray (.tray / page tone), and the well is for controls only.
+   (no border or shadow), anything nested in a card is set into a flat
+   recessed tray (.tray / --bg-tray), and the well is for controls only.
    ============================================================================ */
 
+/* Unscoped on purpose: portal.css loads only on portal.html, and scoping
+   this to the shell (body:has(.portal-shell)) would let the page scroll
+   while the portal is still loading. */
 html, body { height: 100%; }
 body { overflow: hidden; } /* shell scrolls inside .portal-main */
 
 .portal-boot {
   padding: 2rem;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  color: var(--text-secondary);
 }
 
 /* --------------- Shell grid --------------- */
@@ -77,7 +77,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-sidebar .sidebar-brand-title,
 .portal-topbar .sidebar-brand-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -85,7 +85,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-sidebar .sidebar-brand-subtitle,
 .portal-topbar .sidebar-brand-subtitle {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1rem;
   color: var(--accent-brown);
   line-height: 1.2;
@@ -98,7 +98,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.75rem;
   padding: 0.25rem 1.25rem 0.9rem;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   color: var(--text-secondary);
 }
 .portal-sidebar .sidebar-user-text { min-width: 0; }
@@ -115,7 +115,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-radius: 50%;
   background: var(--accent-brown);
   color: var(--label);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1;
 }
@@ -125,7 +125,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   object-fit: cover;
 }
 .portal-sidebar .sidebar-user .sidebar-user-name {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   color: var(--text-primary);
   font-weight: 500;
   font-size: .9rem;
@@ -161,10 +161,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-sidebar .sidebar-nav-group-title {
   margin: 0;
   padding: 0.3rem 0.85rem 0.35rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
@@ -179,7 +179,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-primary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.9rem;
   letter-spacing: 0.02em;
   text-align: left;
@@ -212,7 +212,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: none;
   border-radius: 4px;
   color: var(--text-secondary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: .85rem;
   letter-spacing: 0.02em;
   text-align: left;
@@ -237,7 +237,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background-color: var(--bg-primary);
   background-image: var(--grain);
   background-attachment: local;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.05rem;
 }
 .portal-main .portal-section-header {
@@ -252,7 +252,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-main .portal-section-header h1 {
   margin: 0;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1.6rem;
   letter-spacing: 0.02em;
@@ -341,16 +341,13 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
    Raised, with no border or shadow. The big ones (a table, a board) tear
    along the bottom (.tear / .tear-half in the markup). */
 .portal-card {
-  background: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
   padding: 1.25rem 1.25rem;
   margin-bottom: 1.25rem;
 }
 .portal-card.tear,
 .portal-card.tear-half { padding-bottom: calc(1.25rem + var(--tear-h)); }
 .portal-card .portal-card-title {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 1rem;
   letter-spacing: 0.1em;
@@ -373,22 +370,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   flex-wrap: wrap;
 }
 
-/* Inputs and selects sit in the well, with no outline of their own. */
-.portal-search {
-  background: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  min-height: 38px;
-  padding: 0 0.75rem;
-  border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  line-height: 1.25;
-  box-sizing: border-box;
-  min-width: 16rem;
-}
-.portal-search::placeholder { color: var(--form-input-placeholder); }
-
 .portal-filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -396,60 +377,31 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   margin: 0.35rem 0 0.85rem;
 }
-/* Dropdown chevron in the ink colour, drawn from two gradients so it follows
-   the theme tokens (a data-URI SVG can't read CSS variables). */
-.portal-filter-select,
-.portal-field select,
-.portal-select {
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--text-primary) 50%),
-    linear-gradient(135deg, var(--text-primary) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-}
-.portal-filter-select {
-  background-color: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  /* Same box as .portal-search so dropdowns line up with inputs. Safari's
-     native select ignores padding/height, so appearance is dropped above. */
-  min-height: 38px;
-  padding: 0 2rem 0 0.65rem;
-  border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  line-height: 1.25;
-  box-sizing: border-box;
-  min-width: 11rem;
-}
 
 /* --------------- Tables ---------------
-   The header band drops back to the grained page tone; rows are split by
-   one faint rule and take a touch of the well on hover. */
+   The header is one flat band in the table-head tone with one rule beneath
+   it; rows are split by one faint rule and take the hover tint. Group rows
+   are a band: the row above supplies the rule over it and its own rule sits
+   under it, so no two rules ever stack. */
 .portal-table-wrap { overflow-x: auto; }
 .portal-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.05rem;
 }
 .portal-table thead th {
   text-align: left;
   padding: 0.65rem 0.75rem;
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--text-secondary);
-  border-bottom: 0;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--table-head);
 }
 .portal-table tbody td {
   padding: 0.6rem 0.75rem;
@@ -475,10 +427,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-card > .portal-table-wrap .portal-table th:last-child,
 .portal-card > .portal-table-wrap .portal-table td:last-child { padding-right: 1.25rem; }
 
-/* --------------- Inline buttons ---------------
-   Portal buttons are the shared .btn (css/styles.css). */
-.btn .material-icons { font-size: 18px; }
-
 /* --------------- Form fields --------------- */
 /* Form rhythm (Torchlight): 7px from a label to its control, 26px between
    fields (stacked or in a row, with or without help text), 18px from the
@@ -491,7 +439,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-field + .portal-field { margin-top: 0.875rem; }
 .portal-field label {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.92rem;
   color: var(--text-primary);
 }
@@ -500,44 +448,18 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
        letter-spacing: 0;
        text-transform: none;
    }
-.portal-field input[type="text"],
-.portal-field input[type="date"],
-.portal-field input[type="datetime-local"],
-.portal-field input[type="number"],
-.portal-field textarea,
-.portal-field select, .portal-select {
-  background-color: var(--form-input-bg);
-  border: 0;
-  color: var(--text-primary);
-  padding: 0.55rem 0.65rem;
-  border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-}
-/* Same line-height on inputs and dropdowns so equal padding gives equal
-   heights. (The select chevron is drawn with .portal-filter-select above.) */
-.portal-field input[type="text"],
-.portal-field input[type="date"],
-.portal-field input[type="datetime-local"],
-.portal-field input[type="number"],
-.portal-field select, .portal-select {
-  line-height: 1.25;
-}
-.portal-field select, .portal-select { padding-right: 2rem; }
-.portal-field input::placeholder,
-.portal-field textarea::placeholder { color: var(--form-input-placeholder); }
+/* The fields themselves are the shared .field look (styles.css). */
 /* Standalone section-title style (Stoke small caps) — used only on the
    specific campaign-panel titles, never grouped with the form inputs above. */
 .portal-block-label {
   display: block;
   margin: 0 0 0.5rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
-.portal-field textarea { min-height: 5rem; resize: vertical; }
 .portal-field-help {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -570,16 +492,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-field + .portal-btn-row,
 .portal-field-row + .portal-btn-row { margin-top: 0.375rem; }
 
-/* The formatting toolbar (styles.css) over a portal textarea: the field's own
-   well tone, no border, sitting flush on the box. Quick picks are a wrapping
-   row of small quiet buttons above their box. */
+/* The formatting toolbar (styles.css) over a portal textarea, sitting flush
+   on the box. Quick picks are a wrapping row of small quiet buttons above
+   their box. */
 /* The toolbar and its box as one block, the full width of the field. */
 .markup-field { display: flex; flex-direction: column; }
-.portal-field .markup-toolbar {
-  border: 0;
-  background-color: var(--form-input-bg);
-  border-bottom: 1px solid var(--border-color);
-}
 .portal-field .markup-toolbar + textarea {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
@@ -603,9 +520,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .appt-field { margin-bottom: 0.6rem; }
 .appt-field-label {
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -633,38 +550,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin: 0 0 0.75rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 0.84rem;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
 
-/* --------------- Flash ---------------
-   A line of text led by a dot: red for an error, brown once something has
-   gone through, muted otherwise. */
-.portal-flash {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  margin: 0.5rem 0 0.75rem;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1rem;
-  color: var(--text-primary);
-}
-.portal-flash::before {
-  content: "";
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--text-secondary);
-  transform: translateY(-1px);
-}
-.portal-flash.error { color: var(--accent-red); }
-.portal-flash.error::before { background-color: var(--accent-red); }
-.portal-flash.success::before { background-color: var(--accent-brown); }
 
 /* Keep multi-word member column headers (e.g. "IC Interview") on one line. */
 .members-table thead th { white-space: nowrap; }
@@ -676,7 +569,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .member-profiles-table tbody td { vertical-align: middle; }
 /* Member name (first column) and IC rank (second). Group/empty rows span all
    columns and keep their own style. */
-.members-table tbody td:first-child:not([colspan]) { font-family: 'Stoke', serif; font-size: 0.93rem; }
+.members-table tbody td:first-child:not([colspan]) { font-family: var(--font-ui); font-size: 0.93rem; }
 .members-table tbody td:nth-child(2) { font-style: italic; color: var(--text-secondary); }
 
 /* --------------- Activity cell (status + inline talked-to) --------------- */
@@ -691,10 +584,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: var(--text-secondary);
   white-space: nowrap;
 }
-.activity-cell .talked-to-cell input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-}
 
 /* --------------- Talked-to checkbox cell --------------- */
 .talked-to-cell {
@@ -703,27 +592,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.4rem;
   font-size: 1rem;
 }
-.talked-to-cell input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
 
 /* --------------- My Profile two-column layout --------------- */
-/* My Items — reuses the public venue card + modal look (.venue-card,
-   .venue-modal and the torn edge from styles.css) for a consistent grid and
-   detail view. Item art is square (600x600 uploads), so the card media and the
+/* My Items — the shared card grid, media cards and detail popup from
+   styles.css. Item art is square (600x600 uploads), so the card media and the
    modal image are overridden to a 1:1 ratio here. */
-.my-items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.25rem;
-}
-.pv-item-card .venue-card-media { aspect-ratio: 1 / 1; }
+.pv-item-card .media-card-media { aspect-ratio: 1 / 1; }
 
-.venue-modal.pv-item-modal { max-width: 460px; }
-.pv-item-modal .venue-modal-img { aspect-ratio: 1 / 1; }
+.pv-item-modal .detail-modal-img { aspect-ratio: 1 / 1; }
 .pv-item-abilities {
   margin-top: 1.1rem;
   display: flex;
@@ -733,19 +609,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 /* Each ability is a recessed tray inside the item modal. */
 .pv-item-ability {
   padding: 0.75rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
-}
-.pv-item-ability strong {
-  font-family: 'Stoke', serif;
-  font-size: 0.98rem;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
 }
 .pv-item-ability p {
   margin: 0.15rem 0 0;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   color: var(--text-secondary);
   white-space: pre-wrap;
 }
@@ -771,24 +640,18 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
   cursor: pointer;
   text-transform: none;
   letter-spacing: normal;
   color: var(--text-primary);
 }
-.portal-checkbox-option input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
 .portal-checkbox-option.is-disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-.portal-checkbox-option.is-disabled input[type="checkbox"] {
+.portal-checkbox-option.is-disabled input {
   cursor: not-allowed;
 }
 
@@ -801,7 +664,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   min-height: 50vh;
   text-align: center;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .portal-coming-soon .material-icons {
   font-size: 64px;
@@ -809,7 +672,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   margin-bottom: 0.75rem;
 }
 .portal-coming-soon h2 {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 1.3rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -818,8 +681,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .portal-coming-soon p {
   margin: 0;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 1.15rem;
+  font-family: var(--font-script);
+  font-size: var(--fs-script);
+  font-style: normal;
+  line-height: 1.3;
+  color: var(--text-secondary);
 }
 
 /* --------------- Admin Settings role checkboxes --------------- */
@@ -832,94 +698,21 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   color: var(--text-primary);
   user-select: none;
-}
-.admin-role-checkbox input[type="checkbox"] {
-  accent-color: var(--check-color);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-/* --------------- Modal ---------------
-   The overlay covers the visible part of the window: while a popup is open
-   the scroll lock (js/pv-session.js) keeps --vv-top and --vv-height on the
-   root, which shrink to the space above an on-screen keyboard and follow
-   mobile Safari when it slides the view. Without them it is the full window.
-   The modal never outgrows the overlay (100%, inside its padding), so its
-   body is the only thing that scrolls and its foot is always in reach, and
-   on a large screen it stops at 94dvh. dvh follows mobile browsers' toolbar,
-   where vh is measured as if the toolbar were hidden; browsers without dvh
-   keep the vh lines. The scrim also runs well past the overlay's edges (the
-   shadow), so if Safari moves the view before the overlay catches up, the
-   page around it is still dimmed. */
-.portal-modal-overlay {
-  position: fixed;
-  top: var(--vv-top, 0px);
-  left: 0;
-  right: 0;
-  height: var(--vv-height, 100%);
-  z-index: 60;
-  background: var(--scrim);
-  box-shadow: 0 0 0 100vmax var(--scrim);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 3vh 1rem 1rem;
-  padding: 3dvh 1rem 1rem;
-  overflow-y: auto;
-}
-.portal-modal {
-  background: var(--bg-card);
-  border: 0;
-  border-radius: 4px;
-  width: 100%;
-  max-width: 640px;
-  display: flex;
-  flex-direction: column;
-  max-height: 94vh;
-  max-height: min(94dvh, 100%);
-}
-.portal-modal-lg { max-width: 880px; }
-/* Title and a small quiet close button, with a rule under them. */
-.portal-modal-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.9rem 1.1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.portal-modal-title {
-  margin: 0;
-  flex: 1;
-  font-family: 'Stoke', serif;
-  font-weight: 400;
-  font-size: 1rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-}
-.portal-modal-body {
-  padding: 1rem 1.1rem 1.25rem;
-  overflow-y: auto;
 }
 
 /* --------------- Dashboard --------------- */
 .dashboard-header .dashboard-date {
   margin-left: auto;
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-size: 1.2rem;
   color: var(--accent-brown);
   white-space: nowrap;
 }
 
-.dash-loading {
-  color: var(--text-secondary);
-  font-style: italic;
-}
 
 /* Pending / Scheduled groups side by side on wide views, stacking when the
    row can no longer fit two groups. Each group grows in proportion to how many
@@ -938,9 +731,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .dash-stat-heading {
   margin: 0 0 0.5rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -971,7 +764,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .dash-stat:hover { transform: translateY(-1px); }
 .dash-stat:active { transform: none; }
 .dash-stat-num {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 2.4rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -982,10 +775,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: 'Stoke', serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--text-secondary);
 }
 .dash-stat.is-alert .dash-stat-label::before {
@@ -1005,7 +798,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 .dash-attention-head .portal-card-title { flex: 1; }
 .dash-attention-meta {
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.95rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -1028,43 +821,48 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .dash-attention-text {
   flex: 1;
   min-width: 0;
-  font-family: 'Crimson Pro', serif;
-  font-size: 1.02rem;
+  font-family: var(--font-text);
+  font-size: var(--fs-data);
   color: var(--text-primary);
 }
+.dash-attention-text > span { color: var(--text-body); }
 .dash-attention-source {
-  font-family: 'La Belle Aurore', cursive;
+  font-family: var(--font-script);
   font-style: normal;
   color: var(--text-secondary);
   margin-left: 0.2rem;
+  font-size: var(--fs-script);
+  line-height: 1.3;
 }
 .dash-attention-empty {
-  color: var(--text-secondary);
-  font-style: italic;
   margin: 0.4rem 0 0;
 }
 .dash-open { white-space: nowrap; }
 .dash-open .material-icons { font-size: 16px; }
 
 /* --------------- Division layout --------------- */
+/* Two columns at 1 : 1.35 that stack when the content area can't hold both
+   (about 48rem); the bases share that ratio, so the columns keep it as they
+   grow. */
 .division-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.25rem;
-  align-items: start;
+  align-items: flex-start;
 }
-.division-col { min-width: 0; }
+.division-col { min-width: 0; flex: 1 1 20rem; }
+.division-col + .division-col { flex: 1.35 1 27rem; }
 
 .portal-card-subtitle {
   margin: -0.25rem 0 0.9rem;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.98rem;
 }
 .portal-card-count {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   white-space: nowrap;
 }
 
@@ -1078,11 +876,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-top: 1px solid var(--border-color);
 }
 .ic-interview-row:first-child { border-top: none; }
-.ic-interview-name {
-  font-family: 'Crimson Pro', serif;
-  font-weight: 600;
-  color: var(--text-primary);
-}
 
 /* Bulletins (shared board): recessed trays (.tray) inside the board's card. */
 .bulletin-list { display: flex; flex-direction: column; gap: 12px; }
@@ -1094,19 +887,14 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.5rem 0.65rem;
   margin-bottom: 0.15rem;
 }
-.bulletin-title {
-  flex: 1 1 auto;
-  margin: 0;
-  font-family: 'Stoke', serif;
-  font-weight: 400;
-  font-size: 1.05rem;
-  color: var(--text-primary);
-}
+.bulletin-title { flex: 1 1 auto; }   /* the shared .item-title */
 .bulletin-by {
   margin: 0.1rem 0 0.5rem;
-  font-family: 'La Belle Aurore', cursive;
-  font-size: 0.95rem;
+  font-family: var(--font-script);
+  font-size: var(--fs-script);
   color: var(--text-secondary);
+  font-style: normal;
+  line-height: 1.3;
 }
 
 /* Empty state: a recessed tray. */
@@ -1114,11 +902,10 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border: 0;
   border-radius: 4px;
   padding: 1.5rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   text-align: center;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 
 /* --------------- FC Members directory --------------- */
@@ -1153,7 +940,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   color: var(--text-secondary);
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -1175,7 +962,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: none;
   border: none;
   color: var(--accent-brown);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1.02rem;
   white-space: nowrap;
   cursor: pointer;
@@ -1188,9 +975,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-table .portal-group-row td {
   padding: 0.65rem 0.75rem;
   background-color: var(--bg-group-row);
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
@@ -1248,71 +1035,73 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   background: none;
   border: none;
   cursor: pointer;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.85rem;
   color: var(--accent-brown);
   text-decoration: underline;
 }
 
 /* --------------- Permissions (root only) --------------- */
-/* Matrix: roles across the top, Page → Tab → Action down the side. The grid
-   sits in a recessed tray; the header row and the label column stay put while
-   it scrolls, and share the tray tone so scrolling never shows a seam. Pages,
-   tabs and actions step by indent and type, not fills. */
+/* Matrix: roles across the top, Page → Tab → Action down the side, in the
+   same pattern as the other grids (the Mount Farm tracker): flush to the
+   card's edges, roles in the table-head band, a solid card-toned label
+   column, group bands, one rule between rows and the shared row hover. The
+   header row and the label column stay put while it scrolls. Pages, tabs and
+   actions step by indent and type, not fills. */
 .perm-grid-wrap {
   --perm-pending: var(--text-primary);
   max-height: 70vh;
   overflow: auto;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
-  border: 0;
-  border-radius: 4px;
+  margin: 0 -1.25rem;
 }
 [data-theme="dark"] .perm-grid-wrap { --perm-pending: var(--gold); }
 .perm-grid {
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   min-width: 100%;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 1rem;
 }
 .perm-grid thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--table-head);
   box-shadow: inset 0 -1px 0 var(--border-color);
-  padding: 0.75rem 0.4rem;
-  font-family: 'Stoke', serif;
+  padding: 10px 6px 9px;
+  font-family: var(--font-ui);
   font-weight: 400;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 .perm-grid thead th.perm-corner { left: 0; z-index: 3; }
-.perm-grid .perm-role-col { text-align: center; min-width: 4.25rem; }
+.perm-grid .perm-role-col { text-align: center; min-width: 64px; }
+/* The label column is solid card, like the tracker's people column, so the
+   roles scroll under it. */
 .perm-row-label {
   position: sticky;
   left: 0;
   z-index: 1;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-card);
   text-align: left;
   font-weight: 400;
-  padding: 0.42rem 1rem;
+  padding: 7px 12px 7px 1.25rem;
   min-width: 15rem;
   max-width: 22rem;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
+  transition: background-color 0.15s ease;
 }
-.perm-row-label.is-action { padding-left: 2.1rem; }
-.perm-row-label.is-tab { padding-left: 2.1rem; }
-.perm-row-label.is-tab-action { padding-left: 3.25rem; }
+.perm-row-label.is-action { padding-left: 2.5rem; }
+.perm-row-label.is-tab { padding-left: 2.5rem; }
+.perm-row-label.is-tab-action { padding-left: 3.6rem; }
 .perm-row-sub { display: block; font-size: 0.8rem; color: var(--text-secondary); }
-.perm-page-name { font-family: 'Stoke', serif; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.perm-page-name { font-family: var(--font-ui); font-size: 0.88rem; letter-spacing: 0.02em; color: var(--text-primary); }
 .perm-tab-name { font-style: italic; }
 .perm-toggle {
   display: inline-flex;
@@ -1325,41 +1114,37 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   color: inherit;
   cursor: pointer;
 }
-.perm-toggle .material-icons { font-size: 1.1rem; }
-/* Group rows: ink small caps with a rule underneath, no fill. */
+.perm-toggle.is-static { cursor: default; }
+/* Stands in for the chevron on a page with nothing under it. */
+.perm-toggle-space { flex: none; width: 16px; height: 16px; }
+/* Group rows: a band, as in the other tables, with a rule underneath (the
+   row above supplies the one over it). */
 .perm-group-row td {
-  padding: 1.3rem 0 0.45rem;
+  padding: 0.65rem 0;
+  background-color: var(--bg-group-row);
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Stoke', serif;
-  font-size: 0.84rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-section);
+  letter-spacing: var(--track-section);
   text-transform: uppercase;
   color: var(--text-primary);
 }
-.perm-group-row td > span { position: sticky; left: 1rem; padding: 0 1rem; }
-.perm-cell-td { text-align: center; padding: 0.3rem; border-bottom: 1px solid var(--border-color); }
-/* Cells are controls, so they sit in the well: brown for allow, red for deny,
-   the well's own tone for inherit. An unsaved change gets an offset outline
-   (ink in light, gold in dark); a conflicting one an inner gold ring. */
-.perm-cell {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background-color: var(--bg-darker);
-  font-family: 'Crimson Pro', serif;
-  font-weight: 600;
-  font-size: 0.82rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--text-secondary);
+.perm-group-row td > span { position: sticky; left: 0; padding: 0 1.25rem; }
+.perm-cell-td {
+  text-align: center;
+  padding: 4px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
 }
-.perm-cell.is-allow { background-color: var(--accent-brown); color: var(--label); }
-.perm-cell.is-deny  { background-color: var(--accent-red); color: var(--label); }
+.perm-grid tbody tr:not(.perm-group-row):hover > * { background-color: var(--bg-row-hover); }
+/* The last row hands its rule to the save bar. */
+.perm-grid tbody tr:last-child > * { border-bottom-color: transparent; }
+/* Cells are the shared tick (styles.css): a check for allow, a cross for
+   deny, the empty ringed square for not set. An unsaved change gets an
+   offset outline (ink in light, gold in dark); a conflicting one an inner
+   gold ring. */
+.perm-cell { display: flex; margin: 0 auto; }
 .perm-cell.is-warn  { box-shadow: inset 0 0 0 2px var(--gold); }
 .perm-cell.is-pending { outline: 2px solid var(--perm-pending); outline-offset: 2px; }
 .perm-cell:disabled { cursor: wait; opacity: 0.6; }
@@ -1371,13 +1156,12 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin: 0.75rem -1.25rem -1.25rem;
+  margin: 0 -1.25rem -1.25rem;
   padding: 0.75rem 1.25rem;
   background: var(--bg-card);
   border-top: 1px solid var(--border-color);
 }
-.perm-savebar-count { margin-right: auto; font-family: 'Crimson Pro', serif; color: var(--text-primary); }
-.perm-loading { color: var(--text-secondary); margin: 0; }
+.perm-savebar-count { margin-right: auto; font-family: var(--font-text); color: var(--text-primary); }
 
 /* Roles list + add form */
 .perm-roles { display: flex; flex-direction: column; }
@@ -1388,7 +1172,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   gap: 0.5rem 0.75rem;
   padding: 0.45rem 0;
   border-bottom: 1px solid var(--border-color);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .perm-role-label { font-weight: 600; min-width: 9rem; }
 .perm-role-input { min-width: 9rem; }
@@ -1414,12 +1198,11 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-head-title { margin: 0; flex: 1; }
 .portal-head-desc { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.92rem; }
 .portal-head-desc.is-tight { margin-top: 0.3rem; }
-.portal-flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
+.flash.is-head { margin-top: 0.75rem; margin-bottom: 0; }
 
 /* Text */
 .portal-muted { color: var(--text-secondary); }
 .portal-note { margin: 0; color: var(--text-secondary); }   /* empty / loading notes */
-.portal-strong { font-weight: 600; }
 .portal-pre { white-space: pre-wrap; }
 .portal-gap-top { margin-top: 0.85rem; }
 .portal-card > .portal-table-wrap.portal-gap-top { margin-top: 0.85rem; }
@@ -1438,7 +1221,6 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 }
 /* First cell: the row's name, with any badges beside it. */
 .portal-name-row { display: flex; align-items: center; gap: 0.4rem; }
-.portal-row-title { font-family: Stoke, serif; font-size: 0.9rem; }
 
 /* Forms */
 .portal-field.is-full { grid-column: 1 / -1; }
@@ -1449,7 +1231,7 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
 .portal-btn-row { display: flex; gap: 0.625rem; margin-top: 0.5rem; }   /* Save / Cancel */
 .portal-card.is-tight { margin-bottom: 0.6rem; }
 /* A card inside a card drops back to a recessed tray. */
-.portal-card.is-inset { background-color: var(--bg-primary); background-image: var(--grain); margin-bottom: 0.5rem; }
+.portal-card.is-inset { background-color: var(--bg-tray); margin-bottom: 0.5rem; }
 .btn.is-spaced { margin-left: 0.4rem; }
 .portal-check-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
 
@@ -1494,9 +1276,6 @@ textarea.cmp-code,
 .portal-card.cmp-list-card { margin-bottom: 0.75rem; }
 
 /* --------------- Responsive --------------- */
-@media (max-width: 1100px) {
-  .division-grid { grid-template-columns: 1fr; }
-}
 @media (max-width: 900px) {
   /* Needs Attention rows stack: the state tag, the text, then Open below. */
   .dash-attention-row { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
@@ -1535,7 +1314,7 @@ textarea.cmp-code,
   .portal-main { padding: calc(1rem + var(--tear-h)) 1rem 3rem; }
   .portal-field-row,
   .portal-field-row-triple { grid-template-columns: 1fr; }
-  .portal-search { min-width: 0; width: 100%; }
+  .field.is-search { min-width: 0; width: 100%; }
   .portal-card-actions { width: 100%; }
   /* Section headers with extra content (dashboard date, FC Members search +
      add button) wrap instead of overflowing the viewport. */
@@ -1566,12 +1345,13 @@ textarea.cmp-code,
 
 /* The pages list scrolls inside its own box so the column headers stay in
    view. Collapsed table borders don't travel with a sticky header, so its
-   bottom line is drawn as an inset shadow. */
+   bottom line is drawn as an inset shadow instead of the border. */
 .site-table-scroll { max-height: 70vh; overflow: auto; }
 .site-table-scroll .portal-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
+  border-bottom: 0;
   box-shadow: inset 0 -1px 0 var(--border-color);
 }
 
@@ -1580,8 +1360,7 @@ textarea.cmp-code,
 /* A group is a recessed tray; the rows in it are raised again. */
 .nav-ed-group {
   padding: 0.4rem;
-  background-color: var(--bg-primary);
-  background-image: var(--grain);
+  background-color: var(--bg-tray);
   border-radius: 4px;
 }
 .nav-ed-children {
@@ -1598,7 +1377,7 @@ textarea.cmp-code,
   background: var(--bg-card);
   border: 0;
   border-radius: 4px;
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
 }
 .nav-ed-row.is-dragging { opacity: 0.45; }
 .nav-ed-row.is-over { box-shadow: 0 -3px 0 0 var(--accent-brown); }
@@ -1606,9 +1385,9 @@ textarea.cmp-code,
 .nav-ed-type {
   flex-shrink: 0;
   min-width: 6.5rem;
-  font-family: 'Stoke', serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--track-micro);
   text-transform: uppercase;
   color: var(--text-secondary);
 }
@@ -1622,7 +1401,7 @@ textarea.cmp-code,
 }
 .nav-ed-sub { color: var(--text-secondary); font-size: 0.85rem; }
 .nav-ed-heading {
-  font-family: 'Stoke', serif;
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1639,7 +1418,7 @@ textarea.cmp-code,
   border: 1px dashed transparent;
   border-radius: 0.375rem;
   color: var(--text-secondary);
-  font-family: 'Crimson Pro', serif;
+  font-family: var(--font-text);
   font-size: 0.85rem;
 }
 .nav-ed-end .nav-ed-hint { visibility: hidden; }

@@ -286,7 +286,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Name *'),
@@ -449,7 +449,7 @@
               background: 'var(--bg-card-light)',
               border: '1px solid var(--border-color)',
               borderRadius: '0.25rem',
-              fontFamily: '"La Belle Aurore", cursive',
+              fontFamily: 'var(--font-script)',
               fontSize: '0.95rem',
               color: 'var(--accent-brown)'
             }
@@ -550,7 +550,7 @@
       h('td', null,
         h('div', { className: 'portal-name-row' },
           v.featured ? h('span', { className: 'tag', title: 'Featured' }, '★') : null,
-          h('span', { className: 'portal-row-title' }, v.name)
+          h('span', { className: 'row-name' }, v.name)
         )
       ),
       h('td', null, labelFor(SIZES, v.size)),
@@ -659,7 +659,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Directory'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search venues…'
@@ -673,11 +673,11 @@
             h('span', null, 'New venue')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading
@@ -753,7 +753,7 @@
         ? (MenusTab
             ? h(MenusTab, { session: props && props.session })
             : h('div', { className: 'portal-card' },
-                h('div', { className: 'portal-flash error' },
+                h('div', { className: 'flash error' },
                   'js/admin/venue-menus.js failed to load.')))
         : h(VenueDirectory, null)
     );

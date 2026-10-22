@@ -26,28 +26,28 @@
     </p>
 
     <!-- Two-column layout mirroring campaigns -->
-    <div class="campaign-layout" id="records-layout">
+    <div class="browse-layout" id="records-layout">
 
-      <!-- Patient sidebar (campaign-sidebar pattern) -->
-      <aside class="campaign-sidebar tear-half" id="patient-sidebar" aria-label="Patient navigation">
+      <!-- Patient sidebar (browse-sidebar pattern) -->
+      <aside class="browse-sidebar tear-half" id="patient-sidebar" aria-label="Patient navigation">
         <div class="patient-sidebar-top">
-          <div class="campaign-sidebar-header">
-            <span class="campaign-sidebar-title">Patients</span>
+          <div class="browse-sidebar-header">
+            <span class="browse-sidebar-title">Patients</span>
             <button class="btn is-quiet is-small is-icon" id="sidebar-close-btn" type="button" aria-label="Close patient list">&#10005;</button>
           </div>
           <div class="patient-controls">
-            <input type="search" id="patient-search" class="patient-search" placeholder="Search patients…" aria-label="Search patients" autocomplete="off">
+            <input type="search" id="patient-search" class="field is-block" placeholder="Search patients…" aria-label="Search patients" autocomplete="off">
             <div class="patient-az-bar" id="patient-az-bar" role="group" aria-label="Jump to letter"></div>
           </div>
         </div>
-        <ul class="chapter-list" id="patient-list" role="list">
+        <ul class="sidebar-list" id="patient-list" role="list">
           <!-- populated by JS -->
         </ul>
       </aside>
 
       <!-- Main content area -->
-      <main class="campaign-main" id="records-main">
-        <div class="campaign-toolbar">
+      <main class="browse-main" id="records-main">
+        <div class="browse-toolbar">
           <button class="btn is-quiet" id="sidebar-toggle-btn" type="button" aria-label="Toggle patient list">
             &#9776; Patients
           </button>
@@ -55,7 +55,7 @@
 
         <div id="patient-content">
           <div class="record-card">
-            <p class="v2-state-msg">Select a patient to view their records.</p>
+            <p class="empty-note v2-state-msg">Select a patient to view their records.</p>
             <p class="record-card-note">Please see Fiora if records are not up to date or files are missing.</p>
           </div>
         </div>
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Mobile overlay -->
-    <div class="campaign-overlay" id="campaign-overlay" aria-hidden="true"></div>
+    <div class="browse-overlay" id="browse-overlay" aria-hidden="true"></div>
   </div>
 
   <footer class="site-footer" id="site-footer">
@@ -87,7 +87,7 @@
     var sidebarEl      = document.getElementById("patient-sidebar");
     var toggleBtn      = document.getElementById("sidebar-toggle-btn");
     var closeBtn       = document.getElementById("sidebar-close-btn");
-    var overlay        = document.getElementById("campaign-overlay");
+    var overlay        = document.getElementById("browse-overlay");
     var patientSearch  = document.getElementById("patient-search");
     var azBar          = document.getElementById("patient-az-bar");
 
@@ -109,7 +109,7 @@
     if (window.marked && marked.use) marked.use({ breaks: true });
 
     // ── Sidebar (matches campaign pattern exactly) ─────────────────────
-    function isMobile() { return window.innerWidth <= 768; }
+    function isMobile() { return PVLayout.isNarrow(); }
 
     function openSidebar() {
       if (isMobile()) {
@@ -344,7 +344,7 @@
 
     // ── Patient list ───────────────────────────────────────────────────
     async function loadPatientList() {
-      patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state"><span class="v2-state-msg">Loading&hellip;</span></div></li>';
+      patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state"><span class="empty-note v2-state-msg">Loading&hellip;</span></div></li>';
       try {
         var patients = (await Promise.all([apiGet("/patients"), refreshPermissions()]))[0];
         allPatients = (Array.isArray(patients) ? patients : [])
@@ -354,29 +354,29 @@
           });
         renderPatientList();
         if (!allPatients.length && !seesAllRecords()) {
-          patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg">' + escapeHTML(NO_OWN_RECORDS) + '</p></div>';
+          patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg">' + escapeHTML(NO_OWN_RECORDS) + '</p></div>';
         }
       } catch(err) {
         console.error("Error loading patients:", err);
         var refused = refusedMessage(err);
-        patientList.innerHTML = '<li class="chapter-list-item"><div class="patient-list-state v2-state-msg error">' +
+        patientList.innerHTML = '<li class="sidebar-list-item"><div class="patient-list-state empty-note v2-state-msg error">' +
           (refused ? "No patients to show." : "Failed to load patients.") + '</div></li>';
         azBar.innerHTML = "";
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+        patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg error">' +
           (refused || "Could not reach the medical database. Please try again shortly.") + '</p></div>';
       }
     }
 
     function makePatientItem(p) {
       var li = document.createElement("li");
-      li.className = "chapter-list-item";
+      li.className = "sidebar-list-item";
       li.dataset.patientId = String(p.patient_id);
       if (String(p.patient_id) === String(activePatientId)) li.classList.add("active");
 
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "chapter-list-btn";
-      btn.innerHTML = '<span class="chapter-list-btn-title">' + escapeHTML(p.patient_name) + '</span>';
+      btn.className = "sidebar-list-btn";
+      btn.innerHTML = '<span class="sidebar-list-btn-title">' + escapeHTML(p.patient_name) + '</span>';
       btn.addEventListener("click", function() {
         loadPatient(p.patient_id);
         if (isMobile()) closeSidebar();
@@ -400,12 +400,12 @@
       if (!full) azBar.innerHTML = "";
 
       if (!allPatients.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">' + (full ? "No patients on file." : "No records on file.") + '</li>';
+        patientList.innerHTML = '<li class="empty-note patient-empty-msg">' + (full ? "No patients on file." : "No records on file.") + '</li>';
         if (full) buildAzBar({});
         return;
       }
       if (!filtered.length) {
-        patientList.innerHTML = '<li class="patient-empty-msg">No patients match your search.</li>';
+        patientList.innerHTML = '<li class="empty-note patient-empty-msg">No patients match your search.</li>';
         if (full) buildAzBar({});
         return;
       }
@@ -463,7 +463,7 @@
     }
 
     function setActivePatientItem(id) {
-      var items = patientList.querySelectorAll(".chapter-list-item");
+      var items = patientList.querySelectorAll(".sidebar-list-item");
       items.forEach(function(li) { li.classList.toggle("active", li.dataset.patientId === String(id)); });
     }
 
@@ -473,13 +473,13 @@
       activePatientId = patientId;
       setActivePatientItem(patientId);
 
-      patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg">Loading patient records&hellip;</p></div>';
+      patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg">Loading patient records&hellip;</p></div>';
       try {
         var data = await apiGet("/patients/" + encodeURIComponent(patientId));
         renderPatient(data);
       } catch(err) {
         console.error("Error loading patient:", err);
-        patientContent.innerHTML = '<div class="record-card"><p class="v2-state-msg error">' +
+        patientContent.innerHTML = '<div class="record-card"><p class="empty-note v2-state-msg error">' +
           (refusedMessage(err) || "Could not load this patient's records.") + '</p></div>';
       }
     }
@@ -617,12 +617,12 @@
             html += ' <span class="visit-card-meta">&mdash; ' + escapeHTML(v.attending_medic) + '</span>';
           }
           html += '</div>';
-          html += '<span class="visit-card-chevron" aria-hidden="true">&#9662;</span>';
+          html += '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
           html += '</div>';
 
           html += '<div class="visit-card-body">';
           if (!hasContent) {
-            html += '<em class="visit-card-empty">No details available for this visit.</em>';
+            html += '<p class="empty-note">No details available for this visit.</p>';
           } else {
             if (hasIntake) {
               html += intake

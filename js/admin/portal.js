@@ -353,7 +353,7 @@
         break;
       default:
         body = h('div', { className: 'portal-card' },
-          h('p', { className: 'portal-flash error' }, 'You do not have access to any faction division.'));
+          h('p', { className: 'flash error' }, 'You do not have access to any faction division.'));
     }
 
     return h('div', null,
@@ -432,7 +432,7 @@
   function Missing(file) {
     return function () {
       return h('div', { className: 'portal-card' },
-        h('p', { className: 'portal-flash error' },
+        h('p', { className: 'flash error' },
           'Module not loaded: ' + file + '. Reload the page and try again.'
         )
       );
@@ -540,7 +540,7 @@
       if (!drawerOpen) return;
       function onKey(e) { if (e.key === 'Escape') setDrawerOpen(false); }
       document.addEventListener('keydown', onKey);
-      var mobile = window.matchMedia('(max-width: 900px)');
+      var mobile = window.matchMedia(PVLayout.narrow);
       function onLayout() { if (!mobile.matches) setDrawerOpen(false); }
       mobile.addEventListener('change', onLayout);
       var unlock = PVScrollLock.lock();
@@ -583,11 +583,11 @@
 
     if (!session) {
       PVAdminAPI.redirectToLogin();
-      return h('div', { className: 'portal-boot' }, 'Redirecting…');
+      return h('div', { className: 'empty-note portal-boot' }, 'Redirecting…');
     }
 
     if (!Array.isArray(session.permissions)) {
-      return h('div', { className: 'portal-boot' }, 'Loading…');
+      return h('div', { className: 'empty-note portal-boot' }, 'Loading…');
     }
 
     var activeMeta = SECTIONS.find(function (s) { return s.id === section; });
@@ -657,7 +657,7 @@
           : accessible
           ? h(SectionOutlet, { section: section, session: session, onNavigate: onSelect, navParams: navParams })
           : h('div', { className: 'portal-card' },
-              h('p', { className: 'portal-flash error' },
+              h('p', { className: 'flash error' },
                 'You do not have access to this section.'
               )
             )

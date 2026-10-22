@@ -216,7 +216,7 @@
     var categories = (meta && meta.categories) || [];
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Quest Name *'),
@@ -337,7 +337,7 @@
         },
           DATA_REWARD_LEVELS.map(function (lv) {
             return h('div', { key: lv.key, className: 'portal-field' },
-              h('label', { style: { fontSize: '0.8rem' } }, lv.label),
+              h('label', { className: 'field-label is-small' }, lv.label),
               h('input', {
                 type: 'number', min: 0,
                 value: draft.dataReward[lv.key],
@@ -347,7 +347,7 @@
           })
         ),
         h('div', { className: 'portal-field', style: { marginTop: '0.5rem', maxWidth: '12rem' } },
-          h('label', { style: { fontSize: '0.8rem' } }, 'Cosmic Points'),
+          h('label', { className: 'field-label is-small' }, 'Cosmic Points'),
           h('input', {
             type: 'number', min: 0,
             value: draft.dataReward.cosmicPoints,
@@ -384,8 +384,8 @@
 
     return h('tr', null,
       h('td', null,
-        h('div', { className: 'portal-strong' }, q.questName || '(unnamed)'),
-        itemNames ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, itemNames) : null
+        h('div', { className: 'row-name' }, q.questName || '(unnamed)'),
+        itemNames ? h('div', { className: 'row-meta' }, itemNames) : null
       ),
       h('td', null, q.job || '—'),
       h('td', null, q.location || '—'),
@@ -515,7 +515,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Cosmic Exploration Catalog'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search quests or items…'
@@ -523,7 +523,7 @@
           h('select', {
             value: filterJob,
             onChange: function (e) { setFilterJob(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All jobs'),
             jobs.map(function (j) { return h('option', { key: j.name, value: j.name }, j.name); })
@@ -531,7 +531,7 @@
           h('select', {
             value: filterLoc,
             onChange: function (e) { setFilterLoc(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All locations'),
             locations.map(function (l) { return h('option', { key: l.name, value: l.name }, l.name); })
@@ -539,7 +539,7 @@
           h('select', {
             value: filterCat,
             onChange: function (e) { setFilterCat(e.target.value); },
-            className: 'portal-filter-select'
+            className: 'field is-filter'
           },
             h('option', { value: 'all' }, 'All classes'),
             categories.map(function (c) { return h('option', { key: c.name, value: c.name }, c.name); })
@@ -554,11 +554,11 @@
             h('span', null, 'New quest')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

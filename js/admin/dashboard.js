@@ -88,7 +88,7 @@
 
     if (state.loading) {
       return h('div', null, header(),
-        h('p', { className: 'dash-loading' }, 'Loading…'));
+        h('p', { className: 'empty-note' }, 'Loading…'));
     }
 
     var members = state.members, apps = state.apps, quests = state.quests;
@@ -231,7 +231,7 @@
 
     return h('div', null,
       header(),
-      state.error ? h('p', { className: 'portal-flash error' }, state.error) : null,
+      state.error ? h('p', { className: 'flash error' }, state.error) : null,
 
       // Stat tiles grouped by stage, with FC Members / Open Positions as
       // smaller reference tiles on their own row at the end.
@@ -257,7 +257,7 @@
           )
         ),
         attention.length === 0
-          ? h('p', { className: 'dash-attention-empty' }, 'Nothing needs attention right now.')
+          ? h('p', { className: 'empty-note dash-attention-empty' }, 'Nothing needs attention right now.')
           : h('div', { className: 'dash-attention-list' },
               attention.map(function (it) {
                 return h('div', { className: 'dash-attention-row', key: it.key },

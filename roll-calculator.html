@@ -39,7 +39,7 @@
       if (typeof RollCalculator !== 'undefined') {
         root.render(React.createElement(RollCalculator));
       } else {
-        root.render(React.createElement('div', { className: 'rp-gate' }, 'Failed to load the calculator. Reload the page.'));
+        root.render(React.createElement('div', { className: 'notice-panel is-gate rp-gate' }, 'Failed to load the calculator. Reload the page.'));
       }
     });
   </script>

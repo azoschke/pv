@@ -256,7 +256,7 @@
     });
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-form-section' },
         h('h3', { className: 'portal-form-section-title' }, 'Visit'),
@@ -270,7 +270,7 @@
             onChange: function (e) { setField('visit_date', e.target.value); }
           }), { half: true }),
           field('Attending medic', h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: draft.attending_medic || '',
             onChange: function (e) { setField('attending_medic', e.target.value); }
           },
@@ -278,7 +278,7 @@
             medics.map(function (n) { return h('option', { key: n, value: n }, n); })
           )),
           requests !== null && (requestOptions.length || draft.appointment_id) ? field('Appointment request', h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: draft.appointment_id ? String(draft.appointment_id) : '',
             onChange: function (e) { setField('appointment_id', e.target.value ? Number(e.target.value) : null); }
           },

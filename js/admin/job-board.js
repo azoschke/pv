@@ -140,7 +140,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),
@@ -249,7 +249,7 @@
 
     return h('tr', null,
       h('td', null,
-        h('span', { className: 'portal-row-title' }, j.title)
+        h('span', { className: 'row-name' }, j.title)
       ),
       h('td', null,
         h('span', { className: typeCls }, labelFor(JOB_TYPES, j.job_type || 'primary'))
@@ -361,7 +361,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Job Board'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search postings…'
@@ -375,11 +375,11 @@
             h('span', null, 'New posting')
           )
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

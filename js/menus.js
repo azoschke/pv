@@ -121,19 +121,19 @@
   // ── Venue chooser ────────────────────────────────────────────────────────
   function venueCardHtml(v) {
     var media = v.image_url
-      ? '<img class="menu-venue-card-img" src="' + escapeHTML(v.image_url) +
+      ? '<img class="media-card-img" src="' + escapeHTML(v.image_url) +
         '" alt="" loading="lazy" decoding="async" />'
       : '';
 
     return '' +
-      '<button type="button" class="menu-venue-card" data-venue-id="' + escapeHTML(v.id) + '">' +
+      '<button type="button" class="media-card" data-venue-id="' + escapeHTML(v.id) + '">' +
         // Placeholder field and torn edge, same as the venue directory cards.
-        '<span class="menu-venue-card-media tear-half ' + mediaClass(v) + '">' +
+        '<span class="media-card-media tear-half ' + mediaClass(v) + '">' +
           media +
         '</span>' +
-        '<span class="menu-venue-card-body">' +
-          '<span class="menu-venue-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
-          '<span class="menu-venue-card-location">' + escapeHTML(locationLine(v)) + '</span>' +
+        '<span class="media-card-body">' +
+          '<span class="media-card-title">' + escapeHTML(v.name || "Untitled venue") + '</span>' +
+          '<span class="media-card-meta">' + escapeHTML(locationLine(v)) + '</span>' +
         '</span>' +
       '</button>';
   }
@@ -141,13 +141,13 @@
   function renderChooser() {
     if (!allVenues.length) {
       venueGrid.innerHTML =
-        '<div class="venues-empty"><p>No menus have been published yet.</p>' +
+        '<div class="notice-panel"><p>No menus have been published yet.</p>' +
         '<p>Check back once a tavern or restaurant adds their fare.</p></div>';
       return;
     }
     venueGrid.innerHTML = allVenues.map(venueCardHtml).join("");
     Array.prototype.forEach.call(
-      venueGrid.querySelectorAll(".menu-venue-card"),
+      venueGrid.querySelectorAll(".media-card"),
       function (btn) {
         btn.addEventListener("click", function () {
           selectVenue(btn.dataset.venueId, true);
@@ -237,7 +237,7 @@
 
     var body = cats.length
       ? cats.map(categoryHtml).join("")
-      : '<p class="menu-empty">This menu has not been filled in yet.</p>';
+      : '<p class="empty-note menu-empty">This menu has not been filled in yet.</p>';
 
     // The venue's own photograph doubles as the masthead backdrop, over the
     // placeholder field when there is none. The chooser payload always
@@ -327,7 +327,7 @@
 
   async function selectVenue(venueId, push) {
     showView(push, venueId);
-    sheetEl.innerHTML = '<p class="menu-empty">Loading menu&hellip;</p>';
+    sheetEl.innerHTML = '<p class="empty-note menu-empty">Loading menu&hellip;</p>';
     try {
       var payload = await fetchMenu(venueId);
       renderMenu(payload);
@@ -337,7 +337,7 @@
     } catch (err) {
       console.error("Error loading menu:", err);
       sheetEl.innerHTML =
-        '<p class="menu-empty venues-empty-error">Could not load this menu. ' +
+        '<p class="empty-note menu-empty notice-panel-error">Could not load this menu. ' +
         'Please try again shortly.</p>';
     }
   }
@@ -379,7 +379,7 @@
   });
 
   async function boot() {
-    venueGrid.innerHTML = '<div class="venues-empty"><p>Loading menus&hellip;</p></div>';
+    venueGrid.innerHTML = '<div class="notice-panel"><p>Loading menus&hellip;</p></div>';
     try {
       var data = await fetchVenues();
       allVenues = (Array.isArray(data) ? data : []).filter(function (v) {
@@ -388,7 +388,7 @@
       renderChooser();
     } catch (err) {
       console.error("Error loading menus:", err);
-      venueGrid.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      venueGrid.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the menu directory. Please try again shortly.</p></div>';
       return;
     }

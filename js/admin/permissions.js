@@ -27,8 +27,17 @@
   var useMemo = React.useMemo;
 
   var NEXT = { '': 'allow', allow: 'deny', deny: '' };
-  var SYMBOL = { '': '·', allow: '✓', deny: '✕' };
+  // A check for allow and a cross for deny, drawn like Mount Farm's ticks;
+  // "not set" is the empty ringed square.
+  var ICON = { allow: 'M5 12.5l4.5 4.5L19 7.5', deny: 'M6 6l12 12M18 6L6 18' };
   var WORD = { '': 'Not set', allow: 'Allow', deny: 'Deny' };
+
+  function svgIcon(d, className, strokeWidth) {
+    return h('svg', {
+      className: className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: strokeWidth || 2.6,
+      strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false'
+    }, h('path', { d: d }));
+  }
 
   function cellId(roleId, key) { return roleId + '|' + key; }
 
@@ -55,7 +64,7 @@
 
   function PermCell(props) {
     var v = props.value;
-    var cls = 'perm-cell' + (v ? ' is-' + v : ' is-blank') + (props.pending ? ' is-pending' : '') + (props.warn ? ' is-warn' : '');
+    var cls = 'tick perm-cell' + (v === 'allow' ? ' is-on' : v === 'deny' ? ' is-no' : '') + (props.pending ? ' is-pending' : '') + (props.warn ? ' is-warn' : '');
     return h('td', { className: 'perm-cell-td' },
       h('button', {
         type: 'button',
@@ -63,7 +72,7 @@
         disabled: props.disabled,
         'aria-label': props.roleLabel + ' — ' + props.permLabel + ': ' + WORD[v],
         onClick: props.onClick
-      }, SYMBOL[v]));
+      }, ICON[v] ? svgIcon(ICON[v]) : null));
   }
 
   function RolesCard(props) {
@@ -139,7 +148,8 @@
   function PermissionsSection() {
     var dataState = useState(null); var data = dataState[0], setData = dataState[1];
     var draftState = useState({}); var draft = draftState[0], setDraft = draftState[1];
-    var collapsedState = useState({}); var collapsed = collapsedState[0], setCollapsed = collapsedState[1];
+    // Pages start closed; this holds the ones opened.
+    var openedState = useState({}); var opened = openedState[0], setOpened = openedState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var flashState = useState(''); var flash = flashState[0], setFlash = flashState[1];
     var savingState = useState(false); var saving = savingState[0], setSaving = savingState[1];
@@ -217,7 +227,7 @@
 
     if (!data) {
       return h('div', { className: 'portal-card' },
-        err ? h('div', { className: 'portal-flash error' }, err) : h('p', { className: 'perm-loading' }, 'Loading permissions…'));
+        err ? h('div', { className: 'flash error' }, err) : h('p', { className: 'empty-note' }, 'Loading permissions…'));
     }
 
     var roles = data.roles;
@@ -236,35 +246,48 @@
     }
     function emptyCells() { return roles.map(function (r) { return h('td', { key: r.id, className: 'perm-cell-td' }); }); }
 
+    // A page is named once per group, but the same name can sit in two groups
+    // (a public page and its portal section), so rows and the open / closed
+    // state are keyed by group and page together. Keyed by name alone, two
+    // rows shared a key: closing one page closed its namesake too, and React
+    // left copies of the rows that followed until a reload.
     var rows = [];
     tree.forEach(function (g) {
       rows.push(h('tr', { key: 'g:' + g.name, className: 'perm-group-row' }, h('td', { colSpan: cols }, h('span', null, g.name))));
       g.pages.forEach(function (pg) {
-        var open = !collapsed[pg.name];
-        rows.push(h('tr', { key: 'p:' + pg.name, className: 'perm-page-row' },
+        var pid = g.name + '|' + pg.name;
+        var open = !!opened[pid];
+        // Only a page with actions or tabs under it opens; the rest show their
+        // name, lined up with the others.
+        var opens = pg.actions.length > 0 || pg.tabs.length > 0;
+        rows.push(h('tr', { key: 'p:' + pid, className: 'perm-page-row' },
           h('th', { scope: 'row', className: 'perm-row-label' },
-            h('button', {
-              type: 'button', className: 'perm-toggle', 'aria-expanded': open ? 'true' : 'false',
-              onClick: function () { setCollapsed(function (c) { var n = Object.assign({}, c); if (open) n[pg.name] = true; else delete n[pg.name]; return n; }); }
-            },
-              h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_more' : 'chevron_right'),
-              h('span', { className: 'perm-page-name' }, pg.name)),
+            opens
+              ? h('button', {
+                  type: 'button', className: 'perm-toggle', 'aria-expanded': open ? 'true' : 'false',
+                  onClick: function () { setOpened(function (o) { var n = Object.assign({}, o); if (open) delete n[pid]; else n[pid] = true; return n; }); }
+                },
+                  svgIcon('M9 6l6 6-6 6', 'chevron is-side' + (open ? ' is-open' : ''), 2),
+                  h('span', { className: 'perm-page-name' }, pg.name))
+              : h('span', { className: 'perm-toggle is-static' },
+                  h('span', { className: 'perm-toggle-space', 'aria-hidden': 'true' }),
+                  h('span', { className: 'perm-page-name' }, pg.name)),
             pg.view ? h('span', { className: 'perm-row-sub' }, pg.view.label) : null),
           pg.view ? cells(pg.view, null) : emptyCells()));
         if (!open) return;
         pg.actions.forEach(function (p) {
-          rows.push(h('tr', { key: p.key, className: 'perm-action-row' },
+          rows.push(h('tr', { key: 'a:' + pid + ':' + p.key, className: 'perm-action-row' },
             h('th', { scope: 'row', className: 'perm-row-label is-action' }, p.label),
             cells(p, pg.view)));
         });
         pg.tabs.forEach(function (tb) {
-          rows.push(h('tr', { key: 't:' + pg.name + ':' + tb.name, className: 'perm-tab-row' },
+          rows.push(h('tr', { key: 't:' + pid + ':' + tb.name, className: 'perm-tab-row' },
             h('th', { scope: 'row', className: 'perm-row-label is-tab' },
               h('span', { className: 'perm-tab-name' }, tb.name),
               tb.view ? h('span', { className: 'perm-row-sub' }, tb.view.label) : null),
             tb.view ? cells(tb.view, pg.view) : emptyCells()));
           tb.actions.forEach(function (p) {
-            rows.push(h('tr', { key: p.key, className: 'perm-action-row' },
+            rows.push(h('tr', { key: 'a:' + pid + ':' + tb.name + ':' + p.key, className: 'perm-action-row' },
               h('th', { scope: 'row', className: 'perm-row-label is-tab-action' }, p.label),
               cells(p, tb.view || pg.view)));
           });
@@ -273,8 +296,8 @@
     });
 
     return h('div', null,
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
-      flash ? h('div', { className: 'portal-flash success' }, flash) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
       h('div', { className: 'portal-card perm-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Permissions')),

@@ -554,7 +554,7 @@
 
     // Per-item copy strip when collapsed
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row cdb-card-tags'
+      className: 'inline-row cdb-card-tags'
     },
       h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(quest.items || []).flatMap((item) => {
@@ -608,21 +608,20 @@
       label, h('span', { className: 'cdb-stat-value' }, val || 0)
     );
 
-    const editBody = isEditing && h('div', { className: 'cdb-form-fields' },
-      h('div', { className: 'cdb-field-group' },
-        h('label', { className: 'cdb-check' },
+    const editBody = isEditing && h('div', { className: 'form-fields' },
+      h('div', { className: 'field-group' },
+        h('label', { className: 'check-label' },
           h('input', {
             type: 'checkbox',
             checked: !!draft.foodRequired,
-            onChange: (e) => setDraft(d => ({ ...d, foodRequired: e.target.checked })),
-            className: 'cdb-checkbox'
+            onChange: (e) => setDraft(d => ({ ...d, foodRequired: e.target.checked }))
           }),
           'Food Required'
         ),
         draft.foodRequired && h('select', {
           value: draft.foodType,
           onChange: (e) => setDraft(d => ({ ...d, foodType: e.target.value })),
-          className: 'cdb-select'
+          className: 'field'
         },
           // include current value even if it isn't in the canonical list,
           // so legacy/custom food labels survive editing
@@ -632,14 +631,14 @@
         )
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Macros'),
+        h('label', { className: 'field-label' }, 'Macros'),
         ...quest.items.map((item) => {
           const cur = draft.items[item.id] || { itemName: item.name, macro: '' };
           const autoFocus = focusItemId === item.id;
           return h('div', { key: item.id, className: 'cdb-item-block' },
-            h('label', { className: 'cdb-label-xs' }, 'Macro for ' + (item.name || 'Item')),
+            h('label', { className: 'field-label is-small' }, 'Macro for ' + (item.name || 'Item')),
             h('textarea', {
-              className: 'cdb-input cdb-input-mono',
+              className: 'field is-block is-mono',
               rows: 6,
               value: cur.macro || '',
               onChange: (e) => setDraft(d => ({
@@ -661,16 +660,16 @@
         })
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Notes'),
+        h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
-          className: 'cdb-input',
+          className: 'field is-block',
           rows: 3,
           value: draft.notes || '',
           onChange: (e) => setDraft(d => ({ ...d, notes: e.target.value })),
           placeholder: 'Personal notes for this quest...'
         })
       ),
-      h('div', { className: 'cdb-form-actions' },
+      h('div', { className: 'form-actions' },
         h('button', { type: 'button', onClick: cancelEdit, className: 'btn is-quiet' }, 'Cancel'),
         h('button', { type: 'button', onClick: saveEdit, className: 'btn' }, 'Save')
       )
@@ -697,7 +696,7 @@
         !isEditing && h('div', null,
           h('h4', { className: 'cdb-subheading' }, 'Data Reward (' + quest.job + ')'),
           h(DataRewardChips, { dataReward: quest.dataReward || {}, levels: dataRewardLevels })
-            || h('span', { className: 'cdb-meta' }, '(none)')
+            || h('span', { className: 'meta-note' }, '(none)')
         ),
         !isEditing && !questHasMacro(rec) && h('div', { className: 'cdb-empty-macros tray' },
           h('span', null, 'No macros saved for this quest yet.'),
@@ -750,7 +749,7 @@
           h('p', { className: 'cdb-notes-text' }, rec.notes)
         )
       ),
-      !isEditing && h('div', { className: 'cdb-card-footer' },
+      !isEditing && h('div', { className: 'card-footer' },
         h('button', {
           type: 'button',
           onClick: (e) => { e.stopPropagation(); startEdit(); },
@@ -980,7 +979,7 @@
         h('p', { className: 'app-subtitle' }, 'Manage your Cosmic Exploration mission macros')
       ),
 
-      h('div', { className: 'info-card tear-half' },
+      h('div', { className: 'card tear-half' },
         h('p', null,
           'Recipe stats are provided as they are at level 100. At lower levels, they will scale down.'
         )
@@ -1016,12 +1015,12 @@
         )
       ),
 
-      migrationMsg && h('div', { className: 'cdb-notice' }, migrationMsg),
+      migrationMsg && h('div', { className: 'notice-card' }, migrationMsg),
 
-      loadState === 'error' && h('div', { className: 'cdb-notice is-error' },
+      loadState === 'error' && h('div', { className: 'notice-card is-error' },
         'Could not load catalog: ' + (loadError || 'unknown error')),
 
-      loadError && loadState === 'ready' && h('div', { className: 'cdb-notice' }, loadError),
+      loadError && loadState === 'ready' && h('div', { className: 'notice-card' }, loadError),
 
       h('div', { className: 'cdb-search-section' },
         h('div', { className: 'cdb-search-bar' },
@@ -1035,11 +1034,11 @@
           ),
           searchMode === 'numeric'
             ? h('div', { className: 'cdb-numeric-row' },
-                h('input', { type: 'number', placeholder: 'Difficulty (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Difficulty (exact)', className: 'field is-block',
                   value: difficultySearch, onChange: (e) => setDifficultySearch(e.target.value) }),
-                h('input', { type: 'number', placeholder: 'Quality (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Quality (exact)', className: 'field is-block',
                   value: qualitySearch, onChange: (e) => setQualitySearch(e.target.value) }),
-                h('input', { type: 'number', placeholder: 'Durability (exact)', className: 'cdb-input',
+                h('input', { type: 'number', placeholder: 'Durability (exact)', className: 'field is-block',
                   value: durabilitySearch, onChange: (e) => setDurabilitySearch(e.target.value) }),
                 h('button', {
                   type: 'button',
@@ -1048,13 +1047,13 @@
                 }, 'Clear')
               )
             : h('input', {
-                type: 'text', placeholder: 'Search quests, items, or job...', className: 'cdb-input',
+                type: 'text', placeholder: 'Search quests, items, or job...', className: 'field is-block',
                 value: searchTerm, onChange: (e) => setSearchTerm(e.target.value)
               })
         ),
 
         h('div', { className: 'filters-row' },
-          h('select', { value: sortBy, onChange: (e) => setSortBy(e.target.value), className: 'cdb-select' },
+          h('select', { value: sortBy, onChange: (e) => setSortBy(e.target.value), className: 'field' },
             h('option', { value: 'questName' }, 'Sort by Quest Name'),
             h('option', { value: 'category' }, 'Sort by Class (A→D)'),
             h('option', { value: 'difficulty' }, 'Sort by Difficulty'),
@@ -1063,7 +1062,7 @@
           h('select', {
             value: filterCategory,
             onChange: (e) => setFilterCategory(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Classes'),
             ...categoryOptions.map(cat => h('option', { key: cat, value: cat }, cat))
@@ -1071,7 +1070,7 @@
           h('select', {
             value: filterLocation,
             onChange: (e) => setFilterLocation(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Locations'),
             ...locationOptions.map(loc => h('option', { key: loc, value: loc }, loc))
@@ -1079,15 +1078,14 @@
           h('select', {
             value: filterJob,
             onChange: (e) => setFilterJob(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Jobs'),
             ...jobOptions.map(job => h('option', { key: job, value: job }, job))
           ),
-          h('label', { className: 'cdb-check' },
+          h('label', { className: 'check-label' },
             h('input', {
               type: 'checkbox',
-              className: 'cdb-checkbox',
               checked: onlyWithMacro,
               onChange: (e) => setOnlyWithMacro(e.target.checked)
             }),
@@ -1105,9 +1103,9 @@
 
       h('div', { className: 'cdb-craft-list' },
         loadState === 'loading' && quests.length === 0
-          ? h('div', { className: 'cdb-empty-state' }, 'Loading…')
+          ? h('div', { className: 'empty-note cdb-empty-state' }, 'Loading…')
           : filtered.length === 0
-            ? h('div', { className: 'cdb-empty-state' },
+            ? h('div', { className: 'empty-note cdb-empty-state' },
                 quests.length === 0
                   ? 'No quests in the catalog yet.'
                   : 'No quests match your filters.'

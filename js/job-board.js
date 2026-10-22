@@ -56,7 +56,7 @@
   var sidebarEl    = document.getElementById("jobs-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("jobs-search");
   var catListEl    = document.getElementById("filter-category-list");
   var typeListEl   = document.getElementById("filter-type-list");
@@ -104,7 +104,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   function timeOf(j) {
     var t = Date.parse(j.created_at || "");
@@ -177,10 +177,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -194,11 +194,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -326,7 +326,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -337,7 +337,7 @@
         if (!filters.showClosed && j.status !== "open") return false;
         return kind === "categories" ? j.category === value : jobTypeOf(j) === value;
       });
-      var item = el.closest(".venues-filter-item");
+      var item = el.closest(".filter-item");
       if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
@@ -353,51 +353,51 @@
   function buildCardEl(j) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "job-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
+    card.className = "media-card job-cat-" + j.category + (j.status !== "open" ? " is-inactive" : "");
     card.setAttribute("aria-label", j.title);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media tear-half " + mediaClass(j);
+    media.className = "media-card-media tear-half " + mediaClass(j);
 
     if (j.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(j.image_url, j.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "job-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     var catBadge = document.createElement("span");
-    catBadge.className = "job-badge job-badge-category";
+    catBadge.className = "media-badge media-badge-left";
     catBadge.textContent = jobBadgeLabel(j);
     media.appendChild(catBadge);
 
     var statusBadge = document.createElement("span");
-    statusBadge.className = "job-badge job-badge-status";
+    statusBadge.className = "media-badge media-badge-right";
     statusBadge.textContent = STATUS_LABEL[j.status] || "";
     media.appendChild(statusBadge);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "job-card-body";
+    body.className = "media-card-body";
 
     var title = document.createElement("h3");
-    title.className = "job-card-title";
+    title.className = "media-card-title";
     title.textContent = j.title || "Untitled posting";
     body.appendChild(title);
 
     if (j.contact) {
       var meta = document.createElement("p");
-      meta.className = "job-card-meta";
+      meta.className = "media-card-meta";
       meta.textContent = "Contact: " + j.contact;
       body.appendChild(meta);
     }
 
     var desc = document.createElement("p");
-    desc.className = "job-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(j.description, 140);
     body.appendChild(desc);
 
@@ -419,9 +419,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No postings match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or showing closed postings.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or showing closed postings.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -432,9 +432,9 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(j) {
     if (j.image_url) {
-      return PVThemeImage.html(j.image_url, j.dark_image_url, "job-modal-img tear");
+      return PVThemeImage.html(j.image_url, j.dark_image_url, "detail-modal-img tear");
     }
-    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(j) + '"></div>';
   }
 
   function openModal(j) {
@@ -442,24 +442,24 @@
 
     var descHtml = j.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(j.description)) : "<p>" + escapeHTML(j.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges =
       '<span class="tag">' + escapeHTML(jobBadgeLabel(j)) + '</span>' +
       '<span class="tag">' + escapeHTML(STATUS_LABEL[j.status] || "") + '</span>';
 
     var contactHtml = j.contact
-      ? '<p class="job-modal-contact"><span class="job-modal-contact-label">Contact</span>' +
+      ? '<p class="detail-modal-fact"><span class="detail-modal-fact-label">Contact</span>' +
         escapeHTML(j.contact) + '</p>'
       : "";
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="job-modal-content">' +
-        '<div class="job-modal-badges">' + badges + '</div>' +
-        '<h2 class="job-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="job-modal-title">' + escapeHTML(j.title || "Untitled posting") + '</h2>' +
         contactHtml +
-        '<div class="job-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         applyHtml(j) +
         '<p id="job-action-error" class="quest-action-error" style="display:none;"></p>' +
       '</div>';
@@ -603,7 +603,7 @@
 
   // ── Boot ─────────────────────────────────────────────────────────────────
   async function loadJobs() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading postings&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading postings&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/jobs", {
         method: "GET",
@@ -615,7 +615,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading jobs:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the job board. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

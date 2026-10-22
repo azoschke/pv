@@ -284,17 +284,17 @@
       return function () { document.removeEventListener('keydown', onKey); release(); };
     }, []);
     return h('div', {
-      className: 'cdb-modal-overlay',
+      className: 'modal-overlay',
       onMouseDown: function (e) { if (e.target === e.currentTarget) closeRef.current(); }
     },
       h('div', {
-        className: 'cdb-modal mf-dialog', ref: boxRef, tabIndex: -1,
+        className: 'modal is-padded mf-dialog', ref: boxRef, tabIndex: -1,
         role: props.alert ? 'alertdialog' : 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'mf-dialog-title'
       },
-        h('h2', { id: 'mf-dialog-title', className: 'cdb-form-title' }, props.title),
-        h('div', { className: 'cdb-form-fields' },
+        h('h2', { id: 'mf-dialog-title', className: 'form-title' }, props.title),
+        h('div', { className: 'form-fields' },
           props.children,
-          h('div', { className: 'cdb-form-actions' }, props.footer))));
+          h('div', { className: 'form-actions' }, props.footer))));
   }
 
   // "Delete Sunday Savage?" / "End Friday Farm?" / "Remove Bluefeather?"
@@ -313,7 +313,7 @@
       ]
     },
       h('p', null, props.text),
-      err ? h('p', { className: 'cdb-notice is-error' }, err) : null);
+      err ? h('p', { className: 'notice-card is-error' }, err) : null);
   }
 
   function BackLink() {
@@ -322,8 +322,8 @@
   }
 
   function Notice(props) {
-    return h('div', { className: 'info-card tear-half mf-notice' },
-      h('h1', { className: 'cdb-form-title' }, props.title),
+    return h('div', { className: 'notice-panel is-gate tear-half' },
+      h('h1', { className: 'form-title' }, props.title),
       h('a', { className: 'btn', href: TRACKER_HREF }, 'Back to Mount Farm'));
   }
 
@@ -339,7 +339,7 @@
     return h('div', { className: 'mf-card-head' },
       h('div', { className: 'mf-row-main' },
         h('h2', { id: props.id, className: 'mf-card-title' }, props.title),
-        props.meta ? h('p', { className: 'cdb-meta' }, props.meta) : null),
+        props.meta ? h('p', { className: 'meta-note' }, props.meta) : null),
       props.children);
   }
 
@@ -355,7 +355,7 @@
       : [];
     return h('div', null,
       h('input', {
-        className: 'cdb-input', type: 'search', autoComplete: 'off', 'aria-label': props.label,
+        className: 'field is-block', type: 'search', autoComplete: 'off', 'aria-label': props.label,
         placeholder: props.full ? props.fullText : props.placeholder,
         disabled: !!props.full, value: q,
         onChange: function (e) { setQ(e.target.value); }
@@ -368,7 +368,7 @@
                 onClick: function () { props.onAdd(p.id); setQ(''); }
               }, avatar(p, !!p.primary_member_id), h('span', { className: 'mf-person-name' }, p.name));
             }),
-            results.length ? null : h('p', { className: 'mf-none' }, 'No one by that name.'))
+            results.length ? null : h('p', { className: 'empty-note mf-none' }, 'No one by that name.'))
         : null);
   }
 
@@ -380,7 +380,7 @@
       onClick: props.onToggle
     },
       h('span', { className: 'book-header-left' },
-        svgIcon('mf-chevron' + (props.open ? ' is-open' : ''), 'M9 6l6 6-6 6', 2),
+        svgIcon('chevron is-side' + (props.open ? ' is-open' : ''), 'M9 6l6 6-6 6', 2),
         h('span', { className: 'book-name' }, props.name)),
       h('span', { className: 'book-header-right' }, props.children));
   }
@@ -402,7 +402,7 @@
       arrow(before, 'Previous', 'M15 6l-6 6 6 6'),
       props.id ? h('label', { className: 'mf-picker-count', htmlFor: props.id }, (at + 1) + ' of ' + groups.length) : null,
       h('select', {
-        id: props.id, className: 'mf-picker-select', 'aria-label': props.label, value: groups[at].key,
+        id: props.id, className: 'field mf-picker-select', 'aria-label': props.label, value: groups[at].key,
         onChange: function (e) { props.onPick(e.target.value); }
       }, groups.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name + ' · ' + props.status(g)); })),
       arrow(after, 'Next', 'M9 6l6 6-6 6'));
@@ -419,9 +419,9 @@
     var ev = props.event;
     return h('div', { className: 'mf-row' },
       h('div', { className: 'mf-row-main' },
-        h('div', null, h('span', { className: 'mf-name' }, ev.name), ' ', h(StatusDot, { live: ev.live })),
-        h('div', { className: 'cdb-meta' }, whenText(ev.starts_at) + ' · ' + ev.going + ' going')),
-      h('div', { className: 'cdb-form-actions' },
+        h('div', null, h('span', { className: 'row-name' }, ev.name), ' ', h(StatusDot, { live: ev.live })),
+        h('div', { className: 'meta-note' }, whenText(ev.starts_at) + ' · ' + ev.going + ' going')),
+      h('div', { className: 'form-actions' },
         h('a', { className: 'btn is-quiet is-small', href: eventHref(ev.slug) }, 'Open'),
         ev.can_manage ? h('a', { className: 'btn is-quiet is-small', href: '?edit=' + encodeURIComponent(ev.slug) }, 'Edit') : null,
         ev.can_manage
@@ -451,19 +451,19 @@
     },
       base.me
         ? h('div', null,
-            h('p', { className: 'cdb-label' }, 'Your characters'),
+            h('p', { className: 'field-label' }, 'Your characters'),
             h('div', { className: 'tray mf-list' },
               h('label', { className: 'mf-row' },
-                h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: true, disabled: true }),
-                avatar(base.me), h('span', { className: 'mf-row-main mf-name' }, base.me.name)),
+                h('input', { type: 'checkbox', checked: true, disabled: true }),
+                avatar(base.me), h('span', { className: 'mf-row-main row-name' }, base.me.name)),
               base.alts.map(function (a) {
                 return h('label', { key: a.id, className: 'mf-row is-button' },
-                  h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: prefs.hiddenAlts.indexOf(a.id) === -1, onChange: function () { toggleAlt(a.id); } }),
-                  avatar(a), h('span', { className: 'mf-row-main mf-name' }, a.name));
+                  h('input', { type: 'checkbox', checked: prefs.hiddenAlts.indexOf(a.id) === -1, onChange: function () { toggleAlt(a.id); } }),
+                  avatar(a), h('span', { className: 'mf-row-main row-name' }, a.name));
               })))
         : null,
       h('div', null,
-        h('p', { className: 'cdb-label' }, 'Others'),
+        h('p', { className: 'field-label' }, 'Others'),
         h(PeoplePicker, {
           label: 'Search for people',
           placeholder: base.can.manage ? 'Search the FC list' : 'Search the tracker',
@@ -474,13 +474,13 @@
         h('div', { className: 'mf-list' },
           added.map(function (p) {
             return h('div', { key: p.id, className: 'mf-row' },
-              avatar(p), h('span', { className: 'mf-row-main mf-name' }, p.name),
+              avatar(p), h('span', { className: 'mf-row-main row-name' }, p.name),
               h('button', {
-                type: 'button', className: 'btn is-quiet is-small is-icon', 'aria-label': 'Remove ' + p.name + ' from your view',
+                type: 'button', className: 'mf-remove', 'aria-label': 'Remove ' + p.name + ' from your view',
                 onClick: function () { props.updatePrefs({ added: prefs.added.filter(function (x) { return x !== p.id; }) }); }
-              }, icon('close')));
+              }, svgIcon(null, 'M7 7l10 10M17 7L7 17', 2.2)));
           }),
-          added.length ? null : h('p', { className: 'mf-row cdb-meta' }, 'No one added.'))));
+          added.length ? null : h('p', { className: 'mf-row meta-note' }, 'No one added.'))));
   }
 
   // One expansion at a time, picked from a list. Its mounts run across the
@@ -558,7 +558,7 @@
     function tickButton(c, m) {
       var have = has(c.id, m);
       return h('button', {
-        type: 'button', className: 'mf-tick' + (have ? ' is-have' : ''),
+        type: 'button', className: 'tick' + (have ? ' is-on' : ''),
         'aria-pressed': have ? 'true' : 'false',
         'aria-label': c.name + ' has ' + m.name,
         title: c.name + ' · ' + m.name + (have ? ': has it' : ': needs it'),
@@ -573,12 +573,12 @@
 
     var events = base.events;
     var eventsCard = (events.length || base.can.plan)
-      ? h('section', { className: 'info-card', 'aria-labelledby': 'mf-events-title' },
+      ? h('section', { className: 'card', 'aria-labelledby': 'mf-events-title' },
           h(CardHead, { id: 'mf-events-title', title: 'Your events' },
             base.can.plan ? h('a', { className: 'btn is-quiet is-small', href: '?plan' }, 'Plan an event') : null),
           events.length
             ? h('div', { className: 'mf-list' }, events.map(function (ev) { return h(EventRow, { key: ev.id, event: ev, onClose: closeEvent }); }))
-            : h('p', { className: 'cdb-meta' }, 'No events planned.'))
+            : h('p', { className: 'meta-note' }, 'No events planned.'))
       : null;
 
     function trackerTable() {
@@ -639,7 +639,7 @@
                       return h('div', { key: m.id, className: 'mf-grid-cell' + split(j), role: 'cell' }, tickButton(c, m));
                     }));
                 })))
-          : h('p', { className: 'mf-none' }, 'Everyone in view has every ' + active.name + ' mount.'));
+          : h('p', { className: 'empty-note mf-none' }, 'Everyone in view has every ' + active.name + ' mount.'));
     }
 
     function personCards() {
@@ -664,7 +664,7 @@
               h('span', { className: 'book-progress-text' }, counts[i] + '/' + total),
               h('span', { className: 'book-progress-bar', 'aria-hidden': 'true' },
                 h('span', { className: 'book-progress-bar-fill', style: { width: pct + '%', display: 'block' } })),
-              svgIcon('mf-person-chevron', 'M6 9l6 6 6-6', 2)),
+              svgIcon('chevron', 'M6 9l6 6 6-6', 2)),
             isOpen
               ? h('div', { className: 'mf-person-body' },
                   h(ExpansionPicker, {
@@ -679,17 +679,17 @@
                         h('div', { className: 'mf-person-mount-fight' }, m.fight)),
                       tickButton(c, m));
                   }),
-                  list.length ? null : h('p', { className: 'mf-none' }, firstName(c.name) + ' has every ' + g.name + ' mount.'))
+                  list.length ? null : h('p', { className: 'empty-note mf-none' }, firstName(c.name) + ' has every ' + g.name + ' mount.'))
               : null);
         }));
     }
 
     var tracker = !cols.length
-      ? h('p', { className: 'cdb-notice' }, 'No one in your view.')
+      ? h('p', { className: 'notice-card' }, 'No one in your view.')
       : ticks === null
-        ? h('p', { className: 'cdb-notice' }, 'Loading…')
+        ? h('p', { className: 'notice-card' }, 'Loading…')
         : !expansions.length
-          ? h('p', { className: 'cdb-notice' }, 'No mounts yet.')
+          ? h('p', { className: 'notice-card' }, 'No mounts yet.')
           : h('div', null, trackerTable(), personCards());
 
     return h('div', null,
@@ -697,17 +697,17 @@
         h('h1', { className: 'app-title' }, 'Mount Farm'),
         h('p', { className: 'app-subtitle' }, 'Trial and Savage mounts')),
       eventsCard,
-      base.me ? null : h('p', { className: 'cdb-notice' }, 'Your account isn’t linked to an FC member.'),
+      base.me ? null : h('p', { className: 'notice-card' }, 'Your account isn’t linked to an FC member.'),
       h('div', { className: 'top-controls mf-toolbar' },
         h('div', { className: 'mf-toolbar-start' },
           h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'view' }); } }, icon('tune'), 'Edit view'),
           h('span', { className: 'mf-people-count' }, cols.length === 1 ? '1 person in view' : cols.length + ' people in view')),
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { updatePrefs({ hideCompleted: !prefs.hideCompleted }); } },
           prefs.hideCompleted ? 'Show completed' : 'Hide completed')),
-      err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
+      err ? h('p', { className: 'notice-card is-error' }, err) : null,
       tracker,
       base.can.manage
-        ? h('div', { className: 'cdb-card-footer' }, h('a', { className: 'btn is-plain', href: '?mounts' }, 'Manage mounts'))
+        ? h('div', { className: 'card-footer' }, h('a', { className: 'btn is-plain', href: '?mounts' }, 'Manage mounts'))
         : null,
       dialog && dialog.type === 'view'
         ? h(EditViewDialog, { base: base, prefs: prefs, updatePrefs: updatePrefs, onClose: function () { setDialog(null); } })
@@ -808,7 +808,7 @@
     }
     if (!ev) {
       return h('div', null, h(BackLink),
-        h('p', { className: err ? 'cdb-notice is-error' : 'cdb-notice' }, err || 'Loading…'));
+        h('p', { className: err ? 'notice-card is-error' : 'notice-card' }, err || 'Loading…'));
     }
 
     var event = ev.event;
@@ -879,16 +879,16 @@
       h('header', { className: 'app-header' },
         h('p', { className: 'app-subtitle' }, 'Event night'),
         h('h1', { className: 'app-title' }, event.name),
-        h('p', { className: 'cdb-meta' },
+        h('p', { className: 'meta-note' },
           h(StatusDot, { live: event.live }), ' · ' + whenText(event.starts_at) + ' · ' + party.length + ' going')),
       h('div', { className: 'top-controls top-controls-center' },
-        h('span', { className: 'cdb-meta' }, updatedText),
+        h('span', { className: 'meta-note' }, updatedText),
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: loadFull }, icon('refresh'), 'Refresh'),
         h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: copyLink }, icon('link'), copied ? 'Copied' : 'Copy link'),
         canManage ? h('a', { className: 'btn is-quiet is-small', href: '?edit=' + encodeURIComponent(event.slug) }, 'Edit') : null,
         canManage ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog(true); } },
           event.live ? 'End event' : 'Delete event') : null),
-      err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
+      err ? h('p', { className: 'notice-card is-error' }, err) : null,
       h('div', { className: 'mf-event' },
         h('div', { className: 'mf-fight-grid' },
           fights.map(function (m) {
@@ -928,7 +928,7 @@
                       : h('span', { className: 'mf-tile-state is-need' }, 'Needs'));
                 })));
           }),
-          fights.length ? null : h('p', { className: 'cdb-notice' }, 'No fights yet.')),
+          fights.length ? null : h('p', { className: 'notice-card' }, 'No fights yet.')),
         h('aside', { className: 'mf-suggest tear-half', 'aria-labelledby': 'mf-suggest-title' },
           h('h2', { id: 'mf-suggest-title', className: 'mf-suggest-title' }, 'Most needed'),
           suggestions.map(function (x) {
@@ -944,7 +944,7 @@
                   }, 'Add')
                 : null);
           }),
-          suggestions.length ? null : h('p', { className: 'mf-none' }, 'Nothing else is needed.'))),
+          suggestions.length ? null : h('p', { className: 'empty-note mf-none' }, 'Nothing else is needed.'))),
       dialog
         ? h(ConfirmDialog, {
             title: (event.live ? 'End ' : 'Delete ') + event.name + '?',
@@ -1017,7 +1017,7 @@
     }
     if (!loaded) {
       return h('div', null, h(BackLink),
-        h('p', { className: err ? 'cdb-notice is-error' : 'cdb-notice' }, err || 'Loading…'));
+        h('p', { className: err ? 'notice-card is-error' : 'notice-card' }, err || 'Loading…'));
     }
 
     // Planners search the whole FC list.
@@ -1099,16 +1099,16 @@
     var linkPrefix = '…' + window.location.pathname + '?event=';
     var linkField = isEdit
       ? h('div', { className: 'mf-field is-link' },
-          h('span', { className: 'mf-label' }, 'Link'),
+          h('span', { className: 'field-label' }, 'Link'),
           h('div', { className: 'mf-link-text' },
             h('span', { className: 'mf-row-main' }, linkPrefix + slugText),
             h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: copyLink }, icon('link'), copied ? 'Copied' : 'Copy link')))
       : h('div', { className: 'mf-field is-link' },
-          h('label', { className: 'mf-label', htmlFor: 'mf-event-link' }, 'Link'),
+          h('label', { className: 'field-label', htmlFor: 'mf-event-link' }, 'Link'),
           h('div', { className: 'mf-link-input' },
             h('span', { className: 'mf-link-prefix' }, linkPrefix),
             h('input', {
-              id: 'mf-event-link', className: 'cdb-input', type: 'text', placeholder: 'event-name', value: slugText,
+              id: 'mf-event-link', className: 'field is-block', type: 'text', placeholder: 'event-name', value: slugText,
               onChange: function (e) { setSlugEdited(true); setSlugText(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }
             })));
 
@@ -1119,14 +1119,14 @@
     return h('div', null,
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, isEdit ? 'Edit Event' : 'Plan an Event')),
-      h('section', { className: 'info-card mf-details', 'aria-label': 'Event details' },
+      h('section', { className: 'card mf-details', 'aria-label': 'Event details' },
         h('div', { className: 'mf-fields' },
           h('div', { className: 'mf-field' },
-            h('label', { className: 'mf-label', htmlFor: 'mf-event-name' }, 'Name'),
-            h('input', { id: 'mf-event-name', className: 'cdb-input', type: 'text', placeholder: 'Event name', value: name, onChange: function (e) { onName(e.target.value); } })),
+            h('label', { className: 'field-label', htmlFor: 'mf-event-name' }, 'Name'),
+            h('input', { id: 'mf-event-name', className: 'field is-block', type: 'text', placeholder: 'Event name', value: name, onChange: function (e) { onName(e.target.value); } })),
           h('div', { className: 'mf-field is-when' },
-            h('label', { className: 'mf-label', htmlFor: 'mf-event-when' }, 'Date and time'),
-            h('input', { id: 'mf-event-when', className: 'cdb-input', type: 'datetime-local', value: when, onChange: function (e) { setWhen(e.target.value); } })),
+            h('label', { className: 'field-label', htmlFor: 'mf-event-when' }, 'Date and time'),
+            h('input', { id: 'mf-event-when', className: 'field is-block', type: 'datetime-local', value: when, onChange: function (e) { setWhen(e.target.value); } })),
           linkField)),
       h('div', { className: 'mf-split is-side-first' },
         h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-who-title' },
@@ -1151,7 +1151,7 @@
                 onClick: function () { setParty(party.filter(function (x) { return x !== p.id; })); }
               }, svgIcon(null, 'M7 7l10 10M17 7L7 17', 2.2)));
           }),
-          partyPeople.length ? null : h('p', { className: 'mf-none' }, 'No one added yet.')),
+          partyPeople.length ? null : h('p', { className: 'empty-note mf-none' }, 'No one added yet.')),
         h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'mf-fights-title' },
           h('div', { className: 'mf-panel-head' },
             h('h2', { id: 'mf-fights-title', className: 'mf-panel-title' }, 'Fights'),
@@ -1172,7 +1172,7 @@
                 ? withTitles(g.rows, function (r) {
                     var m = r.mount;
                     return h('label', { key: m.id, className: 'mf-pick' },
-                      h('input', { type: 'checkbox', className: 'cdb-checkbox', checked: !!fights[m.id], onChange: function () { toggleFight(m.id); } }),
+                      h('input', { type: 'checkbox', checked: !!fights[m.id], onChange: function () { toggleFight(m.id); } }),
                       h('span', { className: 'mf-pick-main' },
                         h('span', { className: 'mf-pick-fight' }, m.fight),
                         h('span', { className: 'mf-pick-mount' }, m.name)),
@@ -1183,7 +1183,7 @@
                   }, function (r) { return r.mount; })
                 : null);
           }))),
-      err ? h('p', { className: 'cdb-notice is-error' }, err) : null,
+      err ? h('p', { className: 'notice-card is-error' }, err) : null,
       h('div', { className: 'mf-bar' },
         partyPeople.length
           ? h('div', { className: 'mf-stack' },
@@ -1230,29 +1230,29 @@
       ]
     },
       h('div', null,
-        h('label', { className: 'cdb-label', htmlFor: 'mf-mount-name' }, 'Mount'),
-        h('input', { id: 'mf-mount-name', className: 'cdb-input', type: 'text', placeholder: 'Mount name', value: name, onChange: function (e) { setName(e.target.value); } })),
+        h('label', { className: 'field-label', htmlFor: 'mf-mount-name' }, 'Mount'),
+        h('input', { id: 'mf-mount-name', className: 'field is-block', type: 'text', placeholder: 'Mount name', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', null,
-        h('label', { className: 'cdb-label', htmlFor: 'mf-mount-fight' }, 'Drops from'),
-        h('input', { id: 'mf-mount-fight', className: 'cdb-input', type: 'text', placeholder: 'The fight name', value: fight, onChange: function (e) { setFight(e.target.value); } })),
+        h('label', { className: 'field-label', htmlFor: 'mf-mount-fight' }, 'Drops from'),
+        h('input', { id: 'mf-mount-fight', className: 'field is-block', type: 'text', placeholder: 'The fight name', value: fight, onChange: function (e) { setFight(e.target.value); } })),
       h('div', null,
-        h('label', { className: 'cdb-label', htmlFor: 'mf-mount-group' }, 'Expansion'),
-        h('select', { id: 'mf-mount-group', className: 'cdb-select', value: grp, onChange: function (e) { setGrp(e.target.value); } },
+        h('label', { className: 'field-label', htmlFor: 'mf-mount-group' }, 'Expansion'),
+        h('select', { id: 'mf-mount-group', className: 'field', value: grp, onChange: function (e) { setGrp(e.target.value); } },
           grp ? null : h('option', { value: '', disabled: true }, 'Pick an expansion'),
           GROUPS.map(function (g) { return h('option', { key: g.key, value: g.key }, g.name); }))),
       h('fieldset', { className: 'mf-choice' },
-        h('legend', { className: 'cdb-label' }, 'Kind'),
+        h('legend', { className: 'field-label' }, 'Kind'),
         h('div', { className: 'mf-choice-row' },
           KINDS.map(function (k) {
             return h('label', { key: k.key, className: 'mf-choice-item' },
               h('input', {
-                type: 'radio', className: 'cdb-checkbox', name: 'mf-mount-kind', value: k.key,
+                type: 'radio', name: 'mf-mount-kind', value: k.key,
                 checked: kind === k.key, onChange: function () { setKind(k.key); }
               }),
               k.name);
           })),
         h('p', { className: 'mf-choice-hint' }, 'Savage, then collab mounts, sit at the end of their expansion, each after a line.')),
-      err ? h('p', { className: 'cdb-notice is-error' }, err) : null);
+      err ? h('p', { className: 'notice-card is-error' }, err) : null);
   }
 
   function ManageMounts(props) {
@@ -1288,13 +1288,13 @@
                 h('div', { className: 'mf-item-main' },
                   h('div', { className: 'mf-item-name' }, m.name),
                   h('div', { className: 'mf-mount-fight' }, m.fight)),
-                h('div', { className: 'cdb-form-actions' },
+                h('div', { className: 'form-actions' },
                   h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: function () { setDialog({ type: 'edit', mount: m }); } }, 'Edit'),
                   base.can.delete
                     ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: function () { setDialog({ type: 'remove', mount: m }); } }, 'Remove')
                     : null));
             }),
-            g.mounts.length ? null : h('p', { className: 'mf-none' }, 'No mounts yet.')));
+            g.mounts.length ? null : h('p', { className: 'empty-note mf-none' }, 'No mounts yet.')));
       }),
       dialog && (dialog.type === 'add' || dialog.type === 'edit')
         ? h(MountDialog, { mount: dialog.mount || null, onClose: close, onSaved: saved })
@@ -1331,7 +1331,7 @@
     }, []);
 
     if (!base) {
-      return h('p', { className: err ? 'cdb-notice is-error' : 'cdb-notice' }, err || 'Loading…');
+      return h('p', { className: err ? 'notice-card is-error' : 'notice-card' }, err || 'Loading…');
     }
     if (params.has('event')) return h(EventPage, { base: base, slug: params.get('event') });
     if (params.has('edit')) return h(EventForm, { base: base, slug: params.get('edit') });

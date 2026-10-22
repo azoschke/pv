@@ -58,7 +58,7 @@
   var sidebarEl    = document.getElementById("quests-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("quests-search");
   var typeListEl   = document.getElementById("filter-type-list");
   var schedListEl  = document.getElementById("filter-schedule-list");
@@ -119,7 +119,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // scheduled_at is stored as UTC "YYYY-MM-DD HH:MM:SS".
   function parseQuestDate(q) {
@@ -220,10 +220,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -237,11 +237,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -378,7 +378,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -407,48 +407,48 @@
   function buildCardEl(q) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "job-card quest-card" + (isPast(q) ? " is-inactive" : "");
+    card.className = "media-card quest-card" + (isPast(q) ? " is-inactive" : "");
     card.setAttribute("aria-label", q.title);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "job-card-media tear-half " + mediaClass(q);
+    media.className = "media-card-media tear-half " + mediaClass(q);
 
     if (q.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(q.image_url, q.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "job-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (q.mission_type) {
       var typeBadge = document.createElement("span");
-      typeBadge.className = "job-badge job-badge-category";
+      typeBadge.className = "media-badge media-badge-left";
       typeBadge.textContent = q.mission_type;
       media.appendChild(typeBadge);
     }
 
     var schedBadge = document.createElement("span");
-    schedBadge.className = "job-badge job-badge-status";
+    schedBadge.className = "media-badge media-badge-right";
     schedBadge.textContent = scheduleBadgeText(q);
     media.appendChild(schedBadge);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "job-card-body";
+    body.className = "media-card-body";
 
     var title = document.createElement("h3");
-    title.className = "job-card-title";
+    title.className = "media-card-title";
     title.textContent = q.title || "Untitled quest";
     body.appendChild(title);
 
     var stars = difficultyStars(q.difficulty);
     if (stars || q.group_size) {
       var statsMeta = document.createElement("p");
-      statsMeta.className = "job-card-meta quest-card-stats";
+      statsMeta.className = "media-card-meta quest-card-stats";
       var bits = [];
       if (stars) bits.push(stars);
       if (q.group_size) bits.push("Group: " + q.group_size);
@@ -458,19 +458,19 @@
 
     if (q.reward) {
       var meta = document.createElement("p");
-      meta.className = "job-card-meta";
+      meta.className = "media-card-meta";
       meta.textContent = "Reward: " + q.reward;
       body.appendChild(meta);
     }
 
     var desc = document.createElement("p");
-    desc.className = "job-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(q.description, 140);
     body.appendChild(desc);
 
     var signups = q.signups || [];
     var signupMeta = document.createElement("p");
-    signupMeta.className = "job-card-meta quest-card-signups";
+    signupMeta.className = "media-card-meta quest-card-signups";
     signupMeta.textContent = signups.length === 1
       ? "1 member signed up"
       : signups.length + " members signed up";
@@ -494,9 +494,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No quests match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or showing past quests.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or showing past quests.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -507,9 +507,9 @@
   // ── Modal ────────────────────────────────────────────────────────────────
   function buildImageHtml(q) {
     if (q.image_url) {
-      return PVThemeImage.html(q.image_url, q.dark_image_url, "job-modal-img tear");
+      return PVThemeImage.html(q.image_url, q.dark_image_url, "detail-modal-img tear");
     }
-    return '<div class="job-modal-img job-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(q) + '"></div>';
   }
 
   function scheduleDetailHtml(q) {
@@ -524,13 +524,13 @@
       parts.push(formatLocal(t) + (isPast(q) ? " — this date has passed" : ""));
     }
     if (!parts.length) return "";
-    return '<p class="job-modal-contact"><span class="job-modal-contact-label">When</span>' +
+    return '<p class="detail-modal-fact"><span class="detail-modal-fact-label">When</span>' +
       escapeHTML(parts.join(" · ")) + '</p>';
   }
 
   function metaRow(label, value) {
     if (!value) return "";
-    return '<p class="job-modal-contact"><span class="job-modal-contact-label">' +
+    return '<p class="detail-modal-fact"><span class="detail-modal-fact-label">' +
       escapeHTML(label) + '</span>' + escapeHTML(value) + '</p>';
   }
 
@@ -555,12 +555,12 @@
   function participantsHtml(q) {
     var signups = q.signups || [];
     var html = '<div class="quest-participants">' +
-      '<p class="job-modal-contact-label" style="display:block; margin-bottom:0.4rem;">Signed up (' + signups.length + ')</p>';
+      '<p class="detail-modal-fact-label" style="display:block; margin-bottom:0.4rem;">Signed up (' + signups.length + ')</p>';
     if (!signups.length) {
       html += '<p style="color:var(--text-secondary); margin:0;"><em>No one yet — be the first.</em></p>';
     } else {
-      html += '<div class="venue-card-tags">' + signups.map(function (s) {
-        return '<span class="venue-card-tag">' + escapeHTML(s.member_name) + '</span>';
+      html += '<div class="media-card-tags">' + signups.map(function (s) {
+        return '<span class="media-card-tag">' + escapeHTML(s.member_name) + '</span>';
       }).join("") + '</div>';
     }
     html += '</div>';
@@ -627,7 +627,7 @@
 
     var descHtml = q.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(q.description)) : "<p>" + escapeHTML(q.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var badges = "";
     if (q.mission_type) {
@@ -637,16 +637,16 @@
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="job-modal-content">' +
-        '<div class="job-modal-badges">' + badges + '</div>' +
-        '<h2 class="job-modal-title" id="quest-modal-title">' + escapeHTML(q.title || "Untitled quest") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="quest-modal-title">' + escapeHTML(q.title || "Untitled quest") + '</h2>' +
         scheduleDetailHtml(q) +
         metaRow("Difficulty", difficultyStars(q.difficulty)) +
         metaRow("Group size", q.group_size) +
         metaRow("Reward", q.reward) +
         metaRow("Contact", q.contact) +
         metaRow("Posted by", q.submitted_by_name) +
-        '<div class="job-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         participantsHtml(q) +
         actionHtml(q) +
         '<p id="quest-action-error" class="quest-action-error" style="display:none;"></p>' +
@@ -684,7 +684,7 @@
   async function loadQuests(opts) {
     var keepModal = opts && opts.keepModal;
     if (!keepModal) {
-      gridEl.innerHTML = '<div class="venues-empty"><p>Loading quests&hellip;</p></div>';
+      gridEl.innerHTML = '<div class="notice-panel"><p>Loading quests&hellip;</p></div>';
     }
     try {
       var res = await fetch(API_BASE + "/quests", {
@@ -698,7 +698,7 @@
       if (keepModal && openQuestId != null) openModal(openQuestId);
     } catch (err) {
       console.error("Error loading quests:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the bounty board. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

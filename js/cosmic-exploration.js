@@ -395,23 +395,23 @@
     if (mode === 'edit') {
       return h('div', { className: 'cdb-data-chip-row' },
         ...DATA_REWARD_LEVELS.map(level =>
-          h('div', { key: level.key, className: 'cdb-field-group', style: { minWidth: '70px' } },
-            h('label', { className: 'cdb-label-xs' }, level.label),
+          h('div', { key: level.key, className: 'field-group', style: { minWidth: '70px' } },
+            h('label', { className: 'field-label is-small' }, level.label),
             h('input', {
               type: 'number',
               placeholder: '0',
-              className: 'cdb-input cdb-input-sm',
+              className: 'field is-block is-small',
               value: dataReward[level.key] || 0,
               onChange: (e) => onChange(level.key, parseInt(e.target.value) || 0)
             })
           )
         ),
-        h('div', { className: 'cdb-field-group', style: { minWidth: '90px' } },
-          h('label', { className: 'cdb-label-xs' }, COSMIC_POINTS_META.label),
+        h('div', { className: 'field-group', style: { minWidth: '90px' } },
+          h('label', { className: 'field-label is-small' }, COSMIC_POINTS_META.label),
           h('input', {
             type: 'number',
             placeholder: '0',
-            className: 'cdb-input cdb-input-sm',
+            className: 'field is-block is-small',
             value: dataReward.cosmicPoints || 0,
             onChange: (e) => onChange('cosmicPoints', parseInt(e.target.value) || 0)
           })
@@ -539,73 +539,72 @@
 
     const multipleItems = formData.items.length > 1;
 
-    return h('div', { className: 'cdb-form-panel' },
-      h('h2', { className: 'cdb-form-title craft-name' }, 'Add New Mission'),
-      h('form', { onSubmit: handleSubmit, className: 'cdb-form-fields' },
+    return h('div', { className: 'form-panel' },
+      h('h2', { className: 'form-title craft-name' }, 'Add New Mission'),
+      h('form', { onSubmit: handleSubmit, className: 'form-fields' },
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Quest Name *'),
+          h('label', { className: 'field-label' }, 'Quest Name *'),
           h('input', {
             type: 'text',
             value: formData.questName,
             onChange: (e) => updateField('questName', e.target.value),
-            className: 'cdb-input',
+            className: 'field is-block',
             required: true
           })
         ),
         h('div', { className: 'cdb-grid-3' },
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Location'),
+            h('label', { className: 'field-label' }, 'Location'),
             h('select', {
               value: formData.location,
               onChange: (e) => updateField('location', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...LOCATIONS.map(loc => h('option', { key: loc, value: loc }, loc))
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Job'),
+            h('label', { className: 'field-label' }, 'Job'),
             h('select', {
               value: formData.job,
               onChange: (e) => updateField('job', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...JOBS.map(job => h('option', { key: job, value: job }, job))
             )
           ),
           h('div', null,
-            h('label', { className: 'cdb-label' }, 'Category'),
+            h('label', { className: 'field-label' }, 'Category'),
             h('select', {
               value: formData.category,
               onChange: (e) => updateField('category', e.target.value),
-              className: 'cdb-input'
+              className: 'field is-block'
             },
               ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
             )
           )
         ),
-        h('div', { className: 'cdb-field-group' },
-          h('div', { className: 'cdb-inline-row' },
+        h('div', { className: 'field-group' },
+          h('div', { className: 'inline-row' },
             h('input', {
               type: 'checkbox',
               id: 'newFoodRequired',
               checked: formData.foodRequired,
-              onChange: (e) => updateField('foodRequired', e.target.checked),
-              className: 'cdb-checkbox'
+              onChange: (e) => updateField('foodRequired', e.target.checked)
             }),
-            h('label', { htmlFor: 'newFoodRequired', className: 'cdb-label' }, 'Food Required')
+            h('label', { htmlFor: 'newFoodRequired', className: 'field-label' }, 'Food Required')
           ),
           formData.foodRequired && h('select', {
             value: formData.foodType,
             onChange: (e) => updateField('foodType', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
           )
         ),
         h('div', null,
           h('div', { className: 'cdb-searchmode-bar' },
-            h('label', { className: 'cdb-label is-flush' }, 'Items'),
+            h('label', { className: 'field-label is-flush' }, 'Items'),
             h('button', {
               type: 'button',
               onClick: addItem,
@@ -613,32 +612,32 @@
             }, 'Add Item')
           ),
           ...formData.items.map((item, index) =>
-            h('div', { key: index, className: 'cdb-form-fields is-boxed' },
+            h('div', { key: index, className: 'form-fields is-boxed' },
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                  h('label', { className: 'field-label is-small' }, 'Item Name'),
                   h('input', {
                     type: 'text',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     placeholder: 'Item Name',
                     value: item.name,
                     onChange: (e) => updateItem(index, 'name', e.target.value)
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                  h('label', { className: 'field-label is-small' }, 'Difficulty'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.difficulty,
                     onChange: (e) => updateItem(index, 'difficulty', e.target.value)
                   })
                 ),
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                  h('label', { className: 'field-label is-small' }, 'Quality'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.quality,
                     onChange: (e) => updateItem(index, 'quality', e.target.value)
                   })
@@ -646,10 +645,10 @@
               ),
               h('div', { className: 'cdb-grid-3' },
                 h('div', null,
-                  h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                  h('label', { className: 'field-label is-small' }, 'Durability'),
                   h('input', {
                     type: 'number',
-                    className: 'cdb-input cdb-input-sm',
+                    className: 'field is-block is-small',
                     value: item.durability,
                     onChange: (e) => updateItem(index, 'durability', e.target.value)
                   })
@@ -663,11 +662,11 @@
                 )
               ),
               multipleItems && h('div', null,
-                h('label', { className: 'cdb-label-xs' },
+                h('label', { className: 'field-label is-small' },
                   'Macro for ' + (item.name || `Item ${index + 1}`)
                 ),
                 h('textarea', {
-                  className: 'cdb-input cdb-input-mono',
+                  className: 'field is-block is-mono',
                   rows: 6,
                   value: formData.macros[index] ? formData.macros[index].macro : '',
                   onChange: (e) => updateMacro(index, e.target.value),
@@ -677,9 +676,9 @@
             )
           ),
           !multipleItems && h('div', null,
-            h('label', { className: 'cdb-label' }, 'Macro'),
+            h('label', { className: 'field-label' }, 'Macro'),
             h('textarea', {
-              className: 'cdb-input cdb-input-mono',
+              className: 'field is-block is-mono',
               rows: 6,
               value: formData.macros[0] ? formData.macros[0].macro : '',
               onChange: (e) => updateMacro(0, e.target.value),
@@ -688,7 +687,7 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, `Data Reward (${formData.dataReward.job})`),
+          h('label', { className: 'field-label' }, `Data Reward (${formData.dataReward.job})`),
           h(DataRewardChips, {
             dataReward: formData.dataReward,
             mode: 'edit',
@@ -696,16 +695,16 @@
           })
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Notes'),
+          h('label', { className: 'field-label' }, 'Notes'),
           h('textarea', {
-            className: 'cdb-input',
+            className: 'field is-block',
             rows: 3,
             value: formData.notes,
             onChange: (e) => updateField('notes', e.target.value),
             placeholder: 'Additional notes...'
           })
         ),
-        h('div', { className: 'cdb-form-actions' },
+        h('div', { className: 'form-actions' },
           h('button', {
             type: 'button',
             onClick: onCancel,
@@ -856,7 +855,7 @@
 
     // Collapsed view: header + per-item copy buttons row
     const collapsedBody = !isExpanded && h('div', {
-      className: 'cdb-inline-row cdb-card-tags'
+      className: 'inline-row cdb-card-tags'
     },
       h('span', { className: 'cdb-card-tags-label' }, 'Crafts:'),
       ...(entry.items || []).map((item, idx) => {
@@ -899,24 +898,24 @@
 
     const multipleEditItems = isEditingInline && editFormData.items && editFormData.items.length > 1;
 
-    const editBody = isEditingInline && h('div', { className: 'cdb-form-fields' },
+    const editBody = isEditingInline && h('div', { className: 'form-fields' },
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Quest Name *'),
+        h('label', { className: 'field-label' }, 'Quest Name *'),
         h('input', {
           type: 'text',
           value: editFormData.questName || '',
           onChange: (e) => updateEditField('questName', e.target.value),
-          className: 'cdb-input',
+          className: 'field is-block',
           required: true
         })
       ),
       h('div', { className: 'cdb-grid-3' },
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Location'),
+          h('label', { className: 'field-label' }, 'Location'),
           h('select', {
             value: editFormData.location || LOCATIONS[0],
             onChange: (e) => updateEditField('location', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             // Preserve legacy slash-separated value if present
             editFormData.location && !LOCATIONS.includes(editFormData.location) &&
@@ -925,48 +924,47 @@
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Job'),
+          h('label', { className: 'field-label' }, 'Job'),
           h('select', {
             value: editFormData.job || JOBS[0],
             onChange: (e) => updateEditField('job', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...JOBS.map(job => h('option', { key: job, value: job }, job))
           )
         ),
         h('div', null,
-          h('label', { className: 'cdb-label' }, 'Category'),
+          h('label', { className: 'field-label' }, 'Category'),
           h('select', {
             value: editFormData.category || 'Class D',
             onChange: (e) => updateEditField('category', e.target.value),
-            className: 'cdb-input'
+            className: 'field is-block'
           },
             ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
           )
         )
       ),
-      h('div', { className: 'cdb-field-group' },
-        h('div', { className: 'cdb-inline-row' },
+      h('div', { className: 'field-group' },
+        h('div', { className: 'inline-row' },
           h('input', {
             type: 'checkbox',
             id: `editFoodRequired-${entry.id}`,
             checked: !!editFormData.foodRequired,
-            onChange: (e) => updateEditField('foodRequired', e.target.checked),
-            className: 'cdb-checkbox'
+            onChange: (e) => updateEditField('foodRequired', e.target.checked)
           }),
-          h('label', { htmlFor: `editFoodRequired-${entry.id}`, className: 'cdb-label' }, 'Food Required')
+          h('label', { htmlFor: `editFoodRequired-${entry.id}`, className: 'field-label' }, 'Food Required')
         ),
         editFormData.foodRequired && h('select', {
           value: editFormData.foodType || 'None',
           onChange: (e) => updateEditField('foodType', e.target.value),
-          className: 'cdb-input'
+          className: 'field is-block'
         },
           ...FOOD_OPTIONS.map(food => h('option', { key: food, value: food }, food))
         )
       ),
       h('div', null,
         h('div', { className: 'cdb-searchmode-bar' },
-          h('label', { className: 'cdb-label is-flush' }, 'Items'),
+          h('label', { className: 'field-label is-flush' }, 'Items'),
           h('button', {
             type: 'button',
             onClick: addEditItem,
@@ -974,31 +972,31 @@
           }, 'Add Item')
         ),
         ...editFormData.items.map((item, idx) =>
-          h('div', { key: idx, className: 'cdb-form-fields is-boxed' },
+          h('div', { key: idx, className: 'form-fields is-boxed' },
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Item Name'),
+                h('label', { className: 'field-label is-small' }, 'Item Name'),
                 h('input', {
                   type: 'text',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.name || '',
                   onChange: (e) => updateEditItem(idx, 'name', e.target.value)
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Difficulty'),
+                h('label', { className: 'field-label is-small' }, 'Difficulty'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.difficulty || 0,
                   onChange: (e) => updateEditItem(idx, 'difficulty', e.target.value)
                 })
               ),
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Quality'),
+                h('label', { className: 'field-label is-small' }, 'Quality'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.quality || 0,
                   onChange: (e) => updateEditItem(idx, 'quality', e.target.value)
                 })
@@ -1006,10 +1004,10 @@
             ),
             h('div', { className: 'cdb-grid-3' },
               h('div', null,
-                h('label', { className: 'cdb-label-xs' }, 'Durability'),
+                h('label', { className: 'field-label is-small' }, 'Durability'),
                 h('input', {
                   type: 'number',
-                  className: 'cdb-input cdb-input-sm',
+                  className: 'field is-block is-small',
                   value: item.durability || 0,
                   onChange: (e) => updateEditItem(idx, 'durability', e.target.value)
                 })
@@ -1023,11 +1021,11 @@
               )
             ),
             multipleEditItems && h('div', null,
-              h('label', { className: 'cdb-label-xs' },
+              h('label', { className: 'field-label is-small' },
                 'Macro for ' + (item.name || `Item ${idx + 1}`)
               ),
               h('textarea', {
-                className: 'cdb-input cdb-input-mono',
+                className: 'field is-block is-mono',
                 rows: 6,
                 value: (editFormData.macros[idx] && editFormData.macros[idx].macro) || '',
                 onChange: (e) => updateEditMacro(idx, e.target.value)
@@ -1036,9 +1034,9 @@
           )
         ),
         !multipleEditItems && h('div', null,
-          h('label', { className: 'cdb-label' }, 'Macro'),
+          h('label', { className: 'field-label' }, 'Macro'),
           h('textarea', {
-            className: 'cdb-input cdb-input-mono',
+            className: 'field is-block is-mono',
             rows: 8,
             value: (editFormData.macros[0] && editFormData.macros[0].macro) || '',
             onChange: (e) => updateEditMacro(0, e.target.value)
@@ -1046,7 +1044,7 @@
         )
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, `Data Reward (${editFormData.dataReward && editFormData.dataReward.job || editFormData.job})`),
+        h('label', { className: 'field-label' }, `Data Reward (${editFormData.dataReward && editFormData.dataReward.job || editFormData.job})`),
         h(DataRewardChips, {
           dataReward: editFormData.dataReward || {},
           mode: 'edit',
@@ -1054,15 +1052,15 @@
         })
       ),
       h('div', null,
-        h('label', { className: 'cdb-label' }, 'Notes'),
+        h('label', { className: 'field-label' }, 'Notes'),
         h('textarea', {
-          className: 'cdb-input',
+          className: 'field is-block',
           rows: 3,
           value: editFormData.notes || '',
           onChange: (e) => updateEditField('notes', e.target.value)
         })
       ),
-      h('div', { className: 'cdb-form-actions' },
+      h('div', { className: 'form-actions' },
         h('button', {
           type: 'button',
           onClick: handleInlineCancel,
@@ -1109,7 +1107,7 @@
           h(DataRewardChips, {
             dataReward: entry.dataReward || {},
             mode: 'display'
-          }) || h('span', { className: 'cdb-meta' }, '(none)')
+          }) || h('span', { className: 'meta-note' }, '(none)')
         ),
         // Macros
         !isEditingInline && entry.macros && entry.macros.length > 0 && h('div', null,
@@ -1154,7 +1152,7 @@
           h('p', { className: 'cdb-notes-text' }, entry.notes)
         )
       ),
-      !isEditingInline && h('div', { className: 'cdb-card-footer' },
+      !isEditingInline && h('div', { className: 'card-footer' },
         h('button', {
           type: 'button',
           onClick: (e) => { e.stopPropagation(); handleInlineEdit(); },
@@ -1163,7 +1161,7 @@
           title: 'Edit'
         }, h('span', { className: 'material-icons', 'aria-hidden': 'true' }, 'edit')),
         deleteConfirm
-          ? h('div', { className: 'cdb-inline-row', style: { gap: '0.25rem' } },
+          ? h('div', { className: 'inline-row', style: { gap: '0.25rem' } },
               h('button', {
                 type: 'button',
                 onClick: (e) => { e.stopPropagation(); onDelete(); setDeleteConfirm(false); },
@@ -1212,21 +1210,21 @@
             h('input', {
               type: 'number',
               placeholder: 'Difficulty (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: difficultySearch,
               onChange: (e) => setDifficultySearch(e.target.value)
             }),
             h('input', {
               type: 'number',
               placeholder: 'Quality (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: qualitySearch,
               onChange: (e) => setQualitySearch(e.target.value)
             }),
             h('input', {
               type: 'number',
               placeholder: 'Durability (exact)',
-              className: 'cdb-input',
+              className: 'field is-block',
               value: durabilitySearch,
               onChange: (e) => setDurabilitySearch(e.target.value)
             }),
@@ -1243,7 +1241,7 @@
         : h('input', {
             type: 'text',
             placeholder: 'Search quests, items, or data rewards...',
-            className: 'cdb-input',
+            className: 'field is-block',
             value: searchTerm,
             onChange: (e) => setSearchTerm(e.target.value)
           })
@@ -1431,7 +1429,7 @@
           h('select', {
             value: sortBy,
             onChange: (e) => setSortBy(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'questName' }, 'Sort by Quest Name'),
             h('option', { value: 'category' }, 'Sort by Class (A\u2192D)'),
@@ -1441,7 +1439,7 @@
           h('select', {
             value: filterCategory,
             onChange: (e) => setFilterCategory(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Classes'),
             ...CATEGORIES.map(cat => h('option', { key: cat, value: cat }, cat))
@@ -1449,7 +1447,7 @@
           h('select', {
             value: filterLocation,
             onChange: (e) => setFilterLocation(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             ...locationOptions.map(loc =>
               h('option', { key: loc, value: loc }, loc === 'all' ? 'All Locations' : loc)
@@ -1458,7 +1456,7 @@
           h('select', {
             value: filterJob,
             onChange: (e) => setFilterJob(e.target.value),
-            className: 'cdb-select'
+            className: 'field'
           },
             h('option', { value: 'all' }, 'All Jobs'),
             ...JOBS.map(job => h('option', { key: job, value: job }, job))
@@ -1488,7 +1486,7 @@
       ),
       h('div', { className: 'cdb-craft-list' },
         filteredMacros.length === 0
-          ? h('div', { className: 'cdb-empty-state' },
+          ? h('div', { className: 'empty-note cdb-empty-state' },
               macros.length === 0
                 ? 'No missions yet. Add your first mission above!'
                 : 'No missions match your filters.'

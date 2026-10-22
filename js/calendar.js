@@ -63,7 +63,7 @@
   var sidebarEl    = document.getElementById("calendar-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("calendar-search");
   var catListEl    = document.getElementById("filter-category-list");
   var resetBtn     = document.getElementById("filter-reset");
@@ -106,7 +106,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Worker sends UTC "YYYY-MM-DD HH:MM:SS"; parse to epoch ms (local render).
   function parseUtc(s) {
@@ -267,12 +267,12 @@
   }
 
   function renderLoading() {
-    showPanel('<div class="cal-panel"><p>Loading events&hellip;</p></div>');
+    showPanel('<div class="notice-panel is-gate"><p>Loading events&hellip;</p></div>');
   }
 
   function renderError(message) {
     showPanel(
-      '<div class="cal-panel">' +
+      '<div class="notice-panel is-gate">' +
         '<h2>Couldn’t load the calendar</h2>' +
         '<p>' + escapeHTML(message || "Please try again in a moment.") + '</p>' +
         '<button type="button" class="btn" id="cal-retry">Try again</button>' +
@@ -327,10 +327,10 @@
       if (!present[cat.slug]) { delete filters.categories[cat.slug]; return; }
 
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -344,11 +344,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = cat.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.cat = cat.slug;
       count.textContent = "0";
 
@@ -377,7 +377,7 @@
     allEvents.forEach(function (e) {
       if (matchesSearch(e, q)) counts[e.category] = (counts[e.category] || 0) + 1;
     });
-    catListEl.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    catListEl.querySelectorAll(".filter-count").forEach(function (el) {
       el.textContent = String(counts[el.dataset.cat] || 0);
     });
   }
@@ -479,8 +479,8 @@
     agendaEl.innerHTML = events.length
       ? agendaSectionsHTML(events)
       : (allEvents.length
-          ? '<div class="cal-empty">No events match your filters.</div>'
-          : '<div class="cal-empty">No upcoming events are scheduled right now.</div>');
+          ? '<div class="empty-note cal-empty">No events match your filters.</div>'
+          : '<div class="empty-note cal-empty">No upcoming events are scheduled right now.</div>');
   }
 
   // ── Month + week grids ─────────────────────────────────────────────────────
@@ -573,7 +573,7 @@
 
     weekEl.innerHTML = events.length
       ? agendaSectionsHTML(events)
-      : '<div class="cal-empty">No events this week.</div>';
+      : '<div class="empty-note cal-empty">No events this week.</div>';
     updateNav();
   }
 
@@ -680,13 +680,14 @@
   overlay.addEventListener("click", closeSidebar);
   restoreSidebarState();
 
-  // Rotating a phone to landscape (e.g. ~390px → ~844px) crosses the 768px
-  // breakpoint where the sidebar stops being an off-screen drawer and becomes
-  // the desktop inline column — which is shown by default, so the filter panel
-  // appeared to "open" on its own. Track the mode and, on a mobile→desktop
-  // crossing, collapse the sidebar unless the drawer was deliberately open, so
-  // filters stay put across a rotation. (styles.css owns the 768px breakpoint
-  // and is shared by other pages, so this is handled here rather than there.)
+  // Rotating a tablet or large phone to landscape (e.g. ~430px → ~932px)
+  // crosses the 900px step (PVLayout) where the sidebar stops being an
+  // off-screen drawer and becomes the desktop inline column — which is shown
+  // by default, so the filter panel appeared to "open" on its own. Track the
+  // mode and, on a mobile→desktop crossing, collapse the sidebar unless the
+  // drawer was deliberately open, so filters stay put across a rotation.
+  // (styles.css owns the step and is shared by other pages, so this is
+  // handled here rather than there.)
   var wasMobile = isMobile();
   window.addEventListener("resize", function () {
     var nowMobile = isMobile();

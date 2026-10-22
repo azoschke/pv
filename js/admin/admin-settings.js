@@ -90,7 +90,7 @@
     return h('tr', null,
       h('td', null,
         h('div', { className: 'portal-name-row' },
-          h('span', { className: 'portal-strong' }, u.username),
+          h('span', { className: 'row-name' }, u.username),
           isRoot ? h('span', { className: 'tag', title: 'Root admin (protected)' }, 'Root') : null,
           needsRole ? h('span', { className: 'pill', title: 'No role assigned yet' }, 'Needs role') : null
         ),
@@ -198,14 +198,14 @@
       title: 'Password reset link — ' + result.display_name,
       onClose: onClose
     },
-      h('p', { style: { fontFamily: 'Crimson Pro, serif', margin: '0 0 0.75rem' } },
+      h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.75rem' } },
         'Send this one-time link to ',
         h('strong', null, result.display_name),
         ' over Discord. ',
         expiry ? ('It expires around ' + expiry + ' and ') : 'It ',
         'can only be used once.'
       ),
-      h('div', { className: 'portal-flash error', style: { marginBottom: '1rem' } },
+      h('div', { className: 'flash error', style: { marginBottom: '1rem' } },
         'This link is shown only once — copy it now. It cannot be retrieved again.'
       ),
       h('div', { className: 'portal-field', style: { marginBottom: '1rem' } },
@@ -275,9 +275,9 @@
       title: 'Edit roles — ' + (user.display_name || user.username),
       onClose: onClose
     },
-      h('p', { style: { fontFamily: 'Crimson Pro, serif', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
+      h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
         'Select the roles for ', h('strong', null, user.username), '.'),
-      merr ? h('div', { className: 'portal-flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
+      merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
         props.roles.map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
@@ -454,14 +454,14 @@
               type: 'search',
               name: 'account-search',
               autoComplete: 'off',
-              className: 'portal-search',
+              className: 'field is-search',
               placeholder: 'Filter by username or display name…',
               value: filter,
               onChange: function (e) { setFilter(e.target.value); }
             })
           )
         ),
-        err ? h('div', { className: 'portal-flash error' }, err) : null,
+        err ? h('div', { className: 'flash error' }, err) : null,
         loading
           ? h('p', { className: 'portal-muted' }, 'Loading users…')
           : h('div', { className: 'portal-table-wrap' },

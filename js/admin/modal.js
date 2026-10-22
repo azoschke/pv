@@ -30,14 +30,14 @@
     useEffect(function () { return PVScrollLock.lock(); }, []);
 
     return h('div', {
-      className: 'portal-modal-overlay',
+      className: 'modal-overlay',
       onMouseDown: function (e) {
         if (e.target === e.currentTarget && onClose) onClose();
       }
     },
-      h('div', { className: 'portal-modal portal-modal-' + size, role: 'dialog', 'aria-modal': 'true' },
-        h('div', { className: 'portal-modal-header' },
-          h('h3', { className: 'portal-modal-title' }, title || ''),
+      h('div', { className: 'modal' + (size === 'lg' ? ' is-wide' : ''), role: 'dialog', 'aria-modal': 'true' },
+        h('div', { className: 'modal-head' },
+          h('h3', { className: 'modal-title' }, title || ''),
           h('button', {
             type: 'button',
             className: 'btn is-quiet is-small is-icon',
@@ -45,7 +45,7 @@
             onClick: function () { if (onClose) onClose(); }
           }, '✕')
         ),
-        h('div', { className: 'portal-modal-body' },
+        h('div', { className: 'modal-body' },
           props.children
         )
       )

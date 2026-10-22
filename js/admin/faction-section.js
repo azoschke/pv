@@ -118,7 +118,7 @@
         pending.map(function (m) {
           return h('div', { className: 'ic-interview-row', key: m.id },
             h('span', { className: interviewPillClass(m.interview) }, m.interview),
-            h('span', { className: 'ic-interview-name' }, m.name)
+            h('span', { className: 'row-name' }, m.name)
           );
         })
       )
@@ -151,13 +151,13 @@
       h('div', { className: 'portal-filter-row' },
         h('input', {
           type: 'search',
-          className: 'portal-search',
+          className: 'field is-search',
           placeholder: 'Search name…',
           value: nameFilter,
           onChange: function (e) { setNameFilter(e.target.value); }
         })
       ),
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading roster…')
         : members.length
@@ -175,7 +175,7 @@
                     ? filtered.map(function (m) {
                         var factions = orderedFactions(parseFactions(m.faction));
                         return h('tr', { key: m.id },
-                          h('td', null, m.name),
+                          h('td', { className: 'row-name' }, m.name),
                           h('td', null,
                             m.ic_rank
                               ? m.ic_rank

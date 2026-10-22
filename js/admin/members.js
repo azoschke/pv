@@ -210,7 +210,7 @@
     },
       hasShared ? h(SharedBlock, { member: member, allMembers: allMembers }) : null,
       value
-        ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'Crimson Pro, serif', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
+        ? h('div', { style: { whiteSpace: 'pre-wrap', fontFamily: 'var(--font-text)', fontSize: '1rem', marginTop: hasShared ? '0.75rem' : 0 } }, value)
         : null
     );
   }
@@ -285,7 +285,7 @@
     }
 
     return h('form', { onSubmit: doSave },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       h('div', { className: 'portal-field-row' },
         h('div', { className: 'portal-field' },
           h('label', null, 'Name *'),
@@ -456,7 +456,7 @@
                       });
                       return h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' } },
                         h('select', {
-                          className: 'portal-filter-select',
+                          className: 'field is-filter',
                           value: altPick,
                           style: { flex: '1 1 12rem' },
                           onChange: function (e) { setAltPick(e.target.value); }
@@ -534,7 +534,7 @@
 
     var factions = parseFactions(m.faction);
     return h('tr', null,
-      h('td', null, m.name),
+      h('td', { className: 'row-name' }, m.name),
       h('td', null, m.ic_rank || h('span', { className: 'portal-muted' }, '—')),
       (function () {
         // "NA - No RP" reads as a null field in the grid (the form keeps it).
@@ -752,7 +752,7 @@
 
     function filterSelect(value, onChange, placeholder, options) {
       return h('select', {
-        className: 'portal-filter-select',
+        className: 'field is-filter',
         value: value,
         onChange: function (e) { onChange(e.target.value); }
       },
@@ -771,7 +771,7 @@
         h('div', { className: 'members-header-actions' },
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             placeholder: 'Search name or notes…',
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }
@@ -814,7 +814,7 @@
         }, 'Clear filters') : null
       ),
 
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       loading
         ? h('p', { className: 'portal-muted' }, 'Loading members…')
         : h('div', { className: 'portal-card tear' },

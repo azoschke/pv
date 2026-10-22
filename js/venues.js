@@ -47,7 +47,7 @@
   var sidebarEl    = document.getElementById("venues-sidebar");
   var toggleBtn    = document.getElementById("sidebar-toggle-btn");
   var closeBtn     = document.getElementById("sidebar-close-btn");
-  var overlay      = document.getElementById("campaign-overlay");
+  var overlay      = document.getElementById("browse-overlay");
   var searchInput  = document.getElementById("venues-search");
   var sizeListEl   = document.getElementById("filter-size-list");
   var typeListEl   = document.getElementById("filter-type-list");
@@ -82,7 +82,7 @@
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   function loadFilters() {
     try {
@@ -150,10 +150,10 @@
     listEl.innerHTML = "";
     items.forEach(function (it) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -167,11 +167,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = it.label;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = kind;
       count.dataset.value = it.value;
       count.textContent = "0";
@@ -334,7 +334,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var kind = el.dataset.kind;
       var value = el.dataset.value;
       if (!kind || !value) return;
@@ -345,7 +345,7 @@
         if (kind === "sizes") return v.size === value;
         return (Array.isArray(v.tags) ? v.tags : []).indexOf(value) !== -1;
       });
-      var item = el.closest(".venues-filter-item");
+      var item = el.closest(".filter-item");
       if (item) item.hidden = !anyone && !filters[kind][value];
     });
   }
@@ -385,53 +385,53 @@
   function buildCardEl(v) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card" + (v.featured ? " is-featured" : "");
+    card.className = "media-card" + (v.featured ? " is-featured" : "");
     card.setAttribute("aria-label", v.name);
 
     // The placeholder field shows wherever the image is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(v);
+    media.className = "media-card-media tear-half " + mediaClass(v);
 
     if (v.image_url) {
       // With a dark-mode version, the image swaps with the theme.
       PVThemeImage.elements(v.image_url, v.dark_image_url, function (img) {
         img.loading = "lazy";
-        img.className = "venue-card-img";
+        img.className = "media-card-img";
         img.addEventListener("error", function () { img.remove(); });
       }).forEach(function (img) { media.appendChild(img); });
     }
 
     if (v.featured) {
       var fb = document.createElement("span");
-      fb.className = "venue-badge venue-badge-featured";
+      fb.className = "media-badge media-badge-left";
       fb.innerHTML = '<span aria-hidden="true">&#9733;</span> Featured';
       media.appendChild(fb);
     }
     var sb = document.createElement("span");
-    sb.className = "venue-badge venue-badge-size";
+    sb.className = "media-badge media-badge-right";
     sb.textContent = SIZE_LABEL[v.size] || "";
     media.appendChild(sb);
 
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = v.name || "Untitled venue";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
 
     var loc = document.createElement("p");
-    loc.className = "venue-card-location";
+    loc.className = "media-card-meta";
     loc.textContent = locationLine(v);
     body.appendChild(loc);
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(v.description, 140);
     body.appendChild(desc);
 
@@ -455,9 +455,9 @@
 
     if (!sorted.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = '<p>No venues match these filters.</p>' +
-        '<p class="venues-empty-hint">Try clearing a filter or two.</p>';
+        '<p class="notice-panel-hint">Try clearing a filter or two.</p>';
       gridEl.appendChild(empty);
       return;
     }
@@ -472,14 +472,14 @@
     var imgs = venueImages(v);
 
     if (!imgs.length) {
-      return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
+      return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(v) + '"></div>';
     }
 
     // The primary image (the first) swaps with the theme when it has a
     // dark-mode version; its two copies share slide 0.
     var dark = v.image_url ? v.dark_image_url : null;
     if (imgs.length === 1) {
-      return PVThemeImage.html(imgs[0], dark, "venue-modal-img tear");
+      return PVThemeImage.html(imgs[0], dark, "detail-modal-img tear");
     }
 
     var slides = imgs.map(function (src, i) {
@@ -530,15 +530,15 @@
 
     var descHtml = v.description
       ? (window.marked && marked.parse ? marked.parse(escapeHTML(v.description)) : "<p>" + escapeHTML(v.description) + "</p>")
-      : '<p class="modal-empty-note"><em>No description provided.</em></p>';
+      : '<p class="empty-note">No description provided.</p>';
 
     var allTags = []
       .concat(Array.isArray(v.tags) ? v.tags.map(function (t) { return "#" + t.replace(/_/g, " "); }) : [])
       .concat(Array.isArray(v.extra_tags) ? v.extra_tags.map(function (t) { return "#" + t; }) : []);
     var tagsHtml = allTags.length
-      ? '<div class="venue-card-tags venue-modal-tags">' +
+      ? '<div class="media-card-tags detail-modal-tags">' +
         allTags.map(function (t) {
-          return '<span class="venue-card-tag">' + escapeHTML(t) + '</span>';
+          return '<span class="media-card-tag">' + escapeHTML(t) + '</span>';
         }).join("") +
         '</div>'
       : "";
@@ -550,21 +550,21 @@
     // Menus live on their own page; the card itself stays unchanged, so this
     // link is the only entry point from the directory.
     var menuLinkHtml = v.has_menu
-      ? '<a class="btn is-quiet is-small venue-modal-menu-link" href="menus.html?venue=' +
+      ? '<a class="btn is-quiet is-small detail-modal-link" href="menus.html?venue=' +
         encodeURIComponent(v.id) + '">' +
           'View Menu' +
-          '<span class="venue-modal-menu-arrow" aria-hidden="true">&rarr;</span>' +
+          '<span class="detail-modal-link-arrow" aria-hidden="true">&rarr;</span>' +
         '</a>'
       : "";
 
     modalBody.innerHTML =
       imgHtml +
-      '<div class="venue-modal-content">' +
-        '<div class="venue-modal-badges">' + badges + '</div>' +
-        '<h2 class="venue-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
-        '<p class="venue-modal-location">' + escapeHTML(locationLine(v)) + '</p>' +
+      '<div class="detail-modal-content">' +
+        '<div class="detail-modal-badges">' + badges + '</div>' +
+        '<h2 class="detail-modal-title" id="venue-modal-title">' + escapeHTML(v.name || "Untitled venue") + '</h2>' +
+        '<p class="detail-modal-meta">' + escapeHTML(locationLine(v)) + '</p>' +
         menuLinkHtml +
-        '<div class="venue-modal-desc">' + descHtml + '</div>' +
+        '<div class="detail-modal-desc">' + descHtml + '</div>' +
         tagsHtml +
       '</div>';
 
@@ -597,7 +597,7 @@
 
   // ── Boot ─────────────────────────────────────────────────────────────────
   async function loadVenues() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading venues&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading venues&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/venues", {
         method: "GET",
@@ -609,7 +609,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading venues:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the venue directory. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

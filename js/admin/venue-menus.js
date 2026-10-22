@@ -143,7 +143,7 @@
     }
 
     return h('form', { onSubmit: submit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Category name'),
@@ -234,7 +234,7 @@
     }
 
     return h('form', { onSubmit: submit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Item name'),
@@ -512,7 +512,7 @@
             }, h(Icon, { name: cat.icon, size: 20 })),
 
         h('div', { style: { flex: 1, minWidth: 0 } },
-          h('div', { className: 'portal-strong' }, item.name),
+          h('div', { className: 'row-name' }, item.name),
           item.description
             ? h('div', {
                 style: {
@@ -588,7 +588,7 @@
         },
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Venue Menus'),
           h('select', {
-            className: 'portal-search',
+            className: 'field is-search',
             value: venueId,
             onChange: function (e) { setVenueId(e.target.value); },
             disabled: loading || !venues.length,
@@ -610,12 +610,12 @@
           ) : null
         ),
         flash ? h('div', {
-          className: 'portal-flash success is-head'
+          className: 'flash success is-head'
         }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       loading

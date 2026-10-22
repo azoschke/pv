@@ -417,7 +417,8 @@
   // goes entirely; such a link anywhere else keeps its text but stops being a
   // link; a section that collapses when empty (the home page's .landing-row
   // sections, or anything marked data-pv-collapse) goes when every link in it
-  // went.
+  // went. Sections can nest (the home page's tool groups inside the Tools
+  // row): a link counts toward every section around it.
   function hideClosedLinks(blocked, nav) {
     const SECTIONS = '.landing-row, [data-pv-collapse]';
     const closed = new Set(blocked);
@@ -426,14 +427,15 @@
     const unlink = [];
     document.querySelectorAll('a[href]').forEach(function (a) {
       if (nav.contains(a)) return;
-      const section = a.closest(SECTIONS);
-      if (section) {
-        if (!counts.has(section)) counts.set(section, { links: 0, closed: 0 });
-        counts.get(section).links++;
+      const sections = [];
+      for (let s = a.closest(SECTIONS); s; s = s.parentElement && s.parentElement.closest(SECTIONS)) {
+        sections.push(s);
+        if (!counts.has(s)) counts.set(s, { links: 0, closed: 0 });
+        counts.get(s).links++;
       }
       const target = linkedPage(a.getAttribute('href'));
       if (!target || !closed.has(target)) return;
-      if (section) counts.get(section).closed++;
+      sections.forEach(function (s) { counts.get(s).closed++; });
       const item = a.closest('li');
       if (item) drop.push(item);
       else unlink.push(a);

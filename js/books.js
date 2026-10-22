@@ -447,7 +447,7 @@ function renderBooks() {
     html += '<div class="book-header-right">';
     html += '<span class="book-progress-text">' + bookChecked + ' / ' + bookTotal + '</span>';
     html += '<div class="book-progress-bar"><div class="book-progress-bar-fill" style="width:' + pct + '%"></div></div>';
-    html += '<span class="book-expand-icon">&#9660;</span>';
+    html += '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
     html += '</div>';
     html += '</div>';
 

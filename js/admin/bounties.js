@@ -318,7 +318,7 @@
       return h('tr', null,
         h('td', null,
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' } },
-            h('span', { className: 'portal-row-title' }, q.title),
+            h('span', { className: 'row-name' }, q.title),
             past ? h('span', { className: 'pill' }, 'Past date') : null
           ),
           q.submitted_by_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } },
@@ -421,7 +421,7 @@
           h('h2', { className: 'portal-card-title portal-head-title' }, 'Bounty Board'),
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             value: query,
             onChange: function (e) { setQuery(e.target.value); },
             placeholder: 'Search title, reward, member…'
@@ -434,11 +434,11 @@
         h('p', { className: 'portal-head-desc' },
           'Manage and approve bounty board quests. Make sure to update repeatable quests after the event date has passed.'
         ),
-        flash ? h('div', { className: 'portal-flash success is-head' }, flash) : null
+        flash ? h('div', { className: 'flash success is-head' }, flash) : null
       ),
 
       err ? h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err)
+        h('div', { className: 'flash error' }, err)
       ) : null,
 
       reviewCard,

@@ -47,7 +47,7 @@
   var sidebarEl     = document.getElementById("roster-sidebar");
   var toggleBtn     = document.getElementById("sidebar-toggle-btn");
   var closeBtn      = document.getElementById("sidebar-close-btn");
-  var overlay       = document.getElementById("campaign-overlay");
+  var overlay       = document.getElementById("browse-overlay");
   var searchInput   = document.getElementById("roster-search");
   var factionListEl = document.getElementById("filter-faction-list");
   var factionGroupEl= document.getElementById("filter-faction-group");
@@ -77,7 +77,7 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function isMobile() { return window.innerWidth <= 768; }
+  function isMobile() { return PVLayout.isNarrow(); }
 
   // Split the raw comma-separated faction field into a clean list.
   function parseFactions(value) {
@@ -188,10 +188,10 @@
 
     values.forEach(function (value) {
       var li = document.createElement("li");
-      li.className = "venues-filter-item";
+      li.className = "filter-item";
 
       var label = document.createElement("label");
-      label.className = "venues-filter-check";
+      label.className = "filter-check";
 
       var input = document.createElement("input");
       input.type = "checkbox";
@@ -205,11 +205,11 @@
       });
 
       var text = document.createElement("span");
-      text.className = "venues-filter-check-text";
+      text.className = "filter-check-text";
       text.textContent = value;
 
       var count = document.createElement("span");
-      count.className = "venues-filter-count";
+      count.className = "filter-count";
       count.dataset.kind = (listEl === factionListEl) ? "faction" : "skill";
       count.dataset.value = value;
       count.textContent = "0";
@@ -301,7 +301,7 @@
       }, 0);
     }
 
-    document.querySelectorAll(".venues-filter-count").forEach(function (el) {
+    document.querySelectorAll(".filter-count").forEach(function (el) {
       var value = el.dataset.value;
       if (!value) return;
       el.textContent = String(countFor(el.dataset.kind, value));
@@ -319,19 +319,19 @@
   function buildCardEl(m) {
     var card = document.createElement("button");
     card.type = "button";
-    card.className = "venue-card";
+    card.className = "media-card";
     card.setAttribute("aria-label", m.name);
 
     // The placeholder field shows wherever the portrait is missing or fails.
     var media = document.createElement("div");
-    media.className = "venue-card-media tear-half " + mediaClass(m);
+    media.className = "media-card-media tear-half " + mediaClass(m);
 
     if (m.image_url) {
       var img = document.createElement("img");
       img.src = m.image_url;
       img.alt = "";
       img.loading = "lazy";
-      img.className = "venue-card-img";
+      img.className = "media-card-img";
       img.addEventListener("error", function () { img.remove(); });
       media.appendChild(img);
     }
@@ -339,12 +339,12 @@
     card.appendChild(media);
 
     var body = document.createElement("div");
-    body.className = "venue-card-body";
+    body.className = "media-card-body";
 
     var titleRow = document.createElement("div");
-    titleRow.className = "venue-card-title-row";
+    titleRow.className = "media-card-title-row";
     var title = document.createElement("h3");
-    title.className = "venue-card-title";
+    title.className = "media-card-title";
     title.textContent = m.name || "Unnamed";
     titleRow.appendChild(title);
     body.appendChild(titleRow);
@@ -353,13 +353,13 @@
     // Blank when the member has no IC rank assigned.
     if (m.ic_rank) {
       var rank = document.createElement("p");
-      rank.className = "venue-card-location";
+      rank.className = "media-card-meta";
       rank.textContent = String(m.ic_rank);
       body.appendChild(rank);
     }
 
     var desc = document.createElement("p");
-    desc.className = "venue-card-desc";
+    desc.className = "media-card-desc";
     desc.textContent = truncate(m.description, 160) ||
       "Open the full profile for details and RP hooks.";
     body.appendChild(desc);
@@ -387,11 +387,11 @@
 
     if (!filtered.length) {
       var empty = document.createElement("div");
-      empty.className = "venues-empty";
+      empty.className = "notice-panel";
       empty.innerHTML = allMembers.length
         ? '<p>No members match these filters.</p>'
         : '<p>No published profiles yet.</p>' +
-          '<p class="venues-empty-hint">' +
+          '<p class="notice-panel-hint">' +
           'Members can publish a profile from the portal’s My Profile section.</p>';
       gridEl.appendChild(empty);
       return;
@@ -410,27 +410,27 @@
 
   function buildImageHtml(m) {
     if (m.image_url) {
-      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="venue-modal-img tear">';
+      return '<img src="' + escapeHTML(m.image_url) + '" alt="" class="detail-modal-img tear">';
     }
-    return '<div class="venue-modal-img venue-modal-img-fallback tear ' + mediaClass(m) + '"></div>';
+    return '<div class="detail-modal-img detail-modal-img-fallback tear ' + mediaClass(m) + '"></div>';
   }
 
   function openModal(m) {
     // In the open modal, skills get their own labeled section as plain text.
     var skillsHtml = (m.skills || []).length
-      ? '<p class="venue-modal-location is-section">SKILLS</p>' +
-        '<div class="venue-modal-desc"><p>' +
+      ? '<p class="detail-modal-meta is-section">SKILLS</p>' +
+        '<div class="detail-modal-desc"><p>' +
           m.skills.map(function (s) { return escapeHTML(s); }).join(", ") +
         '</p></div>'
       : "";
 
     var descHtml = m.description
-      ? '<div class="venue-modal-desc">' + md(m.description) + '</div>'
-      : '<div class="venue-modal-desc"><p class="modal-empty-note"><em>No description provided.</em></p></div>';
+      ? '<div class="detail-modal-desc">' + md(m.description) + '</div>'
+      : '<div class="detail-modal-desc"><p class="empty-note">No description provided.</p></div>';
 
     var hooksHtml = m.rp_hooks
-      ? '<p class="venue-modal-location is-section">RP HOOKS</p>' +
-        '<div class="venue-modal-desc">' + md(m.rp_hooks) + '</div>'
+      ? '<p class="detail-modal-meta is-section">RP HOOKS</p>' +
+        '<div class="detail-modal-desc">' + md(m.rp_hooks) + '</div>'
       : "";
 
     var urlHtml = m.url
@@ -448,9 +448,9 @@
 
     modalBody.innerHTML =
       buildImageHtml(m) +
-      '<div class="venue-modal-content">' +
-        (badgesHtml ? '<div class="venue-modal-badges">' + badgesHtml + '</div>' : '') +
-        '<h2 class="venue-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
+      '<div class="detail-modal-content">' +
+        (badgesHtml ? '<div class="detail-modal-badges">' + badgesHtml + '</div>' : '') +
+        '<h2 class="detail-modal-title" id="roster-modal-title">' + escapeHTML(m.name || "Unnamed") + '</h2>' +
         descHtml +
         hooksHtml +
         skillsHtml +
@@ -484,7 +484,7 @@
 
   // ── Boot ─────────────────────────────────────────────────────────────────
   async function loadRoster() {
-    gridEl.innerHTML = '<div class="venues-empty"><p>Loading roster&hellip;</p></div>';
+    gridEl.innerHTML = '<div class="notice-panel"><p>Loading roster&hellip;</p></div>';
     try {
       var res = await fetch(API_BASE + "/roster", {
         method: "GET",
@@ -500,7 +500,7 @@
       renderGrid();
     } catch (err) {
       console.error("Error loading roster:", err);
-      gridEl.innerHTML = '<div class="venues-empty venues-empty-error">' +
+      gridEl.innerHTML = '<div class="notice-panel notice-panel-error">' +
         '<p>Could not reach the roster. Please try again shortly.</p></div>';
       countEl.textContent = "";
     }

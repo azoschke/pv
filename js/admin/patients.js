@@ -185,7 +185,7 @@
         },
           h('label', null, f.label),
           h('select', {
-            className: 'portal-filter-select',
+            className: 'field is-filter',
             value: draft.member_id ? String(draft.member_id) : '',
             onChange: function (e) {
               var val = e.target.value;
@@ -254,7 +254,7 @@
     }
 
     return h('form', { onSubmit: handleSubmit },
-      err ? h('div', { className: 'portal-flash error' }, err) : null,
+      err ? h('div', { className: 'flash error' }, err) : null,
       body,
       h('div', { className: 'portal-form-actions' },
         h('button', {
@@ -298,7 +298,7 @@
         h('div', { className: 'portal-card-actions' },
           h('input', {
             type: 'search',
-            className: 'portal-search',
+            className: 'field is-search',
             placeholder: 'Filter by name…',
             value: filter,
             onChange: function (e) { setFilter(e.target.value); }
@@ -326,7 +326,7 @@
               ? filtered.map(function (p) {
                   return h('tr', { key: p.patient_id },
                     h('td', { style: { verticalAlign: 'middle' } },
-                      h('span', { className: 'portal-row-title' }, p.patient_name),
+                      h('span', { className: 'row-name' }, p.patient_name),
                       p.member_id
                         ? h('span', {
                             style: {
@@ -409,7 +409,7 @@
 
     if (loading) return h('div', { className: 'portal-card' }, 'Loading patient…');
     if (err || !data || !data.patient) return h('div', { className: 'portal-card' },
-      h('div', { className: 'portal-flash error' }, err || 'Patient not found.'),
+      h('div', { className: 'flash error' }, err || 'Patient not found.'),
       h('button', { type: 'button', className: 'btn is-quiet', onClick: onBack }, 'Back')
     );
 
@@ -427,7 +427,7 @@
         ),
         h('h2', { className: 'portal-card-title' }, 'Edit Patient')
       ),
-      saved ? h('div', { className: 'portal-flash success' }, 'Saved.') : null,
+      saved ? h('div', { className: 'flash success' }, 'Saved.') : null,
       h(RecordForm, {
         sections: PATIENT_SECTIONS,
         initial: p,
@@ -560,7 +560,7 @@
 
     if (loading) return h('div', { className: 'portal-card' }, 'Loading visits…');
     if (err || !data || !data.patient) return h('div', { className: 'portal-card' },
-      h('div', { className: 'portal-flash error' }, err || 'Patient not found.'),
+      h('div', { className: 'flash error' }, err || 'Patient not found.'),
       h('button', { type: 'button', className: 'btn is-quiet', onClick: onBack }, 'Back')
     );
 
@@ -744,7 +744,7 @@
 
     if (err && view === 'list') {
       return h('div', { className: 'portal-card' },
-        h('div', { className: 'portal-flash error' }, err),
+        h('div', { className: 'flash error' }, err),
         h('button', { type: 'button', className: 'btn is-quiet', onClick: reload }, 'Retry')
       );
     }
