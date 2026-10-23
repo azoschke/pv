@@ -354,7 +354,7 @@
     if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'toggle', label: 'Heal each turn (toggle on/off)' }, { value: 'passive', label: 'Heal each turn (always on)' }];
     // A shield is granted once and lasts until it's broken, so it has no turn timer.
     if (effect === 'shield') return [{ value: 'once', label: 'Give once (press)' }, { value: 'passive', label: 'Refresh each turn (always on)' }];
-    return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Temporary (lasts a while)' }];
+    return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Press to use (set turns)' }];
   }
   function initTiming(effect, m) {
     var mode = m.mode || 'always';
@@ -511,7 +511,7 @@
     var isStun = effect === 'stun';           // debuff; its own self-contained block
     var isNone = effect === 'none';
     var isImmune = effect === 'stun_immune';
-    // Stun immunity on an ally chosen when it's used only works as Temporary.
+    // Stun immunity on an ally chosen when it's used only works as Press to use.
     var lockTemp = isImmune && (tk === 'party_member' || tk === 'party_members');
     var timing = lockTemp ? 'temp' : timingRaw;
     var isOver = timing === 'over';
@@ -834,7 +834,7 @@
           h('option', { value: 'hp' }, 'The holder’s HP is in range'),
           h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
       (hasEffect && advOpen && condKind && isCondBuff({ conditions: condKind, mode: resolvedMode(), type: resolvedType() }))
-        ? h('p', { className: 'portal-field-help rp-help-tight' }, 'A Temporary bonus with a condition starts by itself each time the condition turns on, lasts its turns, then waits for the condition to turn off and on again. With no turns set, it’s on while the condition holds.') : null,
+        ? h('p', { className: 'portal-field-help rp-help-tight' }, 'With a condition, a Press to use bonus isn’t pressed: it starts by itself each time the condition turns on, lasts its turns, then waits for the condition to turn off and on again. With no turns set, it’s on while the condition holds.') : null,
 
       (hasEffect && advOpen && condKind === 'hp') ? h('div', { className: 'rp-mt4' },
         fieldGrid([

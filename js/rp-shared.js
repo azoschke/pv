@@ -62,7 +62,7 @@
   // Roll / output bonuses. Must stay in step with the worker (lib/constants.js
   // ROLL_OUTPUT_TYPES).
   var ROLL_OUTPUT_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'roll_bonus', 'skill_roll', 'attack_output', 'attack_mult', 'heal_output'];
-  // A "Temporary" roll/output bonus with a condition runs by itself, so it has
+  // A "Press to use" roll/output bonus with a condition runs by itself, so it has
   // no Activate button (worker isCondBuff). With a turn count it starts each
   // time its condition turns on, runs those turns, then waits for the
   // condition to turn off and on again.
