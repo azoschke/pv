@@ -11,7 +11,7 @@
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff;
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase;
   var useRef = React.useRef;
 
   var POLL_MS = 5000;
@@ -91,13 +91,10 @@
     // A condition-driven bonus isn't pressed: its condition starts it.
     var when = isCondBuff(m) ? (m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds')
       : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.';
+    if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.' + (m.start_next_turn ? ' They attack from next turn.' : '');
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
-    // A heal over time flagged start_next_turn heals from next turn, so 1 turn isn't "this turn".
-    var hot1 = m.type === 'heal' && m.start_next_turn && m.duration_turns === 1;
-    var dur = hot1 ? ', for 1 turn' : m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
-    return when + ', ' + core + to + dur + '.';
+    return when + ', ' + core + to + durationPhrase(m) + '.';
   }
   // For an active effect (already resolved target_label + remaining turns).
   function describeActiveEffect(e) {
@@ -107,7 +104,9 @@
     if (e.target_kind === 'party_member' || e.target_kind === 'party_members' || e.target_kind === 'players') tp = e.target_label || tp;
     if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
     var to = tp ? ' to ' + tp : '';
-    var dur = e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
+    // A "Wait a turn" effect is held back (pending) until the next Next Turn.
+    var dur = e.pending ? ' — starts next turn'
+      : e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
     return core + to + dur;
   }
 
@@ -278,7 +277,9 @@
         (b.dots && b.dots.length) ? h('div', { className: 'rp-boss-dots' },
           b.dots.map(function (dt) {
             return h('span', { className: 'rp-boss-dot', key: dt.id },
-              '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + '/turn' + (dt.pending ? ' · next turn' : (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : '')),
+              // A strike set to "Wait a turn" is a one-tick DoT: it lands once, next turn.
+              '🔥 ' + (dt.label || 'DoT') + ' ' + dt.value + (dt.pending && dt.remaining_turns === 1 ? ' · lands next turn'
+                : '/turn' + (dt.pending ? ' · next turn' : (dt.remaining_turns != null ? ' · ' + dt.remaining_turns + ' left' : ''))),
               props.isDM ? h('button', { type: 'button', className: 'rp-chip-x', title: 'Clear DoT', onClick: function (e) { e.stopPropagation(); props.onBossDotRemove(b, dt); } }, '✕') : null);
           })) : null,
         revealed.length ? h('div', { className: 'rp-boss-skills' },
@@ -327,7 +328,9 @@
     var extras = [];
     if (m.mode === 'activated' && m.uses_per_session > 0) extras.push((m.uses_per_session - (m.uses_this_session || 0)) + ' of ' + m.uses_per_session + ' uses left');
     if (cond) extras.push(conditionPhrase(cond));
-    if (timed) extras.push(!running ? 'waiting for its condition' : m.remaining_turns > 0 ? 'active — ' + (m.remaining_turns + 1) + ' turns left' : 'active this turn');
+    // "Wait a turn": switched on / pressed, but held back until the next Next Turn.
+    if (m.active && m.pending) extras.push('starts next turn');
+    else if (timed) extras.push(!running ? 'waiting for its condition' : m.remaining_turns > 0 ? 'active — ' + (m.remaining_turns + 1) + ' turns left' : 'active this turn');
     else if (m.active && m.remaining_turns != null) extras.push('active — ' + m.remaining_turns + (m.duration_turns ? ' of ' + m.duration_turns : '') + ' turns left');
     else if (m.active && !gateClosed) extras.push('active now');
 
@@ -360,8 +363,8 @@
       var disabled = props.locked || spent || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
-      var isRunning = m.active && m.remaining_turns != null;
-      if (isRunning) control = h('button', { type: 'button', className: 'btn is-quiet is-small is-active', disabled: true }, 'Active');
+      var isRunning = m.active && (m.remaining_turns != null || m.pending);
+      if (isRunning) control = h('button', { type: 'button', className: 'btn is-quiet is-small is-active', disabled: true }, m.pending ? 'Starts next turn' : 'Active');
       else if (spent) control = h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Used');
       else control = h('div', { className: 'rp-mod-control' },
         allyPicker,
@@ -1498,7 +1501,7 @@
       return (items || []).map(function (it) {
         return Object.assign({}, it, { abilities: (it.abilities || []).map(function (ab) {
           return Object.assign({}, ab, { modifiers: (ab.modifiers || []).map(function (m) {
-            var s = byMod[m.id]; return s ? Object.assign({}, m, { active: s.active, remaining_turns: s.remaining_turns, runtime_target_member_id: s.runtime_target_member_id, uses_this_session: s.uses_this_session, cond_latched: s.cond_latched }) : m;
+            var s = byMod[m.id]; return s ? Object.assign({}, m, { active: s.active, pending: s.pending, remaining_turns: s.remaining_turns, runtime_target_member_id: s.runtime_target_member_id, uses_this_session: s.uses_this_session, cond_latched: s.cond_latched }) : m;
           }) });
         }) });
       });

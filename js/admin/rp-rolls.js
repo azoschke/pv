@@ -21,7 +21,7 @@
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff;
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -359,7 +359,8 @@
   function initTiming(effect, m) {
     var mode = m.mode || 'always';
     if (effect === 'damage') return m.type === 'dot' ? 'over' : 'once';
-    if (effect === 'heal') return mode === 'toggle' ? 'toggle' : mode === 'always' ? 'passive' : (m.duration_turns === 1 && !m.start_next_turn ? 'once' : 'over');
+    // A 1-turn heal is "Heal once" (with "Wait a turn" it heals next turn instead).
+    if (effect === 'heal') return mode === 'toggle' ? 'toggle' : mode === 'always' ? 'passive' : (m.duration_turns === 1 ? 'once' : 'over');
     if (effect === 'shield') return mode === 'always' ? 'passive' : 'once';
     if (mode === 'toggle') return 'toggle';
     if (mode === 'activated') return 'temp';
@@ -428,14 +429,14 @@
     var usesState = useState(String(m.uses_per_session && m.uses_per_session > 0 ? m.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
     // Pre-fill the saved turns, including 1. The only saved 1 to hide is "Heal once",
     // which stores duration 1 internally but has no turns field.
-    var healOnce = m.type === 'heal' && m.duration_turns === 1 && !m.start_next_turn;
+    var healOnce = m.type === 'heal' && m.duration_turns === 1;
     var durState = useState(m.duration_turns > 0 && !healOnce ? String(m.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     // Vulnerability (debuff): a flat add and/or a multiplier, aimed at an enemy
     // or a player. Reuses enemyScope/enemyCap for the enemy side and tk/ref for
     // the player side.
-    // "Wait a turn before it starts" — delays a vulnerability so it does nothing
-    // this turn and begins next turn (still its full length). DoTs and heals over
-    // time always start next turn; stuns always land now.
+    // "Wait a turn before it starts" — any effect: it does nothing this turn and
+    // begins next turn (still its full length). DoTs and heals each turn always
+    // start next turn, so for them the box shows ticked and locked.
     var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
     // Vulnerability is one-or-the-other: a flat add OR a multiplier, never both.
@@ -520,6 +521,8 @@
     var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
     var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
     var showTurns = hasEffect && !isSummon && !isVuln && !isStun && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
+    // Heals each turn and DoTs always start next turn ("Wait a turn" locked on).
+    var waitBuiltIn = (effect === 'heal' && timing !== 'once') || (isStrike && isOver);
 
     function resolvedMode() {
       if (isStrike || isSummon) return 'activated';
@@ -588,7 +591,7 @@
       }
       if (isStun) {
         var sp = { label: label.trim() || null, value: 0, type: 'stun', rolls: null, skill: null, summon: null, conditions: conditions,
-          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: false };
+          target_kind: vSide === 'enemy' ? enemyScope : tk, mode: 'activated', uses_per_session: resolvedUses(), duration_turns: Math.max(1, parseInt(dur, 10) || 1), start_next_turn: startNext };
         if (vSide === 'enemy') sp.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
         else if (tk === 'class') sp.target_ref = ref || 'tank';
         else sp.target_ref = null;
@@ -601,7 +604,9 @@
         summon: resolvedSummon(), conditions: conditions,
         target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
-        start_next_turn: effect === 'heal' && isOver };
+        // Heal over time keeps its flag (the worker's over-time marker); a heal
+        // once with "Wait a turn" heals next turn. DoTs wait by themselves.
+        start_next_turn: effect === 'heal' ? (isOver || (timing === 'once' && startNext)) : (waitBuiltIn ? false : startNext) };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
@@ -612,8 +617,8 @@
 
     function startNextField() {
       return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
-        h('input', { type: 'checkbox', checked: startNext, onChange: function (e) { setStartNext(e.target.checked); } }),
-        'Wait a turn before it starts');
+        h('input', { type: 'checkbox', checked: waitBuiltIn || startNext, disabled: waitBuiltIn, onChange: function (e) { setStartNext(e.target.checked); } }),
+        waitBuiltIn ? 'Wait a turn before it starts (always, for effects each turn)' : 'Wait a turn before it starts');
     }
 
     return h('form', { onSubmit: submit, className: 'portal-card rp-subform' },
@@ -712,6 +717,7 @@
       isStun ? h('p', { className: 'portal-field-help', style: { margin: '0.2rem 0 0' } }, 'Bosses marked stun-immune are skipped. Minions are enemy adds.') : null,
       isStun ? h('div', { className: 'portal-field rp-w14 rp-mt5' }, h('label', null, 'Skips how many turns?'),
         h('input', { type: 'number', min: 1, value: dur, placeholder: '1', onChange: function (e) { setDur(e.target.value); } })) : null,
+      isStun ? startNextField() : null,
 
       showValue ? fieldGrid([
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
@@ -815,6 +821,7 @@
       showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
+      (showTiming || isSummon) ? startNextField() : null,
 
       // ── Advanced Settings (collapsible) ───────────────────────────────────
       hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
@@ -895,7 +902,7 @@
       var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
       var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
       var atk = s.attack_mode === 'd20' ? 'D20 atk' : (s.attack || 0) + ' atk';
-      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + su + cndSuffix;
+      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + (m.start_next_turn ? ' · attacks from next turn' : '') + su + cndSuffix;
     }
     var t;
     switch (m.target_kind) {
@@ -916,9 +923,7 @@
     // A condition-driven bonus isn't pressed: its condition starts it.
     var when = isCondBuff(m) ? (m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds')
       : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    // A heal over time flagged start_next_turn heals from next turn, so 1 turn isn't "this turn".
-    var hot1 = m.type === 'heal' && m.start_next_turn && m.duration_turns === 1;
-    var dur = hot1 ? ', for 1 turn' : m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
+    var dur = durationPhrase(m);
     var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
       : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')

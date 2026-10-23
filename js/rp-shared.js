@@ -68,6 +68,17 @@
   // condition to turn off and on again.
   function isCondBuff(m) { return !!(m && m.conditions) && m.mode === 'activated' && ROLL_OUTPUT_TYPES.indexOf(m.type) !== -1; }
 
+  // An effect's length: ", this turn" / ", for 3 turns". "Wait a turn"
+  // (start_next_turn) starts it next turn instead. Heals and DoTs always do, so
+  // for them the flag only marks a 1-turn heal as healing once, next turn.
+  function durationPhrase(m) {
+    var n = m.duration_turns;
+    if (m.type === 'heal' && m.start_next_turn && n === 1) return ', next turn';
+    if (m.start_next_turn && m.type !== 'heal' && m.type !== 'dot')
+      return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', starting next turn';
+    return n === 1 ? ', this turn' : n > 1 ? ', for ' + n + ' turns' : '';
+  }
+
   // Conditional-activation gate (HP / scene). The worker sends `conditions` as a
   // parsed object already, but tolerate a JSON string too.
   function parseConditions(c) {
@@ -115,6 +126,7 @@
     rollsPhrase: rollsPhrase,
     typePhrase: typePhrase,
     isCondBuff: isCondBuff,
+    durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
     bossTargetPhrase: bossTargetPhrase
