@@ -250,8 +250,9 @@
 .rp-mod.is-gated { opacity: 0.5; }
 .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 /* Sliding on/off switch for toggle skills: a well track with both states
-   shown; the knob slides and turns brown when on. */
-.rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; height: 1.75rem; padding: 0;
+   shown; the knob slides and turns brown when on. It keeps its width beside
+   a long description. */
+.rp-switch { position: relative; display: inline-flex; align-items: stretch; width: 4.6rem; flex-shrink: 0; height: 1.75rem; padding: 0;
   border: 0; border-radius: 999px; background: var(--bg-darker); cursor: pointer; font: inherit; overflow: hidden; }
 .rp-switch-txt { flex: 1 1 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
