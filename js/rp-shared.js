@@ -59,6 +59,15 @@
     return v + ' ' + String(type || '').replace(/_/g, ' ');
   }
 
+  // Roll / output bonuses. Must stay in step with the worker (lib/constants.js
+  // ROLL_OUTPUT_TYPES).
+  var ROLL_OUTPUT_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'roll_bonus', 'skill_roll', 'attack_output', 'attack_mult', 'heal_output'];
+  // A "Temporary" roll/output bonus with a condition runs by itself, so it has
+  // no Activate button (worker isCondBuff). With a turn count it starts each
+  // time its condition turns on, runs those turns, then waits for the
+  // condition to turn off and on again.
+  function isCondBuff(m) { return !!(m && m.conditions) && m.mode === 'activated' && ROLL_OUTPUT_TYPES.indexOf(m.type) !== -1; }
+
   // Conditional-activation gate (HP / scene). The worker sends `conditions` as a
   // parsed object already, but tolerate a JSON string too.
   function parseConditions(c) {
@@ -105,6 +114,7 @@
     CLASS_PLURAL: CLASS_PLURAL,
     rollsPhrase: rollsPhrase,
     typePhrase: typePhrase,
+    isCondBuff: isCondBuff,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
     bossTargetPhrase: bossTargetPhrase

@@ -20,7 +20,8 @@
   var RPS = window.PVRpShared;
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
-    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase;
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
+    isCondBuff = RPS.isCondBuff;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -825,6 +826,8 @@
           h('option', { value: '' }, 'Always (no condition)'),
           h('option', { value: 'hp' }, 'The holder’s HP is in range'),
           h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
+      (hasEffect && advOpen && condKind && isCondBuff({ conditions: condKind, mode: resolvedMode(), type: resolvedType() }))
+        ? h('p', { className: 'portal-field-help rp-help-tight' }, 'A Temporary bonus with a condition starts by itself each time the condition turns on, lasts its turns, then waits for the condition to turn off and on again. With no turns set, it’s on while the condition holds.') : null,
 
       (hasEffect && advOpen && condKind === 'hp') ? h('div', { className: 'rp-mt4' },
         fieldGrid([
@@ -910,7 +913,9 @@
       case 'minions': t = 'all minions'; break;
       default: t = '';
     }
-    var when = m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
+    // A condition-driven bonus isn't pressed: its condition starts it.
+    var when = isCondBuff(m) ? (m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds')
+      : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
     // A heal over time flagged start_next_turn heals from next turn, so 1 turn isn't "this turn".
     var hot1 = m.type === 'heal' && m.start_next_turn && m.duration_turns === 1;
     var dur = hot1 ? ', for 1 turn' : m.duration_turns === 1 ? ', this turn' : m.duration_turns > 1 ? ', for ' + m.duration_turns + ' turns' : '';
