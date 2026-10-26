@@ -6,9 +6,10 @@
 //  - Each row shows its roles as a read-only list; an "Edit roles" action
 //    (users.roles) opens a popup whose checkboxes commit the full intended
 //    role set for that user in one request. Only an admin (the admin role, or
-//    the root admin) sees the Admin box; for anyone else an account keeps the
-//    admin role exactly as it had it (the worker refuses any change to it).
-//    Only an admin edits their own roles, and never removes their own Admin.
+//    the root admin) sees the Admin and Officer boxes (ADMIN_ONLY_ROLES); for
+//    anyone else an account keeps those roles exactly as it had them (the
+//    worker refuses any change to them). Only an admin edits their own roles,
+//    and never removes their own Admin.
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
 //  - Each account is linked to one roster character, whose name it carries.
 //    An account linked to an alt (made before alts were managed from their
@@ -71,6 +72,10 @@
   function isRootAdmin(user) {
     return user && user.username && user.username.toLowerCase() === ROOT_ADMIN_USERNAME;
   }
+
+  // Roles only an admin gives or takes away (mirrors the worker's
+  // ADMIN_ONLY_ROLES).
+  var ADMIN_ONLY_ROLES = ['admin', 'officer'];
 
   function fmtDate(iso) {
     if (!iso) return '—';
@@ -317,9 +322,11 @@
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
-        // A hidden Admin box keeps its value in the draft, so saving leaves
-        // the account's admin role as it was.
-        props.roles.filter(function (r) { return props.canAdmin || r.slug !== 'admin'; }).map(function (r) {
+        // A hidden Admin or Officer box keeps its value in the draft, so
+        // saving leaves the account's role as it was.
+        props.roles.filter(function (r) {
+          return props.canAdmin || ADMIN_ONLY_ROLES.indexOf(r.slug) === -1;
+        }).map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
             h('input', {
               type: 'checkbox',
