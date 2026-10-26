@@ -5,7 +5,9 @@
 //    last_login) along with their current role slugs.
 //  - Each row shows its roles as a read-only list; an "Edit roles" action
 //    (users.roles) opens a popup whose checkboxes commit the full intended
-//    role set for that user in one request.
+//    role set for that user in one request. Only an admin (the admin role, or
+//    the root admin) sees the Admin box; for anyone else an account keeps the
+//    admin role exactly as it had it (the worker refuses any change to it).
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
 //  - Each account is linked to one roster character, whose name it carries.
 //    An account linked to an alt (made before alts were managed from their
@@ -311,7 +313,9 @@
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
-        props.roles.map(function (r) {
+        // A hidden Admin box keeps its value in the draft, so saving leaves
+        // the account's admin role as it was.
+        props.roles.filter(function (r) { return props.canAdmin || r.slug !== 'admin'; }).map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
             h('input', {
               type: 'checkbox',
@@ -505,6 +509,7 @@
     var session = PVAdminAPI.getSession();
     var selfUsername = session && session.username;
     var callerIsRoot = !!selfUsername && selfUsername.toLowerCase() === ROOT_ADMIN_USERNAME;
+    var callerIsAdmin = callerIsRoot || ((session && session.roles) || []).indexOf('admin') !== -1;
 
     async function reload() {
       setErr('');
@@ -709,6 +714,7 @@
       editingUser ? h(RoleEditModal, {
         user: editingUser,
         roles: roles,
+        canAdmin: callerIsAdmin,
         onSave: handleSaveRoles,
         onClose: function () { setEditingUser(null); }
       }) : null,
