@@ -440,19 +440,23 @@
     );
   }
 
-  // Returns true if the current user is allowed to edit the given visit.
-  // "Edit any visit" always can. "Edit own visits" only covers visits where
-  // attending_medic (trimmed, case-insensitive) matches their own
-  // display_name. A blank attending_medic locks the visit until someone who
-  // can edit any visit fills it in.
+  // Returns true if the current user is allowed to edit the given visit
+  // (mirrors the worker). "Edit any visit" always can. "Edit own visits" only
+  // covers visits whose attending medic is one of the account's characters
+  // (its main or alts): by the medic's character id, or for an older visit
+  // saved without one, by name (trimmed, case-insensitive). A visit with no
+  // medic locks until someone who can edit any visit fills it in.
   function canEditVisit(v) {
     if (PVAdminAPI.can('medical.visits_all')) return true;
     if (!PVAdminAPI.can('medical.visits_own')) return false;
+    var session = PVAdminAPI.getSession() || {};
+    var mine = session.characters || [];
+    if (v && v.attending_medic_id != null) {
+      return mine.some(function (c) { return c.id === v.attending_medic_id; });
+    }
     var medic = (v && v.attending_medic ? String(v.attending_medic) : '').trim().toLowerCase();
     if (!medic) return false;
-    var session = PVAdminAPI.getSession();
-    var me = (session && session.display_name ? String(session.display_name) : '').trim().toLowerCase();
-    return !!me && medic === me;
+    return mine.some(function (c) { return String(c.name || '').trim().toLowerCase() === medic; });
   }
 
   // --------- Visit read row (compact) ----------

@@ -9,7 +9,9 @@
 //    Date             a date picker that fills the in-character date
 //                     ("Third Sun of the Second Umbral Moon") as editable text
 //                     and sets the sort date
-//    Attending medic  the published Medical staff roster
+//    Attending medic  the published Medical staff roster; the visit keeps
+//                     the medic's roster character (attending_medic_id) with
+//                     the name
 //    Request          an optional link to one of the patient's appointment
 //                     requests (medical.view)
 //    Quick picks      procedures add to their box; follow-up and discharge
@@ -165,6 +167,8 @@
 
     var medicsState = useState([]);
     var medics = medicsState[0], setMedics = medicsState[1];
+    var medicIdsState = useState({});   // listed medic name → roster character id
+    var medicIds = medicIdsState[0], setMedicIds = medicIdsState[1];
     var requestsState = useState(null);
     var requests = requestsState[0], setRequests = requestsState[1];
     var savingState = useState(false);
@@ -179,18 +183,28 @@
     // The published roster for the medic picker. A saved visit's medic who
     // is no longer on it stays listed, so editing the visit keeps them; a new
     // report's default (you, or the request's medic) is kept only if listed.
+    // medicIds maps each listed name to its roster character, saved with the
+    // visit (a saved medic off the roster keeps the visit's own id, if any).
     useEffect(function () {
+      var savedId = initial.attending_medic_id != null ? initial.attending_medic_id : null;
       PVAdminAPI.request('GET', '/medical-staff', undefined, false).then(function (list) {
-        var names = (Array.isArray(list) ? list : []).map(function (m) { return m.name; });
+        var rows = Array.isArray(list) ? list : [];
+        var names = rows.map(function (m) { return m.name; });
+        var ids = {};
+        rows.forEach(function (m) { ids[m.name] = m.member_id; });
         var current = String(draft.attending_medic || '').trim();
         if (current && names.indexOf(current) === -1) {
           if (isNew) setField('attending_medic', '');
-          else names.push(current);
+          else { names.push(current); ids[current] = savedId; }
         }
         setMedics(names);
+        setMedicIds(ids);
       }, function () {
         var current = String(draft.attending_medic || '').trim();
         setMedics(current ? [current] : []);
+        var ids = {};
+        if (current) ids[current] = savedId;
+        setMedicIds(ids);
       });
     }, []);
 
@@ -210,10 +224,12 @@
     async function handleSubmit(e) {
       e.preventDefault();
       if (!String(draft.visit_date || '').trim()) { setErr('Give the visit a date.'); return; }
+      var medicName = String(draft.attending_medic || '').trim();
       var body = {
         visit_date: draft.visit_date.trim(),
         sort_date: draft.real_date || M.todayISO(),
-        attending_medic: String(draft.attending_medic || '').trim(),
+        attending_medic: medicName,
+        attending_medic_id: medicName && medicIds[medicName] != null ? medicIds[medicName] : null,
         presenting_complaint: draft.presenting_complaint,
         current_symptoms: draft.current_symptoms,
         recent_exposures: draft.recent_exposures,
