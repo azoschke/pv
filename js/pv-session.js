@@ -3,12 +3,16 @@
 //
 //  The management portal and the public pages share one sign-in, stored in
 //  localStorage under "pv.admin.session" ({ token, username, display_name,
-//  avatar_url, roles, permissions, is_root, expires_at }). This file reads
-//  and writes it, answers permission checks, signs out, and sends requests to
-//  the workers. It also holds the page scroll lock (PVScrollLock) that every
-//  popup and drawer shares, lets the mouse drag scrolling tables, draws
-//  images that have a dark-mode version (PVThemeImage), and answers which
-//  layout step the window is on (PVLayout).
+//  avatar_url, roles, permissions, is_root, member_id, characters,
+//  expires_at }). member_id is the account's roster character; characters is
+//  that character's group, the main first ([{ id, name, is_main }]). This
+//  file reads and writes it, keeps it current from /me (applyMe, and at most
+//  every 10 minutes on pages other than the portal), answers permission
+//  checks, signs out, and sends requests to the workers. It also holds the
+//  page scroll lock (PVScrollLock) that every popup and drawer shares, lets
+//  the mouse drag scrolling tables, draws images that have a dark-mode
+//  version (PVThemeImage), and answers which layout step the window is on
+//  (PVLayout).
 //
 //  Load it before js/api.js, js/rp-api.js, js/nav.js and any page script
 //  that uses the sign-in or opens a popup:
@@ -61,9 +65,60 @@
 
   function clear() {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     // Also drop any leftover from the old sessionStorage-based build.
     sessionStorage.removeItem(SESSION_KEY);
     dropEdge();
+  }
+
+  // ── Keeping the sign-in current ──────────────────────────────────────────
+  // The account's name follows its roster character, and its pictures, roles,
+  // permissions and characters can change while it is signed in. applyMe
+  // folds a /me answer into the stored sign-in and returns it (null when
+  // signed out). The portal calls it on every load; other pages call /me
+  // themselves at most every REFRESH_MS (refreshFromMe).
+  var REFRESH_KEY = 'pv.session.refreshed';
+  var REFRESH_MS = 10 * 60 * 1000;
+
+  function applyMe(me) {
+    var current = get();
+    if (!current || !me) return current;
+    var merged = Object.assign({}, current, {
+      username: me.username || current.username,
+      display_name: me.display_name || current.display_name,
+      avatar_url: me.avatar_url !== undefined ? me.avatar_url : (current.avatar_url || null),
+      roles: Array.isArray(me.roles) ? me.roles : current.roles,
+      permissions: Array.isArray(me.permissions) ? me.permissions : (current.permissions || []),
+      is_root: !!me.is_root,
+      member_id: me.member_id !== undefined ? me.member_id : (current.member_id == null ? null : current.member_id),
+      characters: Array.isArray(me.characters) ? me.characters : (current.characters || []),
+      expires_at: me.expires_at || current.expires_at
+    });
+    set(merged);
+    try { localStorage.setItem(REFRESH_KEY, String(Date.now())); } catch (_e) { /* ignore */ }
+    return merged;
+  }
+
+  // Pages other than the portal and the account pages. Changes are saved for
+  // the next page; 'pv:session' tells anything already drawn. A sign-in /me
+  // turns down has expired, so it is cleared.
+  function refreshFromMe() {
+    var s = get();
+    if (!s) return;
+    if (/\/(portal|login|register|reset)(\.html)?$/.test(global.location.pathname)) return;
+    try {
+      var last = Number(localStorage.getItem(REFRESH_KEY) || 0);
+      if (Date.now() - last < REFRESH_MS) return;
+      localStorage.setItem(REFRESH_KEY, String(Date.now()));
+    } catch (_e) { return; }
+    fetch(MED_API + '/me', { headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + s.token } })
+      .then(function (res) {
+        if (res.status === 401) { clear(); return null; }
+        return res.ok ? res.json() : null;
+      })
+      .then(function (me) {
+        if (me && applyMe(me)) global.dispatchEvent(new Event('pv:session'));
+      }, function () { /* offline or unreachable: try again next time */ });
   }
 
   // ── Signing out ──────────────────────────────────────────────────────────
@@ -84,6 +139,7 @@
         }).catch(function () {})
       : Promise.resolve();
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     var edge = edgeHost()
       ? fetch(EDGE_SESSION_PATH, { method: 'DELETE', credentials: 'same-origin' }).catch(function () {})
@@ -511,6 +567,7 @@
     get: get,
     set: set,
     clear: clear,
+    applyMe: applyMe,
     can: can,
     canAny: canAny,
     redirectToLogin: redirectToLogin,
@@ -520,4 +577,5 @@
   };
 
   syncEdge();
+  refreshFromMe();
 })(window);

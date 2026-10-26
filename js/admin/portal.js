@@ -491,18 +491,9 @@
       var cancelled = false;
       PVAdminAPI.me().then(function (data) {
         if (cancelled || !data) return;
-        var current = PVAdminAPI.getSession();
-        if (!current) return;
-        var merged = Object.assign({}, current, {
-          username: data.username || current.username,
-          display_name: data.display_name || current.display_name,
-          avatar_url: data.avatar_url !== undefined ? data.avatar_url : (current.avatar_url || null),
-          roles: Array.isArray(data.roles) ? data.roles : current.roles,
-          permissions: Array.isArray(data.permissions) ? data.permissions : (current.permissions || []),
-          is_root: !!data.is_root,
-          expires_at: data.expires_at || current.expires_at
-        });
-        PVAdminAPI.setSession(merged);
+        // Name, picture, roles, permissions and characters (js/pv-session.js).
+        var merged = PVSession.applyMe(data);
+        if (!merged) return;
         setSession(merged);
         var wantedSection = permissionsKnown ? section : requestedSection;
         if (!canAccess(wantedSection, merged.permissions)) {

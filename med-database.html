@@ -182,19 +182,14 @@
       return PVSession.canAny(["patient_records.view_all", "medical.view"]);
     }
 
-    // The account's current permissions from /me, saved with the sign-in so
-    // seesAllRecords() matches what the worker sends even after a role
-    // change. If /me can't be reached, the saved ones stand.
+    // The account's current permissions (and the rest of the sign-in) from
+    // /me, saved so seesAllRecords() matches what the worker sends even after
+    // a role change. If /me can't be reached, the saved ones stand.
     function refreshPermissions() {
       if (!PVSession.get()) return Promise.resolve();
       return PVSession.request(API_BASE, "GET", "/me", undefined, { auth: "optional" }).then(function (me) {
-        var s = PVSession.get();
-        if (!s || !me || !Array.isArray(me.permissions)) return;
-        PVSession.set(Object.assign({}, s, {
-          permissions: me.permissions,
-          roles: Array.isArray(me.roles) ? me.roles : s.roles,
-          is_root: !!me.is_root
-        }));
+        if (!me || !Array.isArray(me.permissions)) return;
+        PVSession.applyMe(me);
       }, function () {});
     }
 
