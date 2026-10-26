@@ -282,15 +282,22 @@
   }
 
   // ── Members: Campaigns (quick card and campaign row) ──────────────────────
-  // The latest chapter is the last in the campaign's list.
+  // The latest chapter comes with the campaign list (latest_chapter); from a
+  // campaigns worker older than v5, it's the last in the campaign's list.
+  function latestChapter(c) {
+    if ("latest_chapter" in c) return Promise.resolve(c.latest_chapter);
+    return getJSON(CAMPAIGNS_API + "/campaigns/" + encodeURIComponent(c.slug)).then(function (data) {
+      var chapters = data && Array.isArray(data.chapters) ? data.chapters : [];
+      return chapters[chapters.length - 1] || null;
+    });
+  }
+
   function loadCampaign() {
     var box = document.getElementById("home-q-campaign");
     var head = '<p class="eyebrow">Latest chapter</p>';
     mainCampaign.then(function (c) {
       if (!c) { box.innerHTML = head + muted("No campaign yet"); return null; }
-      return getJSON(CAMPAIGNS_API + "/campaigns/" + encodeURIComponent(c.slug)).then(function (data) {
-        var chapters = data && Array.isArray(data.chapters) ? data.chapters : [];
-        var latest = chapters[chapters.length - 1];
+      return latestChapter(c).then(function (latest) {
         var href = chapterHref(c.slug, latest && latest.slug);
         document.getElementById("home-q-campaign-btn").href = href;
         document.getElementById("home-campaign-continue").href = href;
