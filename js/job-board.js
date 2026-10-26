@@ -542,8 +542,8 @@
   function applyAsHtml() {
     if (!hasAlts()) return "";
     var who = applyAs();
-    return '<label class="quest-action-note" for="job-apply-as">Apply as</label>' +
-      '<select class="field is-small" id="job-apply-as">' +
+    return '<label class="field-label is-flush" for="job-apply-as">Apply as</label>' +
+      '<select class="field" id="job-apply-as">' +
       myCharacters().map(function (c) {
         return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
           escapeHTML(c.name) + '</option>';

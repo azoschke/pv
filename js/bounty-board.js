@@ -619,8 +619,8 @@
   function signUpAsHtml() {
     if (!hasAlts()) return "";
     var who = signUpAs();
-    return '<label class="quest-action-note" for="quest-signup-as">Sign up as</label>' +
-      '<select class="field is-small" id="quest-signup-as">' +
+    return '<label class="field-label is-flush" for="quest-signup-as">Sign up as</label>' +
+      '<select class="field" id="quest-signup-as">' +
       myCharacters().map(function (c) {
         return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
           escapeHTML(c.name) + '</option>';
