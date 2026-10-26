@@ -8,6 +8,7 @@
 //    role set for that user in one request. Only an admin (the admin role, or
 //    the root admin) sees the Admin box; for anyone else an account keeps the
 //    admin role exactly as it had it (the worker refuses any change to it).
+//    Only an admin edits their own roles, and never removes their own Admin.
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
 //  - Each account is linked to one roster character, whose name it carries.
 //    An account linked to an alt (made before alts were managed from their
@@ -85,6 +86,7 @@
     var onReset = props.onReset;
     var selfId = props.selfId;
     var callerIsRoot = props.callerIsRoot;
+    var callerIsAdmin = props.callerIsAdmin;
     var deleting = props.deleting;
     var resetting = props.resetting;
     var roleLabels = props.roleLabels;
@@ -103,6 +105,8 @@
     var resetAllowed = canReset && !isRoot && (!targetIsAdmin || callerIsRoot);
     // Only the root admin changes the root admin's character.
     var linkAllowed = canLink && (!isRoot || callerIsRoot);
+    // Only an admin changes their own roles (the worker refuses anyone else).
+    var rolesAllowed = canRoles && !isRoot && (!isSelf || callerIsAdmin);
 
     return h('tr', null,
       h('td', null,
@@ -135,7 +139,7 @@
         },
           // Root admin is protected: its empty action set is the cue, so no
           // "Edit roles"/"Delete" controls and no explicit "(protected)" label.
-          !isRoot && canRoles
+          rolesAllowed
             ? h('button', {
                 type: 'button',
                 className: 'btn is-small is-quiet',
@@ -688,6 +692,7 @@
                           user: u,
                           selfId: selfId,
                           callerIsRoot: callerIsRoot,
+                          callerIsAdmin: callerIsAdmin,
                           onEditRoles: setEditingUser,
                           onLink: openLink,
                           onDelete: handleDelete,
