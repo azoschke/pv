@@ -221,9 +221,8 @@
   // The account's characters on the staff roster, for "Request as".
   var myMedics = [];
   function fillRequestAs(medics) {
-    var session = PVAdminAPI.getSession() || {};
     var ids = (medics || []).map(function (m) { return m.member_id; });
-    myMedics = (session.characters || []).filter(function (c) { return ids.indexOf(c.id) !== -1; });
+    myMedics = PVSession.characters().filter(function (c) { return ids.indexOf(c.id) !== -1; });
     var select = $('appt-request-as');
     select.innerHTML = '';
     myMedics.forEach(function (c) {
@@ -239,9 +238,7 @@
   function defaultRequestAs() {
     var select = $('appt-request-as');
     if (select.value || !myMedics.length) return;
-    var session = PVAdminAPI.getSession() || {};
-    var own = myMedics.filter(function (c) { return c.id === session.member_id; })[0];
-    select.value = String((own || myMedics[0]).id);
+    select.value = String(PVSession.pickCharacter(null, myMedics).id);
   }
   function requestingAs() {
     var chosen = $('appt-character').selectedOptions[0];

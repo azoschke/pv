@@ -449,8 +449,7 @@
   function canEditVisit(v) {
     if (PVAdminAPI.can('medical.visits_all')) return true;
     if (!PVAdminAPI.can('medical.visits_own')) return false;
-    var session = PVAdminAPI.getSession() || {};
-    var mine = session.characters || [];
+    var mine = PVSession.characters();
     if (v && v.attending_medic_id != null) {
       return mine.some(function (c) { return c.id === v.attending_medic_id; });
     }

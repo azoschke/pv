@@ -51,12 +51,6 @@
   var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
   function divisionLabel(v) { return DIVISION_LABEL[v] || v || '—'; }
 
-  // The account's characters, its main first. With alts, each card shows
-  // which character an entry is for, and a new quest picks one to post as.
-  function myCharacters() {
-    return (PVAdminAPI.getSession() || {}).characters || [];
-  }
-
   function fmtDate(s) {
     if (!s) return '';
     var t = Date.parse(String(s).replace(' ', 'T') + 'Z');
@@ -122,7 +116,7 @@
 
     var quests = (data && data.quests) || [];
     var edits = (data && data.edits) || [];
-    var characters = myCharacters();
+    var characters = PVSession.characters();
     var hasAlts = characters.length > 1;
 
     return h('div', { className: 'portal-card' },
@@ -217,7 +211,7 @@
   // --------- My quest signups card ----------
   function MySignupsCard(props) {
     var signups = props.signups || [];
-    var hasAlts = myCharacters().length > 1;
+    var hasAlts = PVSession.characters().length > 1;
     var onChanged = props.onChanged;
     var onError = props.onError;
 
@@ -339,7 +333,7 @@
   // --------- My job applications card ----------
   function MyJobApplicationsCard(props) {
     var apps = props.apps || [];
-    var hasAlts = myCharacters().length > 1;
+    var hasAlts = PVSession.characters().length > 1;
     var jobsById = props.jobsById || {};
     var onChanged = props.onChanged;
     var onError = props.onError;

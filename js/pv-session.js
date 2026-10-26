@@ -121,6 +121,38 @@
       }, function () { /* offline or unreachable: try again next time */ });
   }
 
+  // ── The account's characters ─────────────────────────────────────────────
+  // Anything a player does as one of their characters (applying, signing up,
+  // posting, requesting) picks it the same way:
+  //   characters()       the account's characters, its main first ([] when
+  //                      signed out)
+  //   pickCharacter(id, list)
+  //                      the one in list (default: all of them) with that id,
+  //                      else the account's own, else the first; null if none
+  //   characterSelectHtml(id, label, list, selectedId)
+  //                      a labelled picker ("Apply as") for a popup's actions
+  function characters() {
+    var s = get();
+    return (s && s.characters) || [];
+  }
+
+  function pickCharacter(id, list) {
+    var s = get();
+    var chars = list || characters();
+    function byId(x) { return chars.filter(function (c) { return c.id === x; })[0]; }
+    return byId(id) || byId(s && s.member_id) || chars[0] || null;
+  }
+
+  function characterSelectHtml(id, label, list, selectedId) {
+    return '<label class="field-label is-flush" for="' + id + '">' + escapeAttr(label) + '</label>' +
+      '<select class="field" id="' + id + '">' +
+      list.map(function (c) {
+        return '<option value="' + c.id + '"' + (c.id === selectedId ? ' selected' : '') + '>' +
+          escapeAttr(c.name) + '</option>';
+      }).join('') +
+      '</select>';
+  }
+
   // ── Signing out ──────────────────────────────────────────────────────────
   var MED_API = 'https://pv-med-database-worker.chlorinatorgreen.workers.dev';
   var SIGN_OUT_WAIT_MS = 4000;
@@ -568,6 +600,9 @@
     set: set,
     clear: clear,
     applyMe: applyMe,
+    characters: characters,
+    pickCharacter: pickCharacter,
+    characterSelectHtml: characterSelectHtml,
     can: can,
     canAny: canAny,
     redirectToLogin: redirectToLogin,

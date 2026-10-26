@@ -332,7 +332,7 @@
       throw err;
     }).then(function (s) {
       var status = s && s.status;
-      var hasAlts = ((session && session.characters) || []).length > 1;
+      var hasAlts = PVSession.characters().length > 1;
       var asWho = hasAlts && s && s.character_name ? " as " + s.character_name : "";
       var name = s && s.campaign_name
         ? '<p class="home-meta"><span class="home-meta-note">' + esc(s.campaign_name + asWho) + "</span></p>"
