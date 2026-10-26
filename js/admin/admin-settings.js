@@ -362,12 +362,9 @@
     }
 
     return h(window.PVAdminModal, {
-      title: 'Linked character — ' + user.username,
+      title: 'Linked character',
       onClose: onClose
     },
-      h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.85rem', color: 'var(--text-secondary)' } },
-        'The account carries its character’s name, and the character’s alts come with it. ' +
-        'A character belongs to one account at most.'),
       merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'portal-field' },
         h('label', { htmlFor: 'link-character' }, 'Character'),
@@ -454,12 +451,9 @@
                 h('input', {
                   id: 'registration-code', type: 'text', autoComplete: 'off', spellCheck: false, maxLength: 100,
                   value: draft, disabled: saving,
-                  placeholder: 'A short phrase works best',
                   onChange: function (e) { setDraft(e.target.value); }
                 }),
-                h('p', { className: 'portal-field-help' },
-                  'At least 6 characters. Capitals and extra spaces don’t matter when someone types it. ' +
-                  'Changing it doesn’t affect existing accounts.')
+                h('p', { className: 'portal-field-help' }, 'At least 6 characters, not case-sensitive.')
               ),
               h('div', { className: 'portal-form-actions' },
                 h('button', { type: 'submit', className: 'btn', disabled: saving || !draft.trim() },

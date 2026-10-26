@@ -28,19 +28,17 @@
         <div class="rules-card">
           Accounts are for Free Company members' <strong>main characters</strong>, one account per character.
           <br><br>
-          Enter your main character's <strong>full name</strong> exactly as it is on the FC roster.
-          Your username is that name in lowercase with a dot between first and last name
-          (for example, <strong>fiora.acaeus</strong>).<br><br>
-          Alts don't get their own accounts: an officer links them to your main, and you manage them from
-          My Profile. You'll need the <strong>registration code</strong> from an officer.
-          New accounts start with no access until an officer assigns a role.
+          Enter your main character’s full name exactly as it is on the FC roster. Your username is that name
+          in lowercase with a dot between first and last name (for example, firstname.lastname).<br><br>
+          You will need a registration code from an officer. New accounts start with no access until an
+          officer assigns a role.
         </div>
 
         <form id="registerForm" autocomplete="off">
           <div class="form-group">
-            <label for="reg-display">Main Character's Full Name</label>
-            <input id="reg-display" name="display_name" type="text" required autocomplete="off">
-            <div class="help-text" id="reg-username-note" hidden>Your username will be <strong id="reg-username"></strong></div>
+            <label for="reg-username">Username</label>
+            <input id="reg-username" name="username" type="text" required autocomplete="username"
+                   autocapitalize="none" spellcheck="false">
           </div>
           <div class="form-group">
             <label for="reg-code">Registration Code</label>
@@ -86,33 +84,20 @@
       return;
     }
 
-    // The username the worker makes from the character's name (its
-    // usernameFor): lowercase, a dot between the parts. Shown as you type;
-    // the worker's answer is the one used.
-    var nameInput = document.getElementById('reg-display');
-    var usernameNote = document.getElementById('reg-username-note');
-    function usernameFor(name) {
-      var parts = String(name || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
-      if (parts.length < 2) return null;
-      var username = parts.join('.');
-      return /^[a-z][a-z0-9'-]*(\.[a-z0-9'-]+)+$/.test(username) ? username : null;
-    }
-    nameInput.addEventListener('input', function () {
-      var username = usernameFor(nameInput.value);
-      usernameNote.hidden = !username;
-      document.getElementById('reg-username').textContent = username || '';
-    });
+    // firstname.lastname, as the worker's USERNAME_RE: the worker finds the
+    // roster character whose name it is.
+    var USERNAME_RE = /^[a-z][a-z0-9'-]*(\.[a-z0-9'-]+)+$/;
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      var displayName = nameInput.value.trim().replace(/\s+/g, ' ');
+      var username = document.getElementById('reg-username').value.trim().toLowerCase();
       var code = document.getElementById('reg-code').value.trim();
       var password = document.getElementById('reg-password').value;
       var confirm = document.getElementById('reg-confirm').value;
 
-      if (!displayName || !code || !password) return;
-      if (!usernameFor(displayName)) {
-        showFlash('error', 'Enter your main character’s full name (first and last).');
+      if (!username || !code || !password) return;
+      if (!USERNAME_RE.test(username)) {
+        showFlash('error', 'Enter your username as firstname.lastname.');
         return;
       }
       if (password.length < 10) {
@@ -130,11 +115,11 @@
 
       try {
         var created = await PVAdminAPI.request('POST', '/auth/register', {
-          display_name: displayName,
+          username: username,
           code: code,
           password: password
         }, false);
-        var username = (created && created.username) || usernameFor(displayName);
+        var displayName = (created && created.display_name) || username;
 
         // Sign the new account straight in so it lands on the portal, where the
         // existing "Account awaiting approval" notice explains the pending state
