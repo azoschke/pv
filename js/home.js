@@ -316,7 +316,8 @@
   }
 
   // ── Members: Roll Calculator ─────────────────────────────────────────────
-  // Active or Paused with the campaign's name; anything else is Not Active.
+  // Active or Paused with the campaign's name (and, for an account with alts,
+  // which character it's in the session as); anything else is Not Active.
   function statusFromActive(d) {
     if (d && d.active) return { status: "active", campaign_name: d.campaign && d.campaign.name };
     if (d && d.reason === "paused") return { status: "paused", campaign_name: d.campaign_name };
@@ -331,7 +332,11 @@
       throw err;
     }).then(function (s) {
       var status = s && s.status;
-      var name = s && s.campaign_name ? '<p class="home-meta"><span class="home-meta-note">' + esc(s.campaign_name) + "</span></p>" : "";
+      var hasAlts = ((session && session.characters) || []).length > 1;
+      var asWho = hasAlts && s && s.character_name ? " \u00b7 as " + s.character_name : "";
+      var name = s && s.campaign_name
+        ? '<p class="home-meta"><span class="home-meta-note">' + esc(s.campaign_name + asWho) + "</span></p>"
+        : "";
       if (status === "active") {
         box.innerHTML = head + '<p class="status-dot is-brown home-quick-value">Active</p>' + name;
       } else if (status === "paused") {

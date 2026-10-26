@@ -652,7 +652,16 @@
     }
 
     async function handleUpdate(id, draft) {
+      var before = members.find(function (m) { return m.id === id; });
       await PVAdminAPI.request('PATCH', '/members/' + id, draft, true);
+      // A new name also reaches the Combat Toolkit's campaign parties (its own
+      // worker, which never hears about roster edits on its own). Best-effort,
+      // like the purge on delete.
+      var newName = String(draft.name || '').trim();
+      if (window.PVRollAPI && before && newName && newName !== before.name) {
+        try { await PVRollAPI.request('PATCH', '/rp/members/' + id, { name: newName }); }
+        catch (_e) { /* non-fatal; the roster rename already succeeded */ }
+      }
       setModalMember(null);
       await reload();
     }
