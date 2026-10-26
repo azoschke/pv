@@ -8,14 +8,22 @@
 //  Published profiles appear on the public Mercenary / Pirate roster pages
 //  for whichever factions officers have assigned in FC Members.
 //
+//  Profile and Items show one of the account's characters at a time
+//  (props.memberId, picked in portal.js MyProfileSection: its own, or one of
+//  its main and alts). Each character has its own picture; only the
+//  account's own character's picture is the account's picture.
+//
 //  Worker routes (authed, no special role):
-//    GET  /my-profile    PUT /my-profile    POST /images (kind 'profile')
+//    GET  /my-profile?member_id=    PUT /my-profile?member_id=
+//    POST /images (kind 'profile', member_id)
+//    GET  /rp/my-items?member_id=   (pv-campaign-rolls-worker)
 // ============================================================================
 
 (function () {
   var h = React.createElement;
   var useState = React.useState;
   var useEffect = React.useEffect;
+  var useRef = React.useRef;
 
   // Factions excluded from the public Company Roster; mirrors the worker's
   // HIDDEN_ROSTER_FACTIONS. A member with any other faction appears on the
@@ -86,7 +94,7 @@
         var skills = (draft.skills || []).filter(function (s) {
           return SKILLS.indexOf(s) !== -1;
         }).slice(0, MAX_SKILLS);
-        await PVAdminAPI.request('PUT', '/my-profile', {
+        await PVAdminAPI.request('PUT', '/my-profile?member_id=' + member.id, {
           description: draft.description,
           skills: skills,
           rp_hooks: draft.rp_hooks,
@@ -94,10 +102,11 @@
           image_url: draft.image_url.trim() || null,
           published: draft.published
         }, true);
-        // The profile picture is also the account's picture (the dashboard
-        // sidebar and the site's account button).
+        // The account's own character's picture is also the account's picture
+        // (the dashboard sidebar and the site's account button); an alt's
+        // stays the alt's.
         var saved = PVAdminAPI.getSession();
-        if (saved) {
+        if (saved && saved.member_id === member.id) {
           PVAdminAPI.setSession(Object.assign({}, saved, { avatar_url: draft.image_url.trim() || null }));
           window.dispatchEvent(new Event('pv:session'));
         }
@@ -133,6 +142,7 @@
           onChange: function (v) { setField('image_url', v); },
           disabled: saving,
           kind: 'profile',
+          fields: { member_id: String(member.id) },
           help: 'Paste a URL or upload an image for your roster portrait.'
         }),
 
@@ -303,17 +313,23 @@
     );
   }
 
-  function MyItems() {
+  function MyItems(props) {
+    var memberId = props.memberId;
     var itemsState = useState(null); var items = itemsState[0], setItems = itemsState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var openState = useState(null); var openItem = openState[0], setOpenItem = openState[1];
 
     useEffect(function () {
-      (async function () {
-        try { setItems(await PVRollAPI.request('GET', '/rp/my-items') || []); }
-        catch (e) { setErr(e.message || 'Failed to load items.'); setItems([]); }
-      })();
-    }, []);
+      var cancelled = false;
+      setItems(null); setErr(''); setOpenItem(null);
+      var path = '/rp/my-items' + (memberId != null ? '?member_id=' + memberId : '');
+      PVRollAPI.request('GET', path).then(function (rows) {
+        if (!cancelled) setItems(rows || []);
+      }, function (e) {
+        if (!cancelled) { setErr(e.message || 'Failed to load items.'); setItems([]); }
+      });
+      return function () { cancelled = true; };
+    }, [memberId]);
 
     if (items === null && !err) return h('div', { className: 'portal-card' }, 'Loading your items…');
 
@@ -332,27 +348,36 @@
   }
 
   // --------- Main component ----------
-  function MyProfile() {
+  function MyProfile(props) {
+    var memberId = props.memberId;
     var profileState = useState(null);   // { member, profile } | null
     var profileData = profileState[0], setProfileData = profileState[1];
     var loadingState = useState(true);
     var loading = loadingState[0], setLoading = loadingState[1];
     var errState = useState('');
     var err = errState[0], setErr = errState[1];
+    // The character the last load asked for, so a slow answer for a
+    // character no longer picked is dropped.
+    var askedRef = useRef(memberId);
 
     async function reload() {
+      var asked = memberId;
+      askedRef.current = asked;
       setErr('');
       try {
-        var data = await PVAdminAPI.request('GET', '/my-profile', undefined, true);
+        var data = await PVAdminAPI.request('GET',
+          '/my-profile' + (asked != null ? '?member_id=' + asked : ''), undefined, true);
+        if (askedRef.current !== asked) return;
         setProfileData(data || { member: null, profile: null });
       } catch (e) {
+        if (askedRef.current !== asked) return;
         setErr(e.message || 'Failed to load your profile.');
       } finally {
-        setLoading(false);
+        if (askedRef.current === asked) setLoading(false);
       }
     }
 
-    useEffect(function () { reload(); }, []);
+    useEffect(function () { setLoading(true); setProfileData(null); reload(); }, [memberId]);
 
     if (loading) {
       return h('div', { className: 'portal-card' }, 'Loading your profile…');
@@ -366,15 +391,14 @@
       ) : null,
 
       member
-        ? h(ProfileCard, { member: member, profile: profileData.profile, onSaved: reload })
-        : h('div', { className: 'portal-card' },
-            h('h2', { className: 'portal-card-title' }, 'Character Profile'),
-            h('div', { className: 'flash error' },
-              'Your account is not linked to the FC roster (display name "' +
-              ((PVAdminAPI.getSession() || {}).display_name || '?') +
-              '" was not found). Contact an officer to fix your roster entry.'
+        ? h(ProfileCard, { key: member.id, member: member, profile: profileData.profile, onSaved: reload })
+        : err
+          ? null
+          : h('div', { className: 'portal-card' },
+              h('h2', { className: 'portal-card-title' }, 'Character Profile'),
+              h('div', { className: 'flash error' },
+                'Your account isn’t linked to a roster character. Contact an officer.')
             )
-          )
     );
   }
 

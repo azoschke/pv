@@ -11,13 +11,15 @@
 //    useImageUpload(opts)  → { uploading, error, upload(file) }
 //        opts.kind        one of KINDS
 //        opts.name        what the file is named after (venue name, title, …)
+//        opts.fields      more form fields to send (a profile picture's
+//                         member_id: which of your characters it's for)
 //        opts.onUploaded  called with the new image URL
 //    UploadButton(props)  the "Upload" button wrapping a hidden file input
 //        busy, disabled, title (null = no tooltip), accept, onFile(file)
 //    ImageField(props)    label + URL box + Upload + help + error + preview
-//        label ('Image'), value, onChange(url), kind, name, help, disabled,
-//        readOnly, blockedReason (upload is off and the button's tooltip says
-//        why, e.g. "Enter the venue name above…")
+//        label ('Image'), value, onChange(url), kind, name, fields, help,
+//        disabled, readOnly, blockedReason (upload is off and the button's
+//        tooltip says why, e.g. "Enter the venue name above…")
 //
 //  Load after js/api.js and before the section scripts.
 // ============================================================================
@@ -67,7 +69,7 @@
       setUploading(true);
       try {
         var url = await PVAdminAPI.uploadImage('/images', file,
-          { kind: opts.kind, name: opts.name || '' }, KINDS[opts.kind]);
+          Object.assign({ kind: opts.kind, name: opts.name || '' }, opts.fields), KINDS[opts.kind]);
         opts.onUploaded(url);
       } catch (e) {
         setError(e.message || 'Upload failed.');
@@ -107,6 +109,7 @@
     var up = useImageUpload({
       kind: props.kind,
       name: props.name,
+      fields: props.fields,
       onUploaded: props.onChange
     });
 
