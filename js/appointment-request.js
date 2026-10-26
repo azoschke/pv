@@ -21,8 +21,10 @@
 //
 //  POST /appointments saves the request and its intake; the med worker posts
 //  the Discord message (and the "submitted by" note when it is on someone
-//  else's behalf). Requests are followed and cancelled in My Profile →
-//  Applications.
+//  else's behalf). A request for someone else is credited to the medic making
+//  it: an account with more than one of its characters on the staff roster
+//  picks which ("Request as"); with one, the worker uses it. Requests are
+//  followed and cancelled in My Profile → Applications.
 // ============================================================================
 
 (function () {
@@ -151,7 +153,9 @@
       if (el.type === 'checkbox') el.checked = Array.isArray(v) && v.indexOf(el.value) !== -1;
       else if (el.type === 'radio') el.checked = v === el.value;
       else {
-        if (el.tagName === 'SELECT' && el.id !== 'appt-character' && el.id !== 'appt-medic') ensureOption(el, v);
+        if (el.tagName === 'SELECT' && ['appt-character', 'appt-medic', 'appt-request-as'].indexOf(el.id) === -1) {
+          ensureOption(el, v);
+        }
         el.value = v;
       }
     });
@@ -173,6 +177,7 @@
       var opt = document.createElement('option');
       opt.value = c.member_id ? 'm:' + c.member_id : 'p:' + c.patient_id;
       opt.setAttribute('data-name', c.name);
+      if (c.own) opt.setAttribute('data-own', '');
       opt.textContent = c.name + (c.open ? ' — has an open request' : '');
       opt.disabled = !!c.open;
       return opt;
@@ -211,6 +216,36 @@
       var positions = Array.isArray(m.positions) && m.positions.length ? ' — ' + m.positions.join(', ') : '';
       add(String(m.member_id), m.name + positions, m.name);
     });
+  }
+
+  // The account's characters on the staff roster, for "Request as".
+  var myMedics = [];
+  function fillRequestAs(medics) {
+    var ids = (medics || []).map(function (m) { return m.member_id; });
+    myMedics = PVSession.characters().filter(function (c) { return ids.indexOf(c.id) !== -1; });
+    var select = $('appt-request-as');
+    select.innerHTML = '';
+    myMedics.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = String(c.id);
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+    defaultRequestAs();
+  }
+  // The account's own character when it's a medic, else the first (as the
+  // worker picks when none is sent).
+  function defaultRequestAs() {
+    var select = $('appt-request-as');
+    if (select.value || !myMedics.length) return;
+    select.value = String(PVSession.pickCharacter(null, myMedics).id);
+  }
+  function requestingAs() {
+    var chosen = $('appt-character').selectedOptions[0];
+    return myMedics.length > 1 && !!chosen && chosen.value !== '' && !chosen.hasAttribute('data-own');
+  }
+  function showRequestAs() {
+    $('appt-request-as-group').hidden = !requestingAs();
   }
 
   function showPatientName() {
@@ -295,6 +330,7 @@
     var groups = [
       ['Request', [
         ['Character', selectedText('appt-character')],
+        ['Requested as', requestingAs() ? selectedText('appt-request-as') : ''],
         ['Medic', selectedText('appt-medic')],
         ['Message for the Secretary', val('appt-reason')]
       ]],
@@ -402,6 +438,7 @@
       plot_hooks: val('intake-plot-hooks'),
       triggers: val('intake-triggers')
     });
+    if (requestingAs()) payload.submitted_by_member_id = Number($('appt-request-as').value);
 
     var btn = $('submit-btn');
     btn.disabled = true;
@@ -470,12 +507,15 @@
     setLoading(false);
     fillCharacters(data);
     fillMedics(staff, data.medics);
+    fillRequestAs(data.medics);
 
     var restoredStep = restoreDraft();
     // A drafted character that has since been given an open request can't be
     // chosen again.
     var chosen = $('appt-character').selectedOptions[0];
     if (chosen && chosen.disabled) $('appt-character').value = '';
+    defaultRequestAs();
+    showRequestAs();
     if (restoredStep > 1 && !stepOneComplete(false)) restoredStep = 1;
     if (!$('intake-patient-date').value) $('intake-patient-date').value = M.todayISO();
     showEorzeanDate();
@@ -483,7 +523,7 @@
     form.addEventListener('input', saveDraftSoon);
     form.addEventListener('change', saveDraftSoon);
     form.addEventListener('submit', submit);
-    $('appt-character').addEventListener('change', function () { showPatientName(); prefillFromRecord(); });
+    $('appt-character').addEventListener('change', function () { showPatientName(); showRequestAs(); prefillFromRecord(); });
     $('intake-patient-date').addEventListener('change', showEorzeanDate);
     $('appt-edit-reason').addEventListener('click', function () { goTo(3); });
     $('appt-next').addEventListener('click', function () { goTo(step + 1); });

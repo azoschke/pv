@@ -86,21 +86,12 @@
     return PVSession.request(API_BASE, method, path, body, { auth: "optional" });
   }
 
-  // The account's characters, its main first. With alts, it applies as the
+  // The account's characters (js/pv-session.js). With alts, it applies as the
   // one picked in the posting (the account's own until another is picked);
   // applications are per character.
-  function myCharacters() {
-    var session = getSession();
-    return (session && session.characters) || [];
-  }
   var applyAsId = null;
-  function applyAs() {
-    var session = getSession();
-    var chars = myCharacters();
-    function byId(id) { return chars.filter(function (c) { return c.id === id; })[0]; }
-    return byId(applyAsId) || byId(session && session.member_id) || chars[0] || null;
-  }
-  function hasAlts() { return myCharacters().length > 1; }
+  function applyAs() { return PVSession.pickCharacter(applyAsId); }
+  function hasAlts() { return PVSession.characters().length > 1; }
 
   // ── State ────────────────────────────────────────────────────────────────
   var allJobs = [];
@@ -541,14 +532,7 @@
   // character's.
   function applyAsHtml() {
     if (!hasAlts()) return "";
-    var who = applyAs();
-    return '<label class="field-label is-flush" for="job-apply-as">Apply as</label>' +
-      '<select class="field" id="job-apply-as">' +
-      myCharacters().map(function (c) {
-        return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
-          escapeHTML(c.name) + '</option>';
-      }).join("") +
-      '</select>';
+    return PVSession.characterSelectHtml("job-apply-as", "Apply as", PVSession.characters(), applyAs().id);
   }
 
   function applyActionsHtml(j) {

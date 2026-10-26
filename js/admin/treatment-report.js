@@ -181,10 +181,12 @@
     var dischargeRef = useRef(null);
 
     // The published roster for the medic picker. A saved visit's medic who
-    // is no longer on it stays listed, so editing the visit keeps them; a new
-    // report's default (you, or the request's medic) is kept only if listed.
-    // medicIds maps each listed name to its roster character, saved with the
-    // visit (a saved medic off the roster keeps the visit's own id, if any).
+    // is no longer on it stays listed, so editing the visit keeps them. A new
+    // report starts as the request's medic when listed; without one, as the
+    // account's character on the roster (its own first, as "Request as"
+    // picks), else blank. medicIds maps each listed name to its roster
+    // character, saved with the visit (a saved medic off the roster keeps the
+    // visit's own id, if any).
     useEffect(function () {
       var savedId = initial.attending_medic_id != null ? initial.attending_medic_id : null;
       PVAdminAPI.request('GET', '/medical-staff', undefined, false).then(function (list) {
@@ -193,7 +195,13 @@
         var ids = {};
         rows.forEach(function (m) { ids[m.name] = m.member_id; });
         var current = String(draft.attending_medic || '').trim();
-        if (current && names.indexOf(current) === -1) {
+        if (isNew && !(request && request.assigned_medic_name)) {
+          var onRoster = {};
+          rows.forEach(function (m) { onRoster[m.member_id] = m.name; });
+          var mine = PVSession.characters().filter(function (c) { return onRoster[c.id] != null; });
+          var pick = mine.length ? PVSession.pickCharacter(null, mine) : null;
+          setField('attending_medic', pick ? onRoster[pick.id] : '');
+        } else if (current && names.indexOf(current) === -1) {
           if (isNew) setField('attending_medic', '');
           else { names.push(current); ids[current] = savedId; }
         }

@@ -541,20 +541,11 @@
     return null;
   }
 
-  // The account's characters, its main first. A player has one signup per
+  // The account's characters (js/pv-session.js). A player has one signup per
   // quest, as whichever character they pick (the account's own by default).
-  function myCharacters() {
-    var session = getSession();
-    return (session && session.characters) || [];
-  }
   var signUpAsId = null;
-  function signUpAs() {
-    var session = getSession();
-    var chars = myCharacters();
-    function byId(id) { return chars.filter(function (c) { return c.id === id; })[0]; }
-    return byId(signUpAsId) || byId(session && session.member_id) || chars[0] || null;
-  }
-  function hasAlts() { return myCharacters().length > 1; }
+  function signUpAs() { return PVSession.pickCharacter(signUpAsId); }
+  function hasAlts() { return PVSession.characters().length > 1; }
 
   // This player's signup on q (any of their characters), by character id; a
   // session saved before ids were kept goes by name.
@@ -562,7 +553,7 @@
     var session = getSession();
     if (!session) return null;
     var signups = q.signups || [];
-    var ids = myCharacters().map(function (c) { return c.id; });
+    var ids = PVSession.characters().map(function (c) { return c.id; });
     if (!ids.length && session.member_id != null) ids = [session.member_id];
     var me = (session.display_name || "").trim().toLowerCase();
     for (var i = 0; i < signups.length; i++) {
@@ -618,14 +609,7 @@
   // "Sign up as" for an account with alts.
   function signUpAsHtml() {
     if (!hasAlts()) return "";
-    var who = signUpAs();
-    return '<label class="field-label is-flush" for="quest-signup-as">Sign up as</label>' +
-      '<select class="field" id="quest-signup-as">' +
-      myCharacters().map(function (c) {
-        return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
-          escapeHTML(c.name) + '</option>';
-      }).join("") +
-      '</select>';
+    return PVSession.characterSelectHtml("quest-signup-as", "Sign up as", PVSession.characters(), signUpAs().id);
   }
 
   function authedFetch(method, path, body) {
