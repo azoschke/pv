@@ -126,6 +126,8 @@
           roles: data.roles || [],
           permissions: data.permissions || [],
           is_root: !!data.is_root,
+          member_id: data.member_id == null ? null : data.member_id,
+          characters: data.characters || [],
           expires_at: data.expires_at || null
         });
         document.getElementById('login-password').value = '';

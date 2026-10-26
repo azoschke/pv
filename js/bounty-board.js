@@ -11,8 +11,8 @@
 //    repeatable -> runs more than once; optional next-run date + cadence note
 //
 //  Logged-in members (session shared with the management portal) can sign up
-//  for quests and withdraw anytime. Quest submission lives in the portal's
-//  My Profile section.
+//  for quests and withdraw anytime: one signup per player, as any of their
+//  characters. Quest submission lives in the portal's My Profile section.
 //
 //  Worker endpoints used:
 //    GET    /quests                       -> listed quests incl. signups
@@ -541,13 +541,36 @@
     return null;
   }
 
+  // The account's characters, its main first. A player has one signup per
+  // quest, as whichever character they pick (the account's own by default).
+  function myCharacters() {
+    var session = getSession();
+    return (session && session.characters) || [];
+  }
+  var signUpAsId = null;
+  function signUpAs() {
+    var session = getSession();
+    var chars = myCharacters();
+    function byId(id) { return chars.filter(function (c) { return c.id === id; })[0]; }
+    return byId(signUpAsId) || byId(session && session.member_id) || chars[0] || null;
+  }
+  function hasAlts() { return myCharacters().length > 1; }
+
+  // This player's signup on q (any of their characters), by character id; a
+  // session saved before ids were kept goes by name.
   function mySignup(q) {
     var session = getSession();
-    if (!session || !session.display_name) return null;
-    var me = session.display_name.trim().toLowerCase();
+    if (!session) return null;
     var signups = q.signups || [];
+    var ids = myCharacters().map(function (c) { return c.id; });
+    if (!ids.length && session.member_id != null) ids = [session.member_id];
+    var me = (session.display_name || "").trim().toLowerCase();
     for (var i = 0; i < signups.length; i++) {
-      if ((signups[i].member_name || "").trim().toLowerCase() === me) return signups[i];
+      var s = signups[i];
+      var match = ids.length
+        ? ids.indexOf(s.member_id) !== -1
+        : !!me && (s.member_name || "").trim().toLowerCase() === me;
+      if (match) return s;
     }
     return null;
   }
@@ -581,20 +604,37 @@
     if (mine) {
       return '<div class="quest-modal-actions">' +
         '<button type="button" class="btn is-danger" id="quest-withdraw-btn">Withdraw signup</button>' +
-        '<span class="quest-action-note">You are signed up for this quest.</span>' +
+        '<span class="quest-action-note">' +
+        (hasAlts() ? 'You are signed up as ' + escapeHTML(mine.member_name) + '.' : 'You are signed up for this quest.') +
+        '</span>' +
         '</div>';
     }
     return '<div class="quest-modal-actions">' +
+      signUpAsHtml() +
       '<button type="button" class="btn" id="quest-signup-btn">Sign up</button>' +
       '</div>';
   }
 
-  function authedFetch(method, path) {
+  // "Sign up as" for an account with alts.
+  function signUpAsHtml() {
+    if (!hasAlts()) return "";
+    var who = signUpAs();
+    return '<label class="field-label is-flush" for="quest-signup-as">Sign up as</label>' +
+      '<select class="field" id="quest-signup-as">' +
+      myCharacters().map(function (c) {
+        return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
+          escapeHTML(c.name) + '</option>';
+      }).join("") +
+      '</select>';
+  }
+
+  function authedFetch(method, path, body) {
     if (!getSession()) return Promise.reject(new Error("You are no longer signed in."));
-    return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
+    return PVSession.request(API_BASE, method, path, body, { auth: "optional" });
   }
 
   function wireModalActions(q) {
+    var signUpAsSelect = document.getElementById("quest-signup-as");
     var signupBtn = document.getElementById("quest-signup-btn");
     var withdrawBtn = document.getElementById("quest-withdraw-btn");
     var errEl = document.getElementById("quest-action-error");
@@ -606,7 +646,8 @@
     async function act(method, btn) {
       btn.disabled = true;
       try {
-        await authedFetch(method, "/quests/" + q.id + "/signups");
+        var body = method === "POST" && hasAlts() ? { member_id: signUpAs().id } : undefined;
+        await authedFetch(method, "/quests/" + q.id + "/signups", body);
         await loadQuests({ keepModal: true });
       } catch (e) {
         btn.disabled = false;
@@ -614,6 +655,9 @@
       }
     }
 
+    if (signUpAsSelect) signUpAsSelect.addEventListener("change", function () {
+      signUpAsId = Number(signUpAsSelect.value);
+    });
     if (signupBtn) signupBtn.addEventListener("click", function () { act("POST", signupBtn); });
     if (withdrawBtn) withdrawBtn.addEventListener("click", function () { act("DELETE", withdrawBtn); });
   }

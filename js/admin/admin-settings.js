@@ -5,17 +5,32 @@
 //    last_login) along with their current role slugs.
 //  - Each row shows its roles as a read-only list; an "Edit roles" action
 //    (users.roles) opens a popup whose checkboxes commit the full intended
-//    role set for that user in one request.
+//    role set for that user in one request. Only an admin (the admin role, or
+//    the root admin) sees the Admin and Officer boxes (ADMIN_ONLY_ROLES); for
+//    anyone else an account keeps those roles exactly as it had them (the
+//    worker refuses any change to them). Only an admin edits their own roles,
+//    and never removes their own Admin.
 //  - users.delete deletes user accounts (confirm prompt). Cannot delete self.
+//  - Each account is linked to one roster character, whose name it carries.
+//    An account linked to an alt (made before alts were managed from their
+//    mains) is tagged "Alt account". users.link changes the linked character
+//    in a popup; a character belongs to one account at most, and only the
+//    root admin changes the root admin's.
+//  - users.registration_code sets the code new accounts need to register;
+//    a blank code closes account creation.
 //  - The root admin also gets the Permissions, Pages and Navigation tabs
 //    (js/admin/permissions.js, site-pages.js, site-nav.js).
 //
 //  Worker routes:
-//    GET    /admin/users                      users.view — list users w/ roles
+//    GET    /admin/users                      users.view — list users w/ roles and characters
 //    PUT    /admin/users/:id/roles            users.roles — { roles: [...] } replace set
+//    PUT    /admin/users/:id/character        users.link — { member_id } (null unlinks)
 //    DELETE /admin/users/:id                  users.delete — hard delete
 //    POST   /admin/users/:id/reset-password   users.reset — mint a one-time reset link
 //    GET    /admin/roles                      users.roles or users.view
+//    GET    /members/basic                    users.link — the character picker
+//    GET    /admin/registration-code          users.registration_code — { code, updated_at, updated_by_name }
+//    PUT    /admin/registration-code          users.registration_code — { code }
 //
 //  Password resets: users.reset mints a single-use, short-lived reset link the
 //  member opens at reset.html to set a new password. Only non-admin
@@ -58,6 +73,10 @@
     return user && user.username && user.username.toLowerCase() === ROOT_ADMIN_USERNAME;
   }
 
+  // Roles only an admin gives or takes away (mirrors the worker's
+  // ADMIN_ONLY_ROLES).
+  var ADMIN_ONLY_ROLES = ['admin', 'officer'];
+
   function fmtDate(iso) {
     if (!iso) return '—';
     var d = new Date(iso.replace(' ', 'T') + 'Z');
@@ -72,12 +91,15 @@
     var onReset = props.onReset;
     var selfId = props.selfId;
     var callerIsRoot = props.callerIsRoot;
+    var callerIsAdmin = props.callerIsAdmin;
     var deleting = props.deleting;
     var resetting = props.resetting;
     var roleLabels = props.roleLabels;
     var canRoles = props.canRoles;
     var canDelete = props.canDelete;
     var canReset = props.canReset;
+    var canLink = props.canLink;
+    var onLink = props.onLink;
 
     var isSelf = u.id === selfId;
     var isRoot = isRootAdmin(u);
@@ -86,15 +108,28 @@
     // Mirror of the server rule: never reset the root admin; resetting an admin
     // account is limited to the root admin (Fiora).
     var resetAllowed = canReset && !isRoot && (!targetIsAdmin || callerIsRoot);
+    // Only the root admin changes the root admin's character.
+    var linkAllowed = canLink && (!isRoot || callerIsRoot);
+    // Only an admin changes their own roles (the worker refuses anyone else).
+    var rolesAllowed = canRoles && !isRoot && (!isSelf || callerIsAdmin);
 
     return h('tr', null,
       h('td', null,
         h('div', { className: 'portal-name-row' },
           h('span', { className: 'row-name' }, u.username),
           isRoot ? h('span', { className: 'tag', title: 'Root admin (protected)' }, 'Root') : null,
-          needsRole ? h('span', { className: 'pill', title: 'No role assigned yet' }, 'Needs role') : null
+          u.is_alt
+            ? h('span', { className: 'tag', title: 'Linked to an alt' + (u.main_name ? ' of ' + u.main_name : '') }, 'Alt account')
+            : null,
+          needsRole ? h('span', { className: 'pill', title: 'No role assigned yet' }, 'Needs role') : null,
+          u.member_id == null
+            ? h('span', { className: 'pill', title: 'Not linked to a roster character' }, 'No character')
+            : null
         ),
-        u.display_name ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } }, u.display_name) : null
+        u.display_name
+          ? h('div', { style: { color: 'var(--text-secondary)', fontSize: '0.9rem' } },
+              u.display_name + (u.is_alt && u.main_name ? ' · alt of ' + u.main_name : ''))
+          : null
       ),
       h('td', null, fmtDate(u.created_at)),
       h('td', null, u.last_login ? fmtDate(u.last_login) : h('span', { className: 'portal-muted' }, 'never')),
@@ -109,12 +144,20 @@
         },
           // Root admin is protected: its empty action set is the cue, so no
           // "Edit roles"/"Delete" controls and no explicit "(protected)" label.
-          !isRoot && canRoles
+          rolesAllowed
             ? h('button', {
                 type: 'button',
                 className: 'btn is-small is-quiet',
                 onClick: function () { onEditRoles(u); }
               }, 'Edit roles')
+            : null,
+          linkAllowed
+            ? h('button', {
+                type: 'button',
+                className: 'btn is-small is-quiet',
+                title: 'Change the roster character this account is linked to',
+                onClick: function () { onLink(u); }
+              }, 'Character')
             : null,
           resetAllowed
             ? h('button', {
@@ -279,7 +322,11 @@
         'Select the roles for ', h('strong', null, user.username), '.'),
       merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
       h('div', { className: 'admin-role-checkboxes', style: { marginBottom: '1.1rem' } },
-        props.roles.map(function (r) {
+        // A hidden Admin or Officer box keeps its value in the draft, so
+        // saving leaves the account's role as it was.
+        props.roles.filter(function (r) {
+          return props.canAdmin || ADMIN_ONLY_ROLES.indexOf(r.slug) === -1;
+        }).map(function (r) {
           return h('label', { key: r.slug, className: 'admin-role-checkbox' },
             h('input', {
               type: 'checkbox',
@@ -296,6 +343,147 @@
         h('button', { type: 'button', className: 'btn', disabled: saving, onClick: save },
           saving ? 'Saving…' : 'Save roles')
       )
+    );
+  }
+
+  // Linked-character popup. members is the roster (GET /members/basic, null
+  // while it loads); a character already linked to another account is listed
+  // but can't be picked. onSave(user, memberId or null) resolves on success
+  // and rejects with an error shown inline.
+  function LinkCharacterModal(props) {
+    var user = props.user;
+    var onClose = props.onClose;
+    var members = props.members;
+
+    var pickState = useState(user.member_id == null ? '' : String(user.member_id));
+    var pick = pickState[0], setPick = pickState[1];
+    var savingState = useState(false);
+    var saving = savingState[0], setSaving = savingState[1];
+    var errState = useState('');
+    var merr = errState[0], setMerr = errState[1];
+
+    // Character id → the other account it's linked to.
+    var takenBy = {};
+    (props.users || []).forEach(function (u) {
+      if (u.member_id != null && u.id !== user.id) takenBy[u.member_id] = u.username;
+    });
+
+    function save() {
+      setSaving(true); setMerr('');
+      Promise.resolve(props.onSave(user, pick === '' ? null : Number(pick))).then(null, function (e) {
+        setMerr((e && e.message) || 'Failed to change the character.');
+        setSaving(false);
+      });
+    }
+
+    return h(window.PVAdminModal, {
+      title: 'Linked character',
+      onClose: onClose
+    },
+      merr ? h('div', { className: 'flash error', style: { marginBottom: '0.85rem' } }, merr) : null,
+      h('div', { className: 'portal-field' },
+        h('label', { htmlFor: 'link-character' }, 'Character'),
+        members === null
+          ? h('p', { className: 'portal-muted', style: { margin: 0 } }, 'Loading the roster…')
+          : h('select', {
+              id: 'link-character',
+              value: pick,
+              disabled: saving,
+              onChange: function (e) { setPick(e.target.value); }
+            },
+              h('option', { value: '' }, 'No character'),
+              members.map(function (m) {
+                var other = takenBy[m.id];
+                return h('option', { key: m.id, value: String(m.id), disabled: !!other },
+                  m.name + (other ? ' — linked to ' + other : ''));
+              })
+            )
+      ),
+      h('div', { className: 'portal-form-actions' },
+        h('button', { type: 'button', className: 'btn is-quiet', disabled: saving, onClick: onClose }, 'Cancel'),
+        h('button', {
+          type: 'button', className: 'btn',
+          disabled: saving || members === null || pick === (user.member_id == null ? '' : String(user.member_id)),
+          onClick: save
+        }, saving ? 'Saving…' : 'Save')
+      )
+    );
+  }
+
+  // The registration code new accounts need (users.registration_code). With
+  // no code set, account creation is closed.
+  function RegistrationCodeCard() {
+    var dataState = useState(null);   // { code, updated_at, updated_by_name }
+    var data = dataState[0], setData = dataState[1];
+    var draftState = useState('');
+    var draft = draftState[0], setDraft = draftState[1];
+    var savingState = useState(false);
+    var saving = savingState[0], setSaving = savingState[1];
+    var errState = useState('');
+    var err = errState[0], setErr = errState[1];
+    var flashState = useState('');
+    var flash = flashState[0], setFlash = flashState[1];
+
+    useEffect(function () {
+      PVAdminAPI.request('GET', '/admin/registration-code', undefined, true).then(setData, function (e) {
+        setErr(e.message || 'Failed to load the registration code.');
+      });
+    }, []);
+
+    async function save(code) {
+      setSaving(true); setErr(''); setFlash('');
+      try {
+        var next = await PVAdminAPI.request('PUT', '/admin/registration-code', { code: code }, true);
+        setData(next);
+        setDraft('');
+        setFlash(next.code ? 'Registration code saved.' : 'Account creation is closed.');
+        setTimeout(function () { setFlash(''); }, 3000);
+      } catch (e) {
+        setErr(e.message || 'Failed to save the registration code.');
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    return h('div', { className: 'portal-card' },
+      h('h2', { className: 'portal-card-title' }, 'Registration Code'),
+      err ? h('div', { className: 'flash error' }, err) : null,
+      flash ? h('div', { className: 'flash success' }, flash) : null,
+      !data
+        ? (err ? null : h('p', { className: 'portal-muted' }, 'Loading…'))
+        : h('div', null,
+            h('p', { style: { fontFamily: 'var(--font-text)', margin: '0 0 0.85rem' } },
+              data.code
+                ? ['New members need this code to create an account: ', h('strong', { key: 'c' }, data.code)]
+                : 'Account creation is closed: no code is set.'),
+            data.updated_at
+              ? h('p', { className: 'portal-field-help', style: { marginTop: '-0.5rem' } },
+                  'Last changed ' + fmtDate(data.updated_at) + (data.updated_by_name ? ' by ' + data.updated_by_name : '') + '.')
+              : null,
+            h('form', { onSubmit: function (e) { e.preventDefault(); if (draft.trim()) save(draft); } },
+              h('div', { className: 'portal-field' },
+                h('label', { htmlFor: 'registration-code' }, data.code ? 'New code' : 'Code'),
+                h('input', {
+                  id: 'registration-code', type: 'text', autoComplete: 'off', spellCheck: false, maxLength: 100,
+                  value: draft, disabled: saving,
+                  onChange: function (e) { setDraft(e.target.value); }
+                }),
+                h('p', { className: 'portal-field-help' }, 'At least 6 characters, not case-sensitive.')
+              ),
+              h('div', { className: 'portal-form-actions' },
+                h('button', { type: 'submit', className: 'btn', disabled: saving || !draft.trim() },
+                  saving ? 'Saving…' : 'Save code'),
+                data.code
+                  ? h('button', {
+                      type: 'button', className: 'btn is-quiet', disabled: saving,
+                      onClick: function () {
+                        if (confirm('Close account creation? No one can register until a new code is set.')) save('');
+                      }
+                    }, 'Close account creation')
+                  : null
+              )
+            )
+          )
     );
   }
 
@@ -322,10 +510,17 @@
     var roles = rolesState[0], setRoles = rolesState[1];
     var tabState = useState('accounts');
     var tab = tabState[0], setTab = tabState[1];
+    // linkingUser: null = closed; otherwise the user whose character popup is
+    // open. members: the roster for its picker, loaded the first time.
+    var linkingUserState = useState(null);
+    var linkingUser = linkingUserState[0], setLinkingUser = linkingUserState[1];
+    var membersState = useState(null);
+    var members = membersState[0], setMembers = membersState[1];
 
     var session = PVAdminAPI.getSession();
     var selfUsername = session && session.username;
     var callerIsRoot = !!selfUsername && selfUsername.toLowerCase() === ROOT_ADMIN_USERNAME;
+    var callerIsAdmin = callerIsRoot || ((session && session.roles) || []).indexOf('admin') !== -1;
 
     async function reload() {
       setErr('');
@@ -367,6 +562,26 @@
         setUsers(prev);
         throw e;
       }
+    }
+
+    function openLink(user) {
+      setLinkingUser(user);
+      if (members !== null) return;
+      PVAdminAPI.request('GET', '/members/basic', undefined, true).then(function (rows) {
+        setMembers(Array.isArray(rows) ? rows : []);
+      }, function (e) {
+        setLinkingUser(null);
+        setErr(e.message || 'Failed to load the roster.');
+      });
+    }
+
+    // Resolves on success (and closes the popup); rejects so the popup can
+    // show the error. Reloads, so the account's name and tags follow.
+    async function handleSaveLink(user, memberId) {
+      setErr('');
+      await PVAdminAPI.request('PUT', '/admin/users/' + user.id + '/character', { member_id: memberId }, true);
+      setLinkingUser(null);
+      await reload();
     }
 
     async function handleDelete(user) {
@@ -446,6 +661,7 @@
 
     return h('div', null,
       h(window.PVAdminSubnav, { tabs: tabs, active: tab, onChange: setTab }),
+      PVAdminAPI.can('users.registration_code') ? h(RegistrationCodeCard) : null,
       h('div', { className: 'portal-card' },
         h('div', { className: 'portal-card-header' },
           h('h2', { className: 'portal-card-title' }, 'Users & Roles'),
@@ -483,13 +699,16 @@
                           user: u,
                           selfId: selfId,
                           callerIsRoot: callerIsRoot,
+                          callerIsAdmin: callerIsAdmin,
                           onEditRoles: setEditingUser,
+                          onLink: openLink,
                           onDelete: handleDelete,
                           onReset: handleReset,
                           deleting: deletingId === u.id,
                           resetting: resettingId === u.id,
                           roleLabels: roleLabeler(roles),
                           canRoles: PVAdminAPI.can('users.roles'),
+                          canLink: PVAdminAPI.can('users.link'),
                           canDelete: PVAdminAPI.can('users.delete'),
                           canReset: PVAdminAPI.can('users.reset')
                         });
@@ -507,8 +726,16 @@
       editingUser ? h(RoleEditModal, {
         user: editingUser,
         roles: roles,
+        canAdmin: callerIsAdmin,
         onSave: handleSaveRoles,
         onClose: function () { setEditingUser(null); }
+      }) : null,
+      linkingUser ? h(LinkCharacterModal, {
+        user: linkingUser,
+        users: users,
+        members: members,
+        onSave: handleSaveLink,
+        onClose: function () { setLinkingUser(null); }
       }) : null,
       resetResult ? h(ResetLinkModal, {
         result: resetResult,

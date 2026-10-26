@@ -13,6 +13,9 @@
 //       characters' open requests: Requested ones can be cancelled; Scheduled
 //       ones show the assigned medic and when, and stay as they are.
 //
+//  Cards 1-3 cover all the account's characters (its main and alts); with
+//  alts they show a Character column, and a new quest picks one to post as.
+//
 //  Worker routes (all authed):
 //    GET  /my/quests        POST /quests      PATCH/DELETE /my/quests/:id
 //    DELETE /quest-edits/:id                  (cancel own proposed edit)
@@ -47,6 +50,12 @@
   };
   var JOB_TYPE_LABEL = { primary: 'Primary', secondary: 'Secondary' };
   function divisionLabel(v) { return DIVISION_LABEL[v] || v || '—'; }
+
+  // The account's characters, its main first. With alts, each card shows
+  // which character an entry is for, and a new quest picks one to post as.
+  function myCharacters() {
+    return (PVAdminAPI.getSession() || {}).characters || [];
+  }
 
   function fmtDate(s) {
     if (!s) return '';
@@ -113,6 +122,8 @@
 
     var quests = (data && data.quests) || [];
     var edits = (data && data.edits) || [];
+    var characters = myCharacters();
+    var hasAlts = characters.length > 1;
 
     return h('div', { className: 'portal-card' },
       h('div', { className: 'portal-head-row' },
@@ -134,6 +145,7 @@
           h('thead', null,
             h('tr', null,
               h('th', null, 'Title'),
+              hasAlts ? h('th', null, 'Character') : null,
               h('th', null, 'Type'),
               h('th', null, 'Schedule'),
               h('th', null, 'Status'),
@@ -145,6 +157,7 @@
               var pill = QUEST_STATUS_PILL[q.status] || QUEST_STATUS_PILL.hidden;
               return h('tr', { key: q.id },
                 h('td', { className: 'row-name' }, q.title),
+                hasAlts ? h('td', null, q.submitted_by_name || '—') : null,
                 h('td', null, q.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(q)),
                 h('td', null, h('span', { className: pill.cls }, pill.label)),
@@ -192,6 +205,8 @@
           quest: modal.quest,
           withStatus: false,
           saveLabel: modal.quest ? 'Save changes' : 'Submit for approval',
+          characters: modal.quest ? null : characters,
+          characterId: (PVAdminAPI.getSession() || {}).member_id,
           onSave: handleSave,
           onCancel: function () { setModal(null); }
         })
@@ -202,6 +217,7 @@
   // --------- My quest signups card ----------
   function MySignupsCard(props) {
     var signups = props.signups || [];
+    var hasAlts = myCharacters().length > 1;
     var onChanged = props.onChanged;
     var onError = props.onError;
 
@@ -227,6 +243,7 @@
           h('thead', null,
             h('tr', null,
               h('th', null, 'Quest'),
+              hasAlts ? h('th', null, 'Character') : null,
               h('th', null, 'Type'),
               h('th', null, 'Schedule'),
               h('th', { className: 'portal-col-actions' }, '')
@@ -236,6 +253,7 @@
             signups.map(function (s) {
               return h('tr', { key: s.id },
                 h('td', { className: 'row-name' }, s.title),
+                hasAlts ? h('td', null, s.member_name) : null,
                 h('td', null, s.mission_type || '—'),
                 h('td', null, PVAdminQuestUtils.scheduleSummary(s)),
                 h('td', { className: 'portal-col-actions' },
@@ -321,6 +339,7 @@
   // --------- My job applications card ----------
   function MyJobApplicationsCard(props) {
     var apps = props.apps || [];
+    var hasAlts = myCharacters().length > 1;
     var jobsById = props.jobsById || {};
     var onChanged = props.onChanged;
     var onError = props.onError;
@@ -347,6 +366,7 @@
           h('thead', null,
             h('tr', null,
               h('th', null, 'Posting'),
+              hasAlts ? h('th', null, 'Character') : null,
               h('th', null, 'Division'),
               h('th', null, 'Type'),
               h('th', null, 'Applied'),
@@ -361,6 +381,7 @@
               var jobType = job && job.job_type ? job.job_type : null;
               return h('tr', { key: a.id },
                 h('td', { className: 'row-name' }, a.job_title),
+                hasAlts ? h('td', null, a.member_name) : null,
                 h('td', null, divisionLabel(a.division)),
                 h('td', null, jobType ? (JOB_TYPE_LABEL[jobType] || jobType) : '—'),
                 h('td', null, fmtDate(a.created_at)),

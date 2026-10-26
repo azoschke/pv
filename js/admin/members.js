@@ -74,10 +74,13 @@
   var INTERVIEWS = ['Not Started', 'Scheduled', 'Completed', 'NA - No RP', 'No Data',];
   var ACTIVITIES  = ['Active', 'LOA', 'Inactive'];
 
-  // Alt linking (stub — display + data only; no account/login wiring yet).
-  // A "main" is any character whose OOC rank is NOT an alt rank; it heads a
-  // group. Alts (Embers or Cinders) point at their main via primary_member_id.
-  // Discord tag and Date Joined are shared across the group, stored on the main.
+  // Alt linking. A "main" is any character whose OOC rank is NOT an alt rank;
+  // it heads a group. Alts (Embers or Cinders) point at their main via
+  // primary_member_id, one level deep. The main's account manages the whole
+  // group (alts can't register accounts of their own), so a main with alts
+  // can't be deleted until they're unlinked or deleted (the worker enforces
+  // both). Discord tag and Date Joined are shared across the group, stored on
+  // the main.
   var ALT_RANKS = ['Embers', 'Cinders'];
   function isAltRank(rank) { return ALT_RANKS.indexOf(rank) !== -1; }
 
@@ -382,8 +385,8 @@
 
       // ── Shared block: Discord tag, Date Joined, and alt links ──────────────
       // Discord tag + Date Joined are shared across the character group and live
-      // on the main. Alt linking is a stub: it records the connection only, with
-      // no account/login wiring yet.
+      // on the main. The alt links decide which characters the main's account
+      // manages.
       h('div', { className: 'portal-form-section', style: { marginTop: '0.5rem' } },
         h('h3', { className: 'portal-form-section-title' }, 'Shared character info'),
 
@@ -498,6 +501,12 @@
           type: 'button',
           className: 'btn is-danger is-end',
           onClick: function () {
+            if (!memberIsAlt && group.alts.length) {
+              alert('"' + (member.name || 'This member') + '" has alts linked to it (' +
+                group.alts.map(function (a) { return a.name; }).join(', ') +
+                '). Unlink or delete them before deleting this character.');
+              return;
+            }
             if (confirm('Delete "' + (member.name || 'this member') + '"? This cannot be undone.')) {
               onDelete(member);
             }
@@ -643,7 +652,16 @@
     }
 
     async function handleUpdate(id, draft) {
+      var before = members.find(function (m) { return m.id === id; });
       await PVAdminAPI.request('PATCH', '/members/' + id, draft, true);
+      // A new name also reaches the Combat Toolkit's campaign parties (its own
+      // worker, which never hears about roster edits on its own). Best-effort,
+      // like the purge on delete.
+      var newName = String(draft.name || '').trim();
+      if (window.PVRollAPI && before && newName && newName !== before.name) {
+        try { await PVRollAPI.request('PATCH', '/rp/members/' + id, { name: newName }); }
+        catch (_e) { /* non-fatal; the roster rename already succeeded */ }
+      }
       setModalMember(null);
       await reload();
     }
@@ -683,7 +701,7 @@
     }
 
     // Link (mainId) or unlink (null) an alt by setting its primary_member_id.
-    // Alt-linking is a stub: it records the connection only. Reloads so the open
+    // The worker refuses a link more than one level deep. Reloads so the open
     // modal reflects the new group immediately.
     async function handleSetPrimary(altId, mainId) {
       setErr('');

@@ -247,7 +247,26 @@
   // --------- Consolidated sections (tabbed wrappers) ----------
   // My Profile now hosts three sub-views that used to be separate places:
   // the roster profile editor, the old My Applications section, and the RP
-  // item loadout (My Items). Each tab follows its own permissions.
+  // item loadout (My Items). Each tab follows its own permissions. An account
+  // with alts picks the character Profile and Items show (its own to start
+  // with); Applications covers all of them in one list.
+  function CharacterPicker(props) {
+    return h('div', { className: 'portal-filter-row' },
+      h('div', { className: 'seg profile-character-seg', role: 'group', 'aria-label': 'Character' },
+        props.characters.map(function (c) {
+          var on = c.id === props.value;
+          return h('button', {
+            key: c.id,
+            type: 'button',
+            className: 'seg-btn' + (on ? ' is-active' : ''),
+            'aria-pressed': on ? 'true' : 'false',
+            onClick: function () { if (!on) props.onChange(c.id); }
+          }, c.name);
+        })
+      )
+    );
+  }
+
   function MyProfileSection(props) {
     var session = props.session;
     var permissions = (session && session.permissions) || [];
@@ -266,17 +285,30 @@
       ? tab
       : (TABS[0] ? TABS[0].id : null);
 
+    // The account's characters, its main first (js/pv-session.js). Until the
+    // portal's /me answers, an old sign-in may not have them yet.
+    var characters = (session && session.characters) || [];
+    var ownId = session && session.member_id != null ? session.member_id : null;
+    var characterState = useState(ownId);
+    var characterId = characters.some(function (c) { return c.id === characterState[0]; })
+      ? characterState[0]
+      : ownId;
+    var picker = characters.length > 1 && (active === 'profile' || active === 'items')
+      ? h(CharacterPicker, { characters: characters, value: characterId, onChange: characterState[1] })
+      : null;
+
     var body;
     if (active === 'applications') {
       body = h(window.PVAdminMyApplications || Missing('my-applications.js'), { session: session });
     } else if (active === 'items') {
-      body = h(window.PVAdminMyItems || Missing('my-profile.js'), { session: session });
+      body = h(window.PVAdminMyItems || Missing('my-profile.js'), { session: session, memberId: characterId });
     } else {
-      body = h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session });
+      body = h(window.PVAdminMyProfile || Missing('my-profile.js'), { session: session, memberId: characterId });
     }
 
     return h('div', null,
       h(window.PVAdminSubnav, { tabs: TABS, active: active, onChange: setTab }),
+      picker,
       body
     );
   }
@@ -491,18 +523,9 @@
       var cancelled = false;
       PVAdminAPI.me().then(function (data) {
         if (cancelled || !data) return;
-        var current = PVAdminAPI.getSession();
-        if (!current) return;
-        var merged = Object.assign({}, current, {
-          username: data.username || current.username,
-          display_name: data.display_name || current.display_name,
-          avatar_url: data.avatar_url !== undefined ? data.avatar_url : (current.avatar_url || null),
-          roles: Array.isArray(data.roles) ? data.roles : current.roles,
-          permissions: Array.isArray(data.permissions) ? data.permissions : (current.permissions || []),
-          is_root: !!data.is_root,
-          expires_at: data.expires_at || current.expires_at
-        });
-        PVAdminAPI.setSession(merged);
+        // Name, picture, roles, permissions and characters (js/pv-session.js).
+        var merged = PVSession.applyMe(data);
+        if (!merged) return;
         setSession(merged);
         var wantedSection = permissionsKnown ? section : requestedSection;
         if (!canAccess(wantedSection, merged.permissions)) {

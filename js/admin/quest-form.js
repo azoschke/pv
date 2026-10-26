@@ -92,11 +92,14 @@
   //    quest       existing quest or null (new)
   //    withStatus  show the status select (officer view)
   //    saveLabel   submit button text
+  //    characters  the account's characters, for "Post as" on a new submission
+  //                (shown with more than one); characterId picks the default
   //    onSave(payload)  payload uses worker field names; scheduled_at is UTC
   //    onCancel
   function QuestForm(props) {
     var quest = props.quest || null;
     var withStatus = !!props.withStatus;
+    var characters = props.characters && props.characters.length > 1 ? props.characters : null;
 
     var draftState = useState({
       title: quest ? (quest.title || '') : '',
@@ -111,7 +114,10 @@
       schedule_mode: quest ? (quest.schedule_mode || 'tbd') : 'tbd',
       scheduled_local: quest ? utcToLocalInput(quest.scheduled_at) : '',
       cadence_note: quest ? (quest.cadence_note || '') : '',
-      status: quest ? (quest.status || 'listed') : 'listed'
+      status: quest ? (quest.status || 'listed') : 'listed',
+      member_id: characters
+        ? String(characters.some(function (c) { return c.id === props.characterId; }) ? props.characterId : characters[0].id)
+        : ''
     });
     var draft = draftState[0], setDraft = draftState[1];
     var savingState = useState(false);
@@ -146,6 +152,7 @@
         cadence_note: draft.schedule_mode === 'repeatable' ? (draft.cadence_note.trim() || null) : null
       };
       if (withStatus) payload.status = draft.status;
+      if (characters) payload.member_id = Number(draft.member_id);
 
       setSaving(true); setErr('');
       try {
@@ -158,6 +165,18 @@
 
     return h('form', { onSubmit: handleSubmit },
       err ? h('div', { className: 'flash error' }, err) : null,
+
+      characters ? h('div', { className: 'portal-field' },
+        h('label', null, 'Post as'),
+        h('select', {
+          value: draft.member_id,
+          onChange: function (e) { setField('member_id', e.target.value); }
+        },
+          characters.map(function (c) {
+            return h('option', { key: c.id, value: String(c.id) }, c.name);
+          })
+        )
+      ) : null,
 
       h('div', { className: 'portal-field' },
         h('label', null, 'Title *'),

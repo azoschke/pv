@@ -7,10 +7,11 @@
 //
 //  Logged-in members (session shared with the management portal) can apply to
 //  open postings from the detail modal and withdraw while still unreviewed.
+//  Applications are per character: an account with alts picks who applies.
 //
 //  Worker endpoints used:
 //    GET    /jobs                     -> list
-//    GET    /my/applications  (auth)  -> own applications
+//    GET    /my/applications  (auth)  -> the account's characters' applications
 //    POST   /jobs/:id/apply   (auth)
 //    DELETE /my/applications/:id (auth, stage 'new' only)
 // ============================================================================
@@ -80,14 +81,30 @@
     return PVSession.can(key, true);
   }
 
-  function authedRequest(method, path) {
+  function authedRequest(method, path, body) {
     if (!getSession()) return Promise.reject(new Error("You are no longer signed in."));
-    return PVSession.request(API_BASE, method, path, undefined, { auth: "optional" });
+    return PVSession.request(API_BASE, method, path, body, { auth: "optional" });
   }
+
+  // The account's characters, its main first. With alts, it applies as the
+  // one picked in the posting (the account's own until another is picked);
+  // applications are per character.
+  function myCharacters() {
+    var session = getSession();
+    return (session && session.characters) || [];
+  }
+  var applyAsId = null;
+  function applyAs() {
+    var session = getSession();
+    var chars = myCharacters();
+    function byId(id) { return chars.filter(function (c) { return c.id === id; })[0]; }
+    return byId(applyAsId) || byId(session && session.member_id) || chars[0] || null;
+  }
+  function hasAlts() { return myCharacters().length > 1; }
 
   // ── State ────────────────────────────────────────────────────────────────
   var allJobs = [];
-  var myApplications = [];   // own applications, loaded when logged in
+  var myApplications = [];   // the account's characters' applications, loaded when logged in
   var filters = {
     search: "",
     categories: {},   // { medical: true, ... }
@@ -475,8 +492,10 @@
   var STAGE_LABEL = { new: "Submitted", scheduled: "Interview scheduled", accepted: "Accepted", declined: "Declined" };
 
   function myApplicationFor(j) {
+    var who = applyAs();
     for (var i = 0; i < myApplications.length; i++) {
       var a = myApplications[i];
+      if (who && a.member_id !== who.id) continue;
       if (a.job_id === j.id && a.stage !== "declined") return a;
     }
     return null;
@@ -489,12 +508,14 @@
     return null;
   }
 
-  // The active (non-declined) application this member already holds to a primary
-  // posting other than j, if any. Used to mirror the worker's one-primary rule
-  // in the UI so applying is blocked before the request is sent.
+  // The active (non-declined) application this character already holds to a
+  // primary posting other than j, if any. Used to mirror the worker's
+  // one-primary rule in the UI so applying is blocked before the request is sent.
   function activePrimaryElsewhere(j) {
+    var who = applyAs();
     for (var i = 0; i < myApplications.length; i++) {
       var a = myApplications[i];
+      if (who && a.member_id !== who.id) continue;
       if (a.stage === "declined") continue;
       if (a.job_id === j.id) continue;
       var other = jobById(a.job_id);
@@ -513,35 +534,48 @@
         '</div>';
     }
     if (!canUse("jobs.apply")) return "";
+    return '<div class="quest-modal-actions">' + applyAsHtml() + applyActionsHtml(j) + '</div>';
+  }
+
+  // "Apply as" for an account with alts; the actions beside it are the picked
+  // character's.
+  function applyAsHtml() {
+    if (!hasAlts()) return "";
+    var who = applyAs();
+    return '<label class="field-label is-flush" for="job-apply-as">Apply as</label>' +
+      '<select class="field" id="job-apply-as">' +
+      myCharacters().map(function (c) {
+        return '<option value="' + c.id + '"' + (who && c.id === who.id ? " selected" : "") + '>' +
+          escapeHTML(c.name) + '</option>';
+      }).join("") +
+      '</select>';
+  }
+
+  function applyActionsHtml(j) {
     var app = myApplicationFor(j);
     if (!app) {
       if (jobTypeOf(j) === "primary") {
         var conflict = activePrimaryElsewhere(j);
         if (conflict) {
-          return '<div class="quest-modal-actions">' +
-            '<button type="button" class="btn" id="job-apply-btn" disabled>Apply</button>' +
-            '<span class="quest-action-note">You already have an active application for a primary position (' +
+          return '<button type="button" class="btn" id="job-apply-btn" disabled>Apply</button>' +
+            '<span class="quest-action-note">' +
+            (hasAlts() ? escapeHTML(applyAs().name) + ' already has' : 'You already have') +
+            ' an active application for a primary position (' +
             escapeHTML(conflict.title) + '). Withdraw it before applying to another primary position. ' +
-            'Secondary positions have no limit.</span>' +
-            '</div>';
+            'Secondary positions have no limit.</span>';
         }
       }
-      return '<div class="quest-modal-actions">' +
-        '<button type="button" class="btn" id="job-apply-btn">Apply</button>' +
-        '</div>';
+      return '<button type="button" class="btn" id="job-apply-btn">Apply</button>';
     }
     if (app.stage === "new") {
-      return '<div class="quest-modal-actions">' +
-        '<button type="button" class="btn is-danger" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
-        '<span class="quest-action-note">Application submitted.</span>' +
-        '</div>';
+      return '<button type="button" class="btn is-danger" id="job-withdraw-btn" data-app-id="' + app.id + '">Withdraw application</button>' +
+        '<span class="quest-action-note">Application submitted.</span>';
     }
-    return '<div class="quest-modal-actions">' +
-      '<span class="quest-action-note">Application status: ' + escapeHTML(STAGE_LABEL[app.stage] || app.stage) + '</span>' +
-      '</div>';
+    return '<span class="quest-action-note">Application status: ' + escapeHTML(STAGE_LABEL[app.stage] || app.stage) + '</span>';
   }
 
   function wireApplyActions(j) {
+    var applyAsSelect = document.getElementById("job-apply-as");
     var applyBtn = document.getElementById("job-apply-btn");
     var withdrawBtn = document.getElementById("job-withdraw-btn");
     var errEl = document.getElementById("job-action-error");
@@ -562,8 +596,15 @@
       }
     }
 
+    if (applyAsSelect) applyAsSelect.addEventListener("change", function () {
+      applyAsId = Number(applyAsSelect.value);
+      openModal(j);
+      var again = document.getElementById("job-apply-as");
+      if (again) again.focus();
+    });
     if (applyBtn) applyBtn.addEventListener("click", function () {
-      act(applyBtn, function () { return authedRequest("POST", "/jobs/" + j.id + "/apply"); });
+      var body = hasAlts() ? { member_id: applyAs().id } : undefined;
+      act(applyBtn, function () { return authedRequest("POST", "/jobs/" + j.id + "/apply", body); });
     });
     if (withdrawBtn) withdrawBtn.addEventListener("click", function () {
       var appId = withdrawBtn.dataset.appId;

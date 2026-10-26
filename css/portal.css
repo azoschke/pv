@@ -377,6 +377,9 @@ body { overflow: hidden; } /* shell scrolls inside .portal-main */
   align-items: center;
   margin: 0.35rem 0 0.85rem;
 }
+/* My Profile's character picker: on a phone the names wrap onto more lines
+   rather than run off the side. */
+.profile-character-seg { flex-wrap: wrap; max-width: 100%; }
 
 /* --------------- Tables ---------------
    The header is one flat band in the table-head tone with one rule beneath

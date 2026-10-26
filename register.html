@@ -26,22 +26,23 @@
         </div>
 
         <div class="rules-card">
-          Accounts are issued only to existing Free Company members.
+          Accounts are for Free Company members' <strong>main characters</strong>, one account per character.
           <br><br>
-          <strong>Username</strong> must be your character's first name, lowercase.<br>
-          <strong>Display name</strong> must be your character's full name (exactly).<br><br>
-          If the pair doesn't match the roster, the account won't be created.
-          New accounts start with no access — an admin will grant roles after.
+          Enter your main character’s full name exactly as it is on the FC roster. Your username is that name
+          in lowercase with a dot between first and last name (for example, firstname.lastname).<br><br>
+          You will need a registration code from an officer. New accounts start with no access until an
+          officer assigns a role.
         </div>
 
         <form id="registerForm" autocomplete="off">
           <div class="form-group">
-            <label for="reg-username">Username (first name, lowercase)</label>
-            <input id="reg-username" name="username" type="text" required autocomplete="username">
+            <label for="reg-username">Username</label>
+            <input id="reg-username" name="username" type="text" required autocomplete="username"
+                   autocapitalize="none" spellcheck="false">
           </div>
           <div class="form-group">
-            <label for="reg-display">Display Name (full character name)</label>
-            <input id="reg-display" name="display_name" type="text" required autocomplete="name">
+            <label for="reg-code">Registration Code</label>
+            <input id="reg-code" name="code" type="text" required autocomplete="off" spellcheck="false">
           </div>
           <div class="form-group">
             <label for="reg-password">Password</label>
@@ -83,14 +84,22 @@
       return;
     }
 
+    // firstname.lastname, as the worker's USERNAME_RE: the worker finds the
+    // roster character whose name it is.
+    var USERNAME_RE = /^[a-z][a-z0-9'-]*(\.[a-z0-9'-]+)+$/;
+
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      var username = document.getElementById('reg-username').value.trim();
-      var displayName = document.getElementById('reg-display').value.trim();
+      var username = document.getElementById('reg-username').value.trim().toLowerCase();
+      var code = document.getElementById('reg-code').value.trim();
       var password = document.getElementById('reg-password').value;
       var confirm = document.getElementById('reg-confirm').value;
 
-      if (!username || !displayName || !password) return;
+      if (!username || !code || !password) return;
+      if (!USERNAME_RE.test(username)) {
+        showFlash('error', 'Enter your username as firstname.lastname.');
+        return;
+      }
       if (password.length < 10) {
         showFlash('error', 'Password must be at least 10 characters.');
         return;
@@ -99,21 +108,18 @@
         showFlash('error', 'Passwords do not match.');
         return;
       }
-      if (!/^[a-z][a-z0-9'-]*$/.test(username)) {
-        showFlash('error', 'Username must be all lowercase letters (your character’s first name).');
-        return;
-      }
 
       btn.disabled = true;
       btn.textContent = 'Creating…';
       showFlash('', '');
 
       try {
-        await PVAdminAPI.request('POST', '/auth/register', {
+        var created = await PVAdminAPI.request('POST', '/auth/register', {
           username: username,
-          display_name: displayName,
+          code: code,
           password: password
         }, false);
+        var displayName = (created && created.display_name) || username;
 
         // Sign the new account straight in so it lands on the portal, where the
         // existing "Account awaiting approval" notice explains the pending state
@@ -130,11 +136,15 @@
               token: data.token,
               username: data.username || username,
               display_name: data.display_name || displayName,
+              avatar_url: data.avatar_url || null,
               roles: data.roles || [],
               permissions: data.permissions || [],
               is_root: !!data.is_root,
+              member_id: data.member_id == null ? null : data.member_id,
+              characters: data.characters || [],
               expires_at: data.expires_at || null
             });
+            await PVSession.handoff();
             window.location.replace('portal.html');
             return;
           }
@@ -145,7 +155,8 @@
 
         form.style.display = 'none';
         showFlash('success',
-          'Account created. An admin will assign roles before you can access the portal. Sign in to confirm.');
+          'Account created. Your username is ' + username + '. An admin will assign roles before you ' +
+          'can access the portal. Sign in to confirm.');
       } catch (err) {
         showFlash('error', err.message || 'Could not create account.');
         btn.disabled = false;
