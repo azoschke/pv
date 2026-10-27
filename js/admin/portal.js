@@ -445,7 +445,7 @@
       case 'campaigns':
         return h(window.PVAdminCampaigns || Missing('campaigns.js'), { session: session });
       case 'rp-rolls':
-        return h(window.PVAdminRpRolls || Missing('rp-rolls.js'), { session: session });
+        return h(LazySection, { id: 'rp-rolls', sectionProps: { session: session } });
       case 'cosmic':
         return h(window.PVAdminCosmicExploration || Missing('cosmic-exploration.js'), { session: session });
       case 'announcements':
@@ -469,6 +469,48 @@
         )
       );
     };
+  }
+
+  // --------- Sections loaded when needed ----------
+  // The Combat Toolkit's script is the portal's largest (about a fifth of it),
+  // so it isn't loaded with the page: it loads when the section is first
+  // opened, or in the background PRELOAD_AFTER_MS after the portal opens for
+  // an account that can use it. Section id → [the global it defines, its file].
+  var LAZY_SECTIONS = { 'rp-rolls': ['PVAdminRpRolls', 'js/admin/rp-rolls.js'] };
+  var PRELOAD_AFTER_MS = 3000;
+  var scriptLoads = {};
+
+  function loadScript(src) {
+    if (!scriptLoads[src]) {
+      scriptLoads[src] = new Promise(function (resolve, reject) {
+        var el = document.createElement('script');
+        el.src = src;
+        el.onload = resolve;
+        el.onerror = function () { delete scriptLoads[src]; reject(new Error('Could not load ' + src)); };
+        document.head.appendChild(el);
+      });
+    }
+    return scriptLoads[src];
+  }
+
+  // "Loading…" until the section's script has arrived, then the section; the
+  // Missing notice if the file can't be fetched.
+  function LazySection(props) {
+    var spec = LAZY_SECTIONS[props.id];
+    var statusState = useState(window[spec[0]] ? 'ready' : 'loading');
+    var status = statusState[0], setStatus = statusState[1];
+    useEffect(function () {
+      if (status === 'ready') return;
+      var live = true;
+      loadScript(spec[1]).then(
+        function () { if (live) setStatus(window[spec[0]] ? 'ready' : 'failed'); },
+        function () { if (live) setStatus('failed'); }
+      );
+      return function () { live = false; };
+    }, []);
+    if (status === 'ready') return h(window[spec[0]], props.sectionProps);
+    if (status === 'failed') return h(Missing(spec[1].split('/').pop()));
+    return h('div', { className: 'portal-card' }, 'Loading…');
   }
 
   // --------- App ----------
@@ -546,6 +588,18 @@
       return function () { cancelled = true; };
     // eslint-disable-next-line
     }, []);
+
+    // Sections that load when needed follow in the background for an account
+    // that can open them, so they usually open without a wait.
+    useEffect(function () {
+      var permissions = session && session.permissions;
+      var timer = setTimeout(function () {
+        Object.keys(LAZY_SECTIONS).forEach(function (id) {
+          if (canAccess(id, permissions)) loadScript(LAZY_SECTIONS[id][1]).catch(function () {});
+        });
+      }, PRELOAD_AFTER_MS);
+      return function () { clearTimeout(timer); };
+    }, [session && session.permissions]);
 
     // The saved sign-in changed elsewhere in the portal (My Profile's picture):
     // show it in the sidebar.

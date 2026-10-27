@@ -1520,18 +1520,41 @@
       });
     }
 
+    // The live session, every POLL_MS: the next poll is set only once the last
+    // has answered, and none run while the tab is in the background (coming
+    // back polls at once).
     useEffect(function () {
       if (!data || !data.active) return;
       var cid = data.campaign.id;
-      var timer = setInterval(async function () {
+      var timer = null, busy = false, stopped = false;
+      function schedule() {
+        if (!stopped && !busy && !timer && !document.hidden) timer = setTimeout(poll, POLL_MS);
+      }
+      async function poll() {
+        timer = null;
+        if (stopped || busy || document.hidden) return;
+        busy = true;
         try {
           var s = await PVRollAPI.request('GET', '/rp/campaigns/' + cid + '/sync');
-          if (!s.active) { bootstrap(); return; }
-          var cur = dataRef.current; if (!cur) return;
-          setData(mergeSync(cur, s));
+          if (!stopped) {
+            if (!s.active) bootstrap();
+            else if (dataRef.current) setData(mergeSync(dataRef.current, s));
+          }
         } catch (_e) {}
-      }, POLL_MS);
-      return function () { clearInterval(timer); };
+        busy = false;
+        schedule();
+      }
+      function onVisibility() {
+        clearTimeout(timer); timer = null;
+        if (!document.hidden) poll();
+      }
+      schedule();
+      document.addEventListener('visibilitychange', onVisibility);
+      return function () {
+        stopped = true;
+        clearTimeout(timer);
+        document.removeEventListener('visibilitychange', onVisibility);
+      };
     }, [data && data.active, data && data.campaign && data.campaign.id]);
 
     async function refresh() {
