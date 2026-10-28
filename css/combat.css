@@ -105,6 +105,14 @@
 
 /* Single / AOE: the shared segmented control (.seg), kept to its content. */
 .rp-seg { align-self: flex-start; }
+/* Combat Toolkit Start, asking who goes first: the Start button opens into
+   joined buttons of the same size and colour, split by thin lines. */
+.rp-start-group { display: inline-flex; }
+.rp-start-group > .btn { border-radius: 0; }
+.rp-start-group > .btn:first-child { border-radius: 4px 0 0 4px; }
+.rp-start-group > .btn:last-child { border-radius: 0 4px 4px 0; }
+.rp-start-group > .btn + .btn { box-shadow: inset 1px 0 0 color-mix(in srgb, var(--label) 35%, transparent); }
+.rp-start-group > .rp-start-label { pointer-events: none; }
 
 /* AOE distribute list: rule-separated rows inside the composer card. */
 .rp-heal-targets { display: flex; flex-direction: column; }
@@ -249,6 +257,10 @@
 /* Conditional skill whose gate is currently unmet: dimmed, with a red flag. */
 .rp-mod.is-gated { opacity: 0.5; }
 .rp-mod-control { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+/* An ability's master control (picks + Activate all / Activate), between its description and its parts. */
+.rp-skill-control { margin: 0.1rem 0 0.4rem; }
+/* A boss skill's Use just went through: a moment of "Done" at full strength. */
+.btn.rp-use-done:disabled { opacity: 1; cursor: default; }
 /* Sliding on/off switch for toggle skills: a well track with both states
    shown; the knob slides and turns brown when on. It keeps its width beside
    a long description. */

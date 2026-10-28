@@ -20,8 +20,9 @@
   var RPS = window.PVRpShared;
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
-    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase;
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase,
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote,
+    bossEffectText = RPS.bossEffectText;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -74,30 +75,6 @@
     { value: 'medium', label: 'Medium' },
     { value: 'light', label: 'Light' }
   ];
-  // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
-  // for activated/always; manual for targeted), 'none' is narrative-only text.
-  // attack_mult multiplies a target's attack damage; damage / dot hit an enemy.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'vulnerability', 'stun', 'none'];
-  var MOD_TYPE_LABELS = {
-    attack_roll: 'Attack roll bonus', defense_roll: 'Defense roll bonus', heal_roll: 'Healing roll bonus',
-    attack_output: 'Bonus attack damage', attack_mult: 'Attack damage multiplier (×)', heal_output: 'Bonus healing',
-    shield: 'Grant shield', heal: 'Restore HP', damage: 'Direct damage (to an enemy)', dot: 'Damage over time (to an enemy)', none: 'Narrative only'
-  };
-  // Types that hit an enemy boss (target is fixed to the chosen boss, Activated mode).
-  var BOSS_MOD_TYPES = ['damage', 'dot'];
-  var TARGET_KINDS = [
-    { value: 'self', label: 'Self' },
-    { value: 'group', label: 'Group (everyone)' },
-    { value: 'class', label: 'Class' },
-    { value: 'holder_item', label: 'Holder of item' },
-    { value: 'party_member', label: 'Party member (picked on use)' }
-  ];
-  var MODES = [
-    { value: 'always', label: 'Always on' },
-    { value: 'toggle', label: 'Toggle (manual on/off)' },
-    { value: 'activated', label: 'Activated (press)' }
-  ];
-
   function flashHook() {
     var st = useState(''); var msg = st[0], set = st[1];
     function go(m) { set(m); setTimeout(function () { set(''); }, 3000); }
@@ -231,20 +208,38 @@
     );
   }
 
-  function fmtNum(n) { return (n >= 0 ? '+' : '') + n; }
+  // A labelled Off/On switch (the same .rp-switch as "Hide My Bosses").
+  function switchRow(label, on, disabled, onChange) {
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.35rem 0' } },
+      h('span', { style: { opacity: disabled ? 0.5 : 1 } }, label),
+      h('button', { type: 'button', className: 'rp-switch' + (on ? ' is-on' : ''), role: 'switch',
+        'aria-checked': on ? 'true' : 'false', 'aria-label': label, disabled: disabled,
+        onClick: function () { onChange(!on); } },
+        h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+        h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+        h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' })));
+  }
 
-  // ── Ability form (name + text + activate-all) ─────────────────────────────
+  // ── Ability form (name + text + activate-all + one button + buffs + turn) ──
   function AbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
     var allState = useState(!!a.activate_all); var activateAll = allState[0], setActivateAll = allState[1];
+    // "One button" (needs Activate all): the Roll Calculator shows the ability as
+    // one Activate button, and its effects lose their own buttons.
+    var oneState = useState(!!a.one_button); var oneButton = oneState[0], setOneButton = oneState[1];
+    // "Affected by buffs" (off by default): the holder's damage / healing bonuses
+    // and the target's "Receive more healing" reach this ability's strikes and heals.
+    var buffsState = useState(!!a.external_buffs); var externalBuffs = buffsState[0], setExternalBuffs = buffsState[1];
+    // "Uses up the turn": using it takes the player's attack or heal for the turn.
+    var turnState = useState(a.uses_action === 'attack' || a.uses_action === 'heal' ? a.uses_action : ''); var usesAction = turnState[0], setUsesAction = turnState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton, external_buffs: externalBuffs, uses_action: usesAction || null }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.5rem' } },
@@ -253,9 +248,16 @@
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
         h('textarea', { rows: 4, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
-        h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
-        'Offer an “Activate all” master control on this ability'),
+      switchRow('Turn on Activate All', activateAll, false, setActivateAll),
+      // Needs Activate All: the master control reads "Activate" and the effects lose their own buttons.
+      switchRow('Activate All replaces buttons', activateAll && oneButton, !activateAll, setOneButton),
+      switchRow('Affected by buffs', externalBuffs, false, setExternalBuffs),
+      h('p', { className: 'portal-field-help rp-help-tight' }, 'On: the holder’s damage and healing bonuses, and the target’s “Receive more healing”, add to this ability’s strikes and heals.'),
+      switchRow('Uses up the turn', !!usesAction, false, function (on) { setUsesAction(on ? 'attack' : ''); }),
+      usesAction ? h('div', { className: 'portal-field rp-w14' }, h('label', null, 'It takes the player’s'),
+        h('select', { value: usesAction, onChange: function (e) { setUsesAction(e.target.value); } },
+          h('option', { value: 'attack' }, 'Attack'),
+          h('option', { value: 'heal' }, 'Heal'))) : null,
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
@@ -286,12 +288,16 @@
       { value: 'attack_output', label: 'Add attack damage' },
       { value: 'attack_mult', label: 'Multiply attack damage' },
       { value: 'heal_output', label: 'Boost healing done' },
+      { value: 'heal_mult', label: 'Multiply healing done' },
       { value: 'damage_reduction', label: 'Reduce damage taken' },
+      { value: 'heal_received', label: 'Receive more healing' },
+      { value: 'extra_attack', label: 'Extra attacks' },
       { value: 'skill', label: 'Add to a skill check' },
       { value: 'stun_immune', label: 'Immune to stun' }
     ] },
     { label: 'Debuffs a target', options: [
       { value: 'vulnerability', label: 'Make a target take more damage' },
+      { value: 'weaken', label: 'Reduce an enemy’s damage' },
       { value: 'stun', label: 'Stun a target (skip its next turn)' }
     ] },
     { label: 'Other', options: [
@@ -308,9 +314,13 @@
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
+    heal_mult: 'Multiplies the healing of the holder’s heals.',
     damage_reduction: 'Lowers damage the target takes.',
+    heal_received: 'The Heal action restores this much more HP on the target. Item heals add it only when their ability is Affected by buffs.',
+    extra_attack: 'The target can attack this many more times each turn while it lasts. An extra attack and a heal can go in either order.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
+    weaken: 'The enemy deals this much less with every hit and every tick of its damage over time while it lasts (never below 1).',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
     none: ''
   };
@@ -354,6 +364,8 @@
     if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'toggle', label: 'Heal each turn (toggle on/off)' }, { value: 'passive', label: 'Heal each turn (always on)' }];
     // A shield is granted once and lasts until it's broken, so it has no turn timer.
     if (effect === 'shield') return [{ value: 'once', label: 'Give once (press)' }, { value: 'passive', label: 'Refresh each turn (always on)' }];
+    // Narrative: just its text, or a press (with a use limit if wanted) so its uses are counted.
+    if (effect === 'none') return [{ value: 'passive', label: 'Just its text (no button)' }, { value: 'temp', label: 'Press to use (set turns)' }];
     return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Press to use (set turns)' }];
   }
   function initTiming(effect, m) {
@@ -370,7 +382,7 @@
     if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll' || type === 'roll_bonus') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
     if (type === 'skill_roll') return 'skill';
-    return type || 'roll'; // attack_output, attack_mult, heal_output, damage_reduction, shield, heal, none
+    return type || 'roll'; // attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, extra_attack, shield, heal, none
   }
 
   // Shared by the item modifier form and the boss effect form.
@@ -438,6 +450,10 @@
     // begins next turn (still its full length). DoTs and heals each turn always
     // start next turn, so for them the box shows ticked and locked.
     var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
+    // A strike or damage over time can skip the enemy's damage reduction.
+    var unmitigatedState = useState(!!m.unmitigated); var unmitigated = unmitigatedState[0], setUnmitigated = unmitigatedState[1];
+    // …and go past its shield, straight to HP.
+    var ignoreShieldsState = useState(!!m.ignore_shields); var ignoreShields = ignoreShieldsState[0], setIgnoreShields = ignoreShieldsState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
     // Vulnerability is one-or-the-other: a flat add OR a multiplier, never both.
     // Seed from whichever the stored effect used (multiplier only when there's no flat).
@@ -506,6 +522,8 @@
 
     var hasEffect = !!effect;
     var isStrike = effect === 'damage';   // hits a chosen enemy; always press-to-use
+    var isWeaken = effect === 'weaken';   // lowers a chosen enemy's damage; always press-to-use
+    var isEnemyPick = isStrike || isWeaken; // aimed at one / several / all enemies
     var isSummon = effect === 'summon';   // spawns minions; always press-to-use
     var isVuln = effect === 'vulnerability'; // debuff; its own self-contained block
     var isStun = effect === 'stun';           // debuff; its own self-contained block
@@ -517,15 +535,15 @@
     var isOver = timing === 'over';
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
     var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun && !isImmune;
-    var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln && !isStun;
-    var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
-    var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
-    var showTurns = hasEffect && !isSummon && !isVuln && !isStun && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
+    var showTarget = hasEffect && !isNone && !isEnemyPick && !isSummon && !isVuln && !isStun;
+    var showTiming = hasEffect && !isSummon && !isVuln && !isStun && !isWeaken;
+    var showUses = hasEffect && (isSummon || isActivated || isVuln || isStun || isWeaken);
+    var showTurns = hasEffect && !isSummon && !isVuln && !isStun && (isWeaken || timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
     // Heals each turn and DoTs always start next turn ("Wait a turn" locked on).
     var waitBuiltIn = (effect === 'heal' && timing !== 'once') || (isStrike && isOver);
 
     function resolvedMode() {
-      if (isStrike || isSummon) return 'activated';
+      if (isEnemyPick || isSummon) return 'activated';
       if (timing === 'passive') return 'always';
       if (timing === 'toggle') return 'toggle';
       return 'activated'; // temp / once / over
@@ -534,7 +552,7 @@
       if (effect === 'roll') return 'roll_bonus';
       if (effect === 'skill') return 'skill_roll';
       if (effect === 'damage') return isOver ? 'dot' : 'damage';
-      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, damage_reduction, none
+      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, extra_attack, none
     }
     function resolvedDuration() {
       if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
@@ -561,7 +579,11 @@
         case 'attack_output': return 'Extra attack damage';
         case 'heal_output': return 'Extra healing';
         case 'attack_mult': return 'Times damage (×)';
+        case 'heal_mult': return 'Times healing (×)';
         case 'damage_reduction': return 'Damage reduced';
+        case 'heal_received': return 'Extra healing received';
+        case 'extra_attack': return 'Extra attacks';
+        case 'weaken': return 'Lowers its damage by';
         case 'shield': return 'Shield amount';
         case 'heal': return isOver ? 'HP each turn' : 'HP restored';
         case 'damage': return isOver ? 'Damage each turn' : 'Damage';
@@ -598,21 +620,33 @@
         try { await props.onSubmit(sp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
         return;
       }
-      var payload = { label: label.trim() || null, value: (isSummon || isImmune) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
+      var payload = { label: label.trim() || null, value: (isSummon || isImmune || isNone) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
         summon: resolvedSummon(), conditions: conditions,
-        target_kind: isSummon ? 'self' : (isStrike ? enemyScope : tk), mode: resolvedMode(),
+        target_kind: isSummon ? 'self' : (isEnemyPick ? enemyScope : tk), mode: resolvedMode(),
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
         // Heal over time keeps its flag (the worker's over-time marker); a heal
         // once with "Wait a turn" heals next turn. DoTs wait by themselves.
-        start_next_turn: effect === 'heal' ? (isOver || (timing === 'once' && startNext)) : (waitBuiltIn ? false : startNext) };
-      if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
+        start_next_turn: effect === 'heal' ? (isOver || (timing === 'once' && startNext)) : (waitBuiltIn ? false : startNext),
+        unmitigated: isStrike && unmitigated, ignore_shields: isStrike && ignoreShields };
+      if (isEnemyPick) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
       else if (tk === 'players') { if (!players.length) { setErr('Pick at least one player.'); return; } payload.target_ref = JSON.stringify(players.map(Number)); }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+
+    function unmitigatedField() {
+      return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+        h('input', { type: 'checkbox', checked: unmitigated, onChange: function (e) { setUnmitigated(e.target.checked); } }),
+        'Unmitigated (skips the enemy’s damage reduction)');
+    }
+    function ignoreShieldsField() {
+      return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem' } },
+        h('input', { type: 'checkbox', checked: ignoreShields, onChange: function (e) { setIgnoreShields(e.target.checked); } }),
+        'Ignores shields (goes straight to HP)');
     }
 
     function startNextField() {
@@ -723,6 +757,8 @@
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
       ]) : null,
+      isStrike ? unmitigatedField() : null,
+      isStrike ? ignoreShieldsField() : null,
       effect === 'roll' ? h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'Which rolls (tick all for every roll)'),
         h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap', paddingTop: '0.2rem' } },
           ROLL_KINDS.map(function (o) {
@@ -766,8 +802,8 @@
         h('input', { type: 'number', min: 0, value: sTurns, placeholder: 'until they die', onChange: function (e) { setSTurns(e.target.value); } })) : null,
 
       // ── Who it affects ────────────────────────────────────────────────────
-      isStrike ? secHead('Who it affects') : null,
-      isStrike ? fieldGrid([
+      isEnemyPick ? secHead('Who it affects') : null,
+      isEnemyPick ? fieldGrid([
         h('div', { className: 'portal-field', key: 'enemies' }, h('label', null, 'Enemies'),
           h('select', { value: enemyScope, onChange: function (e) { setEnemyScope(e.target.value); } },
             h('option', { value: 'boss' }, 'One enemy (chosen on use)'),
@@ -806,7 +842,7 @@
               }))) : null,
 
       // ── How it works ──────────────────────────────────────────────────────
-      (showTiming || isSummon) ? secHead('How it works') : null,
+      (showTiming || isSummon || isWeaken) ? secHead('How it works') : null,
       showTiming ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
@@ -821,7 +857,7 @@
       showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      (showTiming || isSummon) ? startNextField() : null,
+      (showTiming || isSummon || isWeaken) && !isNone ? startNextField() : null,
 
       // ── Advanced Settings (collapsible) ───────────────────────────────────
       hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
@@ -897,7 +933,10 @@
   // holder, this turn. · 2 uses/session".
   function modifierSummary(m, catalogue, members) {
     var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
-    if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
+    if (m.type === 'none') {
+      var nu = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
+      return (m.label ? m.label : 'Narrative effect (shown from the description).') + (m.mode === 'activated' ? ' · Press to use' + durationPhrase(m) : '') + nu + cndSuffix;
+    }
     if (m.type === 'summon') {
       var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
       var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
@@ -930,7 +969,9 @@
       : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
       : m.type === 'stun' ? 'stuns'
       : typePhrase(m.type, m.value);
-    return when + ', ' + core + ' to ' + t + dur + '.' + uses + cndSuffix;
+    if (m.type === 'weaken') return when + ', ' + t + (m.target_kind === 'boss' ? ' deals ' : ' deal ') + Math.abs(m.value) + ' less damage' + dur + '.' + uses + cndSuffix;
+    var hit = hitNote(m);
+    return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + ' to ' + t + dur + '.' + uses + cndSuffix;
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────
@@ -954,36 +995,41 @@
   var BOSS_EFFECT_GROUPS = [
     { label: 'Attack Players', options: [
       { value: 'damage', label: 'Damage' },
-      { value: 'stun', label: 'Stun' }
+      { value: 'stun', label: 'Stun' },
+      { value: 'vulnerability', label: 'Make players take more damage' }
     ] },
-    { label: 'Buff Itself', options: [
+    { label: 'Buff Itself or Allies', options: [
       { value: 'heal', label: 'Heal' },
-      { value: 'damage_reduction', label: 'Mitigate Damage' }
+      { value: 'shield', label: 'Shield' },
+      { value: 'damage_reduction', label: 'Mitigate Damage' },
+      { value: 'attack_output', label: 'Deal more damage' },
+      { value: 'attack_mult', label: 'Multiply damage' },
+      { value: 'stun_immune', label: 'Immune to stun' }
     ] },
     { label: 'Narrative', options: [
       { value: 'none', label: 'Narrative only' }
     ] }
   ];
+  // Effects on the enemies' side: the boss itself, other enemies, or all of them.
+  var BOSS_ALLY_TYPES = ['heal', 'shield', 'damage_reduction', 'attack_output', 'attack_mult', 'stun_immune'];
+  var BOSS_ALLY_TARGETS = [
+    { value: 'self', label: 'Itself' },
+    { value: 'ally', label: 'Another enemy (chosen when used)' },
+    { value: 'allies', label: 'Several enemies (chosen when used)' },
+    { value: 'all_allies', label: 'All enemies (itself included)' }
+  ];
   var BOSS_EFFECT_HELP = {
     damage: 'Hits players for damage.',
     stun: 'Targets skip their next turn.',
-    heal: 'Restores the boss’s HP, up to its max.',
-    damage_reduction: 'Lowers damage the boss takes from each hit.',
+    vulnerability: 'Targets take extra damage from every hit for a while.',
+    heal: 'Restores HP, up to the max.',
+    shield: 'A shield soaks up damage before HP. Shields add up, with no cap.',
+    damage_reduction: 'Lowers the damage each hit does.',
+    attack_output: 'Adds to every hit of its damage and damage over time.',
+    attack_mult: 'Multiplies its damage and damage over time.',
+    stun_immune: 'Can’t be stunned while it lasts.',
     none: ''
   };
-
-  // Plain-language boss-effect wording, mirroring the item modifier summary.
-  function bossEffectSummary(e) {
-    var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
-    if (e.type === 'none') return 'Narrative effect.' + uses;
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
-    if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.' + uses;
-    var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.' + uses;
-    if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.' + uses; }
-    return e.value + ' damage per turn to ' + to + span + '.' + uses;
-  }
 
   // Skill container: name + description. Numbers and uses live on its effects,
   // which the DM fires one at a time (like an item ability's modifiers).
@@ -991,12 +1037,15 @@
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
+    // "Use the whole skill": one press for all its effects, with one set of picks.
+    var allState = useState(!!a.use_all); var useAll = allState[0], setUseAll = allState[1];
+    var oneState = useState(!!a.one_button); var oneButton = oneState[0], setOneButton = oneState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, use_all: useAll, one_button: useAll && oneButton }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.4rem' } },
@@ -1006,6 +1055,9 @@
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
         h('span', { className: 'portal-field-help', style: { display: 'block', margin: '0.1rem 0 0.35rem', lineHeight: 1.2 } }, 'Visible to players on toggle'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      switchRow('Use the whole skill', useAll, false, setUseAll),
+      // Needs Use the whole skill: the effects lose their own Use buttons (switches stay).
+      switchRow('Replaces the effects’ buttons', useAll && oneButton, !useAll, setOneButton),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')),
@@ -1019,26 +1071,56 @@
     // with duration 1 is "once", anything else heals each turn.
     var initEffect = !props.initial ? '' : (x.type === 'dot' ? 'damage' : (x.type || 'damage'));
     var initTiming = x.type === 'dot' ? 'over' : (x.type === 'heal' && (x.duration_turns !== 1 || x.start_next_turn) ? 'over' : 'once');
+    var allyKind = function (k) { return BOSS_ALLY_TARGETS.some(function (o) { return o.value === k; }); };
     var effectState = useState(initEffect); var effect = effectState[0], setEffect = effectState[1];
     var timingState = useState(initTiming); var timing = timingState[0], setTiming = timingState[1];
     var valState = useState(String(x.value != null ? x.value : 2)); var val = valState[0], setVal = valState[1];
-    var tkState = useState(x.target_kind && x.target_kind !== 'self' ? x.target_kind : 'party_member'); var tk = tkState[0], setTk = tkState[1];
+    var tkState = useState(x.target_kind && !allyKind(x.target_kind) ? x.target_kind : 'party_member'); var tk = tkState[0], setTk = tkState[1];
+    var allyTkState = useState(allyKind(x.target_kind) ? x.target_kind : 'self'); var allyTk = allyTkState[0], setAllyTk = allyTkState[1];
     var refState = useState(x.target_ref || 'tank'); var ref = refState[0], setRef = refState[1];
     var durState = useState(x.duration_turns > (x.type === 'heal' && !x.start_next_turn ? 1 : 0) ? String(x.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     var limitUsesState = useState((x.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(x.uses_per_session > 0 ? x.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
+    // Damage can skip the players' damage reduction and/or go past their shields.
+    var unmitigatedState = useState(!!x.unmitigated); var unmitigated = unmitigatedState[0], setUnmitigated = unmitigatedState[1];
+    var ignoreShieldsState = useState(!!x.ignore_shields); var ignoreShields = ignoreShieldsState[0], setIgnoreShields = ignoreShieldsState[1];
+    // "Take more damage": a flat add OR a multiplier, like the item version.
+    var vKindState = useState(x.type === 'vulnerability' && x.mult > 1 && !(x.value > 0) ? 'mult' : 'flat'); var vKind = vKindState[0], setVKind = vKindState[1];
+    var vMultState = useState(String(x.mult > 1 ? x.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
+    // Press to use, always on, or switched on and off by the DM (effects that last).
+    var modeState = useState(x.mode || 'activated'); var mode = modeState[0], setMode = modeState[1];
+    // Only while its own HP is in range (a start point), or the scene matches.
+    var initCond = parseConditions(x.conditions);
+    var condKindState = useState(initCond ? initCond.kind || '' : ''); var condKind = condKindState[0], setCondKind = condKindState[1];
+    var cOpState = useState(initCond && initCond.start ? initCond.start.op : '<'); var cOp = cOpState[0], setCOp = cOpState[1];
+    var cValState = useState(initCond && initCond.start ? String(initCond.start.value) : '50'); var cVal = cValState[0], setCVal = cValState[1];
+    var cUnitState = useState(initCond && initCond.start && initCond.start.unit === 'flat' ? 'flat' : 'pct'); var cUnit = cUnitState[0], setCUnit = cUnitState[1];
+    var cLocsState = useState(initCond && initCond.kind === 'scene' ? (initCond.locations || []).slice() : []); var cLocs = cLocsState[0], setCLocs = cLocsState[1];
+    var cTimesState = useState(initCond && initCond.kind === 'scene' ? (initCond.times || []).slice() : []); var cTimes = cTimesState[0], setCTimes = cTimesState[1];
+    var advState = useState(!!initCond); var advOpen = advState[0], setAdvOpen = advState[1];
+    function toggleIn(list, setList, v) { setList(list.indexOf(v) !== -1 ? list.filter(function (y) { return y !== v; }) : list.concat([v])); }
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     var isDamage = effect === 'damage', isStun = effect === 'stun', isHeal = effect === 'heal', isMitigate = effect === 'damage_reduction';
+    var isVuln = effect === 'vulnerability', isShield = effect === 'shield', isImmune = effect === 'stun_immune';
+    var isAdd = effect === 'attack_output', isMult = effect === 'attack_mult';
     var isOver = timing === 'over';
-    var hitsPlayers = isDamage || isStun;
-    var showValue = isDamage || isHeal || isMitigate;
-    var showTurns = ((isDamage || isHeal) && isOver) || isMitigate;
+    // Effects that last can be always on or switched on and off; damage only as damage over time.
+    var canLast = isHeal || isShield || isMitigate || isAdd || isMult || isImmune || isVuln || (isDamage && isOver);
+    var lasting = canLast && mode !== 'activated';
+    var hitsPlayers = isDamage || isStun || isVuln;
+    var onAllies = BOSS_ALLY_TYPES.indexOf(effect) !== -1;
+    var showValue = isDamage || isHeal || isMitigate || isShield || isAdd || isMult || (isVuln && vKind === 'flat');
+    var showTurns = !lasting && (((isDamage || isHeal) && isOver) || isMitigate || isAdd || isMult || isImmune || isVuln);
 
     function changeEffect(next) { setEffect(next); if (next !== effect) setTiming('once'); }
     function valueLabel() {
       if (isDamage) return isOver ? 'Damage each turn' : 'Damage';
       if (isHeal) return isOver ? 'HP each turn' : 'HP restored';
+      if (isShield) return 'Shield amount';
+      if (isAdd) return 'Extra damage per hit';
+      if (isMult) return 'Times damage (×)';
+      if (isVuln) return 'Extra damage (flat)';
       return 'Damage reduced';
     }
     function timingOpts() {
@@ -1051,14 +1133,32 @@
       e.preventDefault();
       if (!effect) { setErr('Pick an effect.'); return; }
       var turns = parseInt(dur, 10) || 0;   // blank / 0 = until removed
+      var mlt = isVuln && vKind === 'mult' ? Math.max(1, parseFloat(vMult) || 1) : 1;
+      if (isVuln && vKind === 'mult' && mlt <= 1) { setErr('Use a multiplier above 1×.'); return; }
+      if (isVuln && vKind === 'flat' && !((parseInt(val, 10) || 0) > 0)) { setErr('Add some flat extra damage.'); return; }
+      var picked = hitsPlayers ? (tk === 'party_member' || tk === 'party_members') : (allyTk === 'ally' || allyTk === 'allies');
+      if (lasting && mode === 'always' && picked) { setErr('Always on needs a target that isn’t picked: itself, all enemies, a class or everyone.'); return; }
+      var conditions = null;
+      if (condKind === 'hp') {
+        if (cUnit === 'pct' && cOp === '=') { setErr('Use HP (not %) for an “exactly” condition.'); return; }
+        conditions = { kind: 'hp', subject: 'self', start: { op: cOp, value: Math.max(0, parseInt(cVal, 10) || 0), unit: cUnit } };
+      } else if (condKind === 'scene') {
+        if (!cLocs.length && !cTimes.length) { setErr('Pick at least one location or time of day.'); return; }
+        conditions = { kind: 'scene', locations: cLocs.slice(), times: cTimes.slice() };
+      }
       var payload = {
         type: isDamage ? (isOver ? 'dot' : 'damage') : effect,
         value: showValue ? (parseInt(val, 10) || 0) : 0,
-        target_kind: hitsPlayers ? tk : 'self',
+        mult: mlt,
+        target_kind: hitsPlayers ? tk : (onAllies ? allyTk : 'self'),
         target_ref: hitsPlayers && tk === 'class' ? ref : null,
-        duration_turns: isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
-        uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0,
-        start_next_turn: isHeal && isOver
+        duration_turns: lasting ? 0 : isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
+        uses_per_session: limitUses && mode !== 'always' ? Math.max(1, parseInt(uses, 10) || 1) : 0,
+        start_next_turn: isHeal && (isOver || lasting),
+        mode: lasting ? mode : 'activated',
+        conditions: conditions,
+        unmitigated: isDamage && unmitigated,
+        ignore_shields: isDamage && ignoreShields
       };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -1074,10 +1174,22 @@
               return h('optgroup', { key: g.label, label: g.label },
                 g.options.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }));
             }))),
+        isVuln ? h('div', { className: 'portal-field', key: 'vkind' }, h('label', null, 'Kind'),
+          h('select', { value: vKind, onChange: function (e) { setVKind(e.target.value); } },
+            h('option', { value: 'flat' }, 'Flat extra damage'),
+            h('option', { value: 'mult' }, 'Multiply damage (×)'))) : null,
         showValue ? h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
-          h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null
+          h('input', { type: 'number', min: isMult ? 1 : 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null,
+        isVuln && vKind === 'mult' ? h('div', { className: 'portal-field', key: 'vmult' }, h('label', null, 'Times damage (×)'),
+          h('input', { type: 'number', min: 1, step: '0.5', value: vMult, onChange: function (e) { setVMult(e.target.value); } })) : null
       ]),
       (effect && BOSS_EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help rp-help-tight' }, BOSS_EFFECT_HELP[effect]) : null,
+      isDamage ? h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+        h('input', { type: 'checkbox', checked: unmitigated, onChange: function (e) { setUnmitigated(e.target.checked); } }),
+        'Unmitigated (skips the players’ damage reduction)') : null,
+      isDamage ? h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem' } },
+        h('input', { type: 'checkbox', checked: ignoreShields, onChange: function (e) { setIgnoreShields(e.target.checked); } }),
+        'Ignores shields (goes straight to HP)') : null,
 
       hitsPlayers ? secHead('Who it affects') : null,
       hitsPlayers ? fieldGrid([
@@ -1091,9 +1203,25 @@
           h('select', { value: ref || 'tank', onChange: function (e) { setRef(e.target.value); } },
             CLASS_ROLES.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))) : null
       ]) : null,
+      onAllies ? secHead('Who it affects') : null,
+      onAllies ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'atk' }, h('label', null, 'Which enemies'),
+          h('select', { value: allyTk, onChange: function (e) { setAllyTk(e.target.value); } },
+            BOSS_ALLY_TARGETS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
+      ]) : null,
 
       (effect && effect !== 'none') ? secHead('How it works') : null,
-      (isDamage || isHeal) ? fieldGrid([
+      canLast ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'mode' }, h('label', null, 'How it’s used'),
+          h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
+            h('option', { value: 'activated' }, 'The DM presses it'),
+            h('option', { value: 'always' }, 'Always on'),
+            h('option', { value: 'toggle' }, 'The DM switches it on and off')))
+      ]) : null,
+      lasting ? h('p', { className: 'portal-field-help rp-help-tight' }, mode === 'always'
+        ? 'On from the start of the session (or when the boss arrives), with no turn count. Hidden from players until the DM shows it.'
+        : 'Stays on until the DM switches it off, with no turn count. Hidden from players until the DM shows it.') : null,
+      (isDamage || (isHeal && !lasting)) ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
             timingOpts().map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
@@ -1103,12 +1231,49 @@
       showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      effect ? h('div', { className: 'rp-mt5' },
+      effect && !(lasting && mode === 'always') ? h('div', { className: 'rp-mt5' },
         h('label', { className: 'rp-inline-check is-wide' },
           h('input', { type: 'checkbox', checked: limitUses, onChange: function (e) { setLimitUses(e.target.checked); } }),
-          'Limit how many times per session'),
+          lasting ? 'Limit how many times per session it’s switched on' : 'Limit how many times per session'),
         limitUses ? h('div', { className: 'portal-field rp-w9 rp-mt3' }, h('label', null, 'Times per session'),
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
+
+      // ── Advanced Settings (collapsible): a condition ──────────────────────
+      effect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
+        style: { display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 0, padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } },
+        h('span', { 'aria-hidden': 'true', style: { fontSize: '0.9em' } }, advOpen ? '▾' : '▸'),
+        'Advanced Settings') : null,
+      (effect && advOpen) ? h('div', { className: 'portal-field', style: { maxWidth: '20rem' } }, h('label', null, 'Only active when…'),
+        h('select', { value: condKind, onChange: function (e) { setCondKind(e.target.value); } },
+          h('option', { value: '' }, 'Always (no condition)'),
+          h('option', { value: 'hp' }, 'Its HP is in range'),
+          h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
+      (effect && advOpen && condKind) ? h('p', { className: 'portal-field-help rp-help-tight' }, lasting
+        ? 'It only works while the condition holds.'
+        : 'The DM can only use it while the condition holds.') : null,
+      (effect && advOpen && condKind === 'hp') ? h('div', { style: { display: 'flex', gap: '0.4rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.35rem' } },
+        h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'While its HP is'),
+          h('select', { value: cOp, onChange: function (e) { setCOp(e.target.value); } },
+            HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+        h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Amount'),
+          h('input', { type: 'number', min: 0, value: cVal, onChange: function (e) { setCVal(e.target.value); } })),
+        h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Unit'),
+          h('select', { value: cUnit, onChange: function (e) { setCUnit(e.target.value); } },
+            h('option', { value: 'pct' }, '%'),
+            h('option', { value: 'flat' }, 'HP')))) : null,
+      (effect && advOpen && condKind === 'scene') ? h('div', { className: 'rp-mt4' },
+        h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_LOCATIONS.map(function (loc) {
+              return h('label', { key: loc, className: 'rp-inline-check' },
+                h('input', { type: 'checkbox', checked: cLocs.indexOf(loc) !== -1, onChange: function () { toggleIn(cLocs, setCLocs, loc); } }), loc);
+            }))),
+        h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'And these times of day (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_TIMES.map(function (tod) {
+              return h('label', { key: tod, className: 'rp-inline-check' },
+                h('input', { type: 'checkbox', checked: cTimes.indexOf(tod) !== -1, onChange: function () { toggleIn(cTimes, setCTimes, tod); } }), tod);
+            })))) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem' } },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
@@ -1277,16 +1442,17 @@
               h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('span', { className: 'row-name' }, a.name),
+                  a.use_all ? h('span', { className: 'tag rp-tag-spaced' }, a.one_button ? 'One button' : 'Whole skill') : null,
                   a.description ? h('div', { className: 'rp-skill-desc' }, a.description) : null),
                 ro ? null : h('div', { className: 'rp-actions' },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),
                   h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕'))),
               ro ? (a.effects || []).map(function (x) {
                 return h('div', { key: x.id, className: 'rp-effect-box' },
-                  h('span', { className: 'rp-small' }, bossEffectSummary(x)));
+                  h('span', { className: 'rp-small' }, bossEffectText(x, true)));
               }) : h(DragReorder, { items: a.effects || [], onReorder: reorderEffects, renderRow: function (x) {
                 return h('div', { className: 'rp-effect-box is-row' },
-                  h('span', { className: 'rp-small' }, bossEffectSummary(x)),
+                  h('span', { className: 'rp-small' }, bossEffectText(x, true)),
                   h('span', { className: 'rp-actions' },
                     h('button', { type: 'button', className: 'btn is-small is-quiet rp-mini-btn', onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
                     h('button', { type: 'button', className: 'btn is-small is-danger rp-mini-btn', onClick: function () { deleteEffect(x); } }, '✕')));
@@ -1593,7 +1759,9 @@
               h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('span', { className: 'row-name' }, ab.name),
-                  ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, 'Activate all') : null,
+                  ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, ab.one_button ? 'One button' : 'Activate all') : null,
+                  ab.external_buffs ? h('span', { className: 'tag rp-tag-spaced' }, 'Affected by buffs') : null,
+                  ab.uses_action ? h('span', { className: 'tag rp-tag-spaced' }, ab.uses_action === 'heal' ? 'Uses the heal' : 'Uses the attack') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
@@ -1675,6 +1843,8 @@
     var rosterState = useState([]); var roster = rosterState[0], setRoster = rosterState[1];
     var newNameState = useState(''); var newName = newNameState[0], setNewName = newNameState[1];
     var showNewState = useState(false); var showNew = showNewState[0], setShowNew = showNewState[1];
+    // The campaign whose Start is asking who goes first (null = none).
+    var askStartState = useState(null); var askStart = askStartState[0], setAskStart = askStartState[1];
     var newErrState = useState(''); var newErr = newErrState[0], setNewErr = newErrState[1];
 
     // member picker
@@ -1859,8 +2029,11 @@
         setNewName(''); setNewErr(''); setShowNew(false); flash[1]('Campaign created.'); await loadCampaigns();
       } catch (e) { setNewErr(e.message); }
     }
-    async function startSession(c) {
-      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/start'); flash[1]('Session started.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
+    // bossFirst: the players don't have initiative, so the session opens on the
+    // boss's turn (the worker calls it turn 0; the players' first turn is Turn 1).
+    async function startSession(c, bossFirst) {
+      setAskStart(null);
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/start', { boss_first: !!bossFirst }); flash[1](bossFirst ? 'Session started on the boss’s turn.' : 'Session started.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
       catch (e) { setErr(e.message); }
     }
     async function endSession(c) {
@@ -2038,7 +2211,13 @@
               // Lifecycle actions sit beneath the title, where "Start" lives when
               // fresh. Live → Pause + End + Roll Calculator; paused → Resume + End.
               h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' } },
-                (!c.active && !c.paused) ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c); } }, 'Start', mi('play_arrow', 'trail')) : null,
+                // Start asks who goes first in place, as one control.
+                (!c.active && !c.paused && askStart !== c.id) ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { setAskStart(c.id); } }, 'Start', mi('play_arrow', 'trail')) : null,
+                (!c.active && !c.paused && askStart === c.id) ? h('div', { className: 'rp-start-group', role: 'group', 'aria-label': 'Who goes first' },
+                  h('span', { className: 'btn is-small rp-start-label' }, 'Start', mi('play_arrow', 'trail')),
+                  h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c, false); } }, 'Players first'),
+                  h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c, true); } }, 'Boss first'),
+                  h('button', { type: 'button', className: 'btn is-small rp-icon-btn', title: 'Cancel', 'aria-label': 'Cancel', onClick: function () { setAskStart(null); } }, mi('close', 'only'))) : null,
                 c.active ? h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
