@@ -410,13 +410,14 @@
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
 
-  // ── One-button ability (the ability's "Activate all" setting) ──────────────
-  // One Activate fires every part together, like a single skill. It shows only
-  // the picks its parts need (an enemy, several enemies, an ally, several
-  // allies) and stays greyed out until they're all made. Parts that are used
-  // up, waiting for their condition, or firing by themselves don't ask for a
-  // pick; the worker skips them the same way. Switches on its toggle parts
-  // stay on their rows.
+  // ── An ability's master control (its "Activate all" setting) ──────────────
+  // One press fires every part together. It shows only the picks its parts
+  // need (an enemy, several enemies, an ally, several allies) and stays greyed
+  // out until they're all made. Parts that are used up, waiting for their
+  // condition, or firing by themselves don't ask for a pick; the worker skips
+  // them the same way. It reads "Activate all", and the parts keep their own
+  // buttons; with the ability's "One button" setting it reads "Activate" and the
+  // parts lose theirs (switches on toggle parts stay).
   function SkillControl(props) {
     var ab = props.ability;
     var enemyState = useState(''); var enemy = enemyState[0], setEnemy = enemyState[1];
@@ -468,7 +469,7 @@
           memberId: needs.ally ? Number(ally) : null,
           memberIds: needs.allies ? allies.slice() : null
         });
-      } }, 'Activate');
+      } }, ab.one_button ? 'Activate' : 'Activate all');
     var showPicks = !allSpent && !anyRunning;
     return h('div', { className: 'rp-mod-control rp-skill-control' },
       showPicks && needs.enemy && liveBosses.length > 1 ? h('select', { className: 'field', value: enemySel, disabled: props.locked, 'aria-label': 'Target enemy', onChange: function (e) { setEnemy(e.target.value); } },
@@ -520,7 +521,7 @@
             ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
             ab.activate_all ? h(SkillControl, { ability: ab, party: props.party, bosses: props.bosses, locked: props.locked, onActivateAll: props.onActivateAll }) : null,
             (ab.modifiers || []).map(function (m) {
-              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, inSkill: !!ab.activate_all, onToggle: props.onToggle, onActivate: props.onActivate });
+              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, inSkill: !!(ab.activate_all && ab.one_button), onToggle: props.onToggle, onActivate: props.onActivate });
             }));
         })) : null);
   }
@@ -1175,6 +1176,8 @@
     var core = e.type === 'dot' ? e.value + ' damage per turn' : 'Effect';
     return core + ' to ' + to + (e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '');
   }
+  var USE_DONE_MS = 1800; // how long a boss skill's Use shows "Done"
+
   // One effect of a boss skill — its own targeting, hits, and Use button, plus
   // its own session-use count. Mirrors an item's modifier row.
   function DMBossEffectRow(props) {
@@ -1182,6 +1185,9 @@
     var singleState = useState(''); var single = singleState[0], setSingle = singleState[1];
     var picksState = useState({}); var picks = picksState[0], setPicks = picksState[1];
     var hitsState = useState('1'); var hits = hitsState[0], setHits = hitsState[1];
+    // Feedback on Use: '' (ready) → 'busy' (sending) → 'done' (a moment of
+    // "Done", so it isn't pressed again by mistake) → ready again.
+    var statusState = useState(''); var status = statusState[0], setStatus = statusState[1];
     var needSingle = e.type !== 'none' && e.target_kind === 'party_member';
     var needMulti = e.type !== 'none' && e.target_kind === 'party_members';
     var hasDamage = e.type === 'damage' || e.type === 'dot';
@@ -1195,8 +1201,13 @@
     function use() {
       if (stunned && !confirm('I want to use this skill even though the boss is stunned')) return;
       var ids = needMulti ? pickedIds : (needSingle && single ? [Number(single)] : []);
-      props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1), stunned);
-      setSingle(''); setPicks({}); setHits('1');
+      setStatus('busy');
+      Promise.resolve(props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1), stunned)).then(function (ok) {
+        if (ok === false) { setStatus(''); return; } // the error shows at the top; picks stay for another try
+        setSingle(''); setPicks({}); setHits('1');
+        setStatus('done');
+        setTimeout(function () { setStatus(function (cur) { return cur === 'done' ? '' : cur; }); }, USE_DONE_MS);
+      });
     }
     return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
       h('div', { className: 'rp-mod-info' },
@@ -1214,7 +1225,10 @@
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
-        h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
+        status === 'busy' ? h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Using…')
+          : status === 'done' ? h('button', { type: 'button', className: 'btn is-small rp-use-done', disabled: true, 'aria-live': 'polite' },
+              h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'check'), 'Done')
+          : h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.
@@ -1659,7 +1673,8 @@
     }
 
     function cid() { return dataRef.current.campaign.id; }
-    async function act(fn) { setErr(''); try { await fn(); await refresh(); } catch (e) { setErr(e.message || 'Action failed.'); } }
+    // Runs an action, then refreshes. Resolves true when it went through.
+    async function act(fn) { setErr(''); try { await fn(); await refresh(); return true; } catch (e) { setErr(e.message || 'Action failed.'); return false; } }
 
     var rules = rulesOf(data);
     function onHp(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { current_hp: Math.max(0, Math.min(v, p.max_hp)) }); }); }
@@ -1731,7 +1746,7 @@
     function onClearProvoke(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/provoke'); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + '?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseEffect(b, e, targetIds, hits, overrideStun) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
+    function onUseEffect(b, e, targetIds, hits, overrideStun) { return act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }

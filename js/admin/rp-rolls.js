@@ -233,18 +233,21 @@
 
   function fmtNum(n) { return (n >= 0 ? '+' : '') + n; }
 
-  // ── Ability form (name + text + activate-all) ─────────────────────────────
+  // ── Ability form (name + text + activate-all + one button) ────────────────
   function AbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
     var allState = useState(!!a.activate_all); var activateAll = allState[0], setActivateAll = allState[1];
+    // "One button" (needs Activate all): the Roll Calculator shows the ability as
+    // one Activate button, and its effects lose their own buttons.
+    var oneState = useState(!!a.one_button); var oneButton = oneState[0], setOneButton = oneState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.5rem' } },
@@ -256,6 +259,9 @@
       h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
         h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
         'Offer an “Activate all” master control on this ability'),
+      h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0 0.25rem 1.4rem', opacity: activateAll ? 1 : 0.5 } },
+        h('input', { type: 'checkbox', checked: activateAll && oneButton, disabled: !activateAll, onChange: function (e) { setOneButton(e.target.checked); } }),
+        'One button: its effects lose their own buttons, and the master control reads “Activate”'),
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
@@ -1593,7 +1599,7 @@
               h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('span', { className: 'row-name' }, ab.name),
-                  ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, 'Activate all') : null,
+                  ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, ab.one_button ? 'One button' : 'Activate all') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
@@ -2045,11 +2051,11 @@
               h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' } },
                 // Start asks who goes first in place, as one control.
                 (!c.active && !c.paused && askStart !== c.id) ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { setAskStart(c.id); } }, 'Start', mi('play_arrow', 'trail')) : null,
-                (!c.active && !c.paused && askStart === c.id) ? h('div', { className: 'seg rp-start-seg', role: 'group', 'aria-label': 'Who goes first' },
-                  h('span', { className: 'rp-start-seg-label' }, mi('play_arrow', 'lead'), 'Start:'),
-                  h('button', { type: 'button', className: 'seg-btn', onClick: function () { startSession(c, false); } }, 'Players first'),
-                  h('button', { type: 'button', className: 'seg-btn', onClick: function () { startSession(c, true); } }, 'Boss first'),
-                  h('button', { type: 'button', className: 'seg-btn is-cancel', title: 'Cancel', 'aria-label': 'Cancel', onClick: function () { setAskStart(null); } }, mi('close', 'only'))) : null,
+                (!c.active && !c.paused && askStart === c.id) ? h('div', { className: 'rp-start-group', role: 'group', 'aria-label': 'Who goes first' },
+                  h('span', { className: 'btn is-small rp-start-label' }, 'Start', mi('play_arrow', 'trail')),
+                  h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c, false); } }, 'Players first'),
+                  h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c, true); } }, 'Boss first'),
+                  h('button', { type: 'button', className: 'btn is-small rp-icon-btn', title: 'Cancel', 'aria-label': 'Cancel', onClick: function () { setAskStart(null); } }, mi('close', 'only'))) : null,
                 c.active ? h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,
