@@ -245,7 +245,7 @@
         h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' })));
   }
 
-  // ── Ability form (name + text + activate-all + one button) ────────────────
+  // ── Ability form (name + text + activate-all + one button + buffs) ─────────
   function AbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
@@ -254,12 +254,15 @@
     // "One button" (needs Activate all): the Roll Calculator shows the ability as
     // one Activate button, and its effects lose their own buttons.
     var oneState = useState(!!a.one_button); var oneButton = oneState[0], setOneButton = oneState[1];
+    // "Affected by buffs" (off by default): the holder's damage / healing bonuses
+    // and the target's "Receive more healing" reach this ability's strikes and heals.
+    var buffsState = useState(!!a.external_buffs); var externalBuffs = buffsState[0], setExternalBuffs = buffsState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton, external_buffs: externalBuffs }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.5rem' } },
@@ -271,6 +274,8 @@
       switchRow('Turn on Activate All', activateAll, false, setActivateAll),
       // Needs Activate All: the master control reads "Activate" and the effects lose their own buttons.
       switchRow('Activate All replaces buttons', activateAll && oneButton, !activateAll, setOneButton),
+      switchRow('Affected by buffs', externalBuffs, false, setExternalBuffs),
+      h('p', { className: 'portal-field-help rp-help-tight' }, 'On: the holder’s damage and healing bonuses, and the target’s “Receive more healing”, add to this ability’s strikes and heals.'),
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
@@ -327,7 +332,7 @@
     heal_output: 'Makes the holder’s heals restore more HP.',
     heal_mult: 'Multiplies the healing of the holder’s heals.',
     damage_reduction: 'Lowers damage the target takes.',
-    heal_received: 'Every heal on the target restores this much more HP.',
+    heal_received: 'The Heal action restores this much more HP on the target. Item heals add it only when their ability is Affected by buffs.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
@@ -1638,6 +1643,7 @@
                 h('div', null,
                   h('span', { className: 'row-name' }, ab.name),
                   ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, ab.one_button ? 'One button' : 'Activate all') : null,
+                  ab.external_buffs ? h('span', { className: 'tag rp-tag-spaced' }, 'Affected by buffs') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
