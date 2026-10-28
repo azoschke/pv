@@ -51,6 +51,7 @@
       case 'attack_mult': return '×' + value + ' attack damage';
       case 'heal_mult': return '×' + value + ' healing';
       case 'heal_received': return v + ' healing received';
+      case 'extra_attack': return v + ' extra attack' + (value === 1 ? '' : 's') + ' each turn';
       case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
@@ -106,12 +107,19 @@
   }
 
   // An effect's length: ", this turn" / ", for 3 turns". "Wait a turn"
-  // (start_next_turn) starts it next turn instead. Heals and DoTs always do, so
-  // for them the flag only marks a 1-turn heal as healing once, next turn.
+  // (start_next_turn) starts it next turn instead. Damage over time and heals
+  // each turn never land when pressed (their first tick is the next Next
+  // Turn), so they always read from next turn; a heal once with "Wait a turn"
+  // heals once, next turn.
   function durationPhrase(m) {
     var n = m.duration_turns;
-    if (m.type === 'heal' && m.start_next_turn && n === 1) return ', next turn';
-    if (m.start_next_turn && m.type !== 'heal' && m.type !== 'dot')
+    if (m.type === 'dot') return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', starting next turn';
+    if (m.type === 'heal') {
+      if (m.mode === 'always' || m.mode === 'toggle') return ', each turn';
+      if (n === 1) return m.start_next_turn ? ', next turn' : ', this turn';
+      return n > 1 ? ', each turn for ' + n + ' turns, starting next turn' : ', each turn, starting next turn';
+    }
+    if (m.start_next_turn)
       return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', starting next turn';
     return n === 1 ? ', this turn' : n > 1 ? ', for ' + n + ' turns' : '';
   }

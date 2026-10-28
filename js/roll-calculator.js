@@ -125,7 +125,22 @@
     if (rules.action_types && rules.action_types[type] === false) return true;
     if (type === 'buff' && (t.actions || []).indexOf('buff') !== -1) return true;
     if (!t.limit) return true;  // 0 = unlimited
-    return t.used < t.limit;
+    if (type === 'buff') return t.used < t.limit;
+    // Items' extra attacks are attack-only slots on top of the turn's actions;
+    // attacks fill them first (the worker's actionCheck).
+    var counted = (t.actions || []).filter(function (a) { return !(rules.action_types && rules.action_types[a] === false); });
+    var extra = t.extra_attacks || 0;
+    var attacks = counted.filter(function (a) { return a === 'attack'; }).length;
+    var general = counted.length - attacks + Math.max(0, attacks - extra);
+    return type === 'attack' ? (attacks < extra || general < t.limit) : general < t.limit;
+  }
+  // "Uses up the turn": an ability that costs the attack or heal can't be used
+  // once that's spent, unless it already took it this turn.
+  function turnBlocked(data, ab) {
+    if (ab.uses_action !== 'attack' && ab.uses_action !== 'heal') return false;
+    var t = data.my_turn;
+    if (t && (t.paid || []).indexOf(ab.id) !== -1) return false;
+    return !canAct(data, ab.uses_action);
   }
   function actionBlockReason(data, type) {
     var t = data.my_turn;
@@ -139,6 +154,7 @@
     var t = props.myTurn;
     if (!t) return null;
     if (t.ko) return h('span', { className: 'status-dot is-red rp-action-chip' }, 'Knocked out');
+    if (t.limit > 0 && t.used >= t.limit && props.extraLeft) return h('span', { className: 'status-dot is-brown rp-action-chip' }, 'Extra attack ready');
     if (t.limit > 0 && t.used >= t.limit) return h('span', { className: 'status-dot is-quiet rp-action-chip' }, 'Action used: ' + (t.actions || []).join(', '));
     return h('span', { className: 'status-dot is-brown rp-action-chip' }, 'Action ready');
   }
@@ -371,7 +387,7 @@
       var allBosses = m.target_kind === 'all_bosses';       // every enemy
       var bossCap = needBosses ? (parseInt(m.target_ref, 10) || 0) : 0; // 0 = no cap
       var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
-      var disabled = props.locked || spent || waiting || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
+      var disabled = props.locked || props.payLocked || spent || waiting || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
       var isRunning = m.active && (m.remaining_turns != null || m.pending);
@@ -397,7 +413,7 @@
       // switched on until someone is picked; turn it off to re-pick.
       var pickFirst = !m.active && !!allyPicker;
       var sw = h('button', { type: 'button', className: 'rp-switch' + (m.active ? ' is-on' : ''), role: 'switch',
-        'aria-checked': m.active ? 'true' : 'false', disabled: props.locked || (pickFirst && allyMissing),
+        'aria-checked': m.active ? 'true' : 'false', disabled: props.locked || (pickFirst && allyMissing) || (!m.active && props.payLocked),
         onClick: function () { props.onToggle(m, !m.active, m.active ? null : { memberId: needTarget ? Number(pickTarget) : null, memberIds: needTargets ? pickTargets.slice() : null }); } },
         h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
         h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
@@ -517,13 +533,16 @@
       it.description ? h('p', { className: 'rp-item-detail-desc' }, it.description) : null,
       (it.abilities || []).length ? h('div', { className: 'rp-item-abilities' },
         (it.abilities || []).map(function (ab) {
+          var payLocked = !!(props.turnBlocked && props.turnBlocked(ab));
           return h('div', { className: 'rp-item-ability', key: ab.id },
             h('div', { className: 'rp-ability-head' },
-              h('strong', null, ab.name)),
+              h('strong', null, ab.name),
+              ab.uses_action ? h('span', { className: 'tag rp-tag-spaced' }, ab.uses_action === 'heal' ? 'Uses your heal' : 'Uses your attack') : null),
             ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
-            ab.activate_all ? h(SkillControl, { ability: ab, party: props.party, bosses: props.bosses, locked: props.locked, onActivateAll: props.onActivateAll }) : null,
+            payLocked ? h('p', { className: 'rp-note' }, 'You’ve used your ' + ab.uses_action + ' this turn.') : null,
+            ab.activate_all ? h(SkillControl, { ability: ab, party: props.party, bosses: props.bosses, locked: props.locked || payLocked, onActivateAll: props.onActivateAll }) : null,
             (ab.modifiers || []).map(function (m) {
-              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, inSkill: !!(ab.activate_all && ab.one_button), onToggle: props.onToggle, onActivate: props.onActivate });
+              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, payLocked: payLocked, inSkill: !!(ab.activate_all && ab.one_button), onToggle: props.onToggle, onActivate: props.onActivate });
             }));
         })) : null);
   }
@@ -541,7 +560,7 @@
         items.map(function (it) {
           return h(ItemTile, { key: it.item_id, item: it, selected: it.item_id === effId, onSelect: function () { setOpenId(it.item_id); } });
         })),
-      openItem ? h(ItemDetail, { item: openItem, party: props.party, bosses: props.bosses, locked: props.locked,
+      openItem ? h(ItemDetail, { item: openItem, party: props.party, bosses: props.bosses, locked: props.locked, turnBlocked: props.turnBlocked,
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }) : null);
   }
 
@@ -1167,6 +1186,7 @@
           h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked, attackDie: rules.attack_die, rules: rules,
             onMinionAttack: props.onMinionAttack, onMinionRemove: props.onMinionRemove, onMinionHp: props.onMinionHp }))),
       h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
+        turnBlocked: function (ab) { return turnBlocked(data, ab); },
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
   }
 
@@ -1174,14 +1194,16 @@
   // Plain-language boss-effect wording, mirroring the item describer.
   function bossEffectText(e) {
     var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
+    // Damage over time and heals each turn tick from the next Next Turn.
+    var later = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
     if (e.type === 'none') return 'Narrative effect.';
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.';
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + later) + '.';
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.';
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.';
     if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.'; }
-    return e.value + ' damage per turn' + hit + ' to ' + to + span + '.';
+    return e.value + ' damage per turn' + hit + ' to ' + to + later + '.';
   }
   // Active (in-play) boss effect — target already resolved to names.
   function describeBossActiveEffect(e) {
@@ -1793,9 +1815,10 @@
     // resolving (shown to everyone, DM included), otherwise a reminder once this
     // player has spent their action for the turn.
     var actionUsed = !!(data.my_turn && data.my_turn.limit > 0 && data.my_turn.used >= data.my_turn.limit);
+    var extraLeft = actionUsed && canAct(data, 'attack');
     var turnNotice = actionLocked
       ? 'Boss turn, player actions are locked.'
-      : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ').' : '');
+      : (actionUsed ? 'You’ve used your action this turn (' + (data.my_turn.actions || []).join(', ') + ')' + (extraLeft ? ', and you still have an extra attack.' : '.') : '');
 
     // Active-skills "unseen" indicator: used (non-passive) effects + revealed boss
     // effects the player hasn't opened the modal to view yet.
@@ -1824,7 +1847,7 @@
             c ? h(Avatar, { url: avatars[c.member_id], name: c.member_name }) : null,
             h('strong', null, c ? c.member_name : 'Dungeon Master')),
           c ? h('span', null, ROLE_LABEL[c.class_role] + ' · ' + ARMOR_LABEL[c.armor_type]) : null,
-          c ? h(ActionChip, { myTurn: data.my_turn }) : null)),
+          c ? h(ActionChip, { myTurn: data.my_turn, extraLeft: extraLeft }) : null)),
       err ? h('div', { className: 'flash error' }, err) : null,
       ko ? h('div', { className: 'flash error' }, 'You’re knocked out — you can’t act until your HP is restored.') : null,
       (function () {

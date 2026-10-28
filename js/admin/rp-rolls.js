@@ -245,7 +245,7 @@
         h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' })));
   }
 
-  // ── Ability form (name + text + activate-all + one button + buffs) ─────────
+  // ── Ability form (name + text + activate-all + one button + buffs + turn) ──
   function AbilityForm(props) {
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
@@ -257,12 +257,14 @@
     // "Affected by buffs" (off by default): the holder's damage / healing bonuses
     // and the target's "Receive more healing" reach this ability's strikes and heals.
     var buffsState = useState(!!a.external_buffs); var externalBuffs = buffsState[0], setExternalBuffs = buffsState[1];
+    // "Uses up the turn": using it takes the player's attack or heal for the turn.
+    var turnState = useState(a.uses_action === 'attack' || a.uses_action === 'heal' ? a.uses_action : ''); var usesAction = turnState[0], setUsesAction = turnState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton, external_buffs: externalBuffs }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, activate_all: activateAll, one_button: activateAll && oneButton, external_buffs: externalBuffs, uses_action: usesAction || null }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.5rem' } },
@@ -276,6 +278,11 @@
       switchRow('Activate All replaces buttons', activateAll && oneButton, !activateAll, setOneButton),
       switchRow('Affected by buffs', externalBuffs, false, setExternalBuffs),
       h('p', { className: 'portal-field-help rp-help-tight' }, 'On: the holder’s damage and healing bonuses, and the target’s “Receive more healing”, add to this ability’s strikes and heals.'),
+      switchRow('Uses up the turn', !!usesAction, false, function (on) { setUsesAction(on ? 'attack' : ''); }),
+      usesAction ? h('div', { className: 'portal-field rp-w14' }, h('label', null, 'It takes the player’s'),
+        h('select', { value: usesAction, onChange: function (e) { setUsesAction(e.target.value); } },
+          h('option', { value: 'attack' }, 'Attack'),
+          h('option', { value: 'heal' }, 'Heal'))) : null,
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
@@ -309,6 +316,7 @@
       { value: 'heal_mult', label: 'Multiply healing done' },
       { value: 'damage_reduction', label: 'Reduce damage taken' },
       { value: 'heal_received', label: 'Receive more healing' },
+      { value: 'extra_attack', label: 'Extra attacks' },
       { value: 'skill', label: 'Add to a skill check' },
       { value: 'stun_immune', label: 'Immune to stun' }
     ] },
@@ -333,6 +341,7 @@
     heal_mult: 'Multiplies the healing of the holder’s heals.',
     damage_reduction: 'Lowers damage the target takes.',
     heal_received: 'The Heal action restores this much more HP on the target. Item heals add it only when their ability is Affected by buffs.',
+    extra_attack: 'The target can attack this many more times each turn while it lasts. An extra attack and a heal can go in either order.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
@@ -378,6 +387,8 @@
     if (effect === 'heal') return [{ value: 'once', label: 'Heal once' }, { value: 'over', label: 'Heal each turn for a while' }, { value: 'toggle', label: 'Heal each turn (toggle on/off)' }, { value: 'passive', label: 'Heal each turn (always on)' }];
     // A shield is granted once and lasts until it's broken, so it has no turn timer.
     if (effect === 'shield') return [{ value: 'once', label: 'Give once (press)' }, { value: 'passive', label: 'Refresh each turn (always on)' }];
+    // Narrative: just its text, or a press (with a use limit if wanted) so its uses are counted.
+    if (effect === 'none') return [{ value: 'passive', label: 'Just its text (no button)' }, { value: 'temp', label: 'Press to use (set turns)' }];
     return [{ value: 'passive', label: 'Always on' }, { value: 'toggle', label: 'Toggle on/off' }, { value: 'temp', label: 'Press to use (set turns)' }];
   }
   function initTiming(effect, m) {
@@ -394,7 +405,7 @@
     if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll' || type === 'roll_bonus') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
     if (type === 'skill_roll') return 'skill';
-    return type || 'roll'; // attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, shield, heal, none
+    return type || 'roll'; // attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, extra_attack, shield, heal, none
   }
 
   // Shared by the item modifier form and the boss effect form.
@@ -544,8 +555,8 @@
     var isActivated = timing === 'temp' || timing === 'once' || timing === 'over';
     var showValue = hasEffect && !isNone && !isSummon && !isVuln && !isStun && !isImmune;
     var showTarget = hasEffect && !isNone && !isStrike && !isSummon && !isVuln && !isStun;
-    var showTiming = hasEffect && !isNone && !isSummon && !isVuln && !isStun;
-    var showUses = hasEffect && !isNone && (isSummon || isActivated || isVuln || isStun);
+    var showTiming = hasEffect && !isSummon && !isVuln && !isStun;
+    var showUses = hasEffect && (isSummon || isActivated || isVuln || isStun);
     var showTurns = hasEffect && !isSummon && !isVuln && !isStun && (timing === 'temp' || timing === 'over'); // only "…for a while" needs turns
     // Heals each turn and DoTs always start next turn ("Wait a turn" locked on).
     var waitBuiltIn = (effect === 'heal' && timing !== 'once') || (isStrike && isOver);
@@ -560,7 +571,7 @@
       if (effect === 'roll') return 'roll_bonus';
       if (effect === 'skill') return 'skill_roll';
       if (effect === 'damage') return isOver ? 'dot' : 'damage';
-      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, none
+      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, extra_attack, none
     }
     function resolvedDuration() {
       if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
@@ -590,6 +601,7 @@
         case 'heal_mult': return 'Times healing (×)';
         case 'damage_reduction': return 'Damage reduced';
         case 'heal_received': return 'Extra healing received';
+        case 'extra_attack': return 'Extra attacks';
         case 'shield': return 'Shield amount';
         case 'heal': return isOver ? 'HP each turn' : 'HP restored';
         case 'damage': return isOver ? 'Damage each turn' : 'Damage';
@@ -626,7 +638,7 @@
         try { await props.onSubmit(sp); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
         return;
       }
-      var payload = { label: label.trim() || null, value: (isSummon || isImmune) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
+      var payload = { label: label.trim() || null, value: (isSummon || isImmune || isNone) ? 0 : (parseInt(val, 10) || 0), type: resolvedType(),
         rolls: effect === 'roll' ? rolls : null,
         skill: effect === 'skill' ? skillPick : null,
         summon: resolvedSummon(), conditions: conditions,
@@ -857,7 +869,7 @@
       showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      (showTiming || isSummon) ? startNextField() : null,
+      (showTiming || isSummon) && !isNone ? startNextField() : null,
 
       // ── Advanced Settings (collapsible) ───────────────────────────────────
       hasEffect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
@@ -933,7 +945,10 @@
   // holder, this turn. · 2 uses/session".
   function modifierSummary(m, catalogue, members) {
     var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
-    if (m.type === 'none') return (m.label ? m.label : 'Narrative effect (shown from the description).') + cndSuffix;
+    if (m.type === 'none') {
+      var nu = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
+      return (m.label ? m.label : 'Narrative effect (shown from the description).') + (m.mode === 'activated' ? ' · Press to use' + durationPhrase(m) : '') + nu + cndSuffix;
+    }
     if (m.type === 'summon') {
       var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
       var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
@@ -1013,14 +1028,16 @@
   function bossEffectSummary(e) {
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
     var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
+    // Damage over time and heals each turn tick from the next Next Turn.
+    var later = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
     if (e.type === 'none') return 'Narrative effect.' + uses;
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + later) + '.' + uses;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.' + uses;
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
     var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
     if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.' + uses;
     if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.' + uses; }
-    return e.value + ' damage per turn' + hit + ' to ' + to + span + '.' + uses;
+    return e.value + ' damage per turn' + hit + ' to ' + to + later + '.' + uses;
   }
 
   // Skill container: name + description. Numbers and uses live on its effects,
@@ -1644,6 +1661,7 @@
                   h('span', { className: 'row-name' }, ab.name),
                   ab.activate_all ? h('span', { className: 'tag rp-tag-spaced' }, ab.one_button ? 'One button' : 'Activate all') : null,
                   ab.external_buffs ? h('span', { className: 'tag rp-tag-spaced' }, 'Affected by buffs') : null,
+                  ab.uses_action ? h('span', { className: 'tag rp-tag-spaced' }, ab.uses_action === 'heal' ? 'Uses the heal' : 'Uses the attack') : null,
                   ab.description ? h('div', { className: 'rp-skill-desc' }, ab.description) : null),
                 h('div', { style: { display: 'flex', gap: '0.3rem' } },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: ab }); } }, 'Edit'),
