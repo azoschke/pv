@@ -12,7 +12,7 @@
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
     isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, pickNeeded = RPS.pickNeeded,
-    firesByItself = RPS.firesByItself, waitsForCondition = RPS.waitsForCondition;
+    firesByItself = RPS.firesByItself, waitsForCondition = RPS.waitsForCondition, hitNote = RPS.hitNote;
   var useRef = React.useRef;
 
   var POLL_MS = 5000;
@@ -98,8 +98,9 @@
       : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
     if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.' + (m.start_next_turn ? ' They attack from next turn.' : '');
     var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
+    var hit = hitNote(m);
     var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
-    return when + ', ' + core + to + durationPhrase(m) + '.';
+    return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + to + durationPhrase(m) + '.';
   }
   // For an active effect (already resolved target_label + remaining turns).
   function describeActiveEffect(e) {
@@ -156,9 +157,10 @@
     ctx.myModifiers.forEach(function (m) { if (m.type === rollType) add(modLabel(m), m.value); });
     var outputRows = [], outputTotal = 0;
     if (outputType) ctx.myModifiers.forEach(function (m) { if (m.type === outputType) { outputRows.push({ label: modLabel(m), value: m.value }); outputTotal += m.value; } });
-    // Attack damage multipliers (item attack_mult) stack multiplicatively.
+    // Damage and healing multipliers (item attack_mult / heal_mult) stack multiplicatively.
+    var multType = kind === 'attack' ? 'attack_mult' : kind === 'heal' ? 'heal_mult' : null;
     var mult = 1, multRows = [];
-    if (kind === 'attack') ctx.myModifiers.forEach(function (m) { if (m.type === 'attack_mult' && m.value >= 1) { mult *= m.value; multRows.push({ label: modLabel(m), value: m.value }); } });
+    if (multType) ctx.myModifiers.forEach(function (m) { if (m.type === multType && m.value >= 1) { mult *= m.value; multRows.push({ label: modLabel(m), value: m.value }); } });
     return { base: base, rows: rows, total: total, outputRows: outputRows, outputTotal: outputTotal, mult: mult, multRows: multRows };
   }
 
@@ -959,7 +961,12 @@
     var effHealMode = canHealSingle && canHealAoe ? healMode : (canHealAoe ? 'aoe' : 'single');
     // A self-only single heal always targets the acting player.
     var healSingleId = healAnyone ? healSingle : String(c.member_id);
-    var healCalc = computeRoll('heal', healRoll, ctx); var pool = healCalc.total + healCalc.outputTotal;
+    // The heal: roll + bonuses, then any healing multiplier. Each target's
+    // "Receive more healing" lands on top (the worker adds it).
+    function healPool(hc) { return Math.max(0, Math.round((hc.total + hc.outputTotal) * hc.mult)); }
+    var healBonus = (data && data.player_heal_bonus) || {};
+    function bonusFor(id) { return Number(healBonus[id] || healBonus[String(id)]) || 0; }
+    var healCalc = computeRoll('heal', healRoll, ctx); var healPreMult = healCalc.total + healCalc.outputTotal; var pool = healPool(healCalc);
     var healLiving = party.filter(function (p) { return !p.eliminated; });
     var maxPeople = Math.max(1, parseInt(healCount, 10) || 1);
     var allocIds = Object.keys(healAlloc).map(Number);
@@ -1057,7 +1064,12 @@
       var healTerms = ['roll ' + healCalc.base]
         .concat(healCalc.rows.map(function (r) { return r.label + ' ' + fmt(r.value); }))
         .concat(healCalc.outputRows.map(function (r) { return r.label + ' ' + fmt(r.value); }));
-      var newHp = (healSingleMember) ? Math.min(healSingleMember.max_hp, healSingleMember.current_hp + pool) : null;
+      var singleBonus = healSingleMember ? bonusFor(healSingleMember.member_id) : 0;
+      var newHp = (healSingleMember) ? Math.min(healSingleMember.max_hp, healSingleMember.current_hp + pool + singleBonus) : null;
+      var aoeBonus = allocIds.map(function (id) {
+        var p = party.filter(function (x) { return x.member_id === id; })[0];
+        return p && bonusFor(id) && (Number(healAlloc[id]) || 0) > 0 ? p.member_name + ' +' + bonusFor(id) : null;
+      }).filter(Boolean);
       return h('div', { className: 'rp-composer' },
         props.blockHeal ? h('p', { className: 'rp-note rp-note-warn' }, props.blockHeal) : null,
         canHealSingle && canHealAoe ? h('div', { className: 'seg rp-seg', role: 'group' },
@@ -1065,8 +1077,10 @@
           h('button', { type: 'button', className: 'seg-btn' + (healMode === 'aoe' ? ' is-active' : ''), onClick: function () { setHealMode('aoe'); } }, 'AOE')) : null,
         h('div', { className: 'rp-roll-line' },
           h(RollHero, { value: healRoll, max: rules.heal_die, caption: 'D' + rules.heal_die + ' ROLL', ariaLabel: 'Raw D' + rules.heal_die + ' heal roll',
-            disabled: locked, onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setHealRoll(v); var nc = computeRoll('heal', v, ctx); setHealAlloc(evenSplit(allocIds, nc.total + nc.outputTotal)); } }),
-          h(ChipExpr, { terms: healTerms, resultText: pool + ' heal', tone: 'heal' })),
+            disabled: locked, onChange: function (e) { var v = clampNum(e.target.value, rules.heal_die); setHealRoll(v); var nc = computeRoll('heal', v, ctx); setHealAlloc(evenSplit(allocIds, healPool(nc))); } }),
+          h(ChipExpr, { terms: healTerms, resultText: healPreMult + ' heal', tone: 'heal' })),
+        healCalc.multRows.length ? h(ChipExpr, { terms: [healPreMult + ' heal'].concat(healCalc.multRows.map(function (r) { return '×' + r.value; })),
+          resultText: pool + ' heal', tone: 'heal' }) : null,
         effHealMode === 'aoe' ? h('label', { className: 'rp-input-label' }, 'D' + rules.heal_die + ' target count (max people)',
           h('input', { className: 'field is-block', type: 'number', inputMode: 'numeric', min: 1, max: rules.aoe_max_targets, value: healCount, placeholder: 'e.g. 3', onChange: function (e) { setHealCount(clampNum(e.target.value, rules.aoe_max_targets)); } })) : null,
         h('div', { className: 'rp-divider' }),
@@ -1078,8 +1092,9 @@
               : h('span', { className: 'rp-target-name' }, healSingleMember ? healSingleMember.member_name : 'You'),
             (healSingleMember && newHp != null) ? h('span', { className: 'rp-target-newhp' }, String(healSingleMember.current_hp), ' → ', h('span', { className: 'tone-heal' }, String(newHp))) : null),
           !healAnyone ? h('p', { className: 'rp-note' }, 'Self-heal only.') : null,
+          singleBonus ? h('p', { className: 'rp-note' }, healSingleMember.member_name + ' receives ' + fmt(singleBonus) + ' extra healing.') : null,
           h('button', { type: 'button', className: 'btn rp-commit', disabled: !healCanApply, onClick: applyHealSingle },
-            healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool)),
+            healBusy ? 'Applying…' : 'Heal ' + (healSingleMember ? healSingleMember.member_name : 'target') + ' ' + fmt(pool + singleBonus)),
           healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null)
           : h('div', { className: 'rp-target-block' },
             h('h4', { className: 'rp-target-label' }, 'Distribute'),
@@ -1090,6 +1105,7 @@
                 h('span', null, p.member_name + (p.member_id === c.member_id ? ' (you)' : '')),
                 h('input', { className: 'rp-buff-val', type: 'number', min: 0, inputMode: 'numeric', value: String(healAlloc[id]), disabled: locked, onChange: function (e) { setHealAmount(id, e.target.value); } }));
             })) : h('p', { className: 'rp-note' }, 'No targets selected yet.'),
+            aoeBonus.length ? h('p', { className: 'rp-note' }, 'Extra healing received: ' + aoeBonus.join(', ') + '.') : null,
             h('button', { type: 'button', className: 'btn rp-commit', disabled: !healCanApply || allocated <= 0, onClick: applyHealAoe }, healBusy ? 'Applying…' : 'Apply heal to ' + allocIds.length + ' targets'),
             healMsg ? h('p', { className: 'rp-note rp-note-ok' }, healMsg) : null));
     }
@@ -1162,9 +1178,10 @@
     if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.';
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.';
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.';
+    var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
+    if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.';
     if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.'; }
-    return e.value + ' damage per turn to ' + to + span + '.';
+    return e.value + ' damage per turn' + hit + ' to ' + to + span + '.';
   }
   // Active (in-play) boss effect — target already resolved to names.
   function describeBossActiveEffect(e) {
@@ -1173,7 +1190,8 @@
     if (e.type === 'heal') return 'Healing ' + e.value + ' HP per turn' + left;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage' + left;
     var to = e.target_label || bossTargetPhrase(e.target_kind, e.target_ref);
-    var core = e.type === 'dot' ? e.value + ' damage per turn' : 'Effect';
+    var hit = hitNote(e);
+    var core = e.type === 'dot' ? e.value + ' damage per turn' + (hit ? ' (' + hit + ')' : '') : 'Effect';
     return core + ' to ' + to + (e.remaining_turns != null ? ' — ' + e.remaining_turns + ' turns left' : '');
   }
   var USE_DONE_MS = 1800; // how long a boss skill's Use shows "Done"
@@ -1619,7 +1637,7 @@
         campaign: Object.assign({}, cur.campaign, { turn_number: s.turn_number, turn_locked: s.turn_locked, is_dm: s.is_dm, location: s.location || null, time_of_day: s.time_of_day || null }),
         party: s.party, my_modifiers: s.my_modifiers, active_effects: s.active_effects, hp_log: s.hp_log, healed_this_turn: s.healed_this_turn,
         player_stuns: s.player_stuns, player_stuns_next: s.player_stuns_next, player_vulns: s.player_vulns,
-        player_stun_immune: s.player_stun_immune || {}, roll_log: s.roll_log || [],
+        player_stun_immune: s.player_stun_immune || {}, player_heal_bonus: s.player_heal_bonus || {}, roll_log: s.roll_log || [],
         rules: s.rules || cur.rules, bosses: s.bosses, boss_effects: s.boss_effects, my_turn: s.my_turn, turn_actions: s.turn_actions,
         my_personal_buffs: s.my_personal_buffs, personal_buffs: s.personal_buffs, buff_drafts: s.buff_drafts,
         minions: s.minions || [],

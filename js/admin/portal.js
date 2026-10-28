@@ -477,7 +477,7 @@
   // opened, or in the background PRELOAD_AFTER_MS after the portal opens for
   // an account that can use it. Section id → [the global it defines, its file].
   // The file's ?v= changes whenever it changes: browsers keep scripts for hours.
-  var LAZY_SECTIONS = { 'rp-rolls': ['PVAdminRpRolls', 'js/admin/rp-rolls.js?v=4'] };
+  var LAZY_SECTIONS = { 'rp-rolls': ['PVAdminRpRolls', 'js/admin/rp-rolls.js?v=5'] };
   var PRELOAD_AFTER_MS = 3000;
   var scriptLoads = {};
 

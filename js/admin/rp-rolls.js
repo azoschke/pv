@@ -21,7 +21,7 @@
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase;
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -301,7 +301,9 @@
       { value: 'attack_output', label: 'Add attack damage' },
       { value: 'attack_mult', label: 'Multiply attack damage' },
       { value: 'heal_output', label: 'Boost healing done' },
+      { value: 'heal_mult', label: 'Multiply healing done' },
       { value: 'damage_reduction', label: 'Reduce damage taken' },
+      { value: 'heal_received', label: 'Receive more healing' },
       { value: 'skill', label: 'Add to a skill check' },
       { value: 'stun_immune', label: 'Immune to stun' }
     ] },
@@ -323,7 +325,9 @@
     attack_output: 'Adds extra damage to the holder’s attacks.',
     attack_mult: 'Multiplies the damage of the holder’s attacks.',
     heal_output: 'Makes the holder’s heals restore more HP.',
+    heal_mult: 'Multiplies the healing of the holder’s heals.',
     damage_reduction: 'Lowers damage the target takes.',
+    heal_received: 'Every heal on the target restores this much more HP.',
     skill: 'Adds to the holder’s rolls for one skill.',
     vulnerability: 'Target takes extra damage for a while.',
     stun: 'Target skips its next turn. Bosses can be immune to stun.',
@@ -385,7 +389,7 @@
     if (type === 'attack_roll' || type === 'defense_roll' || type === 'heal_roll' || type === 'roll_bonus') return 'roll';
     if (type === 'damage' || type === 'dot') return 'damage';
     if (type === 'skill_roll') return 'skill';
-    return type || 'roll'; // attack_output, attack_mult, heal_output, damage_reduction, shield, heal, none
+    return type || 'roll'; // attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, shield, heal, none
   }
 
   // Shared by the item modifier form and the boss effect form.
@@ -453,6 +457,8 @@
     // begins next turn (still its full length). DoTs and heals each turn always
     // start next turn, so for them the box shows ticked and locked.
     var startNextState = useState(!!m.start_next_turn); var startNext = startNextState[0], setStartNext = startNextState[1];
+    // A strike or damage over time can skip the enemy's damage reduction.
+    var unmitigatedState = useState(!!m.unmitigated); var unmitigated = unmitigatedState[0], setUnmitigated = unmitigatedState[1];
     var vMultState = useState(String(m.mult != null && m.mult > 1 ? m.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
     // Vulnerability is one-or-the-other: a flat add OR a multiplier, never both.
     // Seed from whichever the stored effect used (multiplier only when there's no flat).
@@ -549,7 +555,7 @@
       if (effect === 'roll') return 'roll_bonus';
       if (effect === 'skill') return 'skill_roll';
       if (effect === 'damage') return isOver ? 'dot' : 'damage';
-      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, damage_reduction, none
+      return effect; // summon, heal, shield, attack_output, attack_mult, heal_output, heal_mult, damage_reduction, heal_received, none
     }
     function resolvedDuration() {
       if (effect === 'heal' && timing === 'once') return 1;   // instant heal = one application
@@ -576,7 +582,9 @@
         case 'attack_output': return 'Extra attack damage';
         case 'heal_output': return 'Extra healing';
         case 'attack_mult': return 'Times damage (×)';
+        case 'heal_mult': return 'Times healing (×)';
         case 'damage_reduction': return 'Damage reduced';
+        case 'heal_received': return 'Extra healing received';
         case 'shield': return 'Shield amount';
         case 'heal': return isOver ? 'HP each turn' : 'HP restored';
         case 'damage': return isOver ? 'Damage each turn' : 'Damage';
@@ -621,13 +629,20 @@
         uses_per_session: resolvedUses(), duration_turns: resolvedDuration(),
         // Heal over time keeps its flag (the worker's over-time marker); a heal
         // once with "Wait a turn" heals next turn. DoTs wait by themselves.
-        start_next_turn: effect === 'heal' ? (isOver || (timing === 'once' && startNext)) : (waitBuiltIn ? false : startNext) };
+        start_next_turn: effect === 'heal' ? (isOver || (timing === 'once' && startNext)) : (waitBuiltIn ? false : startNext),
+        unmitigated: isStrike && unmitigated };
       if (isStrike) payload.target_ref = (enemyScope === 'some_bosses' && parseInt(enemyCap, 10) > 0) ? String(parseInt(enemyCap, 10)) : null;
       else if (tk === 'class') payload.target_ref = ref || 'tank';
       else if (tk === 'holder_items') { if (!refs.length) { setErr('Pick at least one item.'); return; } payload.target_ref = JSON.stringify(refs); }
       else if (tk === 'players') { if (!players.length) { setErr('Pick at least one player.'); return; } payload.target_ref = JSON.stringify(players.map(Number)); }
       else payload.target_ref = null;
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
+    }
+
+    function unmitigatedField() {
+      return h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+        h('input', { type: 'checkbox', checked: unmitigated, onChange: function (e) { setUnmitigated(e.target.checked); } }),
+        'Unmitigated (skips the enemy’s damage reduction)');
     }
 
     function startNextField() {
@@ -738,6 +753,7 @@
         h('div', { className: 'portal-field', key: 'value' }, h('label', null, valueLabel()),
           h('input', { type: 'number', value: val, onChange: function (e) { setVal(e.target.value); } }))
       ]) : null,
+      isStrike ? unmitigatedField() : null,
       effect === 'roll' ? h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'Which rolls (tick all for every roll)'),
         h('div', { style: { display: 'flex', gap: '1rem', flexWrap: 'wrap', paddingTop: '0.2rem' } },
           ROLL_KINDS.map(function (o) {
@@ -945,7 +961,8 @@
       : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
       : m.type === 'stun' ? 'stuns'
       : typePhrase(m.type, m.value);
-    return when + ', ' + core + ' to ' + t + dur + '.' + uses + cndSuffix;
+    var hit = hitNote(m);
+    return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + ' to ' + t + dur + '.' + uses + cndSuffix;
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────
@@ -995,9 +1012,10 @@
     if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals itself for ' + e.value + ' HP' : 'Heals itself for ' + e.value + ' HP per turn' + span) + '.' + uses;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage per hit' + span + '.' + uses;
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'damage') return 'Deals ' + e.value + ' damage to ' + to + '.' + uses;
+    var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
+    if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.' + uses;
     if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.' + uses; }
-    return e.value + ' damage per turn to ' + to + span + '.' + uses;
+    return e.value + ' damage per turn' + hit + ' to ' + to + span + '.' + uses;
   }
 
   // Skill container: name + description. Numbers and uses live on its effects,
@@ -1042,6 +1060,9 @@
     var durState = useState(x.duration_turns > (x.type === 'heal' && !x.start_next_turn ? 1 : 0) ? String(x.duration_turns) : ''); var dur = durState[0], setDur = durState[1];
     var limitUsesState = useState((x.uses_per_session || 0) > 0); var limitUses = limitUsesState[0], setLimitUses = limitUsesState[1];
     var usesState = useState(String(x.uses_per_session > 0 ? x.uses_per_session : 1)); var uses = usesState[0], setUses = usesState[1];
+    // Damage can skip the players' damage reduction and/or go past their shields.
+    var unmitigatedState = useState(!!x.unmitigated); var unmitigated = unmitigatedState[0], setUnmitigated = unmitigatedState[1];
+    var ignoreShieldsState = useState(!!x.ignore_shields); var ignoreShields = ignoreShieldsState[0], setIgnoreShields = ignoreShieldsState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     var isDamage = effect === 'damage', isStun = effect === 'stun', isHeal = effect === 'heal', isMitigate = effect === 'damage_reduction';
@@ -1073,7 +1094,9 @@
         target_ref: hitsPlayers && tk === 'class' ? ref : null,
         duration_turns: isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
         uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0,
-        start_next_turn: isHeal && isOver
+        start_next_turn: isHeal && isOver,
+        unmitigated: isDamage && unmitigated,
+        ignore_shields: isDamage && ignoreShields
       };
       try { await props.onSubmit(payload); } catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
@@ -1093,6 +1116,12 @@
           h('input', { type: 'number', min: 0, value: val, onChange: function (e) { setVal(e.target.value); } })) : null
       ]),
       (effect && BOSS_EFFECT_HELP[effect]) ? h('p', { className: 'portal-field-help rp-help-tight' }, BOSS_EFFECT_HELP[effect]) : null,
+      isDamage ? h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem' } },
+        h('input', { type: 'checkbox', checked: unmitigated, onChange: function (e) { setUnmitigated(e.target.checked); } }),
+        'Unmitigated (skips the players’ damage reduction)') : null,
+      isDamage ? h('label', { className: 'portal-check', style: { display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem' } },
+        h('input', { type: 'checkbox', checked: ignoreShields, onChange: function (e) { setIgnoreShields(e.target.checked); } }),
+        'Ignores shields (goes straight to HP)') : null,
 
       hitsPlayers ? secHead('Who it affects') : null,
       hitsPlayers ? fieldGrid([

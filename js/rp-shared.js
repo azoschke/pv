@@ -49,6 +49,8 @@
       case 'attack_output': return v + ' bonus attack damage';
       case 'heal_output': return v + ' bonus healing';
       case 'attack_mult': return '×' + value + ' attack damage';
+      case 'heal_mult': return '×' + value + ' healing';
+      case 'heal_received': return v + ' healing received';
       case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
@@ -61,7 +63,7 @@
 
   // Roll / output bonuses. Must stay in step with the worker (lib/constants.js
   // ROLL_OUTPUT_TYPES).
-  var ROLL_OUTPUT_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'roll_bonus', 'skill_roll', 'attack_output', 'attack_mult', 'heal_output'];
+  var ROLL_OUTPUT_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'roll_bonus', 'skill_roll', 'attack_output', 'attack_mult', 'heal_output', 'heal_mult'];
   // A "Press to use" roll/output bonus with a condition runs by itself, so it has
   // no Activate button (worker isCondBuff). With a turn count it starts each
   // time its condition turns on, runs those turns, then waits for the
@@ -94,6 +96,14 @@
   // the player press it instead, only while it holds.
   function firesByItself(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !pickNeeded(m); }
   function waitsForCondition(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !!pickNeeded(m); }
+
+  // How a strike or damage over time treats the target's defences:
+  // "unmitigated" skips damage reduction, "ignores shields" goes straight to HP.
+  // '' for anything else.
+  function hitNote(m) {
+    if (!m || (m.type !== 'damage' && m.type !== 'dot')) return '';
+    return [m.unmitigated ? 'unmitigated' : null, m.ignore_shields ? 'ignores shields' : null].filter(Boolean).join(', ');
+  }
 
   // An effect's length: ", this turn" / ", for 3 turns". "Wait a turn"
   // (start_next_turn) starts it next turn instead. Heals and DoTs always do, so
@@ -156,6 +166,7 @@
     pickNeeded: pickNeeded,
     firesByItself: firesByItself,
     waitsForCondition: waitsForCondition,
+    hitNote: hitNote,
     durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
