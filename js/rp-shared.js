@@ -52,6 +52,7 @@
       case 'heal_mult': return '×' + value + ' healing';
       case 'heal_received': return v + ' healing received';
       case 'extra_attack': return v + ' extra attack' + (value === 1 ? '' : 's') + ' each turn';
+      case 'weaken': return '−' + Math.abs(value) + ' to its damage';
       case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
       case 'heal': return 'restores ' + value + ' HP';
@@ -73,10 +74,10 @@
 
   // Who an effect needs picked when it's pressed, and what a condition does to
   // it. Must stay in step with the worker (lib/effects.js).
-  var TRIGGER_TYPES = ['summon', 'damage', 'dot', 'vulnerability', 'stun'];
+  var TRIGGER_TYPES = ['summon', 'damage', 'dot', 'vulnerability', 'stun', 'weaken'];
   var ENEMY_KINDS = ['boss', 'some_bosses', 'all_bosses', 'minions'];
   function aimsAtEnemies(m) {
-    return m.type === 'damage' || m.type === 'dot' ||
+    return m.type === 'damage' || m.type === 'dot' || m.type === 'weaken' ||
       ((m.type === 'vulnerability' || m.type === 'stun') && ENEMY_KINDS.indexOf(m.target_kind) !== -1);
   }
   // 'enemy' | 'enemies' | 'ally' | 'allies', or null when the effect knows its
@@ -101,6 +102,15 @@
   // How a strike or damage over time treats the target's defences:
   // "unmitigated" skips damage reduction, "ignores shields" goes straight to HP.
   // '' for anything else.
+  // A boss's own damage right now (sync dmg_add / dmg_mult): "+2", "−1 ×2", or ''.
+  function bossDamagePhrase(b) {
+    var add = (b && b.dmg_add) || 0, mult = (b && b.dmg_mult) || 1;
+    var p = [];
+    if (add) p.push((add > 0 ? '+' : '−') + Math.abs(add));
+    if (mult > 1) p.push('×' + mult);
+    return p.join(' ');
+  }
+
   function hitNote(m) {
     if (!m || (m.type !== 'damage' && m.type !== 'dot')) return '';
     return [m.unmitigated ? 'unmitigated' : null, m.ignore_shields ? 'ignores shields' : null].filter(Boolean).join(', ');
@@ -151,9 +161,13 @@
     return '';
   }
 
-  // Who a boss skill hits, in plain words.
+  // Who a boss skill reaches, in plain words: players, or the enemies' side.
   function bossTargetPhrase(tk, ref) {
     switch (tk) {
+      case 'self': return 'itself';
+      case 'ally': return 'a chosen enemy';
+      case 'allies': return 'chosen enemies';
+      case 'all_allies': return 'all enemies';
       case 'party_member': return 'a chosen player';
       case 'party_members': return 'chosen players';
       case 'class': return 'all ' + (CLASS_PLURAL[ref] || String(ref || '').toUpperCase());
@@ -175,6 +189,7 @@
     firesByItself: firesByItself,
     waitsForCondition: waitsForCondition,
     hitNote: hitNote,
+    bossDamagePhrase: bossDamagePhrase,
     durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
