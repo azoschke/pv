@@ -1675,6 +1675,8 @@
     var rosterState = useState([]); var roster = rosterState[0], setRoster = rosterState[1];
     var newNameState = useState(''); var newName = newNameState[0], setNewName = newNameState[1];
     var showNewState = useState(false); var showNew = showNewState[0], setShowNew = showNewState[1];
+    // The campaign whose Start is asking who goes first (null = none).
+    var askStartState = useState(null); var askStart = askStartState[0], setAskStart = askStartState[1];
     var newErrState = useState(''); var newErr = newErrState[0], setNewErr = newErrState[1];
 
     // member picker
@@ -1859,8 +1861,11 @@
         setNewName(''); setNewErr(''); setShowNew(false); flash[1]('Campaign created.'); await loadCampaigns();
       } catch (e) { setNewErr(e.message); }
     }
-    async function startSession(c) {
-      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/start'); flash[1]('Session started.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
+    // bossFirst: the players don't have initiative, so the session opens on the
+    // boss's turn (the worker calls it turn 0; the players' first turn is Turn 1).
+    async function startSession(c, bossFirst) {
+      setAskStart(null);
+      try { await PVRollAPI.request('POST', '/rp/campaigns/' + c.id + '/session/start', { boss_first: !!bossFirst }); flash[1](bossFirst ? 'Session started on the boss’s turn.' : 'Session started.'); await loadCampaigns(); if (selected && selected.id === c.id) await loadRoster(c.id); }
       catch (e) { setErr(e.message); }
     }
     async function endSession(c) {
@@ -2038,7 +2043,13 @@
               // Lifecycle actions sit beneath the title, where "Start" lives when
               // fresh. Live → Pause + End + Roll Calculator; paused → Resume + End.
               h('div', { style: { display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' } },
-                (!c.active && !c.paused) ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { startSession(c); } }, 'Start', mi('play_arrow', 'trail')) : null,
+                // Start asks who goes first in place, as one control.
+                (!c.active && !c.paused && askStart !== c.id) ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { setAskStart(c.id); } }, 'Start', mi('play_arrow', 'trail')) : null,
+                (!c.active && !c.paused && askStart === c.id) ? h('div', { className: 'seg rp-start-seg', role: 'group', 'aria-label': 'Who goes first' },
+                  h('span', { className: 'rp-start-seg-label' }, mi('play_arrow', 'lead'), 'Start:'),
+                  h('button', { type: 'button', className: 'seg-btn', onClick: function () { startSession(c, false); } }, 'Players first'),
+                  h('button', { type: 'button', className: 'seg-btn', onClick: function () { startSession(c, true); } }, 'Boss first'),
+                  h('button', { type: 'button', className: 'seg-btn is-cancel', title: 'Cancel', 'aria-label': 'Cancel', onClick: function () { setAskStart(null); } }, mi('close', 'only'))) : null,
                 c.active ? h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { pauseSession(c); } }, 'Pause', mi('pause', 'trail')) : null,
                 c.paused ? h('button', { type: 'button', className: 'btn is-small', onClick: function () { resumeSession(c); } }, 'Resume', mi('play_arrow', 'trail')) : null,
                 (c.active || c.paused) ? h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { endSession(c); } }, 'End', mi('close', 'trail')) : null,

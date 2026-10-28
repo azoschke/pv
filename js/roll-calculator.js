@@ -11,10 +11,15 @@
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase;
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, pickNeeded = RPS.pickNeeded,
+    firesByItself = RPS.firesByItself, waitsForCondition = RPS.waitsForCondition;
   var useRef = React.useRef;
 
   var POLL_MS = 5000;
+
+  // A session started with the boss first opens on the boss's turn as turn 0;
+  // the players' first turn is Turn 1.
+  function isOpening(c) { return !c.turn_number && !!c.turn_locked; }
 
   var ARMOR_LABEL = { heavy: 'Heavy Armor', medium: 'Medium Armor', light: 'Light Armor' };
   var ROLE_LABEL  = { tank: 'Tank', dps: 'DPS', healer: 'Healer' };
@@ -335,6 +340,8 @@
     else if (m.active && !gateClosed) extras.push('active now');
 
     var spent = m.mode === 'activated' && m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session;
+    // Aimed at chosen targets with a condition: pressed only while the condition holds.
+    var waiting = waitsForCondition(m) && m.cond_latched === false;
     var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
     var control;
     var needTarget = m.target_kind === 'party_member';    // one ally
@@ -353,14 +360,16 @@
                 p.member_name);
             }))
         : null;
-    if (auto) control = null;
+    // No button for an effect that fires by itself when its condition turns on,
+    // nor for a part of a one-button ability (its Activate fires every part).
+    if (auto || firesByItself(m) || (props.inSkill && m.mode === 'activated')) control = null;
     else if (m.mode === 'activated') {
       var needBoss = m.target_kind === 'boss';              // one enemy
       var needBosses = m.target_kind === 'some_bosses';     // several enemies (cap in target_ref)
       var allBosses = m.target_kind === 'all_bosses';       // every enemy
       var bossCap = needBosses ? (parseInt(m.target_ref, 10) || 0) : 0; // 0 = no cap
       var bossSel = needBoss ? (bossPick && liveBosses.some(function (b) { return String(b.id) === bossPick; }) ? bossPick : (liveBosses.length ? String(liveBosses[0].id) : '')) : '';
-      var disabled = props.locked || spent || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
+      var disabled = props.locked || spent || waiting || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
       var isRunning = m.active && (m.remaining_turns != null || m.pending);
@@ -401,6 +410,91 @@
       m.type === 'none' && m.mode === 'always' ? null : control);
   }
 
+  // ── One-button ability (the ability's "Activate all" setting) ──────────────
+  // One Activate fires every part together, like a single skill. It shows only
+  // the picks its parts need (an enemy, several enemies, an ally, several
+  // allies) and stays greyed out until they're all made. Parts that are used
+  // up, waiting for their condition, or firing by themselves don't ask for a
+  // pick; the worker skips them the same way. Switches on its toggle parts
+  // stay on their rows.
+  function SkillControl(props) {
+    var ab = props.ability;
+    var enemyState = useState(''); var enemy = enemyState[0], setEnemy = enemyState[1];
+    var enemiesState = useState([]); var enemies = enemiesState[0], setEnemies = enemiesState[1];
+    var allyState = useState(''); var ally = allyState[0], setAlly = allyState[1];
+    var alliesState = useState([]); var allies = alliesState[0], setAllies = alliesState[1];
+    function toggleIn(list, setList, id, cap) {
+      setList(function (cur) {
+        if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; });
+        if (cap && cur.length >= cap) return cur;
+        return cur.concat([id]);
+      });
+    }
+    var parts = ab.modifiers || [];
+    function spent(m) { return m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session; }
+    function running(m) { return m.active && (m.remaining_turns != null || m.pending); }
+    var presses = parts.filter(function (m) { return m.mode === 'activated' && !isCondBuff(m) && !firesByItself(m); });
+    var ready = presses.filter(function (m) { return !spent(m) && !(waitsForCondition(m) && m.cond_latched === false); });
+    var switchesOff = parts.filter(function (m) { return m.mode === 'toggle' && !m.active; }); // the press switches these on
+    var needs = {};
+    var cap = 0;
+    ready.concat(switchesOff).forEach(function (m) {
+      var n = pickNeeded(m);
+      if (!n) return;
+      needs[n] = true;
+      var c = n === 'enemies' ? (parseInt(m.target_ref, 10) || 0) : 0;
+      if (c && (!cap || c < cap)) cap = c;
+    });
+    var liveBosses = (props.bosses || []).filter(function (b) { return !b.defeated; });
+    // One enemy standing: it's the pick. Otherwise the player chooses.
+    var enemySel = liveBosses.length === 1 ? String(liveBosses[0].id)
+      : liveBosses.some(function (b) { return String(b.id) === enemy; }) ? enemy : '';
+    var liveEnemies = enemies.filter(function (id) { return liveBosses.some(function (b) { return String(b.id) === id; }); });
+    var missing = (needs.enemy && !enemySel) || (needs.enemies && !liveEnemies.length) ||
+      (needs.ally && !ally) || (needs.allies && !allies.length);
+    var anyRunning = presses.some(running);
+    var allSpent = presses.length > 0 && presses.every(spent) && !switchesOff.length;
+    var nothing = !ready.length && !switchesOff.length;
+    var button;
+    if (allSpent) button = h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Used');
+    else if (anyRunning) {
+      var allPending = presses.filter(running).every(function (m) { return m.pending; });
+      button = h('button', { type: 'button', className: 'btn is-quiet is-small is-active', disabled: true }, allPending ? 'Starts next turn' : 'Active');
+    } else button = h('button', { type: 'button', className: 'btn is-small', disabled: props.locked || missing || nothing,
+      onClick: function () {
+        props.onActivateAll(ab, {
+          bossId: needs.enemy ? enemySel : null,
+          bossIds: needs.enemies ? liveEnemies.slice() : null,
+          memberId: needs.ally ? Number(ally) : null,
+          memberIds: needs.allies ? allies.slice() : null
+        });
+      } }, 'Activate');
+    var showPicks = !allSpent && !anyRunning;
+    return h('div', { className: 'rp-mod-control rp-skill-control' },
+      showPicks && needs.enemy && liveBosses.length > 1 ? h('select', { className: 'field', value: enemySel, disabled: props.locked, 'aria-label': 'Target enemy', onChange: function (e) { setEnemy(e.target.value); } },
+        h('option', { value: '' }, 'enemy…'),
+        liveBosses.map(function (b) { return h('option', { key: b.id, value: b.id }, b.name); })) : null,
+      showPicks && needs.enemies ? h('div', { className: 'rp-pick-multi' },
+        (cap ? [h('span', { key: 'cap', className: 'rp-pick-cap' }, 'pick up to ' + cap)] : []).concat(
+        liveBosses.map(function (b) {
+          var id = String(b.id); var on = liveEnemies.indexOf(id) !== -1;
+          return h('label', { key: b.id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
+            h('input', { type: 'checkbox', checked: on, disabled: props.locked || (!on && cap && liveEnemies.length >= cap), onChange: function () { toggleIn(enemies, setEnemies, id, cap); } }),
+            b.name);
+        }))) : null,
+      showPicks && needs.ally ? h('select', { className: 'field', value: ally, disabled: props.locked, 'aria-label': 'Target ally', onChange: function (e) { setAlly(e.target.value); } },
+        h('option', { value: '' }, 'ally…'),
+        (props.party || []).map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+      showPicks && needs.allies ? h('div', { className: 'rp-pick-multi' },
+        (props.party || []).map(function (p) {
+          var on = allies.indexOf(p.member_id) !== -1;
+          return h('label', { key: p.member_id, className: 'rp-pick-chip' + (on ? ' is-on' : '') },
+            h('input', { type: 'checkbox', checked: on, disabled: props.locked, onChange: function () { toggleIn(allies, setAllies, p.member_id, 0); } }),
+            p.member_name);
+        })) : null,
+      button);
+  }
+
   // ── Items — image strip + inline detail (no modal) ─────────────────────────
   function ItemTile(props) {
     var it = props.item;
@@ -422,12 +516,11 @@
         (it.abilities || []).map(function (ab) {
           return h('div', { className: 'rp-item-ability', key: ab.id },
             h('div', { className: 'rp-ability-head' },
-              h('strong', null, ab.name),
-              ab.activate_all ? h('button', { type: 'button', className: 'btn is-small is-quiet', disabled: props.locked,
-                onClick: function () { props.onActivateAll(ab); } }, 'Activate all') : null),
+              h('strong', null, ab.name)),
             ab.description ? h('p', { className: 'rp-item-ability-desc' }, ab.description) : null,
+            ab.activate_all ? h(SkillControl, { ability: ab, party: props.party, bosses: props.bosses, locked: props.locked, onActivateAll: props.onActivateAll }) : null,
             (ab.modifiers || []).map(function (m) {
-              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, onToggle: props.onToggle, onActivate: props.onActivate });
+              return h(ModifierRow, { key: m.id, modifier: m, party: props.party, bosses: props.bosses, locked: props.locked, inSkill: !!ab.activate_all, onToggle: props.onToggle, onActivate: props.onActivate });
             }));
         })) : null);
   }
@@ -1361,7 +1454,7 @@
           h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'tune'),
           h('span', null, 'DM Control Deck'),
           // Plain muted text, or a red pill once the turn is locked.
-          h('span', { className: c.turn_locked ? 'pill' : 'rp-turn-badge' }, 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
+          h('span', { className: c.turn_locked ? 'pill' : 'rp-turn-badge' }, isOpening(c) ? 'Opening · boss turn' : 'Turn ' + c.turn_number + (c.turn_locked ? ' · locked' : ''))),
         // While collapsed, the count of shared rolls not yet seen.
         !open && unseenRolls ? h('span', { className: 'rp-deck-notice' },
           h('span', { className: 'rp-dm-tab-dot', 'aria-hidden': 'true' }),
@@ -1582,7 +1675,8 @@
     function onBuffRemove(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id); }); }
     function onToggle(m, enabled, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled, target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null }); }); }
     function onActivate(m, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.allBosses }); }); }
-    function onActivateAll(ab) { act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid() }); }); }
+    // A one-button ability: every part at once, with the picks its parts need.
+    function onActivateAll(ab, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null }); }); }
     function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
     function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
     // Scene (location / time of day). Empty string clears back to unset. The
@@ -1686,7 +1780,7 @@
     return h('div', { className: 'rp-tool' },
       h('header', { className: 'rp-header' },
         h('div', null, h('h1', null, 'Roll Calculator'),
-          h('p', { className: 'rp-sub' }, camp.name + ' · Turn ' + camp.turn_number + (camp.turn_locked ? ' (locked)' : '')),
+          h('p', { className: 'rp-sub' }, camp.name + ' · ' + (isOpening(camp) ? 'Opening · boss turn' : 'Turn ' + camp.turn_number + (camp.turn_locked ? ' (locked)' : ''))),
           (camp.location || camp.time_of_day)
             ? h('p', { className: 'rp-scene-chip' },
                 h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'landscape'),

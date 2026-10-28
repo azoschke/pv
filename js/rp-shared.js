@@ -68,6 +68,33 @@
   // condition to turn off and on again.
   function isCondBuff(m) { return !!(m && m.conditions) && m.mode === 'activated' && ROLL_OUTPUT_TYPES.indexOf(m.type) !== -1; }
 
+  // Who an effect needs picked when it's pressed, and what a condition does to
+  // it. Must stay in step with the worker (lib/effects.js).
+  var TRIGGER_TYPES = ['summon', 'damage', 'dot', 'vulnerability', 'stun'];
+  var ENEMY_KINDS = ['boss', 'some_bosses', 'all_bosses', 'minions'];
+  function aimsAtEnemies(m) {
+    return m.type === 'damage' || m.type === 'dot' ||
+      ((m.type === 'vulnerability' || m.type === 'stun') && ENEMY_KINDS.indexOf(m.target_kind) !== -1);
+  }
+  // 'enemy' | 'enemies' | 'ally' | 'allies', or null when the effect knows its
+  // targets (self, everyone, a class, item holders, all enemies, all minions).
+  function pickNeeded(m) {
+    if (aimsAtEnemies(m)) {
+      if (m.target_kind === 'some_bosses') return 'enemies';
+      return (m.target_kind === 'all_bosses' || m.target_kind === 'minions') ? null : 'enemy';
+    }
+    if (m.type === 'summon' || m.type === 'none') return null;
+    if (m.target_kind === 'party_member') return 'ally';
+    if (m.target_kind === 'party_members') return 'allies';
+    return null;
+  }
+  // With a condition, a summon / strike / damage over time / stun / "take more
+  // damage" fires by itself when the condition turns on, so it has no button.
+  // One aimed at chosen targets can't (nobody to pick them): the condition lets
+  // the player press it instead, only while it holds.
+  function firesByItself(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !pickNeeded(m); }
+  function waitsForCondition(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !!pickNeeded(m); }
+
   // An effect's length: ", this turn" / ", for 3 turns". "Wait a turn"
   // (start_next_turn) starts it next turn instead. Heals and DoTs always do, so
   // for them the flag only marks a 1-turn heal as healing once, next turn.
@@ -126,6 +153,9 @@
     rollsPhrase: rollsPhrase,
     typePhrase: typePhrase,
     isCondBuff: isCondBuff,
+    pickNeeded: pickNeeded,
+    firesByItself: firesByItself,
+    waitsForCondition: waitsForCondition,
     durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,

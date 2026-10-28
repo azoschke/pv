@@ -15,7 +15,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-  <link rel="stylesheet" href="css/combat.css">
+  <link rel="stylesheet" href="css/combat.css?v=2">
 </head>
 <body>
   <div class="container">
@@ -31,8 +31,9 @@
   <script src="js/pv-session.js"></script>
   <script src="js/api.js"></script>
   <script src="js/rp-api.js"></script>
-  <script src="js/rp-shared.js"></script>
-  <script src="js/roll-calculator.js"></script>
+  <!-- ?v= changes whenever these must match each other: browsers keep scripts for hours -->
+  <script src="js/rp-shared.js?v=2"></script>
+  <script src="js/roll-calculator.js?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var root = ReactDOM.createRoot(document.getElementById('app'));
