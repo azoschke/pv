@@ -21,7 +21,8 @@
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote;
+    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote,
+    bossModePrefix = RPS.bossModePrefix;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -1059,13 +1060,20 @@
   // Plain-language boss-effect wording, mirroring the item modifier summary
   // (and the Roll Calculator's bossEffectText).
   function bossEffectSummary(e) {
+    var cnd = conditionPhrase(e.conditions);
+    return bossModePrefix(e) + bossEffectCore(e) + (cnd ? ' · ' + cnd : '');
+  }
+  function bossEffectCore(e) {
     var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
+    // Always on / switched on: no turn count, and a shield tops up each turn.
+    var lasting = e.mode === 'always' || e.mode === 'toggle';
+    var span = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     // Damage over time and heals each turn tick from the next Next Turn.
-    var later = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
+    var later = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
     if (e.type === 'none') return 'Narrative effect.' + uses;
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.' + uses;
+    if (e.type === 'shield' && lasting) return 'Keeps ' + to + ' shielded up to ' + e.value + ', topped up each turn.' + uses;
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn && !lasting ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.' + uses;
     if (e.type === 'damage_reduction') return (e.target_kind === 'self' ? 'Takes ' : 'Gives ' + to + ' ') + e.value + ' less damage per hit' + span + '.' + uses;
     if (e.type === 'shield') return 'Shields ' + to + ' for ' + e.value + '.' + uses;
     if (e.type === 'attack_output') return 'Gives ' + to + ' +' + e.value + ' damage per hit' + span + '.' + uses;
@@ -1084,12 +1092,15 @@
     var a = props.initial || {};
     var nameState = useState(a.name || ''); var name = nameState[0], setName = nameState[1];
     var descState = useState(a.description || ''); var desc = descState[0], setDesc = descState[1];
+    // "Use the whole skill": one press for all its effects, with one set of picks.
+    var allState = useState(!!a.use_all); var useAll = allState[0], setUseAll = allState[1];
+    var oneState = useState(!!a.one_button); var oneButton = oneState[0], setOneButton = oneState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     async function submit(e) {
       e.preventDefault();
       if (!name.trim()) { setErr('Name is required.'); return; }
-      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null }); }
+      try { await props.onSubmit({ name: name.trim(), description: desc.trim() || null, use_all: useAll, one_button: useAll && oneButton }); }
       catch (e2) { setErr(e2.message || 'Failed to save.'); }
     }
     return h('form', { onSubmit: submit, className: 'portal-card is-inset', style: { marginTop: '0.4rem' } },
@@ -1099,6 +1110,9 @@
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
         h('span', { className: 'portal-field-help', style: { display: 'block', margin: '0.1rem 0 0.35rem', lineHeight: 1.2 } }, 'Visible to players on toggle'),
         h('textarea', { rows: 3, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
+      switchRow('Use the whole skill', useAll, false, setUseAll),
+      // Needs Use the whole skill: the effects lose their own Use buttons (switches stay).
+      switchRow('Replaces the effects’ buttons', useAll && oneButton, !useAll, setOneButton),
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.4rem' } },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save skill' : 'Add skill'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')),
@@ -1128,16 +1142,31 @@
     // "Take more damage": a flat add OR a multiplier, like the item version.
     var vKindState = useState(x.type === 'vulnerability' && x.mult > 1 && !(x.value > 0) ? 'mult' : 'flat'); var vKind = vKindState[0], setVKind = vKindState[1];
     var vMultState = useState(String(x.mult > 1 ? x.mult : 2)); var vMult = vMultState[0], setVMult = vMultState[1];
+    // Press to use, always on, or switched on and off by the DM (effects that last).
+    var modeState = useState(x.mode || 'activated'); var mode = modeState[0], setMode = modeState[1];
+    // Only while its own HP is in range (a start point), or the scene matches.
+    var initCond = parseConditions(x.conditions);
+    var condKindState = useState(initCond ? initCond.kind || '' : ''); var condKind = condKindState[0], setCondKind = condKindState[1];
+    var cOpState = useState(initCond && initCond.start ? initCond.start.op : '<'); var cOp = cOpState[0], setCOp = cOpState[1];
+    var cValState = useState(initCond && initCond.start ? String(initCond.start.value) : '50'); var cVal = cValState[0], setCVal = cValState[1];
+    var cUnitState = useState(initCond && initCond.start && initCond.start.unit === 'flat' ? 'flat' : 'pct'); var cUnit = cUnitState[0], setCUnit = cUnitState[1];
+    var cLocsState = useState(initCond && initCond.kind === 'scene' ? (initCond.locations || []).slice() : []); var cLocs = cLocsState[0], setCLocs = cLocsState[1];
+    var cTimesState = useState(initCond && initCond.kind === 'scene' ? (initCond.times || []).slice() : []); var cTimes = cTimesState[0], setCTimes = cTimesState[1];
+    var advState = useState(!!initCond); var advOpen = advState[0], setAdvOpen = advState[1];
+    function toggleIn(list, setList, v) { setList(list.indexOf(v) !== -1 ? list.filter(function (y) { return y !== v; }) : list.concat([v])); }
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
     var isDamage = effect === 'damage', isStun = effect === 'stun', isHeal = effect === 'heal', isMitigate = effect === 'damage_reduction';
     var isVuln = effect === 'vulnerability', isShield = effect === 'shield', isImmune = effect === 'stun_immune';
     var isAdd = effect === 'attack_output', isMult = effect === 'attack_mult';
     var isOver = timing === 'over';
+    // Effects that last can be always on or switched on and off; damage only as damage over time.
+    var canLast = isHeal || isShield || isMitigate || isAdd || isMult || isImmune || isVuln || (isDamage && isOver);
+    var lasting = canLast && mode !== 'activated';
     var hitsPlayers = isDamage || isStun || isVuln;
     var onAllies = BOSS_ALLY_TYPES.indexOf(effect) !== -1;
     var showValue = isDamage || isHeal || isMitigate || isShield || isAdd || isMult || (isVuln && vKind === 'flat');
-    var showTurns = ((isDamage || isHeal) && isOver) || isMitigate || isAdd || isMult || isImmune || isVuln;
+    var showTurns = !lasting && (((isDamage || isHeal) && isOver) || isMitigate || isAdd || isMult || isImmune || isVuln);
 
     function changeEffect(next) { setEffect(next); if (next !== effect) setTiming('once'); }
     function valueLabel() {
@@ -1162,15 +1191,27 @@
       var mlt = isVuln && vKind === 'mult' ? Math.max(1, parseFloat(vMult) || 1) : 1;
       if (isVuln && vKind === 'mult' && mlt <= 1) { setErr('Use a multiplier above 1×.'); return; }
       if (isVuln && vKind === 'flat' && !((parseInt(val, 10) || 0) > 0)) { setErr('Add some flat extra damage.'); return; }
+      var picked = hitsPlayers ? (tk === 'party_member' || tk === 'party_members') : (allyTk === 'ally' || allyTk === 'allies');
+      if (lasting && mode === 'always' && picked) { setErr('Always on needs a target that isn’t picked: itself, all enemies, a class or everyone.'); return; }
+      var conditions = null;
+      if (condKind === 'hp') {
+        if (cUnit === 'pct' && cOp === '=') { setErr('Use HP (not %) for an “exactly” condition.'); return; }
+        conditions = { kind: 'hp', subject: 'self', start: { op: cOp, value: Math.max(0, parseInt(cVal, 10) || 0), unit: cUnit } };
+      } else if (condKind === 'scene') {
+        if (!cLocs.length && !cTimes.length) { setErr('Pick at least one location or time of day.'); return; }
+        conditions = { kind: 'scene', locations: cLocs.slice(), times: cTimes.slice() };
+      }
       var payload = {
         type: isDamage ? (isOver ? 'dot' : 'damage') : effect,
         value: showValue ? (parseInt(val, 10) || 0) : 0,
         mult: mlt,
         target_kind: hitsPlayers ? tk : (onAllies ? allyTk : 'self'),
         target_ref: hitsPlayers && tk === 'class' ? ref : null,
-        duration_turns: isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
-        uses_per_session: limitUses ? Math.max(1, parseInt(uses, 10) || 1) : 0,
-        start_next_turn: isHeal && isOver,
+        duration_turns: lasting ? 0 : isStun ? Math.max(1, turns || 1) : (isHeal && !isOver ? 1 : (showTurns ? turns : 0)),
+        uses_per_session: limitUses && mode !== 'always' ? Math.max(1, parseInt(uses, 10) || 1) : 0,
+        start_next_turn: isHeal && (isOver || lasting),
+        mode: lasting ? mode : 'activated',
+        conditions: conditions,
         unmitigated: isDamage && unmitigated,
         ignore_shields: isDamage && ignoreShields
       };
@@ -1225,7 +1266,17 @@
       ]) : null,
 
       (effect && effect !== 'none') ? secHead('How it works') : null,
-      (isDamage || isHeal) ? fieldGrid([
+      canLast ? fieldGrid([
+        h('div', { className: 'portal-field', key: 'mode' }, h('label', null, 'How it’s used'),
+          h('select', { value: mode, onChange: function (e) { setMode(e.target.value); } },
+            h('option', { value: 'activated' }, 'The DM presses it'),
+            h('option', { value: 'always' }, 'Always on'),
+            h('option', { value: 'toggle' }, 'The DM switches it on and off')))
+      ]) : null,
+      lasting ? h('p', { className: 'portal-field-help rp-help-tight' }, mode === 'always'
+        ? 'On from the start of the session (or when the boss arrives), with no turn count. Hidden from players until the DM shows it.'
+        : 'Stays on until the DM switches it off, with no turn count. Hidden from players until the DM shows it.') : null,
+      (isDamage || (isHeal && !lasting)) ? fieldGrid([
         h('div', { className: 'portal-field', key: 'timing' }, h('label', null, 'Timing'),
           h('select', { value: timing, onChange: function (e) { setTiming(e.target.value); } },
             timingOpts().map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); })))
@@ -1235,12 +1286,49 @@
       showTurns ? h('div', { className: 'portal-field rp-w12 rp-mt5' }, h('label', null, 'How many turns?'),
         h('input', { type: 'number', min: 0, value: dur, placeholder: 'until removed', onChange: function (e) { setDur(e.target.value); } }),
         h('p', { className: 'portal-field-help', style: { margin: '0.25rem 0 0' } }, 'Leave blank to last until the end of the session.')) : null,
-      effect ? h('div', { className: 'rp-mt5' },
+      effect && !(lasting && mode === 'always') ? h('div', { className: 'rp-mt5' },
         h('label', { className: 'rp-inline-check is-wide' },
           h('input', { type: 'checkbox', checked: limitUses, onChange: function (e) { setLimitUses(e.target.checked); } }),
-          'Limit how many times per session'),
+          lasting ? 'Limit how many times per session it’s switched on' : 'Limit how many times per session'),
         limitUses ? h('div', { className: 'portal-field rp-w9 rp-mt3' }, h('label', null, 'Times per session'),
           h('input', { type: 'number', min: 1, value: uses, onChange: function (e) { setUses(e.target.value); } })) : null) : null,
+
+      // ── Advanced Settings (collapsible): a condition ──────────────────────
+      effect ? h('button', { type: 'button', onClick: function () { setAdvOpen(!advOpen); }, 'aria-expanded': advOpen ? 'true' : 'false',
+        style: { display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 0, padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', margin: '0.7rem 0 0.35rem' } },
+        h('span', { 'aria-hidden': 'true', style: { fontSize: '0.9em' } }, advOpen ? '▾' : '▸'),
+        'Advanced Settings') : null,
+      (effect && advOpen) ? h('div', { className: 'portal-field', style: { maxWidth: '20rem' } }, h('label', null, 'Only active when…'),
+        h('select', { value: condKind, onChange: function (e) { setCondKind(e.target.value); } },
+          h('option', { value: '' }, 'Always (no condition)'),
+          h('option', { value: 'hp' }, 'Its HP is in range'),
+          h('option', { value: 'scene' }, 'The scene matches (location / time)'))) : null,
+      (effect && advOpen && condKind) ? h('p', { className: 'portal-field-help rp-help-tight' }, lasting
+        ? 'It only works while the condition holds.'
+        : 'The DM can only use it while the condition holds.') : null,
+      (effect && advOpen && condKind === 'hp') ? h('div', { style: { display: 'flex', gap: '0.4rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.35rem' } },
+        h('div', { className: 'portal-field', style: { flex: '0 0 auto' } }, h('label', null, 'While its HP is'),
+          h('select', { value: cOp, onChange: function (e) { setCOp(e.target.value); } },
+            HP_OPS.map(function (o) { return h('option', { key: o.value, value: o.value }, o.label); }))),
+        h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Amount'),
+          h('input', { type: 'number', min: 0, value: cVal, onChange: function (e) { setCVal(e.target.value); } })),
+        h('div', { className: 'portal-field rp-w6' }, h('label', null, 'Unit'),
+          h('select', { value: cUnit, onChange: function (e) { setCUnit(e.target.value); } },
+            h('option', { value: 'pct' }, '%'),
+            h('option', { value: 'flat' }, 'HP')))) : null,
+      (effect && advOpen && condKind === 'scene') ? h('div', { className: 'rp-mt4' },
+        h('div', { className: 'portal-field' }, h('label', null, 'In these locations (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_LOCATIONS.map(function (loc) {
+              return h('label', { key: loc, className: 'rp-inline-check' },
+                h('input', { type: 'checkbox', checked: cLocs.indexOf(loc) !== -1, onChange: function () { toggleIn(cLocs, setCLocs, loc); } }), loc);
+            }))),
+        h('div', { className: 'portal-field rp-mt4' }, h('label', null, 'And these times of day (any)'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', paddingTop: '0.2rem' } },
+            RP_TIMES.map(function (tod) {
+              return h('label', { key: tod, className: 'rp-inline-check' },
+                h('input', { type: 'checkbox', checked: cTimes.indexOf(tod) !== -1, onChange: function () { toggleIn(cTimes, setCTimes, tod); } }), tod);
+            })))) : null,
 
       h('div', { style: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem' } },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save effect' : 'Add effect'),
@@ -1409,6 +1497,7 @@
               h('div', { className: 'rp-row-head' },
                 h('div', null,
                   h('span', { className: 'row-name' }, a.name),
+                  a.use_all ? h('span', { className: 'tag rp-tag-spaced' }, a.one_button ? 'One button' : 'Whole skill') : null,
                   a.description ? h('div', { className: 'rp-skill-desc' }, a.description) : null),
                 ro ? null : h('div', { className: 'rp-actions' },
                   h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: function () { setAbForm({ ability: a }); } }, 'Edit'),

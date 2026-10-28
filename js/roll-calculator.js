@@ -13,7 +13,7 @@
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
     isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, pickNeeded = RPS.pickNeeded,
     firesByItself = RPS.firesByItself, waitsForCondition = RPS.waitsForCondition, hitNote = RPS.hitNote,
-    bossDamagePhrase = RPS.bossDamagePhrase;
+    bossDamagePhrase = RPS.bossDamagePhrase, bossModePrefix = RPS.bossModePrefix;
   var useRef = React.useRef;
 
   var POLL_MS = 5000;
@@ -1201,12 +1201,19 @@
   // ── DM panel ──────────────────────────────────────────────────────────────
   // Plain-language boss-effect wording, mirroring the item describer.
   function bossEffectText(e) {
-    var span = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
+    var cnd = conditionPhrase(e.conditions);
+    return bossModePrefix(e) + bossEffectCore(e) + (cnd ? ' · ' + cnd : '');
+  }
+  function bossEffectCore(e) {
+    // Always on / switched on: no turn count, and a shield tops up each turn.
+    var lasting = e.mode === 'always' || e.mode === 'toggle';
+    var span = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
     // Damage over time and heals each turn tick from the next Next Turn.
-    var later = e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
+    var later = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
     if (e.type === 'none') return 'Narrative effect.';
     var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.';
+    if (e.type === 'shield' && lasting) return 'Keeps ' + to + ' shielded up to ' + e.value + ', topped up each turn.';
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn && !lasting ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.';
     if (e.type === 'damage_reduction') return (e.target_kind === 'self' ? 'Takes ' : 'Gives ' + to + ' ') + e.value + ' less damage per hit' + span + '.';
     if (e.type === 'shield') return 'Shields ' + to + ' for ' + e.value + '.';
     if (e.type === 'attack_output') return 'Gives ' + to + ' +' + e.value + ' damage per hit' + span + '.';
@@ -1220,10 +1227,17 @@
   }
   // Active (in-play) boss effect — target already resolved to names.
   function describeBossActiveEffect(e) {
+    var pre = e.mode === 'always' ? 'Always on · ' : e.mode === 'toggle' ? 'Switched on · ' : '';
+    var post = e.cond_ok === false ? ' (condition not met)' : '';
+    return pre + describeBossActiveCore(e) + post;
+  }
+  function describeBossActiveCore(e) {
     if (e.type === 'none') return 'Narrative effect';
     var left = e.remaining_turns != null ? ', ' + e.remaining_turns + ' turns left' : '';
     var to = e.target_label || bossTargetPhrase(e.target_kind, e.target_ref);
     var onWho = e.target_kind === 'self' || !e.target_kind ? '' : ' — ' + to;
+    if (e.type === 'shield') return 'Shield topped up to ' + e.value + ' each turn' + onWho;
+    if (e.type === 'vulnerability') return 'Take ' + [e.value > 0 ? '+' + e.value : null, e.mult > 1 ? '×' + e.mult : null].filter(Boolean).join(' & ') + ' damage — ' + to + left;
     if (e.type === 'heal') return 'Healing ' + e.value + ' HP per turn' + onWho + left;
     if (e.type === 'damage_reduction') return 'Takes ' + e.value + ' less damage' + onWho + left;
     if (e.type === 'attack_output') return '+' + e.value + ' damage per hit' + onWho + left;
@@ -1257,53 +1271,148 @@
     var hasDamage = e.type === 'damage' || e.type === 'dot';
     var spent = e.uses_per_session > 0 && (e.uses_this_session || 0) >= e.uses_per_session;
     var pickedIds = Object.keys(picks).filter(function (k) { return picks[k]; }).map(Number);
-    var canUse = props.turnLocked && !boss.defeated && !spent &&
-      (needMulti ? pickedIds.length > 0 : needSingle ? !!single : true) &&
+    // Press to use (boss turn only), always on (no button), or a switch the DM
+    // flips any time in the session. A condition that doesn't hold greys out a
+    // press; on a lasting effect it just pauses it.
+    var mode = e.mode || 'activated';
+    var condOff = !!e.conditions && e.cond_ok === false;
+    var picksMade = (needMulti ? pickedIds.length > 0 : needSingle ? !!single : true) &&
       (needAllies ? allyIds.length > 0 : needAlly ? !!ally : true);
+    var canUse = props.turnLocked && !boss.defeated && !spent && !condOff && picksMade;
+    var canSwitch = !boss.defeated && (e.active || (!spent && picksMade));
     var stunned = !!boss.stunned;
     var summary = bossEffectText(e) + (e.uses_per_session > 0 ? ' · ' + (e.uses_per_session - (e.uses_this_session || 0)) + '/' + e.uses_per_session + ' uses' : '');
     function toggle(id) { var n = Object.assign({}, picks); n[id] = !n[id]; setPicks(n); }
-    function use() {
-      if (stunned && !confirm('I want to use this skill even though the boss is stunned')) return;
+    function use(extra) {
+      var on = !extra || extra.enabled !== false;
+      if (on && stunned && !confirm('I want to use this skill even though the boss is stunned')) return;
       var ids = needMulti ? pickedIds : (needSingle && single ? [Number(single)] : []);
       var bossIds = needAllies ? allyIds : (needAlly && ally ? [ally] : []);
       setStatus('busy');
-      Promise.resolve(props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1), stunned, bossIds)).then(function (ok) {
+      Promise.resolve(props.onUseEffect(boss, e, ids, Math.max(1, parseInt(hits, 10) || 1), stunned, bossIds, extra)).then(function (ok) {
         if (ok === false) { setStatus(''); return; } // the error shows at the top; picks stay for another try
         setSingle(''); setPicks({}); setHits('1'); setAlly(''); setAllyPicks({});
         setStatus('done');
         setTimeout(function () { setStatus(function (cur) { return cur === 'done' ? '' : cur; }); }, USE_DONE_MS);
       });
     }
-    return h('div', { className: 'rp-mod', style: { flexWrap: 'wrap' } },
+    // Picks show while a press or a switched-off toggle can use them.
+    var showPicks = mode === 'activated' ? !(props.inSkill) : mode === 'toggle' && !e.active;
+    var control;
+    if (mode === 'always') control = h('span', { className: 'tag' }, 'Always on');
+    else if (mode === 'toggle')
+      control = h('button', { type: 'button', className: 'rp-switch' + (e.active ? ' is-on' : ''), role: 'switch',
+        'aria-checked': e.active ? 'true' : 'false', 'aria-label': e.ability_name || 'Switch', disabled: status === 'busy' || !canSwitch,
+        onClick: function () { use({ enabled: !e.active }); } },
+        h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+        h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+        h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' }));
+    else if (props.inSkill) control = null; // the skill's own button fires it
+    else control = status === 'busy' ? h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Using…')
+      : status === 'done' ? h('button', { type: 'button', className: 'btn is-small rp-use-done', disabled: true, 'aria-live': 'polite' },
+          h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'check'), 'Done')
+      : h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: function () { use(); } }, spent ? 'Used' : 'Use');
+    return h('div', { className: 'rp-mod' + (condOff ? ' is-gated' : ''), style: { flexWrap: 'wrap' } },
       h('div', { className: 'rp-mod-info' },
-        h('span', { className: 'rp-mod-meta' }, summary),
-        needMulti ? h('div', { className: 'rp-skill-picks' },
+        h('span', { className: 'rp-mod-meta' }, summary,
+          condOff ? h('span', { className: 'status-dot is-red rp-tag-spaced' }, 'Condition not met') : null),
+        showPicks && needMulti ? h('div', { className: 'rp-skill-picks' },
           living.map(function (p) {
             return h('label', { key: p.member_id },
               h('input', { type: 'checkbox', checked: !!picks[p.member_id], onChange: function () { toggle(p.member_id); } }),
               h('span', null, p.member_name));
           })) : null,
-        needAllies ? h('div', { className: 'rp-skill-picks' },
+        showPicks && needAllies ? h('div', { className: 'rp-skill-picks' },
           enemies.map(function (x) {
             return h('label', { key: x.id },
               h('input', { type: 'checkbox', checked: !!allyPicks[x.id], onChange: function () { var nx = Object.assign({}, allyPicks); nx[x.id] = !nx[x.id]; setAllyPicks(nx); } }),
               h('span', null, x.name));
           })) : null),
       h('div', { className: 'rp-mod-control' },
-        needAlly ? h('select', { className: 'field', value: ally, onChange: function (ev) { setAlly(ev.target.value); } },
+        showPicks && needAlly ? h('select', { className: 'field', value: ally, onChange: function (ev) { setAlly(ev.target.value); } },
           h('option', { value: '' }, 'enemy…'),
           enemies.map(function (x) { return h('option', { key: x.id, value: x.id }, x.name); })) : null,
-        needSingle ? h('select', { className: 'field', value: single, onChange: function (ev) { setSingle(ev.target.value); } },
+        showPicks && needSingle ? h('select', { className: 'field', value: single, onChange: function (ev) { setSingle(ev.target.value); } },
           h('option', { value: '' }, 'target…'),
           living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+        hasDamage && mode === 'activated' && !props.inSkill ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
+          h('span', null, '×'),
+          h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
+        control));
+  }
+
+  // "Use the whole skill" (the skill's switch in the Boss Library): one press
+  // for every effect, with one set of picks (a player, several players, an
+  // enemy, several enemies) and one Hits for all its damage. Effects that are
+  // used up, always on, already switched on, or whose condition doesn't hold
+  // are left out, and ask for no pick.
+  function DMBossSkillControl(props) {
+    var a = props.ability; var boss = props.boss; var living = props.living;
+    var enemies = (props.enemies || []).filter(function (x) { return !x.defeated; });
+    var oneState = useState(''); var one = oneState[0], setOne = oneState[1];
+    var manyState = useState({}); var many = manyState[0], setMany = manyState[1];
+    var allyState = useState(''); var ally = allyState[0], setAlly = allyState[1];
+    var alliesState = useState({}); var allies = alliesState[0], setAllies = alliesState[1];
+    var hitsState = useState('1'); var hits = hitsState[0], setHits = hitsState[1];
+    var statusState = useState(''); var status = statusState[0], setStatus = statusState[1];
+    function spent(e) { return e.uses_per_session > 0 && (e.uses_this_session || 0) >= e.uses_per_session; }
+    var ready = (a.effects || []).filter(function (e) {
+      var md = e.mode || 'activated';
+      if (md === 'always' || spent(e)) return false;
+      if (md === 'toggle') return !e.active;
+      return !(e.conditions && e.cond_ok === false);
+    });
+    var needs = {};
+    ready.forEach(function (e) { if (e.target_kind === 'party_member' || e.target_kind === 'party_members' || e.target_kind === 'ally' || e.target_kind === 'allies') needs[e.target_kind] = true; });
+    var hasDamage = ready.some(function (e) { return (e.type === 'damage' || e.type === 'dot') && (e.mode || 'activated') === 'activated'; });
+    var keys = function (o) { return Object.keys(o).filter(function (k) { return o[k]; }); };
+    var missing = (needs.party_member && !one) || (needs.party_members && !keys(many).length) ||
+      (needs.ally && !ally) || (needs.allies && !keys(allies).length);
+    var stunned = !!boss.stunned;
+    var canUse = props.turnLocked && !boss.defeated && ready.length > 0 && !missing;
+    function useAll() {
+      if (stunned && !confirm('I want to use this skill even though the boss is stunned')) return;
+      setStatus('busy');
+      Promise.resolve(props.onUseSkill(boss, a, {
+        target_member_id: needs.party_member ? Number(one) : null,
+        target_member_ids: needs.party_members ? keys(many).map(Number) : [],
+        target_boss_id: needs.ally ? ally : null,
+        target_boss_ids: needs.allies ? keys(allies) : [],
+        hits: Math.max(1, parseInt(hits, 10) || 1),
+        override_stun: stunned
+      })).then(function (ok) {
+        if (ok === false) { setStatus(''); return; }
+        setOne(''); setMany({}); setAlly(''); setAllies({}); setHits('1');
+        setStatus('done');
+        setTimeout(function () { setStatus(function (cur) { return cur === 'done' ? '' : cur; }); }, USE_DONE_MS);
+      });
+    }
+    function chips(list, picked, setPicked, idOf, nameOf) {
+      return h('div', { className: 'rp-skill-picks' }, list.map(function (x) {
+        var id = String(idOf(x));
+        return h('label', { key: id },
+          h('input', { type: 'checkbox', checked: !!picked[id], onChange: function () { var nx = Object.assign({}, picked); nx[id] = !nx[id]; setPicked(nx); } }),
+          h('span', null, nameOf(x)));
+      }));
+    }
+    return h('div', { className: 'rp-mod rp-skill-control', style: { flexWrap: 'wrap' } },
+      h('div', { className: 'rp-mod-info' },
+        needs.party_members ? chips(living, many, setMany, function (p) { return p.member_id; }, function (p) { return p.member_name; }) : null,
+        needs.allies ? chips(enemies, allies, setAllies, function (x) { return x.id; }, function (x) { return x.name; }) : null),
+      h('div', { className: 'rp-mod-control' },
+        needs.party_member ? h('select', { className: 'field', value: one, 'aria-label': 'Target player', onChange: function (ev) { setOne(ev.target.value); } },
+          h('option', { value: '' }, 'player…'),
+          living.map(function (p) { return h('option', { key: p.member_id, value: p.member_id }, p.member_name); })) : null,
+        needs.ally ? h('select', { className: 'field', value: ally, 'aria-label': 'Target enemy', onChange: function (ev) { setAlly(ev.target.value); } },
+          h('option', { value: '' }, 'enemy…'),
+          enemies.map(function (x) { return h('option', { key: x.id, value: x.id }, x.name); })) : null,
         hasDamage ? h('label', { className: 'rp-hits', title: 'Hits — multiplies the damage' },
           h('span', null, '×'),
           h('input', { className: 'rp-hits-input', type: 'number', min: 1, inputMode: 'numeric', value: hits, onChange: function (ev) { setHits(ev.target.value); } })) : null,
         status === 'busy' ? h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Using…')
           : status === 'done' ? h('button', { type: 'button', className: 'btn is-small rp-use-done', disabled: true, 'aria-live': 'polite' },
               h('span', { className: 'material-symbols-outlined', 'aria-hidden': 'true' }, 'check'), 'Done')
-          : h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, 'aria-disabled': stunned ? 'true' : null, onClick: use }, spent ? 'Used' : 'Use')));
+          : h('button', { type: 'button', className: 'btn is-small', disabled: !canUse, onClick: useAll }, a.one_button ? 'Use' : 'Use skill')));
   }
   // A skill is a named container (like an item ability): a Show toggle plus its
   // effects, each fired on its own.
@@ -1320,9 +1429,11 @@
           h('span', { className: 'material-icons', 'aria-hidden': 'true', style: { fontSize: '1rem' } }, a.revealed ? 'visibility' : 'visibility_off'),
           a.revealed ? 'Shown' : 'Show')),
       a.description ? h('p', { className: 'rp-boss-skill-desc' }, a.description) : null,
+      a.use_all && effects.length ? h(DMBossSkillControl, { ability: a, boss: boss, living: living, enemies: props.enemies, turnLocked: props.turnLocked, onUseSkill: props.onUseSkill }) : null,
       effects.length
         ? effects.map(function (e) {
-            return h(DMBossEffectRow, { key: e.id, effect: e, boss: boss, living: living, enemies: props.enemies, turnLocked: props.turnLocked, onUseEffect: props.onUseEffect });
+            return h(DMBossEffectRow, { key: e.id, effect: Object.assign({ ability_name: a.name }, e), boss: boss, living: living, enemies: props.enemies, turnLocked: props.turnLocked,
+              inSkill: !!(a.use_all && a.one_button), onUseEffect: props.onUseEffect });
           })
         : h('p', { className: 'rp-note' }, 'No effects configured (add them in the admin Boss Library).'));
   }
@@ -1404,7 +1515,7 @@
       open ? h('div', { className: 'rp-dm-boss-body' },
         h(DMBossVuln, { boss: b, onSetVuln: props.onSetVuln }),
         (b.abilities || []).map(function (a) {
-          return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, enemies: props.enemies, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill });
+          return h(DMBossSkillRow, { key: a.id, ability: a, boss: b, party: props.party, enemies: props.enemies, turnLocked: props.campaign.turn_locked, onUseEffect: props.onUseEffect, onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill });
         }),
         !skillCount ? h('p', { className: 'rp-note' }, 'No skills on this boss (add them in the admin Boss Library).') : null) : null);
   }
@@ -1420,7 +1531,7 @@
       (props.bosses || []).map(function (b) {
         return h(DMBossManageRow, { key: b.id, boss: b, campaign: props.campaign, party: props.party, enemies: props.bosses || [],
           onBossHp: props.onBossHp, onBossShield: props.onBossShield, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove,
-          onSetVuln: props.onSetVuln, onSetStun: props.onSetStun, onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onClearProvoke: props.onClearProvoke });
+          onSetVuln: props.onSetVuln, onSetStun: props.onSetStun, onUseEffect: props.onUseEffect, onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill, onClearProvoke: props.onClearProvoke });
       }),
       !(props.bosses || []).length ? h('p', { className: 'rp-note' }, 'No bosses on the field.') : null,
 
@@ -1604,7 +1715,7 @@
 
         tab === 'bosses' ? h(DMBossesTab, { campaign: c, bosses: props.bosses, bossEffects: props.bossEffects, library: props.library, party: props.party,
           onBossAdd: props.onBossAdd, onBossHp: props.onBossHp, onBossShield: props.onBossShield, onBossVisible: props.onBossVisible, onBossRemove: props.onBossRemove, onSetVuln: props.onSetVuln, onSetStun: props.onSetStun,
-          onUseEffect: props.onUseEffect, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove, onClearProvoke: props.onClearProvoke }) : null,
+          onUseEffect: props.onUseEffect, onUseSkill: props.onUseSkill, onRevealSkill: props.onRevealSkill, onBossEffectPatch: props.onBossEffectPatch, onBossEffectRemove: props.onBossEffectRemove, onClearProvoke: props.onClearProvoke }) : null,
 
         tab === 'players' ? h(DMPlayersTab, { party: props.party, turnActions: props.turnActions, buffDrafts: props.buffDrafts, onResetAction: props.onResetAction, playerVulns: props.playerVulns, onSetPlayerVuln: props.onSetPlayerVuln, playerStuns: props.playerStuns, stunImmune: props.stunImmune, onSetStun: props.onSetStun }) : null,
 
@@ -1825,7 +1936,9 @@
     function onClearProvoke(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/provoke'); }); }
     function onBossDotRemove(b, dt) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-dots/' + dt.id); }); }
     function onBossRemove(b) { if (!confirm('Remove ' + b.name + '?')) return; act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/bosses/' + b.id); }); }
-    function onUseEffect(b, e, targetIds, hits, overrideStun, bossIds) { return act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', { effect_id: e.id, target_member_ids: targetIds || [], target_boss_ids: bossIds || [], hits: hits || 1, override_stun: !!overrideStun }); }); }
+    // extra: { enabled } switches a toggled effect on or off.
+    function onUseEffect(b, e, targetIds, hits, overrideStun, bossIds, extra) { return act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-effect', Object.assign({ effect_id: e.id, target_member_ids: targetIds || [], target_boss_ids: bossIds || [], hits: hits || 1, override_stun: !!overrideStun }, extra || {})); }); }
+    function onUseSkill(b, a, body) { return act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/use-skill', Object.assign({ ability_id: a.id }, body)); }); }
     function onRevealSkill(b, a, revealed) { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/bosses/' + b.id + '/reveal-skill', { ability_id: a.id, revealed: revealed }); }); }
     function onBossEffectPatch(e, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id, body); }); }
     function onBossEffectRemove(e) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/boss-effects/' + e.id); }); }
@@ -1900,7 +2013,7 @@
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
         onEndTurn: onEndTurn, onNextTurn: onNextTurn, onSetScene: onSetScene, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
-        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossShield: onBossShield, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onRevealSkill: onRevealSkill,
+        onBossAdd: onBossAdd, onBossHp: onBossHp, onBossShield: onBossShield, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onUseSkill: onUseSkill, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
         playerVulns: data.player_vulns || {}, onSetPlayerVuln: onSetPlayerVuln,
         playerStuns: Object.assign({}, data.player_stuns_next || {}, data.player_stuns || {}), onSetStun: onSetStun,

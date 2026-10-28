@@ -147,6 +147,8 @@
     if (c.kind === 'hp') {
       var opWord = { '<': 'below', '<=': 'at or below', '=': 'at exactly', '>=': 'at or above', '>': 'above' };
       function pt(p) { return p ? (opWord[p.op] || p.op) + ' ' + p.value + (p.unit === 'flat' ? ' HP' : '%') : ''; }
+      // A boss skill's condition watches its own HP.
+      if (c.subject === 'self') return 'Only while its HP is ' + pt(c.start);
       var whose = c.subject === 'item_holder' ? 'another item’s holder' : 'the holder';
       var s = 'Only while ' + whose + ' is ' + pt(c.start);
       if (c.stop) s += ' (until ' + pt(c.stop) + ')';
@@ -159,6 +161,11 @@
       return parts.length ? 'Only ' + parts.join(' ') : '';
     }
     return '';
+  }
+
+  // How a boss skill effect is used: "Always on: " / "While switched on: " / ''.
+  function bossModePrefix(e) {
+    return e && e.mode === 'always' ? 'Always on: ' : e && e.mode === 'toggle' ? 'While switched on: ' : '';
   }
 
   // Who a boss skill reaches, in plain words: players, or the enemies' side.
@@ -190,6 +197,7 @@
     waitsForCondition: waitsForCondition,
     hitNote: hitNote,
     bossDamagePhrase: bossDamagePhrase,
+    bossModePrefix: bossModePrefix,
     durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
