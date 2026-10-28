@@ -233,6 +233,18 @@
 
   function fmtNum(n) { return (n >= 0 ? '+' : '') + n; }
 
+  // A labelled Off/On switch (the same .rp-switch as "Hide My Bosses").
+  function switchRow(label, on, disabled, onChange) {
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.35rem 0' } },
+      h('span', { style: { opacity: disabled ? 0.5 : 1 } }, label),
+      h('button', { type: 'button', className: 'rp-switch' + (on ? ' is-on' : ''), role: 'switch',
+        'aria-checked': on ? 'true' : 'false', 'aria-label': label, disabled: disabled,
+        onClick: function () { onChange(!on); } },
+        h('span', { className: 'rp-switch-txt rp-switch-off' }, 'Off'),
+        h('span', { className: 'rp-switch-txt rp-switch-on' }, 'On'),
+        h('span', { className: 'rp-switch-knob', 'aria-hidden': 'true' })));
+  }
+
   // ── Ability form (name + text + activate-all + one button) ────────────────
   function AbilityForm(props) {
     var a = props.initial || {};
@@ -256,12 +268,9 @@
         h('input', { type: 'text', value: name, onChange: function (e) { setName(e.target.value); } })),
       h('div', { className: 'portal-field' }, h('label', null, 'Description'),
         h('textarea', { rows: 4, value: desc, onChange: function (e) { setDesc(e.target.value); } })),
-      h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0' } },
-        h('input', { type: 'checkbox', checked: activateAll, onChange: function (e) { setActivateAll(e.target.checked); } }),
-        'Offer an “Activate all” master control on this ability'),
-      h('label', { style: { display: 'flex', alignItems: 'center', gap: '0.4rem', margin: '0.25rem 0 0.25rem 1.4rem', opacity: activateAll ? 1 : 0.5 } },
-        h('input', { type: 'checkbox', checked: activateAll && oneButton, disabled: !activateAll, onChange: function (e) { setOneButton(e.target.checked); } }),
-        'One button: its effects lose their own buttons, and the master control reads “Activate”'),
+      switchRow('Turn on Activate All', activateAll, false, setActivateAll),
+      // Needs Activate All: the master control reads "Activate" and the effects lose their own buttons.
+      switchRow('Activate All replaces buttons', activateAll && oneButton, !activateAll, setOneButton),
       h('div', { className: 'portal-btn-row' },
         h('button', { type: 'submit', className: 'btn is-small' }, props.initial ? 'Save ability' : 'Add ability'),
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
