@@ -51,7 +51,7 @@
       case 'attack_mult': return '×' + value + ' attack damage';
       case 'heal_mult': return '×' + value + ' healing';
       case 'heal_received': return v + ' healing received';
-      case 'extra_attack': return v + ' extra attack' + (value === 1 ? '' : 's') + ' each turn';
+      case 'extra_attack': return v + ' extra attack' + (value === 1 ? '' : 's');
       case 'weaken': return '−' + Math.abs(value) + ' to its damage';
       case 'damage_reduction': return '−' + value + ' damage taken';
       case 'shield': return 'grants ' + value + ' shield';
@@ -183,6 +183,35 @@
     return 'a target';
   }
 
+  // A boss skill effect in plain words, shared by the Combat Toolkit (withUses:
+  // its session limit too) and the Roll Calculator's DM panel.
+  function bossEffectText(e, withUses) {
+    var cnd = conditionPhrase(e.conditions);
+    var uses = withUses && e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
+    return bossModePrefix(e) + bossEffectCore(e) + uses + (cnd ? ' · ' + cnd : '');
+  }
+  function bossEffectCore(e) {
+    // Always on / switched on: no turn count, and a shield tops up each turn.
+    var lasting = e.mode === 'always' || e.mode === 'toggle';
+    var span = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
+    // Damage over time and heals each turn tick from the next Next Turn.
+    var later = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
+    if (e.type === 'none') return 'Narrative effect.';
+    var to = bossTargetPhrase(e.target_kind, e.target_ref);
+    if (e.type === 'shield' && lasting) return 'Keeps ' + to + ' shielded up to ' + e.value + ', topped up each turn.';
+    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn && !lasting ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.';
+    if (e.type === 'damage_reduction') return (e.target_kind === 'self' ? 'Takes ' : 'Gives ' + to + ' ') + e.value + ' less damage per hit' + span + '.';
+    if (e.type === 'shield') return 'Shields ' + to + ' for ' + e.value + '.';
+    if (e.type === 'attack_output') return 'Gives ' + to + ' +' + e.value + ' damage per hit' + span + '.';
+    if (e.type === 'attack_mult') return 'Gives ' + to + ' ×' + e.value + ' damage' + span + '.';
+    if (e.type === 'stun_immune') return 'Makes ' + to + ' immune to stun' + span + '.';
+    if (e.type === 'vulnerability') return 'Makes ' + to + ' take ' + [e.value > 0 ? '+' + e.value : null, e.mult > 1 ? '×' + e.mult : null].filter(Boolean).join(' & ') + ' damage' + span + '.';
+    var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
+    if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.';
+    if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.'; }
+    return e.value + ' damage per turn' + hit + ' to ' + to + later + '.';
+  }
+
   global.PVRpShared = {
     SKILLS: SKILLS,
     skillLabel: skillLabel,
@@ -201,6 +230,7 @@
     durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
-    bossTargetPhrase: bossTargetPhrase
+    bossTargetPhrase: bossTargetPhrase,
+    bossEffectText: bossEffectText
   };
 })(window);

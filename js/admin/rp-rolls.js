@@ -20,9 +20,9 @@
   var RPS = window.PVRpShared;
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
     CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
-    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
+    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase,
     isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote,
-    bossModePrefix = RPS.bossModePrefix;
+    bossEffectText = RPS.bossEffectText;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -75,30 +75,6 @@
     { value: 'medium', label: 'Medium' },
     { value: 'light', label: 'Light' }
   ];
-  // Every effect is a modifier on an ability. 'shield' grants shield (auto-pushed
-  // for activated/always; manual for targeted), 'none' is narrative-only text.
-  // attack_mult multiplies a target's attack damage; damage / dot hit an enemy.
-  var MOD_TYPES = ['attack_roll', 'defense_roll', 'heal_roll', 'attack_output', 'attack_mult', 'heal_output', 'shield', 'heal', 'damage', 'dot', 'vulnerability', 'stun', 'none'];
-  var MOD_TYPE_LABELS = {
-    attack_roll: 'Attack roll bonus', defense_roll: 'Defense roll bonus', heal_roll: 'Healing roll bonus',
-    attack_output: 'Bonus attack damage', attack_mult: 'Attack damage multiplier (×)', heal_output: 'Bonus healing',
-    shield: 'Grant shield', heal: 'Restore HP', damage: 'Direct damage (to an enemy)', dot: 'Damage over time (to an enemy)', none: 'Narrative only'
-  };
-  // Types that hit an enemy boss (target is fixed to the chosen boss, Activated mode).
-  var BOSS_MOD_TYPES = ['damage', 'dot'];
-  var TARGET_KINDS = [
-    { value: 'self', label: 'Self' },
-    { value: 'group', label: 'Group (everyone)' },
-    { value: 'class', label: 'Class' },
-    { value: 'holder_item', label: 'Holder of item' },
-    { value: 'party_member', label: 'Party member (picked on use)' }
-  ];
-  var MODES = [
-    { value: 'always', label: 'Always on' },
-    { value: 'toggle', label: 'Toggle (manual on/off)' },
-    { value: 'activated', label: 'Activated (press)' }
-  ];
-
   function flashHook() {
     var st = useState(''); var msg = st[0], set = st[1];
     function go(m) { set(m); setTimeout(function () { set(''); }, 3000); }
@@ -231,8 +207,6 @@
       )
     );
   }
-
-  function fmtNum(n) { return (n >= 0 ? '+' : '') + n; }
 
   // A labelled Off/On switch (the same .rp-switch as "Hide My Bosses").
   function switchRow(label, on, disabled, onChange) {
@@ -995,7 +969,7 @@
       : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
       : m.type === 'stun' ? 'stuns'
       : typePhrase(m.type, m.value);
-    if (m.type === 'weaken') return when + ', ' + t + ' deals ' + Math.abs(m.value) + ' less damage' + dur + '.' + uses + cndSuffix;
+    if (m.type === 'weaken') return when + ', ' + t + (m.target_kind === 'boss' ? ' deals ' : ' deal ') + Math.abs(m.value) + ' less damage' + dur + '.' + uses + cndSuffix;
     var hit = hitNote(m);
     return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + ' to ' + t + dur + '.' + uses + cndSuffix;
   }
@@ -1056,35 +1030,6 @@
     stun_immune: 'Can’t be stunned while it lasts.',
     none: ''
   };
-
-  // Plain-language boss-effect wording, mirroring the item modifier summary
-  // (and the Roll Calculator's bossEffectText).
-  function bossEffectSummary(e) {
-    var cnd = conditionPhrase(e.conditions);
-    return bossModePrefix(e) + bossEffectCore(e) + (cnd ? ' · ' + cnd : '');
-  }
-  function bossEffectCore(e) {
-    var uses = e.uses_per_session > 0 ? ' · ' + e.uses_per_session + ' use' + (e.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    // Always on / switched on: no turn count, and a shield tops up each turn.
-    var lasting = e.mode === 'always' || e.mode === 'toggle';
-    var span = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns' : ', until removed';
-    // Damage over time and heals each turn tick from the next Next Turn.
-    var later = lasting ? '' : e.duration_turns > 0 ? ', for ' + e.duration_turns + ' turns, starting next turn' : ', starting next turn, until removed';
-    if (e.type === 'none') return 'Narrative effect.' + uses;
-    var to = bossTargetPhrase(e.target_kind, e.target_ref);
-    if (e.type === 'shield' && lasting) return 'Keeps ' + to + ' shielded up to ' + e.value + ', topped up each turn.' + uses;
-    if (e.type === 'heal') return (e.duration_turns === 1 && !e.start_next_turn && !lasting ? 'Heals ' + to + ' for ' + e.value + ' HP' : 'Heals ' + to + ' for ' + e.value + ' HP per turn' + later) + '.' + uses;
-    if (e.type === 'damage_reduction') return (e.target_kind === 'self' ? 'Takes ' : 'Gives ' + to + ' ') + e.value + ' less damage per hit' + span + '.' + uses;
-    if (e.type === 'shield') return 'Shields ' + to + ' for ' + e.value + '.' + uses;
-    if (e.type === 'attack_output') return 'Gives ' + to + ' +' + e.value + ' damage per hit' + span + '.' + uses;
-    if (e.type === 'attack_mult') return 'Gives ' + to + ' ×' + e.value + ' damage' + span + '.' + uses;
-    if (e.type === 'stun_immune') return 'Makes ' + to + ' immune to stun' + span + '.' + uses;
-    if (e.type === 'vulnerability') return 'Makes ' + to + ' take ' + [e.value > 0 ? '+' + e.value : null, e.mult > 1 ? '×' + e.mult : null].filter(Boolean).join(' & ') + ' damage' + span + '.' + uses;
-    var hit = hitNote(e); hit = hit ? ' (' + hit + ')' : '';
-    if (e.type === 'damage') return 'Deals ' + e.value + ' damage' + hit + ' to ' + to + '.' + uses;
-    if (e.type === 'stun') { var n = e.duration_turns > 0 ? e.duration_turns : 1; return 'Stuns ' + to + ' for ' + n + ' turn' + (n === 1 ? '' : 's') + '.' + uses; }
-    return e.value + ' damage per turn' + hit + ' to ' + to + later + '.' + uses;
-  }
 
   // Skill container: name + description. Numbers and uses live on its effects,
   // which the DM fires one at a time (like an item ability's modifiers).
@@ -1504,10 +1449,10 @@
                   h('button', { type: 'button', className: 'btn is-small is-danger', onClick: function () { deleteAbility(a); } }, '✕'))),
               ro ? (a.effects || []).map(function (x) {
                 return h('div', { key: x.id, className: 'rp-effect-box' },
-                  h('span', { className: 'rp-small' }, bossEffectSummary(x)));
+                  h('span', { className: 'rp-small' }, bossEffectText(x, true)));
               }) : h(DragReorder, { items: a.effects || [], onReorder: reorderEffects, renderRow: function (x) {
                 return h('div', { className: 'rp-effect-box is-row' },
-                  h('span', { className: 'rp-small' }, bossEffectSummary(x)),
+                  h('span', { className: 'rp-small' }, bossEffectText(x, true)),
                   h('span', { className: 'rp-actions' },
                     h('button', { type: 'button', className: 'btn is-small is-quiet rp-mini-btn', onClick: function () { setFxForm({ abilityId: a.id, effect: x }); } }, 'Edit'),
                     h('button', { type: 'button', className: 'btn is-small is-danger rp-mini-btn', onClick: function () { deleteEffect(x); } }, '✕')));
