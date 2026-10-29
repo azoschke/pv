@@ -1,5 +1,5 @@
 // ============================================================================
-//  RollCalculator (v8)
+//  RollCalculator (v9)
 // ============================================================================
 
 (function () {
@@ -9,9 +9,9 @@
   // Shared lists + plain-language helpers (js/rp-shared.js).
   var RPS = window.PVRpShared;
   var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
-    CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
+    CLASS_PLURAL = RPS.CLASS_PLURAL, effectPhrase = RPS.effectPhrase, itemEffectText = RPS.itemEffectText,
     parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase, bossTargetPhrase = RPS.bossTargetPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, pickNeeded = RPS.pickNeeded,
+    isCondBuff = RPS.isCondBuff, pickNeeded = RPS.pickNeeded,
     firesByItself = RPS.firesByItself, waitsForCondition = RPS.waitsForCondition, hitNote = RPS.hitNote,
     bossDamagePhrase = RPS.bossDamagePhrase, bossEffectText = RPS.bossEffectText;
   var useRef = React.useRef;
@@ -29,8 +29,6 @@
   var BUFF_ICON   = { attack_roll: 'swords', defense_roll: 'add_moderator', heal_roll: 'favorite' };
   // Tab glyphs.
   var TAB_ICON = { attack: 'swords', heal: 'healing', buff: 'auto_awesome', defend: 'shield', skill: 'target' };
-  function skillPhrase(skill, value) { return (value >= 0 ? '+' : '') + value + ' to ' + skillLabel(skill) + ' checks'; }
-  function summonPhrase(s) { s = s || {}; var atk = s.attack_mode === 'd20' ? ', D20 atk' : (s.attack ? ', ' + s.attack + ' atk' : ''); return 'summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ')'; }
 
   var FALLBACK_RULES = {
     role_base_hp: { tank: 25, dps: 20, healer: 15 },
@@ -88,35 +86,36 @@
       case 'boss': return 'a chosen enemy';
       case 'some_bosses': return 'several chosen enemies';
       case 'all_bosses': return 'all enemies';
+      case 'minions': return 'all minions';
     }
     return '';
   }
-  // For a catalogue modifier (My Items / admin): full "when → what → to whom" sentence.
-  function describeModifier(m) {
-    if (m.type === 'none') return m.label || 'Special effect — see the item text.';
-    // A condition-driven bonus isn't pressed: its condition starts it.
-    var when = isCondBuff(m) ? (m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds')
-      : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    if (m.type === 'summon') return when + ', ' + summonPhrase(m.summon) + '.' + (m.start_next_turn ? ' They attack from next turn.' : '');
-    if (m.type === 'weaken') return when + ', ' + targetPhrase(m.target_kind, m.target_ref) + (m.target_kind === 'boss' ? ' deals ' : ' deal ') + Math.abs(m.value) + ' less damage' + durationPhrase(m) + '.';
-    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value) : m.type === 'skill_roll' ? skillPhrase(m.skill, m.value) : typePhrase(m.type, m.value);
-    var hit = hitNote(m);
-    var to = ' to ' + targetPhrase(m.target_kind, m.target_ref);
-    return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + to + durationPhrase(m) + '.';
-  }
-  // For an active effect (already resolved target_label + remaining turns).
+  var ENEMY_KINDS = ['boss', 'some_bosses', 'all_bosses', 'minions'];
+  // For an active effect (already resolved target_label + remaining turns), in
+  // the same terms as the item's own line (js/rp-shared.js effectPhrase).
   function describeActiveEffect(e) {
     if (e.type === 'none') return e.label || 'Special effect';
-    var core = e.type === 'roll_bonus' ? rollsPhrase(e.rolls, e.value) : e.type === 'skill_roll' ? skillPhrase(e.skill, e.value) : typePhrase(e.type, e.value);
     var tp = targetPhrase(e.target_kind, e.target_ref);
     if (e.target_kind === 'party_member' || e.target_kind === 'party_members' || e.target_kind === 'players') tp = e.target_label || tp;
     if (e.target_kind === 'holder_item' || e.target_kind === 'holder_items') tp = e.target_label || tp;
-    var to = tp ? ' to ' + tp : '';
+    var to = tp ? (ENEMY_KINDS.indexOf(e.target_kind) !== -1 ? ' on ' : ' to ') + tp : '';
     // A "Wait a turn" effect is held back (pending) until the next Next Turn.
     var dur = e.pending ? ' — starts next turn'
       : e.remaining_turns != null ? ' — ' + e.remaining_turns + (e.duration_turns ? ' of ' + e.duration_turns : '') + ' turn' + (e.remaining_turns === 1 && !e.duration_turns ? '' : 's') + ' left' : '';
-    return core + to + dur;
+    return effectPhrase(e) + to + dur;
   }
+  // An effect saved without a label is named by what it does.
+  function effectTitle(m) {
+    if (m.label) return m.label;
+    if (m.type === 'none') return 'Effect';
+    var p = effectPhrase(m);
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  }
+  // A pressed effect still running for its holder: on, and waiting its turn,
+  // with turns left, or with no turn count (for the rest of the session). The
+  // worker refuses another press then (lib/items.js isRunning). A conditioned
+  // effect's row only watches its condition, so it doesn't count.
+  function runningPress(m) { return m.active && (m.remaining_turns != null || m.pending || !m.conditions); }
 
   // ── Action economy (client view) ──────────────────────────────────────────
   function canAct(data, type) {
@@ -341,7 +340,7 @@
     var bossPickState = useState(''); var bossPick = bossPickState[0], setBossPick = bossPickState[1];
     var bossPicksState = useState([]); var bossPicks = bossPicksState[0], setBossPicks = bossPicksState[1];
     function toggleBoss(id, cap) { setBossPicks(function (cur) { if (cur.indexOf(id) !== -1) return cur.filter(function (x) { return x !== id; }); if (cap && cur.length >= cap) return cur; return cur.concat([id]); }); }
-    var plain = describeModifier(m);
+    var plain = itemEffectText(m);
     // A conditional-activation gate (HP / scene). When the worker reports the gate
     // is currently unmet (cond_latched === false) the effect isn't applying, so the
     // row greys out and says so — its bonus is already excluded server-side.
@@ -395,7 +394,7 @@
       var disabled = props.locked || props.payLocked || spent || waiting || allyMissing || (needBoss && !bossSel) || (needBosses && !bossPicks.length) || (allBosses && !liveBosses.length);
       // Three stages: Activate (can fire) → Active (a lasting effect running) → Used
       // (no session uses left). Instant effects skip "Active" (no remaining turns).
-      var isRunning = m.active && (m.remaining_turns != null || m.pending);
+      var isRunning = runningPress(m);
       if (isRunning) control = h('button', { type: 'button', className: 'btn is-quiet is-small is-active', disabled: true }, m.pending ? 'Starts next turn' : 'Active');
       else if (spent) control = h('button', { type: 'button', className: 'btn is-small', disabled: true }, 'Used');
       else control = h('div', { className: 'rp-mod-control' },
@@ -427,7 +426,7 @@
     }
     return h('div', { className: 'rp-mod' + (gateClosed ? ' is-gated' : '') },
       h('div', { className: 'rp-mod-info' },
-        h('span', null, h('strong', null, m.label || (m.type === 'none' ? 'Effect' : typePhrase(m.type, m.value))),
+        h('span', null, h('strong', null, effectTitle(m)),
           gateClosed && !timed ? h('span', { className: 'status-dot is-red rp-tag-spaced' }, 'Condition not met') : null),
         h('span', { className: 'rp-mod-meta' }, plain + (extras.length ? ' · ' + extras.join(' · ') : ''))),
       m.type === 'none' && m.mode === 'always' ? null : control);
@@ -456,7 +455,7 @@
     }
     var parts = ab.modifiers || [];
     function spent(m) { return m.uses_per_session > 0 && (m.uses_this_session || 0) >= m.uses_per_session; }
-    function running(m) { return m.active && (m.remaining_turns != null || m.pending); }
+    var running = runningPress;
     var presses = parts.filter(function (m) { return m.mode === 'activated' && !isCondBuff(m) && !firesByItself(m); });
     var ready = presses.filter(function (m) { return !spent(m) && !(waitsForCondition(m) && m.cond_latched === false); });
     var switchesOff = parts.filter(function (m) { return m.mode === 'toggle' && !m.active; }); // the press switches these on
@@ -1193,7 +1192,7 @@
             showSkills: true, skillsUnseen: props.skillsUnseen, onOpenSkills: props.onOpenSkills }),
           h(SummonsPanel, { minions: props.minions, bosses: bosses, myId: c.member_id, isDM: props.isDM, locked: locked, attackDie: rules.attack_die, rules: rules,
             onMinionAttack: props.onMinionAttack, onMinionRemove: props.onMinionRemove, onMinionHp: props.onMinionHp }))),
-      h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked,
+      h(ItemsStrip, { items: props.items, party: party, bosses: bosses, locked: locked || props.sending,
         turnBlocked: function (ab) { return turnBlocked(data, ab); },
         onToggle: props.onToggle, onActivate: props.onActivate, onActivateAll: props.onActivateAll }));
   }
@@ -1637,8 +1636,8 @@
           h('span', { className: 'rp-dm-tab-dot', 'aria-hidden': 'true' }),
           unseenCount + (unseenCount === 1 ? ' New Roll Shared' : ' New Rolls Shared')) : null,
         h('div', { className: 'rp-deck-head-ctl' },
-          h('button', { type: 'button', className: 'btn is-small', disabled: c.turn_locked, onClick: props.onEndTurn }, 'End Turn'),
-          h('button', { type: 'button', className: 'btn is-small', disabled: !c.turn_locked, onClick: props.onNextTurn }, 'Next Turn'),
+          h('button', { type: 'button', className: 'btn is-small', disabled: c.turn_locked || props.sending, onClick: props.onEndTurn }, 'End Turn'),
+          h('button', { type: 'button', className: 'btn is-small', disabled: !c.turn_locked || props.sending, onClick: props.onNextTurn }, 'Next Turn'),
           h('button', { type: 'button', className: 'btn is-small is-quiet rp-deck-toggle', 'aria-expanded': open ? 'true' : 'false', onClick: function () { setOpen(!open); } },
             h('span', { className: 'material-icons', 'aria-hidden': 'true' }, open ? 'expand_less' : 'expand_more'),
             open ? 'Hide' : 'Show'))),
@@ -1838,6 +1837,16 @@
     function cid() { return dataRef.current.campaign.id; }
     // Runs an action, then refreshes. Resolves true when it went through.
     async function act(fn) { setErr(''); try { await fn(); await refresh(); return true; } catch (e) { setErr(e.message || 'Action failed.'); return false; } }
+    // Item presses, switches and turn changes: one at a time, and their
+    // buttons lock until it has gone through and the page has refreshed, so a
+    // quick second click can't send it twice.
+    var sendingRef = useRef(false);
+    var sendingState = useState(false); var sending = sendingState[0], setSending = sendingState[1];
+    function send(fn) {
+      if (sendingRef.current) return;
+      sendingRef.current = true; setSending(true);
+      act(fn).then(function () { sendingRef.current = false; setSending(false); });
+    }
 
     var rules = rulesOf(data);
     function onHp(p, v) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/characters/' + p.member_id, { current_hp: Math.max(0, Math.min(v, p.max_hp)) }); }); }
@@ -1851,12 +1860,12 @@
     }
     function onBuffPatch(b, body) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id, body); }); }
     function onBuffRemove(b) { act(function () { return PVRollAPI.request('DELETE', '/rp/campaigns/' + cid() + '/personal-buffs/' + b.id); }); }
-    function onToggle(m, enabled, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled, target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null }); }); }
-    function onActivate(m, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.allBosses }); }); }
+    function onToggle(m, enabled, opts) { opts = opts || {}; send(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/toggle', { campaign_id: cid(), enabled: enabled, target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null }); }); }
+    function onActivate(m, opts) { opts = opts || {}; send(function () { return PVRollAPI.request('POST', '/rp/modifiers/' + m.id + '/activate', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null, all_bosses: !!opts.allBosses }); }); }
     // A one-button ability: every part at once, with the picks its parts need.
-    function onActivateAll(ab, opts) { opts = opts || {}; act(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null }); }); }
-    function onEndTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
-    function onNextTurn() { act(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
+    function onActivateAll(ab, opts) { opts = opts || {}; send(function () { return PVRollAPI.request('POST', '/rp/abilities/' + ab.id + '/activate-all', { campaign_id: cid(), target_member_id: opts.memberId != null ? opts.memberId : null, target_member_ids: opts.memberIds && opts.memberIds.length ? opts.memberIds : null, target_boss_id: opts.bossId || null, target_boss_ids: opts.bossIds && opts.bossIds.length ? opts.bossIds : null }); }); }
+    function onEndTurn() { send(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/end', {}); }); }
+    function onNextTurn() { send(function () { return PVRollAPI.request('POST', '/rp/campaigns/' + cid() + '/turn/next', {}); }); }
     // Scene (location / time of day). Empty string clears back to unset. The
     // worker re-checks scene-gated effects immediately, so they fire on save.
     function onSetScene(patch) { act(function () { return PVRollAPI.request('PATCH', '/rp/campaigns/' + cid() + '/scene', patch); }); }
@@ -1985,7 +1994,7 @@
 
       isDM ? h(DMDeck, { campaign: camp, effects: effectsList, hpLog: data.hp_log || [],
         bosses: data.bosses || [], bossEffects: bossEffectsList, library: library || [], party: data.party || [], turnActions: data.turn_actions || [],
-        onEndTurn: onEndTurn, onNextTurn: onNextTurn, onSetScene: onSetScene, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
+        onEndTurn: onEndTurn, onNextTurn: onNextTurn, sending: sending, onSetScene: onSetScene, onToggleEffect: onToggleEffect, onSetTurns: onSetTurns, onRemoveEffect: onRemoveEffect,
         onPauseSession: onPauseSession, onEndSession: onEndSession,
         onBossAdd: onBossAdd, onBossHp: onBossHp, onBossShield: onBossShield, onBossVisible: onBossVisible, onBossRemove: onBossRemove, onSetVuln: onSetVuln, onUseEffect: onUseEffect, onUseSkill: onUseSkill, onRevealSkill: onRevealSkill,
         onBossEffectPatch: onBossEffectPatch, onBossEffectRemove: onBossEffectRemove, onResetAction: onResetAction,
@@ -2002,7 +2011,7 @@
           skillsUnseen: skillsUnseen, onOpenSkills: openSkills,
           onApplyDamage: onApplyDamage, onApplyHeal: onApplyHeal, onSaveBuffDraft: onSaveBuffDraft, onApplyBuff: onApplyBuff,
           onProvoke: onProvoke, onShareRoll: onShareRoll,
-          onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll,
+          onHp: onHp, onShield: onShield, onToggle: onToggle, onActivate: onActivate, onActivateAll: onActivateAll, sending: sending,
           minions: data.minions || [], onMinionAttack: onMinionAttack, onMinionRemove: onMinionRemove, onMinionHp: onMinionHp,
           onBossVisible: onBossVisible, onBossDotRemove: onBossDotRemove })
         : h('div', null,

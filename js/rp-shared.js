@@ -31,36 +31,50 @@
 
   // ── Plain-language descriptions ─────────────────────────────────────────
   var CLASS_PLURAL = { tank: 'Tanks', dps: 'DPS', healer: 'Healers' };
-  // A roll_bonus modifier boosts one or more rolls with a single value.
-  function rollsPhrase(rolls, value) {
-    var v = (value >= 0 ? '+' : '') + value;
+  function signed(v) { return (v >= 0 ? '+' : '−') + Math.abs(v); }
+  // The rolls a roll_bonus boosts: "attack & defense", or "all".
+  function rollsWords(rolls) {
     var set = Array.isArray(rolls) ? rolls : [];
-    if (set.length >= 3) return v + ' to all rolls';
-    if (!set.length) return v + ' roll bonus';
-    var names = set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; });
-    return v + ' to ' + names.join(' & ') + ' roll' + (set.length > 1 ? 's' : '');
+    if (set.length >= 3) return 'all';
+    return set.map(function (r) { return r === 'attack_roll' ? 'attack' : r === 'defense_roll' ? 'defense' : 'healing'; }).join(' & ');
   }
-  function typePhrase(type, value) {
-    var v = (value >= 0 ? '+' : '') + value;
-    switch (type) {
-      case 'attack_roll': return v + ' attack roll bonus';
-      case 'defense_roll': return v + ' defense roll bonus';
-      case 'heal_roll': return v + ' healing roll bonus';
-      case 'attack_output': return v + ' bonus attack damage';
-      case 'heal_output': return v + ' bonus healing';
-      case 'attack_mult': return '×' + value + ' attack damage';
-      case 'heal_mult': return '×' + value + ' healing';
-      case 'heal_received': return v + ' healing received';
-      case 'extra_attack': return v + ' extra attack' + (value === 1 ? '' : 's');
-      case 'weaken': return '−' + Math.abs(value) + ' to its damage';
-      case 'damage_reduction': return '−' + value + ' damage taken';
-      case 'shield': return 'grants ' + value + ' shield';
-      case 'heal': return 'restores ' + value + ' HP';
-      case 'damage': return 'deals ' + value + ' damage';
-      case 'dot': return value + ' damage per turn';
-      case 'stun_immune': return 'grants stun immunity';
+  var ROLL_WORD = { attack_roll: 'attack', defense_roll: 'defense', heal_roll: 'healing' };
+  // "Take more damage": "+2 extra damage", "×2 damage", or "+2 extra damage, ×2".
+  function vulnWords(m) {
+    var mult = m.mult > 1 ? '×' + m.mult : '';
+    if (!(m.value > 0) && mult) return mult + ' damage';
+    return signed(m.value || 0) + ' extra damage' + (mult ? ', ' + mult : '');
+  }
+
+  // What an item effect does, as a short phrase in the same terms as
+  // itemEffectText: "+5 attack damage", "+1 to attack & defense rolls", "a
+  // shield of 2". The Roll Calculator's lists of effects in play use it, and
+  // it names an effect saved without a label.
+  function effectPhrase(m) {
+    var v = m.value;
+    switch (m.type) {
+      case 'roll_bonus': return signed(v) + ' to ' + rollsWords(m.rolls) + ' rolls';
+      case 'attack_roll': case 'defense_roll': case 'heal_roll': return signed(v) + ' to ' + ROLL_WORD[m.type] + ' rolls';
+      case 'skill_roll': return signed(v) + ' to ' + skillLabel(m.skill) + ' checks';
+      case 'attack_output': return signed(v) + ' attack damage';
+      case 'attack_mult': return '×' + v + ' attack damage';
+      case 'heal_output': return signed(v) + ' healing';
+      case 'heal_mult': return '×' + v + ' healing';
+      case 'heal_received': return signed(v) + ' healing received';
+      case 'extra_attack': return v + ' extra attack' + (v === 1 ? '' : 's');
+      case 'damage_reduction': return Math.abs(v) + ' less damage per hit';
+      case 'vulnerability': return vulnWords(m).replace(' damage', ' damage taken');
+      case 'weaken': return Math.abs(v) + ' less damage dealt';
+      case 'stun_immune': return 'stun immunity';
+      case 'shield': return 'a shield of ' + v;
+      case 'heal': return v + ' HP of healing';
+      case 'damage': return v + ' damage';
+      case 'dot': return v + ' damage per turn';
+      case 'stun': return 'stun';
+      case 'summon': return 'summon';
+      case 'none': return 'narrative';
     }
-    return v + ' ' + String(type || '').replace(/_/g, ' ');
+    return signed(v) + ' ' + String(m.type || '').replace(/_/g, ' ');
   }
 
   // Roll / output bonuses. Must stay in step with the worker (lib/constants.js
@@ -99,9 +113,6 @@
   function firesByItself(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !pickNeeded(m); }
   function waitsForCondition(m) { return !!(m && m.conditions) && TRIGGER_TYPES.indexOf(m.type) !== -1 && !!pickNeeded(m); }
 
-  // How a strike or damage over time treats the target's defences:
-  // "unmitigated" skips damage reduction, "ignores shields" goes straight to HP.
-  // '' for anything else.
   // A boss's own damage right now (sync dmg_add / dmg_mult): "+2", "−1 ×2", or ''.
   function bossDamagePhrase(b) {
     var add = (b && b.dmg_add) || 0, mult = (b && b.dmg_mult) || 1;
@@ -111,27 +122,12 @@
     return p.join(' ');
   }
 
+  // How a strike or damage over time treats the target's defences:
+  // "unmitigated" skips damage reduction, "ignores shields" goes straight to HP.
+  // '' for anything else.
   function hitNote(m) {
     if (!m || (m.type !== 'damage' && m.type !== 'dot')) return '';
     return [m.unmitigated ? 'unmitigated' : null, m.ignore_shields ? 'ignores shields' : null].filter(Boolean).join(', ');
-  }
-
-  // An effect's length: ", this turn" / ", for 3 turns". "Wait a turn"
-  // (start_next_turn) starts it next turn instead. Damage over time and heals
-  // each turn never land when pressed (their first tick is the next Next
-  // Turn), so they always read from next turn; a heal once with "Wait a turn"
-  // heals once, next turn.
-  function durationPhrase(m) {
-    var n = m.duration_turns;
-    if (m.type === 'dot') return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', starting next turn';
-    if (m.type === 'heal') {
-      if (m.mode === 'always' || m.mode === 'toggle') return ', each turn';
-      if (n === 1) return m.start_next_turn ? ', next turn' : ', this turn';
-      return n > 1 ? ', each turn for ' + n + ' turns, starting next turn' : ', each turn, starting next turn';
-    }
-    if (m.start_next_turn)
-      return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', starting next turn';
-    return n === 1 ? ', this turn' : n > 1 ? ', for ' + n + ' turns' : '';
   }
 
   // Conditional-activation gate (HP / scene). The worker sends `conditions` as a
@@ -161,6 +157,100 @@
       return parts.length ? 'Only ' + parts.join(' ') : '';
     }
     return '';
+  }
+
+  // ── An item effect in plain words ───────────────────────────────────────
+  // Shared by the Combat Toolkit and the Roll Calculator: when it happens, what
+  // it does to whom, and for how long. "When activated, gives the holder +5
+  // attack damage, this turn." o (all optional): names, the item names by id
+  // (for "the holders of ..."); members, [{ id, name }] (for picked players);
+  // uses / condition, add its session uses and its condition to the end.
+  function refIds(ref) {
+    if (Array.isArray(ref)) return ref.map(String);
+    try { var a = JSON.parse(ref); return Array.isArray(a) ? a.map(String) : [String(a)]; } catch (_) { return ref ? [String(ref)] : []; }
+  }
+  // Who it reaches, and how many (for the verb).
+  function itemTarget(m, o) {
+    switch (m.target_kind) {
+      case 'self': return ['the holder', 1];
+      case 'group': return ['the whole party', 1];
+      case 'class': return ['all ' + (CLASS_PLURAL[m.target_ref] || String(m.target_ref || '').toUpperCase()), 2];
+      case 'holder_item': case 'holder_items': {
+        var ids = refIds(m.target_ref);
+        var names = ids.map(function (id) { return o.names && o.names[id]; }).filter(Boolean);
+        if (names.length && names.length === ids.length) return ['the holder' + (names.length > 1 ? 's' : '') + ' of ' + names.join(' and '), names.length > 1 ? 2 : 1];
+        return [ids.length > 1 ? 'the items’ holders' : 'the item’s holder', ids.length > 1 ? 2 : 1];
+      }
+      case 'party_member': return ['a chosen ally', 1];
+      case 'party_members': return ['several chosen allies', 2];
+      case 'players': {
+        var pnames = refIds(m.target_ref).map(function (id) { var mb = (o.members || []).filter(function (x) { return String(x.id) === id; })[0]; return mb ? mb.name : null; }).filter(Boolean);
+        return pnames.length ? [pnames.join(' and '), pnames.length > 1 ? 2 : 1] : ['specific players', 2];
+      }
+      case 'boss': return ['a chosen enemy', 1];
+      case 'some_bosses': return [m.target_ref ? 'up to ' + m.target_ref + ' chosen enemies' : 'several chosen enemies', 2];
+      case 'all_bosses': return ['all enemies', 2];
+      case 'minions': return ['all minions', 2];
+    }
+    return ['its target', 1];
+  }
+  function itemWhen(m) {
+    if (isCondBuff(m)) return m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds';
+    if (firesByItself(m)) return 'When its condition turns on';
+    return m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
+  }
+  function itemCore(m, o) {
+    var tn = itemTarget(m, o), t = tn[0], many = tn[1] > 1;
+    var v = m.value;
+    var hit = hitNote(m); hit = hit ? ' (' + hit + ')' : '';
+    switch (m.type) {
+      case 'roll_bonus': case 'attack_roll': case 'defense_roll': case 'heal_roll': case 'skill_roll':
+      case 'attack_output': case 'attack_mult': case 'heal_output': case 'heal_mult': case 'heal_received': case 'extra_attack':
+        return 'gives ' + t + ' ' + effectPhrase(m);
+      case 'damage_reduction': return t + (many ? ' take ' : ' takes ') + Math.abs(v) + ' less damage per hit';
+      case 'vulnerability': return t + (many ? ' take ' : ' takes ') + vulnWords(m);
+      case 'weaken': return t + (many ? ' deal ' : ' deals ') + Math.abs(v) + ' less damage';
+      case 'stun_immune': return t + (many ? ' are' : ' is') + ' immune to stun';
+      case 'shield': return 'shields ' + t + ' for ' + v;
+      case 'heal': return 'heals ' + t + ' for ' + v + ' HP';
+      case 'damage': return 'deals ' + v + ' damage' + hit + ' to ' + t;
+      case 'dot': return 'deals ' + v + ' damage per turn' + hit + ' to ' + t;
+      case 'stun': return 'stuns ' + t;
+      case 'summon': {
+        var sm = m.summon && typeof m.summon === 'object' ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
+        var atk = sm.attack_mode === 'd20' ? 'attacks on a d20' : sm.attack ? 'attacks for ' + sm.attack : 'no attack';
+        return 'summons ' + (sm.count || 1) + ' × ' + (sm.name || 'Minion') + ' (' + (sm.hp || 1) + ' HP, ' + atk + ', ' + (sm.turns ? sm.turns + ' turns' : 'until defeated') + ')';
+      }
+    }
+    return effectPhrase(m) + ' to ' + t;
+  }
+  // How long: lasting effects say when they end; one-off actions don't. "Wait
+  // a turn" (start_next_turn) starts it next turn. Damage over time and heals
+  // each turn never land when pressed (their first tick is the next Next
+  // Turn).
+  function itemLength(m) {
+    var n = m.duration_turns;
+    var wait = !!m.start_next_turn;
+    if (m.type === 'dot') return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', every turn, starting next turn';
+    if (m.type === 'heal') {
+      if (m.mode !== 'activated') return ' each turn';
+      if (n === 1) return wait ? ', next turn' : '';
+      return n > 1 ? ' each turn for ' + n + ' turns, starting next turn' : ' each turn, starting next turn';
+    }
+    if (m.type === 'damage' || m.type === 'summon') return wait ? ', next turn' : '';
+    if (m.type === 'shield') return m.mode === 'activated' ? (wait ? ', next turn' : '') : ' each turn';
+    if (m.type === 'stun') { var st = Math.max(1, n || 1); return ' for ' + st + ' turn' + (st === 1 ? '' : 's') + (wait ? ', starting next turn' : ''); }
+    if (m.mode !== 'activated' || (isCondBuff(m) && !(n > 0))) return '';
+    if (wait) return n === 1 ? ', next turn' : n > 1 ? ', for ' + n + ' turns, starting next turn' : ', from next turn for the rest of the session';
+    return n === 1 ? ', this turn' : n > 1 ? ', for ' + n + ' turns' : ', for the rest of the session';
+  }
+  function itemEffectText(m, o) {
+    o = o || {};
+    var uses = o.uses && m.mode === 'activated' && m.uses_per_session > 0 ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
+    var cnd = o.condition ? conditionPhrase(m.conditions) : '';
+    var tail = uses + (cnd ? ' · ' + cnd : '');
+    if (m.type === 'none') return (m.mode === 'activated' ? 'Narrative only, pressed to use' + (m.duration_turns === 1 ? ', this turn' : '') + '.' : 'Narrative only.') + tail;
+    return itemWhen(m) + ', ' + itemCore(m, o) + itemLength(m) + '.' + (m.type === 'summon' && m.start_next_turn ? ' They attack from next turn.' : '') + tail;
   }
 
   // How a boss skill effect is used: "Always on: " / "While switched on: " / ''.
@@ -218,8 +308,8 @@
     RP_LOCATIONS: RP_LOCATIONS,
     RP_TIMES: RP_TIMES,
     CLASS_PLURAL: CLASS_PLURAL,
-    rollsPhrase: rollsPhrase,
-    typePhrase: typePhrase,
+    effectPhrase: effectPhrase,
+    itemEffectText: itemEffectText,
     isCondBuff: isCondBuff,
     pickNeeded: pickNeeded,
     firesByItself: firesByItself,
@@ -227,7 +317,6 @@
     hitNote: hitNote,
     bossDamagePhrase: bossDamagePhrase,
     bossModePrefix: bossModePrefix,
-    durationPhrase: durationPhrase,
     parseConditions: parseConditions,
     conditionPhrase: conditionPhrase,
     bossTargetPhrase: bossTargetPhrase,

@@ -18,11 +18,9 @@
   var useEffect = React.useEffect;
   // Shared lists + plain-language helpers (js/rp-shared.js).
   var RPS = window.PVRpShared;
-  var SKILLS = RPS.SKILLS, skillLabel = RPS.skillLabel, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
-    CLASS_PLURAL = RPS.CLASS_PLURAL, rollsPhrase = RPS.rollsPhrase, typePhrase = RPS.typePhrase,
-    parseConditions = RPS.parseConditions, conditionPhrase = RPS.conditionPhrase,
-    isCondBuff = RPS.isCondBuff, durationPhrase = RPS.durationPhrase, hitNote = RPS.hitNote,
-    bossEffectText = RPS.bossEffectText;
+  var SKILLS = RPS.SKILLS, RP_LOCATIONS = RPS.RP_LOCATIONS, RP_TIMES = RPS.RP_TIMES,
+    itemEffectText = RPS.itemEffectText, parseConditions = RPS.parseConditions,
+    isCondBuff = RPS.isCondBuff, bossEffectText = RPS.bossEffectText;
 
   // Inline Material icon. `pos` shifts the optical alignment: 'lead' for an icon
   // that sits before button text, 'trail' for one after it, 'only' for an
@@ -928,50 +926,14 @@
         h('button', { type: 'button', className: 'btn is-small is-quiet', onClick: props.onCancel }, 'Cancel')));
   }
 
-  // Plain-language summary of a modifier (matches the player-facing wording in
-  // the roll calculator) — e.g. "When activated, +8 bonus attack damage to the
-  // holder, this turn. · 2 uses/session".
+  // Plain-language summary of a modifier, in the same words as the Roll
+  // Calculator (js/rp-shared.js itemEffectText), with the item holders and
+  // players it names, its session uses and its condition — e.g. "When
+  // activated, gives the holder +8 attack damage, this turn. · 2 uses/session".
   function modifierSummary(m, catalogue, members) {
-    var cnd = conditionPhrase(m.conditions); var cndSuffix = cnd ? ' · ' + cnd : '';
-    if (m.type === 'none') {
-      var nu = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-      return (m.label ? m.label : 'Narrative effect (shown from the description).') + (m.mode === 'activated' ? ' · Press to use' + durationPhrase(m) : '') + nu + cndSuffix;
-    }
-    if (m.type === 'summon') {
-      var s = (m.summon && typeof m.summon === 'object') ? m.summon : (function () { try { return JSON.parse(m.summon) || {}; } catch (_) { return {}; } })();
-      var su = (m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-      var atk = s.attack_mode === 'd20' ? 'D20 atk' : (s.attack || 0) + ' atk';
-      return 'Summons ' + (s.count || 1) + ' × ' + (s.name || 'Minion') + ' (' + (s.hp || 1) + ' HP, ' + atk + (s.turns ? ', ' + s.turns + ' turns' : '') + ').' + (m.start_next_turn ? ' · attacks from next turn' : '') + su + cndSuffix;
-    }
-    var t;
-    switch (m.target_kind) {
-      case 'self': t = 'the holder'; break;
-      case 'group': t = 'the whole party'; break;
-      case 'class': t = 'all ' + (CLASS_PLURAL[m.target_ref] || String(m.target_ref || '').toUpperCase()); break;
-      case 'holder_item': { var it = (catalogue || []).filter(function (c) { return c.id === m.target_ref; })[0]; t = 'whoever holds ' + (it ? it.name : 'the item'); break; }
-      case 'holder_items': { var ids = []; try { ids = JSON.parse(m.target_ref) || []; } catch (_) { ids = m.target_ref ? [m.target_ref] : []; } var names = ids.map(function (id) { var c = (catalogue || []).filter(function (x) { return x.id === id; })[0]; return c ? c.name : null; }).filter(Boolean); t = names.length ? 'holders of ' + names.join(', ') : 'item holders'; break; }
-      case 'party_member': t = 'a chosen ally'; break;
-      case 'party_members': t = 'several chosen allies'; break;
-      case 'players': { var pids = []; try { pids = JSON.parse(m.target_ref) || []; } catch (_) { pids = []; } var pnames = pids.map(function (id) { var mb = (members || []).filter(function (x) { return String(x.id) === String(id); })[0]; return mb ? mb.name : null; }).filter(Boolean); t = pnames.length ? pnames.join(', ') : 'specific players'; break; }
-      case 'boss': t = 'a chosen enemy'; break;
-      case 'some_bosses': t = 'several chosen enemies' + (m.target_ref ? ' (up to ' + m.target_ref + ')' : ''); break;
-      case 'all_bosses': t = 'all enemies'; break;
-      case 'minions': t = 'all minions'; break;
-      default: t = '';
-    }
-    // A condition-driven bonus isn't pressed: its condition starts it.
-    var when = isCondBuff(m) ? (m.duration_turns > 0 ? 'When its condition turns on' : 'While its condition holds')
-      : m.mode === 'always' ? 'Always' : m.mode === 'toggle' ? 'While turned on' : 'When activated';
-    var dur = durationPhrase(m);
-    var uses = (m.mode === 'activated' && m.uses_per_session > 0) ? ' · ' + m.uses_per_session + ' use' + (m.uses_per_session === 1 ? '' : 's') + '/session' : '';
-    var core = m.type === 'roll_bonus' ? rollsPhrase(m.rolls, m.value)
-      : m.type === 'skill_roll' ? ((m.value >= 0 ? '+' : '') + m.value + ' to ' + skillLabel(m.skill) + ' checks')
-      : m.type === 'vulnerability' ? ('applies ' + ([m.value > 0 ? '+' + m.value : null, (m.mult != null && m.mult > 1) ? '×' + m.mult : null].filter(Boolean).join(' & ') + ' ').replace(/^ $/, '') + 'vulnerability')
-      : m.type === 'stun' ? 'stuns'
-      : typePhrase(m.type, m.value);
-    if (m.type === 'weaken') return when + ', ' + t + (m.target_kind === 'boss' ? ' deals ' : ' deal ') + Math.abs(m.value) + ' less damage' + dur + '.' + uses + cndSuffix;
-    var hit = hitNote(m);
-    return when + ', ' + core + (hit ? ' (' + hit + ')' : '') + ' to ' + t + dur + '.' + uses + cndSuffix;
+    var names = {};
+    (catalogue || []).forEach(function (c) { names[c.id] = c.name; });
+    return itemEffectText(m, { names: names, members: members, uses: true, condition: true });
   }
 
   // ── Boss library (officer/admin) ──────────────────────────────────────────
@@ -1820,6 +1782,17 @@
     );
   }
 
+  // A campaign's name, edited in its manager. Save stays off until it changes.
+  function CampaignNameField(props) {
+    var nameState = useState(props.campaign.name); var name = nameState[0], setName = nameState[1];
+    var trimmed = name.trim();
+    return h('div', { className: 'portal-field' }, h('label', null, 'Campaign name'),
+      h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
+        h('input', { type: 'text', value: name, style: { flex: '1 1 auto' }, onChange: function (e) { setName(e.target.value); } }),
+        h('button', { type: 'button', className: 'btn is-small', disabled: !trimmed || trimmed === props.campaign.name,
+          onClick: function () { props.onSave(trimmed); } }, 'Save')));
+  }
+
   // ── Main component ────────────────────────────────────────────────────────
   function PVAdminRpRolls(props) {
     // Tabs and buttons follow the permission grid. A campaign's DM still runs
@@ -2137,6 +2110,10 @@
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + selected.id + '/bosses/' + b.id, { hp_visible: !b.hp_visible }); await loadCampBosses(selected.id); }
       catch (e) { setErr(e.message); }
     }
+    async function renameCampaign(c, name) {
+      try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { name: name }); flash[1]('Campaign renamed.'); await loadCampaigns(); }
+      catch (e) { setErr(e.message); }
+    }
     async function setDmFor(c, memberId) {
       try { await PVRollAPI.request('PATCH', '/rp/campaigns/' + c.id, { dm_member_id: memberId === '' ? null : Number(memberId) }); flash[1]('DM updated.'); await loadCampaigns(); }
       catch (e) { setErr(e.message); }
@@ -2227,6 +2204,7 @@
               isSel ? h('div', { style: { marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' } },
                 canManage
                   ? h('div', { className: 'portal-card is-inset' },
+                      h(CampaignNameField, { key: c.id, campaign: c, onSave: function (name) { renameCampaign(c, name); } }),
                       h('div', { className: 'portal-field' }, h('label', null, 'Dungeon Master'),
                         members === null ? h('p', { className: 'portal-note' }, 'Loading members…') :
                           h('select', { value: c.dm_member_id != null ? String(c.dm_member_id) : '', onChange: function (e) { setDmFor(c, e.target.value); } },
