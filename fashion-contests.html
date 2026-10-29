@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fashion Contests — Phoenix Vanguard</title>
+
+  <link rel="icon" href="assets/pdf-emblem-web.png" type="image/png">
+  <link rel="preload" href="assets/CrimsonPro-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/Stoke-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/LaBelleAurore-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/MaterialSymbolsOutlined-trimmed.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/fashion-contests.css">
+  <script>(function(){var t=localStorage.getItem('crafting-tools-theme');if(t)document.documentElement.setAttribute('data-theme',t);})()</script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="nav-placeholder"></div>
+    <div id="app"></div>
+  </div>
+
+  <footer class="site-footer" id="site-footer">
+    <p class="site-footer-text">FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd.<br>
+    FINAL FANTASY XIV &copy; SQUARE ENIX CO., LTD.</p>
+  </footer>
+
+  <script src="js/pv-session.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin/image-upload.js"></script>
+  <script src="js/fashion-contests.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = ReactDOM.createRoot(document.getElementById('app'));
+      if (typeof FashionContests !== 'undefined') {
+        root.render(React.createElement(FashionContests));
+      } else {
+        root.render(React.createElement('p', { className: 'notice-card is-error' }, 'Fashion Contests failed to load. Reload the page.'));
+      }
+    });
+  </script>
+  <script src="js/nav.js"></script>
+</body>
+</html>

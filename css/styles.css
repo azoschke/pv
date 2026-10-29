@@ -985,6 +985,8 @@ button.nav-sublink {
   color: var(--accent-brown-hover);
   text-decoration: underline;
 }
+/* With an icon (a back link) the underline would run under it too. */
+.btn.is-plain:has(.material-symbols-outlined):hover:not(:disabled) { text-decoration: none; }
 
 .btn.is-small {
   min-height: 30px;
@@ -1061,7 +1063,7 @@ button.nav-sublink {
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.card, .portal-card, .record-card, .form-panel, .notice-panel,
   .craft-card, .cdb-search-section, .chapter-view, .atma-card, .mf-panel, .mf-person-card,
-  .mf-manage, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
+  .mf-manage, .mf-bar, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
   .rp-item-detail, .menu-sheet, .browse-sidebar, .media-card, .modal) *) {
   --bg-darker: var(--bg-card);
   --form-input-bg: var(--bg-card);
@@ -1073,7 +1075,7 @@ button.nav-sublink {
   .app-header, .seg, .chapter-bar, .cal-monthnav, .overall-progress, .appt-actions,
   .form-progress):not(:is(.card, .portal-card, .record-card, .form-panel, .notice-panel,
   .craft-card, .cdb-search-section, .chapter-view, .atma-card, .mf-panel, .mf-person-card,
-  .mf-manage, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
+  .mf-manage, .mf-bar, .home-board, .home-onboard, .rp-card, .rp-deck, .rp-composer-wrap,
   .rp-item-detail, .menu-sheet, .browse-sidebar, .media-card, .modal) *)
   .seg-btn:is(.is-active, [aria-pressed="true"]) {
   background-color: var(--page-control-active);
@@ -1360,7 +1362,8 @@ input:is([type="checkbox"], [type="radio"]):disabled { opacity: 0.5; cursor: def
 .card,
 .portal-card, .record-card, .form-panel, .notice-panel, .craft-card, .cdb-search-section,
 .chapter-view, .atma-card, .mf-panel, .home-board, .home-onboard,
-.rp-card, .rp-deck, .rp-composer-wrap, .rp-item-detail {
+.rp-card, .rp-deck, .rp-composer-wrap, .rp-item-detail,
+.fc-feature, .fc-upcoming, .fc-panel {
   background-color: var(--bg-card);
   border: 0;
   border-radius: 4px;
@@ -1919,6 +1922,7 @@ select.field.is-small { padding-right: 1.75rem; }
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   font-family: inherit;
   color: inherit;
+  text-decoration: none;
 }
 
 .media-card:hover {
@@ -3050,21 +3054,24 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   overflow: hidden;
 }
 
+/* A page moves the photo's focus by setting --band-focus on its .home-band
+   (in its own stylesheet). */
 .home-band-photo img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--band-focus, 50% 50%);
 }
 
 .home-band.is-short .home-band-photo { height: 360px; }
-.home-band.is-short .home-band-photo img { object-position: 50% 30%; }
+.home-band.is-short .home-band-photo img { object-position: var(--band-focus, 50% 30%); }
 
 /* The same band and card heading another page (staff-roster.html): the
    member band's height, overlapped as far as the member welcome. */
 .home-band.is-page .home-band-photo { height: 360px; }
-.home-band.is-page .home-band-photo img { object-position: 50% 35%; }
+.home-band.is-page .home-band-photo img { object-position: var(--band-focus, 50% 35%); }
 
 /* The raised card that overlaps the bottom of the band: the visitor's
    welcome, or the member's welcome back with the quick-access cards. */

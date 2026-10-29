@@ -46,6 +46,7 @@
     boss:     { square: true, maxSize: 600 },
     item:     { square: true, maxSize: 600 },
     codex:    {},
+    fashion:  { maxWidth: 800 },
     // Link previews: cropped to 1200×630 and saved as JPEG.
     campaign: { width: 1200, height: 630, jpeg: true },
     site:     { width: 1200, height: 630, jpeg: true },
