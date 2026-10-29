@@ -3054,21 +3054,24 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   overflow: hidden;
 }
 
+/* A page moves the photo's focus by setting --band-focus on its .home-band
+   (in its own stylesheet). */
 .home-band-photo img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--band-focus, 50% 50%);
 }
 
 .home-band.is-short .home-band-photo { height: 360px; }
-.home-band.is-short .home-band-photo img { object-position: 50% 30%; }
+.home-band.is-short .home-band-photo img { object-position: var(--band-focus, 50% 30%); }
 
 /* The same band and card heading another page (staff-roster.html): the
    member band's height, overlapped as far as the member welcome. */
 .home-band.is-page .home-band-photo { height: 360px; }
-.home-band.is-page .home-band-photo img { object-position: 50% 35%; }
+.home-band.is-page .home-band-photo img { object-position: var(--band-focus, 50% 35%); }
 
 /* The raised card that overlaps the bottom of the band: the visitor's
    welcome, or the member's welcome back with the quick-access cards. */

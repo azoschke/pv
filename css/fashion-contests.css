@@ -16,6 +16,7 @@
 }
 .fc-desc { max-width: 34rem; font-size: 1rem; white-space: pre-line; }
 .fc-head-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.fc-band { --band-focus: 50% 25%; }
 
 /* Look pictures: portrait in the grids, landscape on the podium and past
    cards, keeping the top of a portrait in view. */

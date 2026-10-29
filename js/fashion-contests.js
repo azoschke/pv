@@ -480,7 +480,7 @@
   // The banner and title card, as on the medical pages.
   function LandingHero(props) {
     return h(React.Fragment, null,
-      h('div', { className: 'home-band is-page' },
+      h('div', { className: 'home-band is-page fc-band' },
         h('div', { className: 'home-band-photo media-ph tear' }, h('img', { src: BANNER, alt: '' }))),
       h('header', { className: 'home-hero-card is-page tear' },
         h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
