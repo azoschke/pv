@@ -1,0 +1,239 @@
+/* =============================================================================
+   fashion-contests.css — Fashion Contests (fashion-contests.html), after
+   styles.css. Cards, tables, rows, fields and text use the shared pieces
+   (media card, task / Atma table, Mount Farm's panels, rows and bar, text
+   roles, status dots); these rules lay out the rest.
+   ============================================================================= */
+
+/* Header: the title block, with the description or New contest beside it. */
+.fc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 32px;
+  padding-bottom: 20px;
+}
+.fc-desc { max-width: 34rem; font-size: 1rem; white-space: pre-line; }
+.fc-head-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+
+/* Look pictures: portrait in the grids, landscape on the podium and past
+   cards, keeping the top of a portrait in view. */
+.fc-portrait { aspect-ratio: 4 / 5; }
+.fc-landscape { aspect-ratio: 4 / 3; }
+.fc-look img { object-position: 50% 20%; }
+.fc-collage-tile,
+.fc-thumb,
+.fc-dlg-thumb,
+.fc-entry-thumb,
+.fc-table-thumb { display: block; overflow: hidden; border-radius: 3px; }
+
+.media-card.fc-static { cursor: default; }
+.media-card.fc-static:hover { transform: none; }
+.media-card.is-current { box-shadow: 0 0 0 2px var(--accent-brown); }
+.media-card.is-own { opacity: 0.6; }
+.fc-rank { color: var(--accent-brown); }
+.fc-red { color: var(--accent-red); }
+.fc-winner { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+
+.fc-progress { display: flex; align-items: center; gap: 12px; }
+.fc-progress .progress-bar { flex: 1; min-width: 60px; }
+
+/* --- The list --- */
+.fc-feature {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding-bottom: var(--tear-h);
+  border-radius: 4px 4px 0 0;
+}
+/* One big look and two stacked; fewer fill the space. */
+.fc-collage {
+  flex: 1 1 460px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  height: 380px;
+  padding: 12px 0 0 12px;
+}
+.fc-collage .fc-collage-tile:first-child,
+.fc-collage.is-2 .fc-collage-tile { grid-row: 1 / 3; }
+.fc-collage.is-1 { grid-template-columns: minmax(0, 1fr); }
+.fc-feature-body {
+  flex: 1 1 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 26px 8px;
+}
+.fc-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
+
+.fc-section { margin-top: 28px; }
+.fc-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 1rem; }
+.fc-section-head .form-title { margin: 0; }
+.fc-up-row { display: flex; align-items: center; gap: 16px; padding: 12px 20px; }
+.fc-up-row + .fc-up-row { border-top: 1px solid var(--border-color); }
+.fc-date { flex: none; display: flex; flex-direction: column; align-items: center; width: 56px; line-height: 1.1; }
+.fc-date-day { font-family: var(--font-ui); font-size: 1.625rem; color: var(--text-primary); }
+
+/* --- A contest --- */
+.fc-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+.fc-grid { flex: 999 1 560px; min-width: 0; }
+.fc-panel {
+  flex: 1 1 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px 22px;
+}
+.fc-panel .form-title { margin: 0; }
+.fc-panel-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 6px 0 0; }
+.fc-dl dd { margin: 0; }
+
+.fc-ballot-head { display: flex; align-items: center; gap: 14px; }
+.fc-thumb { flex: none; width: 64px; height: 80px; border-radius: 3px 3px 0 0; }
+.fc-crit { display: flex; flex-direction: column; gap: 6px; }
+.fc-crit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.fc-crit-head .meta-note { text-align: right; line-height: 1.3; }
+.fc-scale { display: flex; justify-content: space-between; margin-top: -8px; }
+.fc-ballot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* A 1–5 score: a well track, the chosen number solid brown. */
+.fc-score {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+}
+.fc-score-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 1.06rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.fc-score-btn:hover:not(:disabled) { background-color: var(--well-hover); }
+.fc-score-btn[aria-pressed="true"],
+.fc-score-btn[aria-pressed="true"]:hover:not(:disabled) { background-color: var(--accent-brown); color: var(--label); }
+.fc-score-btn:disabled { cursor: default; }
+.fc-score:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: 2px; }
+.fc-score.is-compact { gap: 2px; padding: 2px; }
+.fc-score.is-compact .fc-score-btn { min-height: 30px; font-size: 0.875rem; }
+
+/* Results */
+.fc-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fc-closed-line { margin-top: 22px; text-align: right; }
+.fc-results { margin-top: 12px; }
+.fc-results tr.fc-mine td { background-color: var(--bg-group-row); }
+.fc-results .fc-avg { font-family: var(--font-ui); font-size: 1.1rem; color: var(--text-primary); }
+.fc-entrant { display: inline-flex; align-items: center; gap: 12px; }
+.fc-table-thumb { flex: none; width: 32px; height: 40px; }
+.fc-you { color: var(--accent-brown); }
+.fc-table-foot { padding: 14px 26px 0; }
+
+/* --- Make / Edit a contest --- */
+.mf-details .mf-fields + .mf-fields { margin-top: 18px; }
+.fc-split { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 16px; margin-top: 20px; }
+.fc-split > .mf-panel { flex: 1 1 520px; min-width: 0; }
+.fc-picker-row { display: flex; align-items: flex-start; gap: 8px; }
+.fc-picker-row .fc-picker { flex: 1; min-width: 0; }
+
+/* A look: drag handle, picture, name, status and title, then its buttons.
+   The row a look is dragged over takes a brown line on top. */
+.fc-entry.is-over { box-shadow: inset 0 2px 0 var(--accent-brown); }
+.fc-entry.is-dragging { opacity: 0.45; }
+.fc-handle { flex: none; display: inline-flex; width: 14px; color: var(--text-secondary); cursor: grab; }
+.fc-handle svg { width: 10px; height: 16px; margin: 0 auto; }
+.fc-entry-thumb { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 56px; }
+.fc-no-image { font-family: var(--font-ui); font-size: 0.69rem; line-height: 1.2; text-align: center; color: var(--media-ink-dim); }
+.fc-entry-main { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; }
+.fc-entry-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.fc-entry-actions { display: flex; flex: none; align-items: center; gap: 8px; }
+.fc-file { display: none; }
+.fc-voter .seg { flex: none; }
+.fc-voter .seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* In-person scores: one look, a row per in-person voter. */
+.modal.fc-scores-dialog { max-width: 720px; }
+.fc-dlg-head { display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px 12px; }
+.fc-dlg-thumb { flex: none; width: 48px; height: 60px; border-radius: 3px 3px 0 0; }
+.fc-scores-dialog .form-title { margin: 0; }
+.fc-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 14px; }
+.fc-chip[aria-current="true"] { box-shadow: inset 0 0 0 1px var(--accent-brown); }
+.fc-ip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 156px) 44px;
+  align-items: center;
+  gap: 0 12px;
+  padding: 8px 22px;
+}
+.fc-ip-row + .fc-ip-row { border-top: 1px solid var(--border-color); }
+.fc-ip-row.is-head { background-color: var(--table-head); }
+.fc-ip-row.is-own { opacity: 0.6; }
+.fc-ip-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fc-ip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-ip-note { grid-column: 2 / 6; }
+.fc-ip-avg { font-family: var(--font-ui); color: var(--text-primary); text-align: right; }
+.fc-ip-avg.is-muted,
+.fc-ip-row.is-head .fc-ip-avg { color: var(--text-secondary); }
+.fc-dlg-error { margin: 10px 22px 0; }
+.fc-dlg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-dlg-count { margin: 0 auto 0 4px; }
+
+@media (max-width: 900px) {
+  .fc-podium { grid-template-columns: minmax(0, 1fr); }
+  .fc-collage { height: 320px; padding-right: 12px; }
+}
+
+/* Phones: rows wrap their buttons under them, and each in-person row puts
+   the voter and average over the three scores. */
+@media (max-width: 640px) {
+  .fc-entry,
+  .fc-voter { flex-wrap: wrap; }
+  .fc-entry-main { flex-basis: calc(100% - 96px); }
+  .fc-entry-actions { width: 100%; justify-content: flex-end; }
+  .fc-voter .mf-row-main { flex-basis: calc(100% - 88px); }
+  .fc-voter .seg { margin-left: 42px; }
+  .fc-picker-row { flex-direction: column; align-items: stretch; }
+  .fc-ip-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "who who avg" "creativity style theme";
+    gap: 6px 8px;
+    padding: 10px 16px;
+  }
+  .fc-ip-row.is-head { display: none; }
+  .fc-ip-who { grid-area: who; }
+  .fc-ip-avg { grid-area: avg; }
+  .fc-score.is-creativity { grid-area: creativity; }
+  .fc-score.is-style { grid-area: style; }
+  .fc-score.is-theme { grid-area: theme; }
+  .fc-ip-note { grid-column: 1 / -1; }
+  .fc-dlg-head, .fc-chips, .fc-dlg-foot { padding-left: 16px; padding-right: 16px; }
+  .fc-collage { height: 260px; }
+  .fc-feature-body { padding: 18px 18px 8px; }
+}

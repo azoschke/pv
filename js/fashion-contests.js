@@ -2,49 +2,41 @@
 //  FashionContests — the FC's fashion contests (fashion-contests.html)
 //
 //  One page, with the view picked by the address:
-//    fashion-contests.html                  the list: what's on now, what's
-//                                           coming up, and past winners
-//    fashion-contests.html?contest=<link>   a contest: its looks before voting
-//                                           opens, the ballot while it's open,
-//                                           the results once it's closed
+//    fashion-contests.html                  the list: on now, upcoming, past
+//    fashion-contests.html?contest=<link>   a contest: its looks, the ballot
+//                                           while voting is open, the results
+//                                           once it's closed
 //    fashion-contests.html?plan             make a contest
-//    fashion-contests.html?edit=<link>      edit and run a contest, and enter
-//                                           in-person scores
+//    fashion-contests.html?edit=<link>      edit and run a contest
 //    fashion-contests.html?results=<link>   results so far
 //
 //  Access (Permissions grid, Site Pages → Fashion Contests):
-//    site.fashion-contests.view   open the page, see every contest, vote when
-//                                 on a contest's voter list
+//    site.fashion-contests.view   open the page, vote when on a voter list
 //    fashion_contest.create       make contests
-//    fashion_contest.manage       edit, run and delete every contest
-//  The person who made a contest can also edit, run and delete it. Once
-//  voting has closed, only the root admin can edit or delete it; the root
-//  admin can also clear any one voter's scores.
+//    fashion_contest.manage       run every contest
+//  A contest's maker runs it too. Once voting has closed, only the root admin
+//  can edit or delete it, or clear a voter's votes.
 //
 //  Worker routes (pv-med-database-worker, routes/fashion-contests.js):
-//    GET    /fashion-contests              { can, members, contests, past }
+//    GET    /fashion-contests              { can, contests, past }
+//    GET    /fashion-contests?members=1    { can, members }
 //    POST   /fashion-contests              { slug, name, subtitle, description,
 //                                            starts_at, prizes, entries,
 //                                            voters }
-//    GET    /fashion-contests/:slug        { contest, entries, voter_count, me,
-//                                            my_entry_id, my_scores, results,
-//                                            and for those running it: voters,
-//                                            in_person_scores, members }
-//    PATCH  /fashion-contests/:id          any of the POST fields but the slug,
-//                                            and status
+//    GET    /fashion-contests/:slug        the contest; ?edit=1 adds members
+//    PATCH  /fashion-contests/:id          returns the contest (?edit=1 too)
 //    DELETE /fashion-contests/:id
 //    PUT    /fashion-contests/:id/scores   { scores: [{ voter_id?, entry_id,
 //                                            creativity, style, theme }] }
 //    POST   /fashion-contests/:id/submit   submits your ballot
-//    DELETE /fashion-contests/:id/submit   takes it back, to change it
+//    DELETE /fashion-contests/:id/submit   takes it back
 //    DELETE /fashion-contests/:id/voters/:voter_id/scores
-//                                          clears a voter's scores (root)
+//  The score, ballot and clearing routes return only what changed (me,
+//  my_scores, and voters and in_person_scores for those running it), which
+//  is merged into the page's data.
 //
-//  Voting opens and closes by hand (status draft, open, closed). On its day,
-//  in the viewer's own time zone, a contest moves from Upcoming to the top of
-//  the list, and stays there until voting closes. The edit page saves
-//  everything with Save changes except in-person scores, which save from
-//  their own dialog, one look at a time.
+//  A contest moves from Upcoming to the top of the list on its day, in the
+//  viewer's time zone, and stays until voting closes.
 // ============================================================================
 
 (function () {
@@ -87,7 +79,6 @@
     }, h('path', { d: d }));
   }
 
-  // The drag handle's two columns of dots.
   function grip() {
     return h('svg', { viewBox: '0 0 12 18', fill: 'currentColor', 'aria-hidden': 'true', focusable: 'false' },
       [3, 9, 15].map(function (y) {
@@ -115,10 +106,8 @@
 
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
-  // An average to the places given, or a dash when there is none.
   function fixed(n, places) { return n == null ? '—' : n.toFixed(places); }
 
-  // The first sentence of a description, for the list's card.
   function firstSentence(text) {
     var t = String(text || '').trim();
     var m = t.match(/^[\s\S]*?[.!?](?=\s|$)/);
@@ -141,7 +130,6 @@
     var d = new Date(iso);
     return isNaN(d.getTime()) ? null : d;
   }
-  // A day in the viewer's own time zone, as a number that sorts.
   function dayKey(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
   function isDayOf(iso) { var d = dateOf(iso); return !!d && dayKey(d) <= dayKey(new Date()); }
   function isToday(iso) { var d = dateOf(iso); return !!d && dayKey(d) === dayKey(new Date()); }
@@ -156,7 +144,6 @@
     var d = dateOf(iso);
     return d ? d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) + ' at ' + timeText(d) : '';
   }
-  // "October 2025"
   function monthYear(iso) {
     var d = dateOf(iso);
     return d ? d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '';
@@ -188,21 +175,23 @@
     return (e && e.message) || what + ' could not load.';
   }
 
-  // All three scores given.
   function complete(s) {
     return !!s && CRITERIA.every(function (c) { return s[c.key] != null; });
   }
   function meanOf(s) {
     return (s.creativity + s.style + s.theme) / 3;
   }
-  // An entrant and a voter (or two of either) who are the same player.
   function samePlayer(a, b) {
     return a.main_id != null && a.main_id === b.main_id;
   }
 
+  // Not started (gold), partly done (brown), done (muted), live (red).
+  function dotClass(state) {
+    return 'status-dot' + (state === 'none' ? ' is-gold' : state === 'part' ? ' is-brown' : state === 'live' ? ' is-red' : '');
+  }
+
   // ── Shared pieces ──────────────────────────────────────────────────────────
 
-  // Initials, or the person's My Profile picture when they have one.
   function Avatar(props) {
     var errState = useState(false); var err = errState[0], setErr = errState[1];
     var p = props.person || {};
@@ -212,20 +201,18 @@
         : initials(p.name));
   }
 
-  // A look's picture, cropped to its frame, or a dark placeholder field.
+  // A look's picture in its frame, or the placeholder field.
   function LookImage(props) {
     var errState = useState(false); var err = errState[0], setErr = errState[1];
     useEffect(function () { setErr(false); }, [props.url]);
     var show = props.url && !err;
     return h('span', {
-      className: 'fc-img ' + (props.className || '') + (show ? '' : ' media-ph is-tone-' + ((Math.abs(props.tone || 0) % 5) + 1)),
+      className: 'fc-look ' + props.className + (show ? '' : ' media-ph is-tone-' + ((Math.abs(props.tone || 0) % 5) + 1)),
       'aria-hidden': 'true'
     },
-      show ? h('img', { src: props.url, alt: '', loading: 'lazy', onError: function () { setErr(true); } }) : props.children);
-  }
-
-  function Dot(props) {
-    return h('span', { className: 'fc-dot is-' + props.state, 'aria-hidden': 'true' });
+      show
+        ? h('img', { className: 'media-card-img', src: props.url, alt: '', loading: 'lazy', onError: function () { setErr(true); } })
+        : props.children);
   }
 
   function Progress(props) {
@@ -235,13 +222,11 @@
         className: 'progress-bar', role: 'progressbar', 'aria-label': props.label,
         'aria-valuemin': 0, 'aria-valuemax': props.of, 'aria-valuenow': props.done
       }, h('div', { className: 'progress-bar-fill', style: { width: pct + '%' } })),
-      h('span', { className: 'fc-progress-text' }, props.label));
+      h('span', { className: 'meta-note' }, props.label));
   }
 
-  // A 1–5 score: a well track with the chosen number in brown. Clicking the
-  // chosen number again clears it (clearable). With keys, the whole control
-  // is one stop for Tab and takes 1 to 5 from the keyboard (Backspace or 0
-  // clears).
+  // A 1–5 score. clearable: clicking the chosen number clears it. keys: one
+  // Tab stop that takes 1 to 5 (Backspace or 0 clears).
   function ScoreSeg(props) {
     function onKey(e) {
       if (props.disabled) return;
@@ -286,7 +271,6 @@
       }, props.children));
   }
 
-  // "Delete All Saints' Wake?"
   function ConfirmDialog(props) {
     var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -304,9 +288,8 @@
           h('button', { type: 'button', className: 'btn is-destructive', onClick: confirm, disabled: busy }, props.confirmLabel))));
   }
 
-  // Back to the list (or wherever href goes), with anything for the right.
   function BackLink(props) {
-    return h('div', { className: 'fc-back fc-on-page' },
+    return h('div', { className: 'top-controls' },
       h('a', { className: 'btn is-plain', href: props.href || LIST_HREF }, icon('arrow_back'), props.label || 'Fashion contests'),
       props.children);
   }
@@ -323,7 +306,7 @@
       h('p', { className: props.err ? 'notice-card is-error' : 'notice-card' }, props.err || 'Loading…'));
   }
 
-  // Search the FC list and pick someone. skip(person) leaves people out.
+  // Search the FC list and pick someone; skip(person) leaves people out.
   function PeoplePicker(props) {
     var qState = useState(''); var q = qState[0], setQ = qState[1];
     var needle = q.trim().toLowerCase();
@@ -348,24 +331,21 @@
         : null);
   }
 
-  // The script line, the title and its subtitle, with the description on
-  // the right.
   function ContestHead(props) {
     var c = props.contest;
     return h('header', { className: 'fc-head' },
       h('div', null,
-        h('p', { className: 'fc-presents' }, 'The Phoenix Vanguard presents'),
-        h('h1', { className: 'fc-title' }, c.name),
-        c.subtitle ? h('p', { className: 'fc-subtitle' }, c.subtitle) : null),
+        h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
+        h('h1', { className: 'app-title' }, c.name),
+        c.subtitle ? h('p', { className: 't-label' }, c.subtitle) : null),
       c.description ? h('p', { className: 'fc-desc' }, c.description) : null);
   }
 
-  // A look in the gallery: its picture and the entrant's name.
   function LookCard(props) {
     var e = props.entry;
-    return h('div', { className: 'fc-card' },
-      h(LookImage, { url: e.image_url, tone: props.index, className: 'fc-card-img tear-half' }),
-      h('span', { className: 'fc-card-body' }, h('span', { className: 'fc-card-name' }, e.name)));
+    return h('div', { className: 'media-card fc-static' },
+      h(LookImage, { url: e.image_url, tone: props.index, className: 'media-card-media tear-half fc-portrait' }),
+      h('span', { className: 'media-card-body' }, h('span', { className: 'media-card-title' }, e.name)));
   }
 
   function prizesLine(prizes) {
@@ -373,8 +353,7 @@
     return list.length ? 'Prizes: ' + list.join(' · ') : '';
   }
 
-  // The top three (more when places are shared): picture, place, name,
-  // average and prize.
+  // The top three; more when places are shared.
   function Podium(props) {
     var rows = props.rows.filter(function (r) { return r.rank && r.rank <= 3; });
     if (!rows.length) return null;
@@ -382,49 +361,47 @@
       rows.map(function (r) {
         var e = props.byId[r.entry_id];
         var prize = props.prizes[r.rank - 1];
-        return h('article', { key: r.entry_id, className: 'fc-podium-card' },
-          h(LookImage, { url: e.image_url, tone: e.order, className: 'fc-podium-img tear-half' + (props.wide ? ' is-wide' : '') }),
-          h('div', { className: 'fc-podium-body' },
-            h('p', { className: 'fc-place' }, PLACES[r.rank - 1]),
-            h('div', { className: 'fc-podium-line' },
-              h('h2', { className: 'fc-podium-name' }, e.name),
-              h('span', { className: 'fc-podium-avg' }, fixed(r.average, 2))),
-            prize ? h('p', { className: 'fc-podium-prize' }, prize) : null));
+        return h('article', { key: r.entry_id, className: 'media-card fc-static' },
+          h(LookImage, { url: e.image_url, tone: e.order, className: 'media-card-media tear-half' + (props.wide ? '' : ' fc-landscape') }),
+          h('div', { className: 'media-card-body' },
+            h('p', { className: 't-script fc-red' }, PLACES[r.rank - 1]),
+            h('div', { className: 'media-card-title-row' },
+              h('h2', { className: 'media-card-title' }, e.name),
+              h('span', { className: 'media-card-title' }, fixed(r.average, 2))),
+            prize ? h('p', { className: 'media-card-meta' }, prize) : null));
       }));
   }
 
-  // Every look's averages, best first, on a torn card. Criteria to one
-  // place, the average to two.
+  // Criteria to one place, the average to two.
   function ResultsTable(props) {
-    return h('section', { className: 'fc-table-card tear', 'aria-label': 'All scores' },
-      h('div', { className: 'fc-table-scroll' },
-        h('table', { className: 'fc-table' + (props.ballots ? ' has-ballots' : '') },
+    return h('section', { className: 'atma-card tear fc-results', 'aria-label': 'All scores' },
+      h('div', { className: 'atma-scroll' },
+        h('table', { className: 'task-table atma-table' },
           h('thead', null,
             h('tr', null,
               h('th', { scope: 'col' }, 'Rank'),
               h('th', { scope: 'col' }, 'Entrant'),
-              CRITERIA.map(function (c) { return h('th', { key: c.key, scope: 'col', className: 'is-num' }, c.name); }),
-              props.ballots ? h('th', { scope: 'col', className: 'is-num' }, 'Ballots') : null,
-              h('th', { scope: 'col', className: 'is-num' }, 'Average'))),
+              CRITERIA.map(function (c) { return h('th', { key: c.key, scope: 'col', className: 'td-count-header' }, c.name); }),
+              props.ballots ? h('th', { scope: 'col', className: 'td-count-header' }, 'Ballots') : null,
+              h('th', { scope: 'col', className: 'td-count-header' }, 'Average'))),
           h('tbody', null,
             props.rows.map(function (r) {
               var e = props.byId[r.entry_id];
               var mine = props.mine != null && props.mine === r.entry_id;
-              return h('tr', { key: r.entry_id, className: mine ? 'is-mine' : null },
-                h('td', { className: 'is-rank' }, r.rank || '—'),
+              return h('tr', { key: r.entry_id, className: mine ? 'fc-mine' : null },
+                h('td', { className: 'td-num' }, r.rank || '—'),
                 h('td', null,
                   h('span', { className: 'fc-entrant' },
                     props.thumbs ? h(LookImage, { url: e.image_url, tone: e.order, className: 'fc-table-thumb' }) : null,
-                    h('span', { className: 'fc-entrant-name' }, e.name),
-                    mine ? h('span', { className: 'fc-you' }, 'You') : null)),
-                CRITERIA.map(function (c) { return h('td', { key: c.key, className: 'is-num' }, fixed(r[c.key], 1)); }),
-                props.ballots ? h('td', { className: 'is-num is-muted' }, r.ballots) : null,
-                h('td', { className: 'is-num is-avg' }, fixed(r.average, 2)));
+                    h('span', { className: 'row-name' }, e.name),
+                    mine ? h('span', { className: 'meta-note fc-you' }, 'You') : null)),
+                CRITERIA.map(function (c) { return h('td', { key: c.key, className: 'td-count' }, fixed(r[c.key], 1)); }),
+                props.ballots ? h('td', { className: 'td-count' }, r.ballots) : null,
+                h('td', { className: 'td-count fc-avg' }, fixed(r.average, 2)));
             })))),
-      props.children ? h('div', { className: 'fc-table-foot' }, props.children) : null);
+      props.children ? h('div', { className: 'form-actions fc-table-foot' }, props.children) : null);
   }
 
-  // entry id → the entry, with its place in the runway order.
   function entriesById(entries) {
     var out = {};
     entries.forEach(function (e, i) { out[e.id] = Object.assign({ order: i }, e); });
@@ -433,15 +410,11 @@
 
   // ── The list ───────────────────────────────────────────────────────────────
 
-  // What's on: voting open, or the contest's day has come.
   function FeatureCard(props) {
     var c = props.contest;
     var open = c.status === 'open';
     var ballot = open ? c.my_ballot : null;
     var d = dateOf(c.starts_at);
-    var status = open
-      ? 'Voting open'
-      : isToday(c.starts_at) && d ? 'Today · voting opens ' + timeText(d) : 'Voting not open yet';
     var counts = [plural(c.entries, 'entry', 'entries'), plural(c.voters, 'voter', 'voters')];
     if (open && c.site_ballots && c.site_ballots.of) {
       counts.push(c.site_ballots.in + ' of ' + c.site_ballots.of + ' site ballots in');
@@ -455,12 +428,13 @@
             c.thumbs.map(function (url, i) { return h(LookImage, { key: i, url: url, tone: i, className: 'fc-collage-tile' }); }))
         : null,
       h('div', { className: 'fc-feature-body' },
-        h('p', { className: 'fc-status' }, h(Dot, { state: open ? 'live' : 'done' }), status),
+        h('p', { className: 't-label ' + dotClass(open ? 'live' : 'done') },
+          open ? 'Voting open' : isToday(c.starts_at) && d ? 'Today · voting opens ' + timeText(d) : 'Voting not open yet'),
         h('div', null,
-          h('h2', { id: titleId, className: 'fc-feature-title' }, c.name),
-          c.subtitle ? h('p', { className: 'fc-subtitle' }, c.subtitle) : null),
-        blurb ? h('p', { className: 'fc-blurb' }, blurb) : null,
-        h('p', { className: 'fc-counts' }, counts.join(' · ')),
+          h('h2', { id: titleId, className: 'app-title' }, c.name),
+          c.subtitle ? h('p', { className: 't-label' }, c.subtitle) : null),
+        blurb ? h('p', null, blurb) : null,
+        h('p', { className: 'meta-note' }, counts.join(' · ')),
         ballot
           ? h(Progress, {
               done: ballot.submitted ? ballot.of : ballot.scored, of: ballot.of,
@@ -478,11 +452,11 @@
     var d = dateOf(c.starts_at);
     return h('div', { className: 'fc-up-row' },
       h('div', { className: 'fc-date', 'aria-hidden': 'true' },
-        h('span', { className: 'fc-date-mon' }, d ? d.toLocaleDateString(undefined, { month: 'short' }) : ''),
+        h('span', { className: 't-label' }, d ? d.toLocaleDateString(undefined, { month: 'short' }) : ''),
         h('span', { className: 'fc-date-day' }, d ? d.getDate() : '—')),
-      h('div', { className: 'fc-up-main' },
-        h('p', { className: 'fc-up-name' }, c.name),
-        h('p', { className: 'fc-up-meta' }, shortWhen(c.starts_at))),
+      h('div', { className: 'mf-row-main' },
+        h('p', { className: 'item-title' }, c.name),
+        h('p', { className: 'row-meta' }, shortWhen(c.starts_at))),
       c.can_manage
         ? h('a', { className: 'btn is-quiet is-small', href: editHref(c.slug), 'aria-label': 'Edit ' + c.name }, 'Edit')
         : null);
@@ -490,15 +464,15 @@
 
   function PastCard(props) {
     var c = props.contest;
-    return h('a', { className: 'fc-past', href: contestHref(c.slug) },
-      h(LookImage, { url: c.image_url, tone: c.id, className: 'fc-past-img tear-half' }),
-      h('span', { className: 'fc-past-body' },
-        h('span', { className: 'fc-past-name' }, c.name),
-        h('span', { className: 'fc-past-meta' }, monthYear(c.starts_at) + ' · ' + plural(c.entries, 'entry', 'entries')),
+    return h('a', { className: 'media-card', href: contestHref(c.slug) },
+      h(LookImage, { url: c.image_url, tone: c.id, className: 'media-card-media tear-half fc-landscape' }),
+      h('span', { className: 'media-card-body' },
+        h('span', { className: 'media-card-title' }, c.name),
+        h('span', { className: 'media-card-meta' }, monthYear(c.starts_at) + ' · ' + plural(c.entries, 'entry', 'entries')),
         c.winners.length
-          ? h('span', { className: 'fc-past-winner' },
-              h('span', { className: 'fc-script-red' }, 'Winner'),
-              h('span', { className: 'fc-past-who' }, c.winners.join(' & ')))
+          ? h('span', { className: 'fc-winner' },
+              h('span', { className: 't-script fc-red' }, 'Winner'),
+              h('span', { className: 'row-name' }, c.winners.join(' & ')))
           : null));
   }
 
@@ -507,79 +481,74 @@
     var top = base.contests.filter(function (c) { return c.status === 'open' || isDayOf(c.starts_at); });
     var upcoming = base.contests.filter(function (c) { return c.status !== 'open' && !isDayOf(c.starts_at); });
     return h('div', null,
-      h('header', { className: 'fc-head is-list' },
+      h('header', { className: 'fc-head' },
         h('div', null,
-          h('p', { className: 'fc-presents' }, 'The Phoenix Vanguard presents'),
-          h('h1', { className: 'fc-title is-list' }, 'Fashion Contests')),
+          h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
+          h('h1', { className: 'app-title' }, 'Fashion Contests')),
         base.can.create ? h('a', { className: 'btn', href: '?plan' }, 'New contest') : null),
       top.map(function (c) { return h(FeatureCard, { key: c.id, contest: c }); }),
       h('section', { className: 'fc-section', 'aria-labelledby': 'fc-up-title' },
-        h('h2', { id: 'fc-up-title', className: 'fc-section-title' }, 'Upcoming'),
+        h('h2', { id: 'fc-up-title', className: 'form-title' }, 'Upcoming'),
         h('div', { className: 'fc-upcoming' },
           upcoming.length
             ? upcoming.map(function (c) { return h(UpcomingRow, { key: c.id, contest: c }); })
-            : h('p', { className: 'fc-none' }, 'No contests coming up'))),
+            : h('p', { className: 'empty-note mf-none' }, 'No contests coming up'))),
       h('section', { className: 'fc-section', 'aria-labelledby': 'fc-past-title' },
         h('div', { className: 'fc-section-head' },
-          h('h2', { id: 'fc-past-title', className: 'fc-section-title' }, 'Past contests'),
-          base.past.length ? h('span', { className: 'fc-section-count' }, plural(base.past.length, 'contest', 'contests')) : null),
+          h('h2', { id: 'fc-past-title', className: 'form-title' }, 'Past contests'),
+          base.past.length ? h('span', { className: 'meta-note' }, plural(base.past.length, 'contest', 'contests')) : null),
         base.past.length
-          ? h('div', { className: 'fc-past-grid' }, base.past.map(function (c) { return h(PastCard, { key: c.id, contest: c }); }))
-          : h('p', { className: 'fc-none is-bare' }, 'No past contests yet')));
+          ? h('div', { className: 'card-grid' }, base.past.map(function (c) { return h(PastCard, { key: c.id, contest: c }); }))
+          : h('p', { className: 'empty-note' }, 'No past contests yet')));
   }
 
   // ── A contest ──────────────────────────────────────────────────────────────
 
-  // Before voting opens: the looks, when voting opens, how to score and the
-  // prizes.
   function UpcomingView(props) {
     var data = props.data, c = data.contest;
     var prizes = [];
     c.prizes.forEach(function (p, i) { if (p) prizes.push({ prize: p, i: i }); });
     return h('div', { className: 'fc-layout' },
-      h('section', { className: 'fc-grid', 'aria-label': 'Entries' },
+      h('section', { className: 'card-grid fc-grid', 'aria-label': 'Entries' },
         data.entries.map(function (e, i) { return h(LookCard, { key: e.id, entry: e, index: i }); })),
       h('aside', { className: 'fc-panel', 'aria-label': 'About voting' },
         h('div', null,
-          h('p', { className: 'fc-caps' }, 'Voting'),
-          h('h2', { className: 'fc-panel-title' }, 'Opens ' + longWhen(c.starts_at))),
+          h('p', { className: 't-label' }, 'Voting'),
+          h('h2', { className: 'form-title' }, 'Opens ' + longWhen(c.starts_at))),
         h('div', null,
-          h('p', { className: 'fc-caps' }, 'How to score'),
+          h('p', { className: 't-label' }, 'How to score'),
           h('dl', { className: 'fc-dl' },
             CRITERIA.map(function (cr) {
               return h(React.Fragment, { key: cr.key },
-                h('dt', null, cr.name),
+                h('dt', { className: 'item-title' }, cr.name),
                 h('dd', null, cr.long || cr.question));
             })),
-          h('p', { className: 'fc-scale' }, '1 · Adequate  –  5 · Impressive')),
+          h('p', { className: 'meta-note' }, '1 · Adequate  –  5 · Impressive')),
         prizes.length
           ? h('div', { className: 'fc-panel-foot' },
-              h('p', { className: 'fc-caps' }, 'Prizes'),
-              h('dl', { className: 'fc-dl is-prizes' },
+              h('p', { className: 't-label' }, 'Prizes'),
+              h('dl', { className: 'fc-dl' },
                 prizes.map(function (x) {
                   return h(React.Fragment, { key: x.i },
-                    h('dt', { className: 'fc-script-red' }, PRIZE_NAMES[x.i]),
+                    h('dt', { className: 't-script fc-red' }, PRIZE_NAMES[x.i]),
                     h('dd', null, x.prize));
                 })))
           : null));
   }
 
-  // Voting open, for someone not on the voter list: the looks and prizes.
+  // Voting open, for someone not on the voter list.
   function GalleryView(props) {
     var data = props.data;
     var line = prizesLine(data.contest.prizes);
     return h('div', null,
-      line ? h('div', { className: 'fc-toolbar' }, h('p', { className: 'fc-prizes-line' }, line)) : null,
-      h('section', { className: 'fc-grid is-full', 'aria-label': 'All looks' },
+      line ? h('div', { className: 'top-controls top-controls-right' }, h('p', { className: 'meta-note' }, line)) : null,
+      h('section', { className: 'card-grid', 'aria-label': 'All looks' },
         data.entries.map(function (e, i) { return h(LookCard, { key: e.id, entry: e, index: i }); })));
   }
 
-  // Voting open, for a voter: every look to pick from, and the ballot for the
-  // one picked. Each look's scores save with Save and next look; Submit
-  // ballot is there once every look but your own has all three. A submitted
-  // ballot is locked until Edit ballot takes it back (it doesn't count until
-  // it's submitted again). In-person voters see their scores here without
-  // changing them.
+  // Voting open, for a voter: pick a look, score it, save and move on, then
+  // submit. A submitted ballot is locked until Edit ballot takes it back.
+  // In-person voters see their scores without changing them.
   function BallotView(props) {
     var data = props.data, c = data.contest, me = data.me;
     var readOnly = !!me.in_person;
@@ -600,7 +569,6 @@
     var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
 
-    // Your own ranking: the looks you've fully scored, by your average.
     var ranked = scoreable.filter(function (e) { return complete(saved[e.id]); })
       .sort(function (a, b) { return meanOf(saved[b.id]) - meanOf(saved[a.id]); });
     var rankOf = {};
@@ -615,15 +583,14 @@
     var scoredCount = ranked.length;
     var allIn = scoreable.length > 0 && scoredCount === scoreable.length;
 
-    // The next look after this one (in the order shown) that isn't scored
-    // yet, or just the next one.
-    function nextAfter(id, nowDone) {
+    // The next unscored look after this one in the order shown, else the next.
+    function nextAfter(id) {
       var list = shown.filter(function (e) { return e.id !== own; });
       var at = 0;
       list.forEach(function (e, i) { if (e.id === id) at = i; });
-      for (var step = 1; step <= list.length; step++) {
+      for (var step = 1; step < list.length; step++) {
         var e = list[(at + step) % list.length];
-        if (e.id !== id && !complete(saved[e.id]) && e.id !== nowDone) return e.id;
+        if (!complete(saved[e.id])) return e.id;
       }
       return list.length > 1 ? list[(at + 1) % list.length].id : id;
     }
@@ -638,45 +605,37 @@
       });
     }
 
+    function run(req, failText, after) {
+      setBusy(true); setErr('');
+      req.then(function (d) {
+        props.merge(d);
+        if (after) after();
+        setBusy(false);
+      }, function (e) { setBusy(false); setErr(e.message || failText); });
+    }
+
     function saveAndNext() {
       var id = cur.id;
-      var go = nextAfter(id, id);
-      setBusy(true); setErr('');
-      api('PUT', '/fashion-contests/' + c.id + '/scores', {
+      var go = nextAfter(id);
+      run(api('PUT', '/fashion-contests/' + c.id + '/scores', {
         scores: [{ entry_id: id, creativity: vals.creativity, style: vals.style, theme: vals.theme }]
-      }).then(function () { return props.reload(); }).then(function () {
+      }), 'Your scores could not be saved.', function () {
         setDrafts(function (prev) { var next = Object.assign({}, prev); delete next[id]; return next; });
         setCurrent(go);
-        setBusy(false);
-      }, function (e) { setBusy(false); setErr(e.message || 'Your scores could not be saved.'); });
-    }
-
-    function submit() {
-      setBusy(true); setErr('');
-      api('POST', '/fashion-contests/' + c.id + '/submit').then(function () { return props.reload(); }).then(function () {
-        setDrafts({});
-        setBusy(false);
-      }, function (e) { setBusy(false); setErr(e.message || 'Your ballot could not be submitted.'); });
-    }
-
-    function takeBack() {
-      setBusy(true); setErr('');
-      api('DELETE', '/fashion-contests/' + c.id + '/submit').then(function () { return props.reload(); }).then(function () {
-        setBusy(false);
-      }, function (e) { setBusy(false); setErr(e.message || 'Your ballot could not be reopened.'); });
+      });
     }
 
     var line = prizesLine(c.prizes);
     var position = cur ? scoreable.indexOf(cur) + 1 : 0;
 
     return h('div', null,
-      h('div', { className: 'fc-toolbar' },
+      h('div', { className: 'top-controls' },
         h('div', { className: 'seg', role: 'group', 'aria-label': 'Order looks by' },
           h('button', { type: 'button', className: 'seg-btn', 'aria-pressed': order === 'entry' ? 'true' : 'false', onClick: function () { setOrder('entry'); } }, 'Entry order'),
           h('button', { type: 'button', className: 'seg-btn', 'aria-pressed': order === 'rank' ? 'true' : 'false', onClick: function () { setOrder('rank'); } }, 'Your ranking')),
-        line ? h('p', { className: 'fc-prizes-line' }, line) : null),
+        line ? h('p', { className: 'meta-note' }, line) : null),
       h('div', { className: 'fc-layout' },
-        h('section', { className: 'fc-grid', 'aria-label': 'All looks' },
+        h('section', { className: 'card-grid fc-grid', 'aria-label': 'All looks' },
           shown.map(function (e) {
             var isOwn = e.id === own;
             var isCurrent = e.id === current;
@@ -686,87 +645,102 @@
               : isCurrent ? 'Scoring now' : 'Not scored yet';
             return h('button', {
               key: e.id, type: 'button', disabled: isOwn, 'aria-pressed': isCurrent ? 'true' : 'false',
-              className: 'fc-card is-pick' + (isCurrent ? ' is-current' : '') + (isOwn ? ' is-own' : ''),
+              className: 'media-card' + (isCurrent ? ' is-current' : '') + (isOwn ? ' is-own fc-static' : ''),
               onClick: function () { setCurrent(e.id); }
             },
-              h(LookImage, { url: e.image_url, tone: looks.indexOf(e), className: 'fc-card-img tear-half' }),
-              h('span', { className: 'fc-card-body' },
-                h('span', { className: 'fc-card-top' },
-                  h('span', { className: 'fc-card-name' }, e.name + (isOwn ? ' (you)' : '')),
-                  rankOf[e.id] ? h('span', { className: 'fc-rank' }, '#' + rankOf[e.id]) : null),
-                h('span', { className: 'fc-card-sub' }, summary)));
+              h(LookImage, { url: e.image_url, tone: looks.indexOf(e), className: 'media-card-media tear-half fc-portrait' }),
+              h('span', { className: 'media-card-body' },
+                h('span', { className: 'media-card-title-row' },
+                  h('span', { className: 'media-card-title' }, e.name + (isOwn ? ' (you)' : '')),
+                  rankOf[e.id] ? h('span', { className: 'row-name fc-rank' }, '#' + rankOf[e.id]) : null),
+                h('span', { className: 'media-card-meta' }, summary)));
           })),
-        h('aside', { className: 'fc-panel fc-ballot', 'aria-label': 'Score this look' },
+        h('aside', { className: 'fc-panel', 'aria-label': 'Score this look' },
           cur
             ? h(React.Fragment, null,
                 h('div', { className: 'fc-ballot-head' },
                   h(LookImage, { url: cur.image_url, tone: looks.indexOf(cur), className: 'fc-thumb tear-half' }),
                   h('div', null,
-                    h('p', { className: 'fc-caps' }, (locked ? 'Look ' : 'Scoring · ') + position + ' of ' + scoreable.length),
-                    h('h2', { className: 'fc-ballot-name' }, cur.name),
-                    cur.look_title ? h('p', { className: 'fc-look-title' }, cur.look_title) : null)),
+                    h('p', { className: 't-label' }, (locked ? 'Look ' : 'Scoring · ') + position + ' of ' + scoreable.length),
+                    h('h2', { className: 'form-title' }, cur.name),
+                    cur.look_title ? h('p', { className: 't-script' }, cur.look_title) : null)),
                 CRITERIA.map(function (cr) {
                   return h('div', { key: cr.key, className: 'fc-crit' },
                     h('div', { className: 'fc-crit-head' },
-                      h('h3', { className: 'fc-crit-name' }, cr.name),
-                      h('span', { className: 'fc-crit-q' }, cr.question)),
+                      h('h3', { className: 'item-title' }, cr.name),
+                      h('span', { className: 'meta-note' }, cr.question)),
                     h(ScoreSeg, {
                       value: vals[cr.key], label: cr.name + ' score', disabled: locked || busy,
                       onPick: function (n) { pick(cr.key, n); }
                     }));
                 }),
-                h('div', { className: 'fc-scale-row' }, h('span', null, '1 · Adequate'), h('span', null, '5 · Impressive')),
+                h('div', { className: 'fc-scale meta-note' }, h('span', null, '1 · Adequate'), h('span', null, '5 · Impressive')),
                 locked
                   ? null
-                  : h('div', { className: 'fc-ballot-actions' },
+                  : h('div', { className: 'form-actions' },
                       h('button', {
                         type: 'button', className: 'btn is-quiet', disabled: busy || scoreable.length < 2,
-                        onClick: function () { setCurrent(nextAfter(cur.id, null)); }
+                        onClick: function () { setCurrent(nextAfter(cur.id)); }
                       }, 'Skip'),
                       h('button', { type: 'button', className: 'btn', disabled: busy || !complete(vals), onClick: saveAndNext }, 'Save and next look')))
-            : h('p', { className: 'fc-none is-bare' }, 'No looks to score yet'),
-          h('div', { className: 'fc-ballot-foot' },
+            : h('p', { className: 'empty-note' }, 'No looks to score yet'),
+          h('div', { className: 'fc-panel-foot' },
             h(Progress, { done: scoredCount, of: scoreable.length, label: scoredCount + ' of ' + scoreable.length + ' scored' }),
             readOnly
               ? null
               : me.submitted
                 ? h('div', { className: 'fc-ballot-in' },
-                    h('span', { className: 'fc-ballot-state' }, h(Dot, { state: 'done' }), 'Ballot submitted'),
-                    h('button', { type: 'button', className: 'btn is-quiet', disabled: busy, onClick: takeBack }, 'Edit ballot'))
-                : h('button', { type: 'button', className: 'btn', disabled: busy || !allIn, onClick: submit }, 'Submit ballot')),
+                    h('span', { className: dotClass('done') }, 'Ballot submitted'),
+                    h('button', {
+                      type: 'button', className: 'btn is-quiet', disabled: busy,
+                      onClick: function () { run(api('DELETE', '/fashion-contests/' + c.id + '/submit'), 'Your ballot could not be reopened.'); }
+                    }, 'Edit ballot'))
+                : h('button', {
+                    type: 'button', className: 'btn', disabled: busy || !allIn,
+                    onClick: function () {
+                      run(api('POST', '/fashion-contests/' + c.id + '/submit'), 'Your ballot could not be submitted.', function () { setDrafts({}); });
+                    }
+                  }, 'Submit ballot')),
           err ? h('p', { className: 'notice-card is-error' }, err) : null)));
   }
 
-  // Voting closed: the winners, how many voted, and every look's averages.
   function FinalView(props) {
     var data = props.data, c = data.contest, res = data.results;
     var byId = entriesById(data.entries);
     return h('div', null,
       h(Podium, { rows: res.rows, byId: byId, prizes: c.prizes, label: 'Winners' }),
-      h('p', { className: 'fc-closed-line' }, 'Voting closed · ' + plural(res.voters, 'voter', 'voters')),
+      h('p', { className: 'meta-note fc-closed-line' }, 'Voting closed · ' + plural(res.voters, 'voter', 'voters')),
       h(ResultsTable, { rows: res.rows, byId: byId, mine: data.my_entry_id, thumbs: true }));
   }
 
-  function ContestPage(props) {
+  // Loads a contest; merge(patch) folds a save's response into it.
+  function useContest(slug, edit) {
     var dataState = useState(null); var data = dataState[0], setData = dataState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
     var goneState = useState(false); var gone = goneState[0], setGone = goneState[1];
-
     function load() {
-      return api('GET', '/fashion-contests/' + encodeURIComponent(props.slug)).then(function (d) {
+      return api('GET', '/fashion-contests/' + encodeURIComponent(slug) + (edit ? '?edit=1' : '')).then(function (d) {
         setData(d); setErr('');
+        return d;
       }, function (e) {
         if (e.status === 404) setGone(true);
         else setErr(loadError(e, 'The contest'));
       });
     }
+    function merge(patch) {
+      setData(function (d) { return Object.assign({}, d, patch); });
+    }
     useEffect(function () { load(); }, []);
+    return { data: data, setData: setData, err: err, setErr: setErr, gone: gone, load: load, merge: merge };
+  }
 
-    if (gone) return h(Notice, { title: 'This Contest Isn’t Available' });
-    if (!data) return h(Loading, { err: err });
-    var c = data.contest;
+  function ContestPage(props) {
+    var s = useContest(props.slug, false);
+    if (s.gone) return h(Notice, { title: 'This Contest Isn’t Available' });
+    if (!s.data) return h(Loading, { err: s.err });
+    var data = s.data, c = data.contest;
     var body = c.status === 'closed' ? h(FinalView, { data: data })
-      : c.status === 'open' ? (data.me ? h(BallotView, { data: data, reload: load }) : h(GalleryView, { data: data }))
+      : c.status === 'open' ? (data.me ? h(BallotView, { data: data, merge: s.merge }) : h(GalleryView, { data: data }))
       : h(UpcomingView, { data: data });
     return h('div', null,
       h(BackLink, null,
@@ -778,25 +752,12 @@
   // ── Results so far ─────────────────────────────────────────────────────────
 
   function ResultsPage(props) {
-    var dataState = useState(null); var data = dataState[0], setData = dataState[1];
-    var errState = useState(''); var err = errState[0], setErr = errState[1];
-    var goneState = useState(false); var gone = goneState[0], setGone = goneState[1];
+    var s = useContest(props.slug, false);
     var busyState = useState(false); var busy = busyState[0], setBusy = busyState[1];
-
-    function load() {
-      return api('GET', '/fashion-contests/' + encodeURIComponent(props.slug)).then(function (d) {
-        setData(d); setErr('');
-      }, function (e) {
-        if (e.status === 404) setGone(true);
-        else setErr(loadError(e, 'The results'));
-      });
-    }
-    useEffect(function () { load(); }, []);
-
-    if (gone || (data && !data.contest.can_manage)) return h(Notice, { title: 'These Results Aren’t Available' });
-    if (!data) return h(Loading, { err: err });
-    var c = data.contest, res = data.results;
-    var byId = entriesById(data.entries);
+    if (s.gone || (s.data && !s.data.contest.can_manage)) return h(Notice, { title: 'These Results Aren’t Available' });
+    if (!s.data) return h(Loading, { err: s.err });
+    var c = s.data.contest, res = s.data.results;
+    var byId = entriesById(s.data.entries);
     var counts = [];
     if (res.site_ballots.of) counts.push(res.site_ballots.in + ' of ' + res.site_ballots.of + ' site ballots');
     if (res.in_person_looks) counts.push('in-person ' + res.in_person_looks.in + ' of ' + res.in_person_looks.of + ' looks');
@@ -804,36 +765,34 @@
 
     function reload() {
       setBusy(true);
-      load().then(function () { setBusy(false); });
+      s.load().then(function () { setBusy(false); });
     }
     function close() {
-      setBusy(true); setErr('');
+      setBusy(true); s.setErr('');
       api('PATCH', '/fashion-contests/' + c.id, { status: 'closed' }).then(function () {
         goTo(contestHref(c.slug));
-      }, function (e) { setBusy(false); setErr(e.message || 'Voting could not be closed.'); });
+      }, function (e) { setBusy(false); s.setErr(e.message || 'Voting could not be closed.'); });
     }
 
     return h('div', null,
       h(BackLink, { href: editHref(c.slug), label: 'Edit contest' }),
-      h('header', { className: 'fc-head is-results' },
+      h('header', { className: 'top-controls' },
         h('div', null,
-          h('p', { className: 'fc-caps' }, 'Results so far · ' + stage),
-          h('h1', { className: 'fc-title' }, c.name)),
-        h('div', { className: 'fc-head-side fc-on-page' },
-          counts.length ? h('p', { className: 'fc-counts' }, counts.join(' · ')) : null,
+          h('p', { className: 't-label' }, 'Results so far · ' + stage),
+          h('h1', { className: 'app-title' }, c.name)),
+        h('div', { className: 'fc-head-side' },
+          counts.length ? h('p', { className: 'meta-note' }, counts.join(' · ')) : null,
           h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: reload, disabled: busy }, 'Reload'))),
       h(Podium, { rows: res.rows, byId: byId, prizes: c.prizes, wide: true, label: 'Top three' }),
       h(ResultsTable, { rows: res.rows, byId: byId, ballots: true },
         c.status === 'open'
           ? h('button', { type: 'button', className: 'btn', onClick: close, disabled: busy }, 'Close voting and show results')
           : null),
-      err ? h('p', { className: 'notice-card is-error' }, err) : null);
+      s.err ? h('p', { className: 'notice-card is-error' }, s.err) : null);
   }
 
   // ── Make a contest / Edit a contest ────────────────────────────────────────
 
-  // A look in Entries: drag to reorder, its picture, name, in-person status
-  // and title, Enter scores, Image and remove.
   function EntryRow(props) {
     var e = props.entry;
     var Upload = window.PVAdminImageUpload;
@@ -844,7 +803,7 @@
         })
       : null;
     return h('div', {
-      className: 'fc-entry' + (props.over ? ' is-over' : '') + (props.dragging ? ' is-dragging' : ''),
+      className: 'mf-added fc-entry' + (props.over ? ' is-over' : '') + (props.dragging ? ' is-dragging' : ''),
       onDragOver: props.onDragOver, onDrop: props.onDrop
     },
       h('span', {
@@ -853,16 +812,16 @@
       }, grip()),
       h(LookImage, { url: e.image_url, tone: props.index, className: 'fc-entry-thumb' },
         h('span', { className: 'fc-no-image' }, 'No image')),
-      h('div', { className: 'fc-entry-main' },
-        h('span', { className: 'fc-entry-top' },
-          h('span', { className: 'fc-row-name' }, e.name),
-          props.status ? h('span', { className: 'fc-row-status' }, h(Dot, { state: props.status.state }), props.status.text) : null),
+      h('div', { className: 'mf-row-main fc-entry-main' },
+        h('div', { className: 'fc-entry-top' },
+          h('span', { className: 'row-name' }, e.name),
+          props.status ? h('span', { className: 'row-meta ' + dotClass(props.status.state) }, props.status.text) : null),
         h('input', {
-          className: 'field is-block', type: 'text', 'aria-label': 'Look title for ' + e.name,
+          className: 'field is-block is-small', type: 'text', 'aria-label': 'Look title for ' + e.name,
           placeholder: 'Look title (optional)', value: e.look_title, maxLength: 80,
           onChange: function (ev) { props.onChange({ look_title: ev.target.value }); }
         }),
-        up && up.error ? h('span', { className: 'fc-row-error' }, up.error) : null),
+        up && up.error ? h('p', { className: 'notice-card is-error' }, up.error) : null),
       h('div', { className: 'fc-entry-actions' },
         props.scores
           ? h('button', {
@@ -884,9 +843,7 @@
         }, svgIcon(null, CROSS, 2.2))));
   }
 
-  // A voter: avatar, name, how far they are, Clear votes (root admin, once
-  // they have scores), On the site / In person and remove. Only a voter with
-  // a site account can vote on the site.
+  // Only a voter with a site account can vote on the site.
   function VoterRow(props) {
     var v = props.voter;
     var sv = props.saved;
@@ -904,11 +861,11 @@
         state = sv.scored ? 'part' : 'none';
       }
     }
-    return h('div', { className: 'fc-voter' },
+    return h('div', { className: 'mf-added fc-voter' },
       h(Avatar, { person: v }),
-      h('div', { className: 'fc-voter-main' },
-        h('span', { className: 'fc-row-name' }, v.name, props.entrant ? h('span', { className: 'fc-entrant-tag' }, ' · entrant') : null),
-        h('span', { className: 'fc-row-status' }, h(Dot, { state: state }), text)),
+      h('div', { className: 'mf-row-main' },
+        h('div', { className: 'row-name' }, v.name, props.entrant ? h('span', { className: 'meta-note' }, ' · entrant') : null),
+        h('div', null, h('span', { className: 'row-meta ' + dotClass(state) }, text))),
       props.onClear && sv && (sv.score_count || sv.submitted)
         ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: props.onClear }, 'Clear votes')
         : null,
@@ -928,9 +885,8 @@
       }, svgIcon(null, CROSS, 2.2)));
   }
 
-  // In-person scores for one look at a time, as each entrant walks: a row
-  // per in-person voter (the entrant's own row greyed out), chips to jump
-  // between looks, and Save, next. Moving to another look saves this one.
+  // One look's in-person scores, a row per in-person voter. Moving to another
+  // look saves this one; keys 1–5 set the focused score.
   function InPersonDialog(props) {
     var entries = props.entries;
     var idState = useState(props.startId); var id = idState[0], setId = idState[1];
@@ -944,7 +900,6 @@
     var entry = entries[at];
     var prev = entries[at - 1], next = entries[at + 1];
 
-    // The first score control takes focus on each look, ready for 1 to 5.
     useEffect(function () {
       var first = tableRef.current && tableRef.current.querySelector('.fc-score[tabindex="0"]');
       if (first) first.focus();
@@ -980,9 +935,7 @@
         };
       });
       if (!list.length) return Promise.resolve();
-      return api('PUT', '/fashion-contests/' + props.contestId + '/scores', { scores: list }).then(function () {
-        return props.onSaved();
-      });
+      return api('PUT', '/fashion-contests/' + props.contestId + '/scores', { scores: list }).then(props.onSaved);
     }
     function moveTo(toId) {
       setBusy(true); setErr('');
@@ -999,34 +952,34 @@
     return h(Modal, { className: 'fc-scores-dialog', labelledBy: 'fc-ip-title', onClose: props.onClose },
       h('div', { className: 'fc-dlg-head' },
         h(LookImage, { url: entry.image_url, tone: at, className: 'fc-dlg-thumb tear-half' }),
-        h('div', { className: 'fc-dlg-titles' },
-          h('p', { className: 'fc-caps' }, 'In-person scores · look ' + (at + 1) + ' of ' + entries.length),
-          h('h2', { id: 'fc-ip-title', className: 'fc-dlg-name' }, entry.name)),
+        h('div', { className: 'mf-row-main' },
+          h('p', { className: 't-label' }, 'In-person scores · look ' + (at + 1) + ' of ' + entries.length),
+          h('h2', { id: 'fc-ip-title', className: 'form-title' }, entry.name)),
         h('button', { type: 'button', className: 'mf-remove', 'aria-label': 'Close', onClick: props.onClose }, svgIcon(null, CROSS, 2.2))),
       h('nav', { className: 'fc-chips', 'aria-label': 'Looks' },
         entries.map(function (e) {
           var n = counts(e);
           return h('button', {
-            key: e.id, type: 'button', className: 'fc-chip', 'aria-current': e.id === id ? 'true' : 'false', disabled: busy,
+            key: e.id, type: 'button', className: 'btn is-quiet is-small fc-chip', 'aria-current': e.id === id ? 'true' : 'false', disabled: busy,
             onClick: function () { if (e.id !== id) moveTo(e.id); }
           },
-            h(Dot, { state: n.of && n.got >= n.of ? 'done' : n.got ? 'part' : 'none' }),
-            e.name, ' ', h('span', { className: 'fc-chip-count' }, n.got + '/' + n.of));
+            h('span', { className: dotClass(n.of && n.got >= n.of ? 'done' : n.got ? 'part' : 'none') }, e.name),
+            h('span', { className: 'meta-note' }, n.got + '/' + n.of));
         })),
-      h('div', { className: 'fc-ip-table', ref: tableRef },
-        h('div', { className: 'fc-ip-row is-head', 'aria-hidden': 'true' },
+      h('div', { ref: tableRef },
+        h('div', { className: 'fc-ip-row is-head t-label', 'aria-hidden': 'true' },
           h('span', null, 'Voter'),
           CRITERIA.map(function (c) { return h('span', { key: c.key }, c.name); }),
           h('span', { className: 'fc-ip-avg' }, 'Avg')),
         props.voters.map(function (v) {
+          var who = h('span', { className: 'fc-ip-who' }, h(Avatar, { person: v }), h('span', { className: 'row-name fc-ip-name' }, v.name));
           if (samePlayer(v, entry)) {
             return h('div', { key: v.id, className: 'fc-ip-row is-own' },
-              h('span', { className: 'fc-ip-who' }, h(Avatar, { person: v }), h('span', { className: 'fc-ip-name' }, v.name)),
-              h('span', { className: 'fc-ip-note' }, 'Their own look. Not scored.'));
+              who, h('span', { className: 'meta-note fc-ip-note' }, 'Their own look. Not scored.'));
           }
           var s = valueFor(v.id);
           return h('div', { key: v.id, className: 'fc-ip-row' },
-            h('span', { className: 'fc-ip-who' }, h(Avatar, { person: v }), h('span', { className: 'fc-ip-name' }, v.name)),
+            who,
             CRITERIA.map(function (c) {
               return h(ScoreSeg, {
                 key: c.key, className: 'is-' + c.key, compact: true, keys: true, clearable: true, disabled: busy,
@@ -1036,11 +989,11 @@
             }),
             h('span', { className: 'fc-ip-avg' + (complete(s) ? '' : ' is-muted') }, complete(s) ? meanOf(s).toFixed(1) : '—'));
         }),
-        props.voters.length ? null : h('p', { className: 'fc-none' }, 'No in-person voters')),
+        props.voters.length ? null : h('p', { className: 'empty-note mf-none' }, 'No in-person voters')),
       err ? h('p', { className: 'notice-card is-error fc-dlg-error' }, err) : null,
       h('div', { className: 'fc-dlg-foot' },
         prev ? h('button', { type: 'button', className: 'btn is-quiet', disabled: busy, onClick: function () { moveTo(prev.id); } }, '← ' + prev.name) : null,
-        h('p', { className: 'fc-dlg-count' }, here.got + ' of ' + here.of + ' voters in'),
+        h('p', { className: 'meta-note fc-dlg-count' }, here.got + ' of ' + here.of + ' voters in'),
         h('button', { type: 'button', className: 'btn' + (next ? ' is-quiet' : ''), disabled: busy, onClick: saveAndClose }, 'Save and close'),
         next ? h('button', { type: 'button', className: 'btn', disabled: busy, onClick: function () { moveTo(next.id); } }, 'Save, next: ' + next.name + ' →') : null));
   }
@@ -1073,6 +1026,8 @@
     return { name: '', subtitle: '', description: '', when: '', slug: '', status: 'draft', prizes: ['', '', ''], entries: [], voters: [] };
   }
 
+  // Everything saves with Save changes, except in-person scores (their
+  // dialog) and Clear votes.
   function ContestForm(props) {
     var base = props.base, editSlug = props.slug;
     var isEdit = !!editSlug;
@@ -1088,22 +1043,26 @@
     var dragState = useState(null); var dragKey = dragState[0], setDragKey = dragState[1];
     var overState = useState(null); var overKey = overState[0], setOverKey = overState[1];
 
-    // reset: start the form again from what's saved (on opening, and after
-    // Save changes). Otherwise only the scores and progress refresh.
-    function load(reset) {
-      return api('GET', '/fashion-contests/' + encodeURIComponent(editSlug)).then(function (d) {
-        setData(d);
-        if (reset && d.contest.can_manage) {
-          var f = formFrom(d);
-          setForm(f);
-          setInitial(snapshot(f));
-        }
-      }, function (e) {
+    // A full contest from the worker: the data, and the form started again
+    // from it.
+    function take(d) {
+      setData(d);
+      if (d.contest.can_manage) {
+        var f = formFrom(d);
+        setForm(f);
+        setInitial(snapshot(f));
+      }
+    }
+    function merge(patch) {
+      setData(function (d) { return Object.assign({}, d, patch); });
+    }
+    useEffect(function () {
+      if (!isEdit) return;
+      api('GET', '/fashion-contests/' + encodeURIComponent(editSlug) + '?edit=1').then(take, function (e) {
         if (e.status === 404) setGone(true);
         else setErr(loadError(e, 'The contest'));
       });
-    }
-    useEffect(function () { if (isEdit) load(true); }, []);
+    }, []);
 
     if (data && !data.contest.can_manage && data.contest.status === 'closed') return h(Notice, { title: 'This Contest Is Closed' });
     if (gone || (data && !data.contest.can_manage)) return h(Notice, { title: 'This Contest Isn’t Available' });
@@ -1133,8 +1092,8 @@
       });
     }
 
-    // One character per player: someone whose player is already in (as an
-    // entrant or a voter) can only be added as that same character.
+    // One character per player: a player already in can only be added as
+    // that same character.
     var taken = {};
     form.entries.concat(form.voters).forEach(function (r) { if (r.main_id != null) taken[r.main_id] = r.member_id; });
     function otherCharacter(p) { return taken[p.main_id] != null && taken[p.main_id] !== p.id; }
@@ -1181,7 +1140,7 @@
       };
     }
 
-    // In-person progress for each saved look, from what's saved.
+    // In-person progress for each saved look.
     var savedVoters = isEdit ? data.voters : [];
     var savedVoterById = {};
     savedVoters.forEach(function (v) { savedVoterById[v.id] = v; });
@@ -1226,7 +1185,7 @@
       if (isEdit) body.status = form.status;
       setSaving(true); setErr('');
       var req = isEdit
-        ? api('PATCH', '/fashion-contests/' + c.id, body).then(function () { return load(true); })
+        ? api('PATCH', '/fashion-contests/' + c.id + '?edit=1', body).then(take)
         : api('POST', '/fashion-contests', Object.assign({ slug: link }, body)).then(function (d) {
             goTo(editHref((d && d.slug) || link));
           });
@@ -1242,8 +1201,8 @@
       }, function () { setErr('The link could not be copied.'); });
     }
 
-    function field(id, label, input) {
-      return h('div', { className: 'fc-field' }, h('label', { className: 'field-label', htmlFor: id }, label), input);
+    function field(id, label, input, kind) {
+      return h('div', { className: 'mf-field' + (kind ? ' ' + kind : '') }, h('label', { className: 'field-label', htmlFor: id }, label), input);
     }
     function textInput(id, key, placeholder, max) {
       return h('input', {
@@ -1258,21 +1217,20 @@
     }
 
     // The link is set when the contest is made and can't change after.
-    var linkPrefix = '…' + window.location.pathname + '?contest=';
     var linkField = isEdit
-      ? h('div', { className: 'fc-field' },
+      ? h('div', { className: 'mf-field is-link' },
           h('span', { className: 'field-label' }, 'Link'),
           h('div', { className: 'mf-link-text' },
-            h('span', { className: 'fc-link-text' }, linkPrefix + form.slug),
+            h('span', { className: 'mf-row-main' }, '…' + window.location.pathname + '?contest=' + form.slug),
             h('button', { type: 'button', className: 'btn is-quiet is-small', onClick: copyLink }, copied ? 'Copied' : 'Copy link')))
-      : h('div', { className: 'fc-field' },
-          h('label', { className: 'field-label', htmlFor: 'fc-link' }, 'Link'),
+      : field('fc-link', 'Link',
           h('div', { className: 'mf-link-input' },
             h('span', { className: 'mf-link-prefix' }, '…?contest='),
             h('input', {
               id: 'fc-link', className: 'field is-block', type: 'text', placeholder: 'contest-name', value: form.slug,
               onChange: function (e) { setSlugEdited(true); update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') }); }
-            })));
+            })),
+          'is-link');
 
     var sitesCount = form.voters.filter(function (v) { return !v.in_person; }).length;
     var summary = plural(form.entries.length, 'entry', 'entries') + ' · ' + plural(form.voters.length, 'voter', 'voters');
@@ -1280,25 +1238,24 @@
     return h('div', null,
       h(BackLink),
       h('header', { className: 'app-header' }, h('h1', { className: 'app-title' }, isEdit ? 'Edit Contest' : 'New Contest')),
-      h('section', { className: 'card fc-details', 'aria-label': 'Contest details' },
-        h('div', { className: 'fc-fields' },
+      h('section', { className: 'card mf-details', 'aria-label': 'Contest details' },
+        h('div', { className: 'mf-fields' },
           field('fc-name', 'Name', textInput('fc-name', 'name', 'Contest name', 80)),
           field('fc-subtitle', 'Subtitle', textInput('fc-subtitle', 'subtitle', '', 120)),
           field('fc-when', 'Date and time', h('input', {
             id: 'fc-when', className: 'field is-block', type: 'datetime-local', value: form.when,
             onChange: function (e) { update({ when: e.target.value }); }
-          })),
+          }), 'is-when'),
           linkField),
-        h('div', { className: 'fc-field is-wide' },
-          h('label', { className: 'field-label', htmlFor: 'fc-desc' }, 'Description'),
-          h('textarea', {
+        h('div', { className: 'mf-fields' },
+          field('fc-desc', 'Description', h('textarea', {
             id: 'fc-desc', className: 'field is-block', rows: 2, maxLength: 2000, value: form.description,
             onChange: function (e) { update({ description: e.target.value }); }
-          })),
-        h('div', { className: 'fc-fields is-prizes' },
+          }))),
+        h('div', { className: 'mf-fields' },
           [0, 1, 2].map(function (i) {
             var id = 'fc-prize-' + i;
-            return h('div', { key: i, className: 'fc-field' },
+            return h('div', { key: i, className: 'mf-field' },
               h('label', { className: 'field-label', htmlFor: id }, ['1st', '2nd', '3rd'][i] + ' place prize'),
               h('input', {
                 id: id, className: 'field is-block', type: 'text', value: form.prizes[i], maxLength: 120,
@@ -1306,10 +1263,10 @@
               }));
           }))),
       h('div', { className: 'fc-split' },
-        h('section', { className: 'mf-panel tear-half fc-list-panel', 'aria-labelledby': 'fc-entries-title' },
+        h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'fc-entries-title' },
           h('div', { className: 'mf-panel-head is-baseline' },
             h('h2', { id: 'fc-entries-title', className: 'mf-panel-title' }, 'Entries'),
-            h('span', { className: 'fc-panel-note' }, plural(form.entries.length, 'look', 'looks') + ' · runway order')),
+            h('span', { className: 'meta-note' }, plural(form.entries.length, 'look', 'looks') + ' · runway order')),
           h('div', { className: 'mf-panel-body' },
             h(PeoplePicker, {
               placeholder: 'Add an entrant from the FC list', pool: pool, disabled: locked,
@@ -1341,11 +1298,11 @@
               onRemove: function () { removeRow('entries', e.key); }
             });
           }),
-          form.entries.length ? null : h('p', { className: 'fc-none' }, 'No entries yet')),
-        h('section', { className: 'mf-panel tear-half fc-list-panel', 'aria-labelledby': 'fc-voters-title' },
+          form.entries.length ? null : h('p', { className: 'empty-note mf-none' }, 'No entries yet')),
+        h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'fc-voters-title' },
           h('div', { className: 'mf-panel-head is-baseline' },
             h('h2', { id: 'fc-voters-title', className: 'mf-panel-title' }, 'Voters'),
-            h('span', { className: 'fc-panel-note' }, sitesCount + ' on the site · ' + (form.voters.length - sitesCount) + ' in person')),
+            h('span', { className: 'meta-note' }, sitesCount + ' on the site · ' + (form.voters.length - sitesCount) + ' in person')),
           h('div', { className: 'mf-panel-body fc-picker-row' },
             h(PeoplePicker, {
               placeholder: 'Add a voter from the FC list', pool: pool, disabled: locked,
@@ -1365,9 +1322,9 @@
               onClear: c && c.can_clear && v.id ? function () { setDialog({ type: 'clear', voter: savedVoterById[v.id] }); } : null
             });
           }),
-          form.voters.length ? null : h('p', { className: 'fc-none' }, 'No voters yet'))),
+          form.voters.length ? null : h('p', { className: 'empty-note mf-none' }, 'No voters yet'))),
       err ? h('p', { className: 'notice-card is-error' }, err) : null,
-      h('div', { className: 'mf-bar fc-bar' },
+      h('div', { className: 'mf-bar' },
         isEdit
           ? h('div', { className: 'seg', role: 'group', 'aria-label': 'Voting' },
               STATUSES.map(function (s) {
@@ -1386,8 +1343,7 @@
             contestId: c.id, entries: savedEntries, voters: inPersonVoters.map(function (v) {
               return Object.assign({}, v, { image_url: (people[v.member_id] || {}).image_url });
             }),
-            scores: ipScores, startId: dialog.entryId,
-            onSaved: function () { return load(false); },
+            scores: ipScores, startId: dialog.entryId, onSaved: merge,
             onClose: function () { setDialog(null); }
           })
         : null,
@@ -1408,8 +1364,7 @@
             onClose: function () { setDialog(null); },
             onConfirm: function () {
               return api('DELETE', '/fashion-contests/' + c.id + '/voters/' + dialog.voter.id + '/scores')
-                .then(function () { return load(false); })
-                .then(function () { setDialog(null); });
+                .then(function (d) { merge(d); setDialog(null); });
             }
           })
         : null);
@@ -1430,6 +1385,7 @@
 
   function FashionContests() {
     var params = new URLSearchParams(window.location.search);
+    var plan = params.has('plan');
     var needsBase = !(params.has('contest') || params.has('edit') || params.has('results'));
     var baseState = useState(null); var base = baseState[0], setBase = baseState[1];
     var errState = useState(''); var err = errState[0], setErr = errState[1];
@@ -1438,17 +1394,20 @@
     useEffect(function () {
       if (!signedIn) { PVSession.redirectToLogin(); return; }
       if (!needsBase) return;
-      api('GET', '/fashion-contests').then(function (d) {
+      api('GET', '/fashion-contests' + (plan ? '?members=1' : '')).then(function (d) {
         setBase(normalizeBase(d)); setErr('');
-      }, function (e) { setErr(loadError(e, 'Fashion Contests')); });
+      }, function (e) {
+        if (plan && e.status === 403) setBase(normalizeBase({}));
+        else setErr(loadError(e, 'Fashion Contests'));
+      });
     }, []);
 
     if (!signedIn) return null;
     if (params.has('contest')) return h(ContestPage, { slug: params.get('contest') });
     if (params.has('edit')) return h(ContestForm, { slug: params.get('edit') });
     if (params.has('results')) return h(ResultsPage, { slug: params.get('results') });
-    if (!base) return h(Loading, { err: err, back: params.has('plan') });
-    if (params.has('plan')) {
+    if (!base) return h(Loading, { err: err, back: plan });
+    if (plan) {
       return base.can.create
         ? h(ContestForm, { base: base, slug: null })
         : h(Notice, { title: 'You Can’t Make Contests' });
