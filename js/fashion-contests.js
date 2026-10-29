@@ -1259,7 +1259,7 @@
       h('section', { className: 'card fc-details', 'aria-label': 'Contest details' },
         h('div', { className: 'fc-fields' },
           field('fc-name', 'Name', textInput('fc-name', 'name', 'Contest name', 80)),
-          field('fc-subtitle', 'Subtitle', textInput('fc-subtitle', 'subtitle', 'Second annual fashion contest', 120)),
+          field('fc-subtitle', 'Subtitle', textInput('fc-subtitle', 'subtitle', '', 120)),
           field('fc-when', 'Date and time', h('input', {
             id: 'fc-when', className: 'field is-block', type: 'datetime-local', value: form.when,
             onChange: function (e) { update({ when: e.target.value }); }
