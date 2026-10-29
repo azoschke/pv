@@ -478,16 +478,14 @@
   }
 
   // The banner and title card, as on the medical pages.
-  function LandingHero(props) {
+  function LandingHero() {
     return h(React.Fragment, null,
       h('div', { className: 'home-band is-page fc-band' },
         h('div', { className: 'home-band-photo media-ph tear' }, h('img', { src: BANNER, alt: '' }))),
       h('header', { className: 'home-hero-card is-page tear' },
         h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
         h('h1', { className: 'app-title' }, 'Fashion Contests'),
-        props.canCreate
-          ? h('div', { className: 'home-hero-actions' }, h('a', { className: 'btn', href: '?plan' }, 'New contest'))
-          : null));
+        h('p', { className: 'home-hero-lead' }, 'Dust off your best glamours and check out upcoming fashion contests or view past winners.')));
   }
 
   function Landing(props) {
@@ -495,10 +493,12 @@
     var top = base.contests.filter(function (c) { return c.status === 'open' || isDayOf(c.starts_at); });
     var upcoming = base.contests.filter(function (c) { return c.status !== 'open' && !isDayOf(c.starts_at); });
     return h('div', null,
-      h(LandingHero, { canCreate: base.can.create }),
+      h(LandingHero),
       top.map(function (c) { return h(FeatureCard, { key: c.id, contest: c }); }),
       h('section', { className: 'fc-section', 'aria-labelledby': 'fc-up-title' },
-        h('h2', { id: 'fc-up-title', className: 'form-title' }, 'Upcoming'),
+        h('div', { className: 'fc-section-head' },
+          h('h2', { id: 'fc-up-title', className: 'form-title' }, 'Upcoming'),
+          base.can.create ? h('a', { className: 'btn', href: '?plan' }, 'New contest') : null),
         h('div', { className: 'fc-upcoming' },
           upcoming.length
             ? upcoming.map(function (c) { return h(UpcomingRow, { key: c.id, contest: c }); })
