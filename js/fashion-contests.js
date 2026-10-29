@@ -1244,7 +1244,7 @@
       : h('div', { className: 'fc-field' },
           h('label', { className: 'field-label', htmlFor: 'fc-link' }, 'Link'),
           h('div', { className: 'mf-link-input' },
-            h('span', { className: 'mf-link-prefix' }, linkPrefix),
+            h('span', { className: 'mf-link-prefix' }, '…?contest='),
             h('input', {
               id: 'fc-link', className: 'field is-block', type: 'text', placeholder: 'contest-name', value: form.slug,
               onChange: function (e) { setSlugEdited(true); update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') }); }
