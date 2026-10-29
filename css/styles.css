@@ -6367,6 +6367,15 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   border-top: 1px solid var(--border-color);
 }
 .fc-ballot .notice-card { margin: 0; padding: 0; }
+.fc-ballot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.fc-ballot-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--text-primary);
+}
 
 /* A 1–5 score: a well track, the chosen number solid brown. */
 .fc-score {

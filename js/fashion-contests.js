@@ -34,6 +34,7 @@
 //    PUT    /fashion-contests/:id/scores   { scores: [{ voter_id?, entry_id,
 //                                            creativity, style, theme }] }
 //    POST   /fashion-contests/:id/submit   submits your ballot
+//    DELETE /fashion-contests/:id/submit   takes it back, to change it
 //
 //  Voting opens and closes by hand (status draft, open, closed). On its day,
 //  in the viewer's own time zone, a contest moves from Upcoming to the top of
@@ -571,11 +572,14 @@
 
   // Voting open, for a voter: every look to pick from, and the ballot for the
   // one picked. Each look's scores save with Save and next look; Submit
-  // ballot is there once every look but your own has all three. In-person
-  // voters see their scores here without changing them.
+  // ballot is there once every look but your own has all three. A submitted
+  // ballot is locked until Edit ballot takes it back (it doesn't count until
+  // it's submitted again). In-person voters see their scores here without
+  // changing them.
   function BallotView(props) {
     var data = props.data, c = data.contest, me = data.me;
     var readOnly = !!me.in_person;
+    var locked = readOnly || !!me.submitted;
     var looks = data.entries;
     var own = data.my_entry_id;
     var scoreable = looks.filter(function (e) { return e.id !== own; });
@@ -646,8 +650,16 @@
     function submit() {
       setBusy(true); setErr('');
       api('POST', '/fashion-contests/' + c.id + '/submit').then(function () { return props.reload(); }).then(function () {
+        setDrafts({});
         setBusy(false);
       }, function (e) { setBusy(false); setErr(e.message || 'Your ballot could not be submitted.'); });
+    }
+
+    function takeBack() {
+      setBusy(true); setErr('');
+      api('DELETE', '/fashion-contests/' + c.id + '/submit').then(function () { return props.reload(); }).then(function () {
+        setBusy(false);
+      }, function (e) { setBusy(false); setErr(e.message || 'Your ballot could not be reopened.'); });
     }
 
     var line = prizesLine(c.prizes);
@@ -686,7 +698,7 @@
                 h('div', { className: 'fc-ballot-head' },
                   h(LookImage, { url: cur.image_url, tone: looks.indexOf(cur), className: 'fc-thumb tear-half' }),
                   h('div', null,
-                    h('p', { className: 'fc-caps' }, (readOnly ? 'Look ' : 'Scoring · ') + position + ' of ' + scoreable.length),
+                    h('p', { className: 'fc-caps' }, (locked ? 'Look ' : 'Scoring · ') + position + ' of ' + scoreable.length),
                     h('h2', { className: 'fc-ballot-name' }, cur.name),
                     cur.look_title ? h('p', { className: 'fc-look-title' }, cur.look_title) : null)),
                 CRITERIA.map(function (cr) {
@@ -695,12 +707,12 @@
                       h('h3', { className: 'fc-crit-name' }, cr.name),
                       h('span', { className: 'fc-crit-q' }, cr.question)),
                     h(ScoreSeg, {
-                      value: vals[cr.key], label: cr.name + ' score', disabled: readOnly || busy,
+                      value: vals[cr.key], label: cr.name + ' score', disabled: locked || busy,
                       onPick: function (n) { pick(cr.key, n); }
                     }));
                 }),
                 h('div', { className: 'fc-scale-row' }, h('span', null, '1 · Adequate'), h('span', null, '5 · Impressive')),
-                readOnly
+                locked
                   ? null
                   : h('div', { className: 'fc-ballot-actions' },
                       h('button', {
@@ -713,8 +725,11 @@
             h(Progress, { done: scoredCount, of: scoreable.length, label: scoredCount + ' of ' + scoreable.length + ' scored' }),
             readOnly
               ? null
-              : h('button', { type: 'button', className: 'btn', disabled: busy || me.submitted || !allIn, onClick: submit },
-                  me.submitted ? 'Ballot submitted' : 'Submit ballot')),
+              : me.submitted
+                ? h('div', { className: 'fc-ballot-in' },
+                    h('span', { className: 'fc-ballot-state' }, h(Dot, { state: 'done' }), 'Ballot submitted'),
+                    h('button', { type: 'button', className: 'btn is-quiet', disabled: busy, onClick: takeBack }, 'Edit ballot'))
+                : h('button', { type: 'button', className: 'btn', disabled: busy || !allIn, onClick: submit }, 'Submit ballot')),
           err ? h('p', { className: 'notice-card is-error' }, err) : null)));
   }
 
