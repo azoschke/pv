@@ -82,23 +82,21 @@
 /* --- A contest --- */
 .fc-layout { display: flex; align-items: flex-start; gap: 16px; }
 .fc-grid { flex: 1 1 0; min-width: 0; }
+/* The panel beside the looks (about voting, or the ballot) stays in view;
+   on narrower screens it goes above them instead. */
 .fc-panel {
+  position: sticky;
+  top: 1rem;
   flex: 0 0 360px;
   min-width: 0;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: 20px 22px 22px;
 }
 .fc-panel .form-title { margin: 0; }
-/* The ballot stays in view beside the looks; on narrower screens it goes
-   above them instead. */
-.fc-ballot {
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-}
 .fc-panel-foot {
   display: flex;
   flex-direction: column;
@@ -215,9 +213,8 @@
 
 @media (max-width: 900px) {
   .fc-layout { flex-direction: column; align-items: stretch; }
-  .fc-grid,
-  .fc-panel { flex: none; }
-  .fc-ballot { order: -1; position: static; max-height: none; overflow-y: visible; }
+  .fc-grid { flex: none; }
+  .fc-panel { flex: none; order: -1; position: static; max-height: none; overflow-y: visible; }
   .fc-podium { grid-template-columns: minmax(0, 1fr); }
   .fc-collage { height: 320px; padding-right: 12px; }
 }

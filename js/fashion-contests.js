@@ -655,7 +655,7 @@
                   rankOf[e.id] ? h('span', { className: 'row-name fc-rank' }, '#' + rankOf[e.id]) : null),
                 h('span', { className: 'media-card-meta' }, summary)));
           })),
-        h('aside', { className: 'fc-panel fc-ballot', 'aria-label': 'Score this look' },
+        h('aside', { className: 'fc-panel', 'aria-label': 'Score this look' },
           cur
             ? h(React.Fragment, null,
                 h('div', { className: 'fc-ballot-head' },
