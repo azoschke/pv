@@ -17,7 +17,9 @@
 //                                 on a contest's voter list
 //    fashion_contest.create       make contests
 //    fashion_contest.manage       edit, run and delete every contest
-//  The person who made a contest can also edit, run and delete it.
+//  The person who made a contest can also edit, run and delete it. Once
+//  voting has closed, only the root admin can edit or delete it; the root
+//  admin can also clear any one voter's scores.
 //
 //  Worker routes (pv-med-database-worker, routes/fashion-contests.js):
 //    GET    /fashion-contests              { can, members, contests, past }
@@ -35,6 +37,8 @@
 //                                            creativity, style, theme }] }
 //    POST   /fashion-contests/:id/submit   submits your ballot
 //    DELETE /fashion-contests/:id/submit   takes it back, to change it
+//    DELETE /fashion-contests/:id/voters/:voter_id/scores
+//                                          clears a voter's scores (root)
 //
 //  Voting opens and closes by hand (status draft, open, closed). On its day,
 //  in the viewer's own time zone, a contest moves from Upcoming to the top of
@@ -880,8 +884,9 @@
         }, svgIcon(null, CROSS, 2.2))));
   }
 
-  // A voter: avatar, name, how far they are, On the site / In person and
-  // remove. Only a voter with a site account can vote on the site.
+  // A voter: avatar, name, how far they are, Clear votes (root admin, once
+  // they have scores), On the site / In person and remove. Only a voter with
+  // a site account can vote on the site.
   function VoterRow(props) {
     var v = props.voter;
     var sv = props.saved;
@@ -904,6 +909,9 @@
       h('div', { className: 'fc-voter-main' },
         h('span', { className: 'fc-row-name' }, v.name, props.entrant ? h('span', { className: 'fc-entrant-tag' }, ' · entrant') : null),
         h('span', { className: 'fc-row-status' }, h(Dot, { state: state }), text)),
+      props.onClear && sv && (sv.score_count || sv.submitted)
+        ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: props.onClear }, 'Clear votes')
+        : null,
       h('div', { className: 'seg', role: 'group', 'aria-label': 'How ' + v.name + ' votes' },
         h('button', {
           type: 'button', className: 'seg-btn', 'aria-pressed': v.in_person ? 'false' : 'true',
@@ -1097,6 +1105,7 @@
     }
     useEffect(function () { if (isEdit) load(true); }, []);
 
+    if (data && !data.contest.can_manage && data.contest.status === 'closed') return h(Notice, { title: 'This Contest Is Closed' });
     if (gone || (data && !data.contest.can_manage)) return h(Notice, { title: 'This Contest Isn’t Available' });
     if (!form) return h(Loading, { err: err });
 
@@ -1352,7 +1361,8 @@
               key: v.key, voter: Object.assign({}, v, { image_url: v.image_url || (people[v.member_id] || {}).image_url }),
               saved: v.id ? savedVoterById[v.id] : null, entrant: !!entryIds[v.member_id], locked: locked,
               onChange: function (patch) { setRow('voters', v.key, patch); },
-              onRemove: function () { removeRow('voters', v.key); }
+              onRemove: function () { removeRow('voters', v.key); },
+              onClear: c && c.can_clear && v.id ? function () { setDialog({ type: 'clear', voter: savedVoterById[v.id] }); } : null
             });
           }),
           form.voters.length ? null : h('p', { className: 'fc-none' }, 'No voters yet'))),
@@ -1388,6 +1398,19 @@
             confirmLabel: 'Delete contest',
             onClose: function () { setDialog(null); },
             onConfirm: function () { return api('DELETE', '/fashion-contests/' + c.id).then(function () { goTo(LIST_HREF); }); }
+          })
+        : null,
+      dialog && dialog.type === 'clear'
+        ? h(ConfirmDialog, {
+            title: 'Clear ' + dialog.voter.name + '’s Votes?',
+            text: 'This action is final.',
+            confirmLabel: 'Clear votes',
+            onClose: function () { setDialog(null); },
+            onConfirm: function () {
+              return api('DELETE', '/fashion-contests/' + c.id + '/voters/' + dialog.voter.id + '/scores')
+                .then(function () { return load(false); })
+                .then(function () { setDialog(null); });
+            }
           })
         : null);
   }
