@@ -27,6 +27,7 @@
     18. Bounty Board + Faction Rosters
     19. Venue Menus
     20. Mount Farm
+    21. Fashion Contests
 
    Breakpoints: three steps, written as max-width queries, with each
    component's narrow rules next to the component.
@@ -6081,4 +6082,551 @@ html:not(.pv-signed-in) .home-for-members { display: none; }
   .mf-split,
   .mf-split.is-side-first { grid-template-columns: minmax(0, 1fr); }
   .mf-bar { position: static; }
+}
+
+/* =============================================================================
+   21. FASHION CONTESTS — the list, a contest's page and its ballot, results,
+   and Make / Edit with the in-person scores dialog
+   Edit's panels, people search, × buttons, link field and sticky bar are
+   Mount Farm's (section 20); these rules lay out the rest.
+   ========================================================================== */
+
+/* Light mode: buttons sitting on the page (Back, Edit contest, Reload) take
+   the card colour, as "Controls on the page" does in section 6. */
+:root:not([data-theme="dark"]) .fc-on-page {
+  --bg-darker: var(--bg-card);
+  --well-hover: var(--page-control-hover);
+}
+.fc-back { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* Header: "The Phoenix Vanguard presents", the title and its subtitle in
+   caps, with the description (or New contest) on the right. */
+.fc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 32px;
+  padding: 16px 0 20px;
+}
+.fc-head.is-list { gap: 14px 24px; padding-bottom: 22px; }
+.fc-head.is-results { padding: 8px 0 18px; gap: 12px 32px; }
+.fc-presents {
+  margin: 0;
+  font-family: var(--font-script);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  color: var(--accent-brown);
+}
+.fc-title {
+  margin: 2px 0 0;
+  font-size: clamp(1.9rem, 1.4rem + 1.4vw, 2.25rem);
+  line-height: 1.1;
+}
+.fc-title.is-list { font-size: clamp(2rem, 1.4rem + 1.6vw, 2.375rem); }
+.fc-caps,
+.fc-subtitle,
+.fc-status,
+.fc-date-mon {
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.fc-caps { margin: 0; }
+.fc-subtitle { margin: 2px 0 0; }
+.fc-desc { max-width: 34rem; margin: 0; font-size: 1rem; white-space: pre-line; }
+.fc-head-side { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.fc-counts { margin: 0; font-size: 1rem; color: var(--text-secondary); }
+
+/* Status dots: brown when partly done, muted when done, gold when not
+   started; red for voting open. */
+.fc-dot {
+  display: inline-block;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--gold);
+}
+.fc-dot.is-part { background-color: var(--accent-brown); }
+.fc-dot.is-done { background-color: var(--text-secondary); }
+.fc-dot.is-live { background-color: var(--accent-red); }
+.fc-status .fc-dot { width: 8px; height: 8px; }
+
+/* A look's picture: cropped to its frame, keeping the top of a portrait. */
+.fc-img { display: block; position: relative; overflow: hidden; }
+.fc-img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+
+/* The script face in red: place names, prizes and "Winner". */
+.fc-script-red,
+.fc-place {
+  font-family: var(--font-script);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--accent-red);
+}
+
+.fc-none { margin: 0; padding: 14px 20px; font-size: 1rem; color: var(--text-secondary); }
+.fc-none.is-bare { padding: 0; }
+
+.fc-progress { display: flex; align-items: center; gap: 12px; }
+.fc-progress .progress-bar { flex: 1; min-width: 60px; }
+.fc-progress-text { font-size: 0.94rem; color: var(--text-secondary); white-space: nowrap; }
+
+/* --- The list --- */
+/* What's on: a torn card with a collage of three looks (one big, two
+   stacked) beside its name, counts, your ballot and the buttons. */
+.fc-feature {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding-bottom: var(--tear-h);
+  background-color: var(--bg-card);
+  border-radius: 4px 4px 0 0;
+}
+.fc-collage {
+  flex: 1 1 460px;
+  min-width: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  height: 380px;
+  padding: 12px 0 0 12px;
+}
+.fc-collage-tile { border-radius: 3px; }
+.fc-collage .fc-collage-tile:first-child,
+.fc-collage.is-2 .fc-collage-tile { grid-row: 1 / 3; }
+.fc-collage.is-1 { grid-template-columns: minmax(0, 1fr); }
+.fc-feature-body {
+  flex: 1 1 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 26px 8px;
+}
+.fc-status { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.fc-feature-title { margin: 0; font-size: 2rem; line-height: 1.15; }
+.fc-blurb { margin: 0; font-size: 1.06rem; }
+.fc-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
+
+.fc-section { margin-top: 28px; }
+.fc-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.fc-section-title { margin: 0 0 10px; font-size: 1.5rem; }
+.fc-section-head .fc-section-title { margin: 0; }
+.fc-section-count { font-size: 0.94rem; color: var(--text-secondary); }
+
+/* Upcoming: a date block (month over day), the name and when, and Edit for
+   those who run it. */
+.fc-upcoming { background-color: var(--bg-card); border-radius: 4px; }
+.fc-up-row { display: flex; align-items: center; gap: 16px; padding: 12px 20px; }
+.fc-up-row + .fc-up-row { border-top: 1px solid var(--border-color); }
+.fc-date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56px;
+  line-height: 1.1;
+}
+.fc-date-day { font-family: var(--font-ui); font-size: 1.625rem; color: var(--text-primary); }
+.fc-up-main { flex: 1; min-width: 0; }
+.fc-up-name { margin: 0; font-family: var(--font-ui); font-size: 1.125rem; color: var(--text-primary); }
+.fc-up-meta { margin: 0; font-size: 0.94rem; color: var(--text-secondary); }
+
+/* Past contests: a card per contest, the winner's look on top. */
+.fc-past-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+}
+.fc-past {
+  display: block;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+.fc-past-img { aspect-ratio: 4 / 3; }
+.fc-past-body { display: flex; flex-direction: column; padding: 4px 16px 14px; }
+.fc-past-name { font-family: var(--font-ui); font-size: 1.19rem; color: var(--text-primary); transition: color 0.15s ease; }
+.fc-past:hover .fc-past-name { color: var(--accent-brown); }
+.fc-past-meta { font-size: 0.94rem; color: var(--text-secondary); }
+.fc-past-winner { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+.fc-past-winner .fc-script-red { font-size: 1.06rem; }
+.fc-past-who { font-family: var(--font-ui); font-size: 1rem; color: var(--text-primary); }
+
+/* --- A contest --- */
+/* The looks, beside a panel (about voting, or the ballot). */
+.fc-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+.fc-grid {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+}
+.fc-panel {
+  flex: 1 1 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px 22px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+.fc-panel-title { margin: 0; font-size: 1.5rem; line-height: 1.3; }
+.fc-panel-foot { padding-top: 14px; border-top: 1px solid var(--border-color); }
+.fc-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 6px 0 0; }
+.fc-dl dt { font-family: var(--font-ui); font-size: 1.06rem; color: var(--text-primary); }
+.fc-dl dd { margin: 0; }
+.fc-dl.is-prizes { gap: 4px 16px; }
+.fc-dl.is-prizes dt { font-family: var(--font-script); font-size: 1.125rem; color: var(--accent-red); }
+.fc-scale { margin: 8px 0 0; font-size: 0.94rem; color: var(--text-secondary); }
+
+/* A look: its picture over the name (and, on the ballot, your rank and
+   score). The one being scored is ringed brown; your own is faded. */
+.fc-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.fc-card.is-pick { cursor: pointer; }
+.fc-card.is-current { box-shadow: 0 0 0 2px var(--accent-brown); }
+.fc-card.is-own { opacity: 0.6; cursor: default; }
+.fc-card-img { aspect-ratio: 4 / 5; }
+.fc-card-body { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 12px; line-height: 1.3; }
+.fc-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.fc-card-name { font-family: var(--font-ui); font-size: 1rem; color: var(--text-primary); }
+.fc-rank { font-family: var(--font-ui); font-size: 0.82rem; color: var(--accent-brown); }
+.fc-card-sub { font-size: 0.875rem; color: var(--text-secondary); }
+
+/* Over the looks: Entry order / Your ranking, and the prizes. */
+.fc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 12px; }
+.fc-prizes-line { margin: 0 0 0 auto; font-size: 1rem; color: var(--text-secondary); }
+
+/* The ballot: the look, a 1–5 control per criterion with its question, the
+   scale, Skip / Save and next look, then your progress and Submit. */
+.fc-ballot { gap: 16px; }
+.fc-ballot-head { display: flex; align-items: center; gap: 14px; }
+.fc-thumb { flex: none; width: 64px; height: 80px; border-radius: 3px 3px 0 0; }
+.fc-ballot-name { margin: 0; font-size: 1.375rem; line-height: 1.25; }
+.fc-look-title {
+  margin: 0;
+  font-family: var(--font-script);
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+.fc-crit { display: flex; flex-direction: column; gap: 6px; }
+.fc-crit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.fc-crit-name { margin: 0; font-size: 1.06rem; }
+.fc-crit-q { font-size: 0.94rem; line-height: 1.3; color: var(--text-secondary); text-align: right; }
+.fc-scale-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -8px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.fc-ballot-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.fc-ballot-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-ballot .notice-card { margin: 0; padding: 0; }
+
+/* A 1–5 score: a well track, the chosen number solid brown. */
+.fc-score {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  background-color: var(--bg-darker);
+  border-radius: 4px;
+}
+.fc-score-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 1.06rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.fc-score-btn:hover:not(:disabled) { background-color: var(--well-hover); }
+.fc-score-btn[aria-pressed="true"],
+.fc-score-btn[aria-pressed="true"]:hover:not(:disabled) { background-color: var(--accent-brown); color: var(--label); }
+.fc-score-btn:disabled { cursor: default; }
+.fc-score:focus-visible { outline: 2px solid var(--accent-brown); outline-offset: 2px; }
+.fc-score.is-compact { gap: 2px; padding: 2px; }
+.fc-score.is-compact .fc-score-btn { min-height: 30px; font-size: 0.875rem; }
+
+/* Results: the top three, how many voted, and the table on a torn card. */
+.fc-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fc-podium-card { overflow: hidden; background-color: var(--bg-card); border-radius: 4px; }
+.fc-podium-img { aspect-ratio: 4 / 3; }
+.fc-podium-img.is-wide { aspect-ratio: 16 / 9; }
+.fc-podium-body { padding: 6px 18px 16px; }
+.fc-place { margin: 0; font-size: 1.25rem; }
+.fc-podium-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.fc-podium-name,
+.fc-podium-avg {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+.fc-podium-avg { font-variant-numeric: tabular-nums; }
+.fc-podium-prize { margin: 2px 0 0; font-size: 0.94rem; color: var(--text-secondary); }
+.fc-closed-line { margin: 22px 0 0; font-size: 1rem; color: var(--text-secondary); text-align: right; }
+
+.fc-table-card {
+  margin-top: 12px;
+  padding-bottom: var(--tear-h);
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border-radius: 4px 4px 0 0;
+}
+.fc-podium + .fc-table-card { margin-top: 16px; }
+.fc-table-scroll { overflow-x: auto; }
+.fc-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 1.06rem; }
+.fc-table.has-ballots { min-width: 760px; }
+.fc-table th {
+  padding: 10px 12px;
+  background-color: var(--table-head);
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  text-align: left;
+}
+.fc-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+.fc-table :is(th, td):first-child { padding-left: 22px; }
+.fc-table :is(th, td):last-child { padding-right: 22px; }
+.fc-table .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.fc-table td.is-rank { font-family: var(--font-ui); color: var(--text-primary); }
+.fc-table td.is-avg { font-family: var(--font-ui); font-size: 1.19rem; color: var(--text-primary); }
+.fc-table td.is-muted { color: var(--text-secondary); }
+.fc-table tr.is-mine td { background-color: var(--bg-group-row); }
+.fc-entrant { display: inline-flex; align-items: center; gap: 12px; }
+.fc-entrant-name { font-family: var(--font-ui); color: var(--text-primary); }
+.fc-table-thumb { flex: none; width: 32px; height: 40px; border-radius: 3px; }
+.fc-you { font-size: 0.94rem; color: var(--accent-brown); }
+.fc-table-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 22px 0; }
+
+/* --- Make / Edit a contest --- */
+.card.fc-details { padding: 20px 24px 22px; }
+.fc-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px 20px;
+}
+.fc-field { min-width: 0; }
+.fc-field.is-wide,
+.fc-fields.is-prizes { margin-top: 16px; }
+.fc-link-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Entries and Voters, side by side, each a torn panel of rows. */
+.fc-split { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 16px; margin-top: 20px; }
+.fc-list-panel { flex: 1 1 520px; min-width: 0; }
+.fc-panel-note { font-size: 0.94rem; color: var(--text-secondary); }
+.fc-picker-row { display: flex; align-items: flex-start; gap: 8px; }
+.fc-picker-row .fc-picker { flex: 1; min-width: 0; }
+.fc-row-name { font-family: var(--font-ui); font-size: 1rem; color: var(--text-primary); }
+.fc-row-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--text-secondary); }
+.fc-row-error { font-size: 0.875rem; color: var(--accent-red); }
+.fc-entrant-tag { font-family: var(--font-text); font-size: 0.875rem; color: var(--text-secondary); }
+
+/* A look: drag handle, picture, name and in-person status over its title,
+   then Enter scores, Image and remove. The row a look is dragged over takes
+   a brown line on top. */
+.fc-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 16px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-entry.is-over { box-shadow: inset 0 2px 0 var(--accent-brown); }
+.fc-entry.is-dragging { opacity: 0.45; }
+.fc-handle {
+  display: inline-flex;
+  flex: none;
+  width: 14px;
+  color: var(--text-secondary);
+  cursor: grab;
+}
+.fc-handle svg { width: 10px; height: 16px; margin: 0 auto; }
+.fc-entry-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 56px;
+  border-radius: 3px;
+}
+.fc-no-image {
+  font-family: var(--font-ui);
+  font-size: 0.69rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--media-ink-dim);
+}
+.fc-entry-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fc-entry-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.fc-entry .field { min-height: 32px; padding: 0 10px; font-size: 0.94rem; }
+.fc-entry-actions { display: flex; flex: none; align-items: center; gap: 8px; }
+.fc-file { display: none; }
+
+/* A voter: avatar, name and progress, On the site / In person, remove. */
+.fc-voter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px 9px 22px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-voter-main { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+.fc-voter .seg { flex: none; }
+.fc-voter .seg-btn { min-height: 30px; padding: 0 10px; font-size: 0.82rem; }
+.fc-voter .seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* The bar's Not open / Voting open / Closed keeps the well track on the
+   card-coloured bar. */
+:root:not([data-theme="dark"]) .fc-bar .seg { background-color: var(--page-control-active); }
+:root:not([data-theme="dark"]) .fc-bar .seg .seg-btn:is(.is-active, [aria-pressed="true"]) { background-color: var(--bg-card); }
+
+/* In-person scores: one look, a row per in-person voter. */
+.modal.fc-scores-dialog { max-width: 720px; }
+.fc-dlg-head { display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px 12px; }
+.fc-dlg-thumb { flex: none; width: 48px; height: 60px; border-radius: 3px 3px 0 0; }
+.fc-dlg-titles { flex: 1; min-width: 0; }
+.fc-dlg-name { margin: 0; font-size: 1.5rem; line-height: 1.2; }
+.fc-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 14px; }
+.fc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--bg-darker);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.fc-chip:hover:not(:disabled) { background-color: var(--well-hover); }
+.fc-chip[aria-current="true"] { box-shadow: inset 0 0 0 1px var(--accent-brown); }
+.fc-chip-count { font-family: var(--font-text); font-size: 0.875rem; color: var(--text-secondary); }
+.fc-ip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 156px) 44px;
+  align-items: center;
+  gap: 0 12px;
+  padding: 8px 22px;
+}
+.fc-ip-row + .fc-ip-row { border-top: 1px solid var(--border-color); }
+.fc-ip-row.is-head {
+  background-color: var(--table-head);
+  font-family: var(--font-ui);
+  font-size: var(--fs-caps);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.fc-ip-row.is-own { opacity: 0.6; }
+.fc-ip-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fc-ip-name {
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-ip-note { grid-column: 2 / 6; font-size: 0.94rem; color: var(--text-secondary); }
+.fc-ip-avg { font-family: var(--font-ui); font-size: 0.94rem; color: var(--text-primary); text-align: right; }
+.fc-ip-row.is-head .fc-ip-avg { color: inherit; font-size: inherit; }
+.fc-ip-avg.is-muted { color: var(--text-secondary); }
+.fc-dlg-error { margin: 10px 22px 0; }
+.fc-dlg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--border-color);
+}
+.fc-dlg-count { margin: 0 auto 0 4px; font-size: 0.94rem; color: var(--text-secondary); }
+
+@media (max-width: 900px) {
+  .fc-podium { grid-template-columns: minmax(0, 1fr); }
+  .fc-collage { height: 320px; padding-right: 12px; }
+}
+
+/* Phones: rows wrap their buttons under them, and each in-person row puts
+   the voter and average over the three scores. */
+@media (max-width: 640px) {
+  .fc-entry { flex-wrap: wrap; }
+  .fc-entry-main { flex-basis: calc(100% - 96px); }
+  .fc-entry-actions { width: 100%; justify-content: flex-end; }
+  .fc-voter { flex-wrap: wrap; padding-left: 16px; }
+  .fc-voter-main { flex-basis: calc(100% - 88px); }
+  .fc-voter .seg { margin-left: 42px; }
+  .fc-picker-row { flex-direction: column; align-items: stretch; }
+  .fc-ip-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "who who avg" "creativity style theme";
+    gap: 6px 8px;
+    padding: 10px 16px;
+  }
+  .fc-ip-row.is-head { display: none; }
+  .fc-ip-who { grid-area: who; }
+  .fc-ip-avg { grid-area: avg; }
+  .fc-score.is-creativity { grid-area: creativity; }
+  .fc-score.is-style { grid-area: style; }
+  .fc-score.is-theme { grid-area: theme; }
+  .fc-ip-note { grid-column: 1 / -1; }
+  .fc-dlg-head, .fc-chips, .fc-dlg-foot { padding-left: 16px; padding-right: 16px; }
+  .fc-collage { height: 260px; }
+  .fc-feature-body { padding: 18px 18px 8px; }
 }
