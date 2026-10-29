@@ -985,6 +985,8 @@ button.nav-sublink {
   color: var(--accent-brown-hover);
   text-decoration: underline;
 }
+/* With an icon (a back link) the underline would run under it too. */
+.btn.is-plain:has(.material-symbols-outlined):hover:not(:disabled) { text-decoration: none; }
 
 .btn.is-small {
   min-height: 30px;

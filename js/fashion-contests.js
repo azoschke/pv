@@ -655,7 +655,7 @@
                   rankOf[e.id] ? h('span', { className: 'row-name fc-rank' }, '#' + rankOf[e.id]) : null),
                 h('span', { className: 'media-card-meta' }, summary)));
           })),
-        h('aside', { className: 'fc-panel', 'aria-label': 'Score this look' },
+        h('aside', { className: 'fc-panel fc-ballot', 'aria-label': 'Score this look' },
           cur
             ? h(React.Fragment, null,
                 h('div', { className: 'fc-ballot-head' },
@@ -864,7 +864,7 @@
     return h('div', { className: 'mf-added fc-voter' },
       h(Avatar, { person: v }),
       h('div', { className: 'mf-row-main' },
-        h('div', { className: 'row-name' }, v.name, props.entrant ? h('span', { className: 'meta-note' }, ' · entrant') : null),
+        h('div', { className: 'row-name' }, v.name, props.entrant ? h('span', { className: 'row-meta' }, ' · entrant') : null),
         h('div', null, h('span', { className: 'row-meta ' + dotClass(state) }, text))),
       props.onClear && sv && (sv.score_count || sv.submitted)
         ? h('button', { type: 'button', className: 'btn is-danger is-small', onClick: props.onClear }, 'Clear votes')
@@ -1266,7 +1266,7 @@
         h('section', { className: 'mf-panel tear-half', 'aria-labelledby': 'fc-entries-title' },
           h('div', { className: 'mf-panel-head is-baseline' },
             h('h2', { id: 'fc-entries-title', className: 'mf-panel-title' }, 'Entries'),
-            h('span', { className: 'meta-note' }, plural(form.entries.length, 'look', 'looks') + ' · runway order')),
+            h('span', { className: 'meta-note' }, plural(form.entries.length, 'look', 'looks'))),
           h('div', { className: 'mf-panel-body' },
             h(PeoplePicker, {
               placeholder: 'Add an entrant from the FC list', pool: pool, disabled: locked,

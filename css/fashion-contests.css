@@ -80,10 +80,10 @@
 .fc-date-day { font-family: var(--font-ui); font-size: 1.625rem; color: var(--text-primary); }
 
 /* --- A contest --- */
-.fc-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
-.fc-grid { flex: 999 1 560px; min-width: 0; }
+.fc-layout { display: flex; align-items: flex-start; gap: 16px; }
+.fc-grid { flex: 1 1 0; min-width: 0; }
 .fc-panel {
-  flex: 1 1 360px;
+  flex: 0 0 360px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -91,6 +91,14 @@
   padding: 20px 22px 22px;
 }
 .fc-panel .form-title { margin: 0; }
+/* The ballot stays in view beside the looks; on narrower screens it goes
+   above them instead. */
+.fc-ballot {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
 .fc-panel-foot {
   display: flex;
   flex-direction: column;
@@ -206,6 +214,10 @@
 .fc-dlg-count { margin: 0 auto 0 4px; }
 
 @media (max-width: 900px) {
+  .fc-layout { flex-direction: column; align-items: stretch; }
+  .fc-grid,
+  .fc-panel { flex: none; }
+  .fc-ballot { order: -1; position: static; max-height: none; overflow-y: visible; }
   .fc-podium { grid-template-columns: minmax(0, 1fr); }
   .fc-collage { height: 320px; padding-right: 12px; }
 }
