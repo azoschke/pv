@@ -104,7 +104,7 @@
   padding-top: 14px;
   border-top: 1px solid var(--border-color);
 }
-.fc-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 6px 0 0; }
+.fc-dl { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 6px 16px; margin: 6px 0 0; }
 .fc-dl dd { margin: 0; }
 
 .fc-ballot-head { display: flex; align-items: center; gap: 14px; }

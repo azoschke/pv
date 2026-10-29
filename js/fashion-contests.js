@@ -46,6 +46,7 @@
   var useRef = React.useRef;
 
   var LIST_HREF = window.location.pathname;
+  var BANNER = 'https://images.phoenixvanguard-tools.com/fashion-contest.jpg';
   var CRITERIA = [
     { key: 'creativity', name: 'Creativity', question: 'How original is this idea?' },
     { key: 'style', name: 'Style', question: 'Do the pieces and colours work together?',
@@ -476,16 +477,25 @@
           : null));
   }
 
+  // The banner and title card, as on the medical pages.
+  function LandingHero(props) {
+    return h(React.Fragment, null,
+      h('div', { className: 'home-band is-page' },
+        h('div', { className: 'home-band-photo media-ph tear' }, h('img', { src: BANNER, alt: '' }))),
+      h('header', { className: 'home-hero-card is-page tear' },
+        h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
+        h('h1', { className: 'app-title' }, 'Fashion Contests'),
+        props.canCreate
+          ? h('div', { className: 'home-hero-actions' }, h('a', { className: 'btn', href: '?plan' }, 'New contest'))
+          : null));
+  }
+
   function Landing(props) {
     var base = props.base;
     var top = base.contests.filter(function (c) { return c.status === 'open' || isDayOf(c.starts_at); });
     var upcoming = base.contests.filter(function (c) { return c.status !== 'open' && !isDayOf(c.starts_at); });
     return h('div', null,
-      h('header', { className: 'fc-head' },
-        h('div', null,
-          h('p', { className: 'app-subtitle' }, 'The Phoenix Vanguard presents'),
-          h('h1', { className: 'app-title' }, 'Fashion Contests')),
-        base.can.create ? h('a', { className: 'btn', href: '?plan' }, 'New contest') : null),
+      h(LandingHero, { canCreate: base.can.create }),
       top.map(function (c) { return h(FeatureCard, { key: c.id, contest: c }); }),
       h('section', { className: 'fc-section', 'aria-labelledby': 'fc-up-title' },
         h('h2', { id: 'fc-up-title', className: 'form-title' }, 'Upcoming'),
@@ -1406,7 +1416,8 @@
     if (params.has('contest')) return h(ContestPage, { slug: params.get('contest') });
     if (params.has('edit')) return h(ContestForm, { slug: params.get('edit') });
     if (params.has('results')) return h(ResultsPage, { slug: params.get('results') });
-    if (!base) return h(Loading, { err: err, back: plan });
+    if (!base && !plan) return h('div', null, h(LandingHero), h(Loading, { err: err, back: false }));
+    if (!base) return h(Loading, { err: err });
     if (plan) {
       return base.can.create
         ? h(ContestForm, { base: base, slug: null })
