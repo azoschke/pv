@@ -28,7 +28,7 @@
 
   // Fixed vocabularies — keep in sync with the worker's EVENT_ASSET_TYPES /
   // EVENT_ASSET_TAGS so client and server validation agree.
-  var TYPES = ['Roleplay', 'PVE', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
+  var TYPES = ['Roleplay', 'PVE', 'PVP', 'Community', 'Seasonal', 'Collaboration', 'FC Events'];
   var TAGS = [
     'Maps', 'FATEs', 'Field Operations', 'Deep Dungeons', 'V&C Dungeons',
     'Extreme Mount Farm', 'Savage Mount Farm', 'Moogle Treasure Trove', 'Unlock'
